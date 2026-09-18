@@ -134,17 +134,27 @@ async function listen(engine: SyncEngine, db: IDatabase): Promise<SyncTriggers> 
     }, WRITE_DEBOUNCE_MS)
   }
 
-  const stateChange = await App.addListener('appStateChange', async ({ isActive }) => {
-    if (isActive) {
-      db.resume()
-      void now()
-      return
-    }
-
-    // Going to the background. Let the page in flight settle and give the lock
-    // back before the system decides to take the whole app instead.
+  // Going to the background: let the page in flight settle and give the lock
+  // back before the system decides to take the whole app instead.
+  const background = async () => {
     await db.suspend()
-  })
+  }
+
+  const foreground = () => {
+    db.resume()
+    void now()
+  }
+
+  // Both events, deliberately. `appStateChange` is the cross-platform one and
+  // `pause`/`resume` are the native lifecycle pair; which of them a given
+  // platform and version delivers is not something to bet a `0xdead10cc` on.
+  // `suspend()` is documented as safe to call twice and on an idle database, so
+  // the overlap costs nothing.
+  const stateChange = await App.addListener('appStateChange', ({ isActive }) =>
+    isActive ? foreground() : void background(),
+  )
+  const paused = await App.addListener('pause', () => void background())
+  const resumed = await App.addListener('resume', () => foreground())
 
   const networkChange = await Network.addListener('networkStatusChange', (status) => {
     if (status.connected) void now()
@@ -153,6 +163,8 @@ async function listen(engine: SyncEngine, db: IDatabase): Promise<SyncTriggers> 
   const stop = async () => {
     if (debounce !== null) clearTimeout(debounce)
     await stateChange.remove()
+    await paused.remove()
+    await resumed.remove()
     await networkChange.remove()
     await db.suspend()
   }
