@@ -19,6 +19,8 @@ import { SYNC_WIRE_FIELDS } from '../syncFields'
  */
 const ALLOWED: Partial<Record<string, readonly string[]>> = SYNC_WIRE_FIELDS
 
+
+
 type Change = { collection?: string; data?: unknown }
 
 const changesIn = (node: unknown, out: Change[] = []): Change[] => {

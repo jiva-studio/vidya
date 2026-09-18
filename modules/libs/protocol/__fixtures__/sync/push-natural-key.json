@@ -1,0 +1,40 @@
+{
+  "name": "push-natural-key",
+  "covers": ["T-C-2"],
+  "endpoint": "POST /sync/push",
+  "description": "The second device of one student hands in a section the first has already handed in, under a local id of its own. The table's key is the natural one (enrolment, version, section), so the server writes onto the row that key already holds and the HLC decides the text. The answer names both ids: docId is what was sent, serverDocId is the row it landed in. Without the second the device would keep a local row the server has never heard of — carried by no pull, removed by no tombstone — beside the winning row arriving as a second answer to one section.",
+  "request": {
+    "deviceId": "device-b21e7f05",
+    "changes": [
+      {
+        "outboxId": 80,
+        "collection": "homework",
+        "docId": "bbbbbbbb-2222-4bbb-8bbb-bbbbbbbbbbbb",
+        "op": "upsert",
+        "data": {
+          "enrollmentId": "3a5c7e92-4b18-4d06-9f2e-1c8b6d4a3f57",
+          "lessonVersionId": "a41c7d02-33b5-4e8f-9c6a-71e204f5d8b3",
+          "sectionId": "11111111-1111-4111-8111-111111111111",
+          "text": "Written on the tablet, after the phone had already sent its own.",
+          "submittedAt": "2026-09-18T07:15:00.000Z"
+        },
+        "hlc": "001789729700000:00000:device-b21e7f05",
+        "baseHlc": null
+      }
+    ]
+  },
+  "response": {
+    "results": [
+      {
+        "outboxId": 80,
+        "collection": "homework",
+        "docId": "bbbbbbbb-2222-4bbb-8bbb-bbbbbbbbbbbb",
+        "status": "accepted",
+        "serverHlc": "001789729700000:00000:device-b21e7f05",
+        "restamped": false,
+        "serverDocId": "aaaaaaaa-1111-4aaa-8aaa-aaaaaaaaaaaa"
+      }
+    ],
+    "journaledOutboxId": 80
+  }
+}

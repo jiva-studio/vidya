@@ -44,6 +44,13 @@
       "description": "A batch whose rows are answered one by one: results has the length of changes and the same order, and a refusal leaves its neighbours applied."
     },
     {
+      "file": "push-natural-key.json",
+      "name": "push-natural-key",
+      "endpoint": "POST /sync/push",
+      "covers": ["T-C-2"],
+      "description": "A row written under an id other than the one it was sent with. The natural key of a homework answer is (enrolment, version, section), so the second device of one student lands on the row the first created; serverDocId names it, and is absent on every other accepted row."
+    },
+    {
       "file": "push-rejections.json",
       "name": "push-rejections",
       "endpoint": "POST /sync/push",

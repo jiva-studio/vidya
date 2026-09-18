@@ -244,6 +244,25 @@ export type PushAccepted = {
 
   /** `true` when the server assigned a new stamp rather than keeping the sent one. */
   restamped: boolean
+
+  /**
+   * The id the server actually wrote under, present only when it differs from
+   * `docId`.
+   *
+   * A device generates the id for work it writes offline, so two devices of one
+   * student can hand in the same section — or the same block — under two ids.
+   * The table's key is the natural one (`enrolment`, `version`, `section`), so
+   * the second push is written onto the row the first created, and the HLC
+   * decides the text as it is meant to. Without this field the answer named the
+   * id that was *sent*: the second device kept a local row the server has never
+   * heard of, which no pull can ever carry and no tombstone can ever remove,
+   * while the winning row arrived beside it as a second answer to one section.
+   *
+   * Absent means "written under the id you sent". Present means "your row and
+   * mine are the same row, and this is its name": the device renames its local
+   * row and its outbox entries to this id.
+   */
+  serverDocId?: string
 }
 
 /**

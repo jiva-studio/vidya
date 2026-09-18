@@ -180,7 +180,12 @@ describe('T-C-1: the shape of a pull response', () => {
 /* -------------------------------------------------------------------------- */
 
 describe('T-C-2: the shape of a push response', () => {
-  const pushFixtures = ['push-mixed.json', 'push-rejections.json', 'push-restamped.json']
+  const pushFixtures = [
+    'push-mixed.json',
+    'push-rejections.json',
+    'push-restamped.json',
+    'push-natural-key.json',
+  ]
 
   it.each(pushFixtures)('answers %s row by row, in order', (file) => {
     const fixture = read<{ request: PushRequest; response: PushResponse }>(file)
@@ -205,6 +210,27 @@ describe('T-C-2: the shape of a push response', () => {
       false,
       true,
     ])
+  })
+
+  it('names the row it wrote when that is not the row it was sent', () => {
+    const fixture = read<{ request: PushRequest; response: PushResponse }>('push-natural-key.json')
+    const [result] = fixture.response.results
+
+    expect(result.status).toBe('accepted')
+    expect(result.status === 'accepted' && result.serverDocId).toBeDefined()
+    expect(result.status === 'accepted' && result.serverDocId).not.toBe(result.docId)
+
+    // And `docId` is still the id the device sent, so the answer can be matched
+    // to the row that produced it.
+    expect(result.docId).toBe(fixture.request.changes[0].docId)
+  })
+
+  it('leaves serverDocId out when the server wrote under the id it was sent', () => {
+    const fixture = read<{ response: PushResponse }>('push-mixed.json')
+
+    for (const result of fixture.response.results) {
+      expect(result.status === 'accepted' && 'serverDocId' in result).toBe(false)
+    }
   })
 
   it('carries the write checkpoint back to the device', () => {
