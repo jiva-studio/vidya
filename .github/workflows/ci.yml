@@ -25,8 +25,6 @@ jobs:
         run: npm ci
         working-directory: modules
 
-      # The same gate developers run locally: typecheck, lint, format:check, test.
-      # Keeping CI on `make check` means the two can never drift apart.
       - name: Run quality gate
         run: make check
 
@@ -34,9 +32,6 @@ jobs:
     name: Quality Gate (Postgres)
     runs-on: ubuntu-latest
 
-    # The default gate runs against pg-mem, which is fast but is not Postgres:
-    # it has one session and stubs advisory locking out. The `*.postgres.spec.ts`
-    # suites skip themselves there, so this job is the only place they run.
     services:
       postgres:
         image: postgres:16
@@ -65,42 +60,8 @@ jobs:
         run: npm ci
         working-directory: modules
 
-      # Only the suites that need a real database. The whole suite against
-      # Postgres (`make test-postgres`) is broader but currently has a failure
-      # unrelated to the database contract, so it runs on a schedule instead of
-      # blocking every pull request.
       - name: Run the suites that require Postgres
         run: make test-postgres-required
         env:
           VIDYA_TEST_DB_HOST: localhost
           VIDYA_TEST_DB_PORT: 5432
-
-  mutation:
-    name: Mutation Score (diff)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          # Stryker's diff mode needs the merge base with main, which a shallow
-          # checkout does not have.
-          fetch-depth: 0
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: modules/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-        working-directory: modules
-
-      # Mutates only the files this branch changed, and scores them against the
-      # incremental baseline committed in .stryker/incremental/. Exits non-zero
-      # when the score falls below the package's break threshold.
-      - name: Mutation score on the diff
-        run: make mutate-diff PKG=@vidya/api

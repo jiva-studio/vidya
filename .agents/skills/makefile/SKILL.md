@@ -35,13 +35,13 @@ Workspace-wide gates are the exception and stay unprefixed: `check`, `typecheck`
   (`*.postgres.spec.ts`). These skip themselves under pg-mem, so they are only
   proved here. Fast enough to belong on a branch.
 - `test-postgres` — every suite with a real Postgres behind it. Broader, slower,
-  scheduled rather than per change.
+  run locally rather than per change.
 
 **Mutation testing**
 - `mutate-diff PKG=…` — mutate only what the branch changed, against the merge
   base with main. The per-change run.
 - `mutate-full PKG=…` — mutate a whole package. Hours for a package the size of
-  the API; manual or scheduled.
+  the API; run it on a developer machine, not in CI.
 
 **API**
 - `api-build` — `nest build` for `@vidya/api`.

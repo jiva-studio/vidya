@@ -5,32 +5,32 @@ place by saying something the code cannot.
 
 ---
 
-## 1. No references to documents that are not in the repository
+## 1. A comment stands on its own
 
-Tags like `(D-14)`, `(I-2, AC-22f)` or `(T-S-35)` point at plans and specs that
-live outside git or under `.gitignore`. To anyone who opens the file they are a
-link to nowhere, and they rot the moment the document is renumbered.
+Whoever opens the file has the code and nothing else. A comment that sends them
+somewhere they cannot go says nothing.
 
-Forbidden in comments, in docblocks, in commit-adjacent code, and in test names.
+Do not point at anything outside the repository: planning documents, specs,
+ticket numbers, review notes, internal registers. If a document is worth citing,
+commit it and link it by path.
 
 ```ts
 // Bad
-/** Resolves the server id for a queued row (D-14, AC-22f). */
+/** Resolves the server id for a queued row (see the sync register, row 14). */
 
 // Good
 /** Resolves the server id for a queued row. */
 ```
 
+A test name says what breaks, not where the requirement is filed.
+
 ```ts
 // Bad
-it('T-S-35: rejects a push whose clock is behind the last ack', ...)
+it('case 35: rejects a push whose clock is behind the last ack', ...)
 
 // Good
 it('rejects a push whose clock is behind the last ack', ...)
 ```
-
-A test name states what breaks, not where the requirement is filed. If you need
-to point at a document, point at one that is committed and link it by path.
 
 ---
 

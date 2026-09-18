@@ -77,7 +77,8 @@ test-postgres:
 #
 # Coverage says a line ran. Mutation testing says the suite noticed. `mutate-diff`
 # only mutates what the branch changed and is the one to run per change;
-# `mutate-full` re-measures a whole package and is for a schedule.
+# `mutate-full` re-measures a whole package. Hours. Run it on this machine,
+# not on paid CI minutes.
 # ---------------------------------------------------------------------------
 
 mutate-diff:

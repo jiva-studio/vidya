@@ -115,7 +115,7 @@ the line were wrong.
 
 ```bash
 make mutate-diff PKG=@vidya/api   # only the files this branch changed
-make mutate-full PKG=@vidya/api   # the whole package — hours; run on a schedule
+make mutate-full PKG=@vidya/api   # the whole package — hours; run it locally
 ```
 
 Both run incrementally against the baseline committed in `.stryker/incremental/`,
