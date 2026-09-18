@@ -22,15 +22,18 @@ import { useIonRouter } from '@ionic/vue'
 import { IonPage, IonButton } from '@ionic/vue'
 import { CongratsConfetti } from '@/design'
 
-// --- Interface -------------------------------------------------------------
+/* ---------------------------------- Props ----------------------------------- */
+
 defineProps<{
   id: string
 }>()
 
-// --- Dependencies ----------------------------------------------------------
+/* ---------------------------------- State ----------------------------------- */
+
 const router = useIonRouter()
 
-// --- Handlers --------------------------------------------------------------
+/* --------------------------------- Handlers --------------------------------- */
+
 function onGoToMyGroupsClicked() {
   router.navigate({ name: 'my-enrollments' }, 'root', 'pop')
 }

@@ -24,13 +24,13 @@ import { WizardGetSignInCodeByEmail, WizardSignInWithCode, SchoolOfDevotionLogo 
 import { StepsWizard } from '@/design'
 import { ref } from 'vue'
 
-// --- Dependencies ----------------------------------------------------------
-const router = useIonRouter()
+/* ---------------------------------- State ----------------------------------- */
 
-// --- State -----------------------------------------------------------------
+const router = useIonRouter()
 const authenticationStep = ref(0)
 
-// --- Handlers --------------------------------------------------------------
+/* --------------------------------- Handlers --------------------------------- */
+
 function onWizardGoBack() {
   authenticationStep.value -= 1
 }
