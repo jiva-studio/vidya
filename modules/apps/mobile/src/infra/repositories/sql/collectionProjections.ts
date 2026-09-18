@@ -1,9 +1,4 @@
-import {
-  isSyncCollection,
-  type SyncCollection,
-  SyncCollections,
-  type SyncPayload,
-} from '@vidya/domain'
+import type { SyncCollection, SyncPayload } from '@vidya/domain'
 
 import type { QueryValue, Row } from '@/ports'
 
@@ -196,16 +191,14 @@ export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionP
  *
  * Throws on a collection that does not replicate: reaching here with one is a
  * programming error, because every path that handles untrusted input checks
- * {@link isSyncCollection} and skips the row long before this point (T-X-1).
+ * `isSyncCollection` from the domain and skips the row long before this point
+ * (T-X-1) — the one guard, in the one place untrusted input arrives.
  */
 export function projectionOf(collection: SyncCollection): CollectionProjection {
   const projection = COLLECTION_PROJECTIONS[collection]
   if (projection === undefined) throw new Error(`No projection for collection: ${collection}`)
   return projection
 }
-
-/** Every collection has a projection — the completeness guard behind AC-13. */
-export const PROJECTED_COLLECTIONS: readonly SyncCollection[] = SyncCollections
 
 /** Names the fields a payload must carry for `collection` to be storable. */
 export function requiredFields(collection: SyncCollection): readonly string[] {
@@ -303,7 +296,3 @@ export function rowToPayload(collection: SyncCollection, row: Row): SyncPayload 
 
   return payload
 }
-
-/** Guard for untrusted input — a wire row naming a collection we do not have. */
-export const isProjectedCollection = (value: string): value is SyncCollection =>
-  isSyncCollection(value)

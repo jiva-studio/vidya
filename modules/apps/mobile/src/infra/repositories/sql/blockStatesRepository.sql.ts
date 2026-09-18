@@ -16,8 +16,7 @@ import type {
 } from '@/ports'
 
 import type { UtcClock } from '../../persistence/migrations'
-import { rowToPayload } from './collectionProjections'
-import { readSyncRow, readSyncRows, writeSyncRow } from './rowWriter'
+import { readSyncRows, writeSyncRow } from './rowWriter'
 
 /**
  * Local reads and writes over `block_states` — where the student is inside a
@@ -101,16 +100,6 @@ export function createSqlBlockStateRepository(
       return toBlockState(payload)
     },
   }
-}
-
-/** Reads one row by its document id — the addressing the sync engine uses. */
-export async function readBlockStateById(
-  db: IDatabase,
-  owner: string,
-  id: string,
-): Promise<LocalBlockState | null> {
-  const row = await readSyncRow(db, { owner, collection: 'block_states', docId: id })
-  return row === null ? null : toBlockState(rowToPayload('block_states', row))
 }
 
 function toBlockState(payload: SyncPayload): LocalBlockState {
