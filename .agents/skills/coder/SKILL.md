@@ -75,19 +75,32 @@ things it forbids, because they are the four that keep happening:
 
 ## Phase 4: Gatekeeper (strict)
 
-Before reporting the task complete, run the project gate from the repository root:
+While working, use the narrow gate — the same four stages against the one
+workspace you are changing:
+
+```bash
+make check-package PKG=@vidya/api
+```
+
+Before reporting the task complete, run the full gate from the repository root,
+and the mutation score on what you changed:
 
 ```bash
 make check
+make mutate-diff PKG=@vidya/api
 ```
 
-The [`../makefile/SKILL.md`](../makefile/SKILL.md) skill documents what this
-project's gate chains and which targets exist for a faster inner loop.
+The [`../makefile/SKILL.md`](../makefile/SKILL.md) skill documents every target.
 
-**A partial gate is not a gate.** Running only the linter or only one package's
-tests leaves the rest unverified, and a change that satisfies one stage routinely
-fails another — a decomposition that fixes a line-count violation still has to
-compile, stay formatted and keep the tests green.
+**A partial gate is not a gate.** `check-package` is the inner loop and not a
+substitute: a package's own tests say nothing about the packages that import it,
+and a change that satisfies one stage routinely fails another — a decomposition
+that fixes a line-count violation still has to compile, stay formatted and keep
+the rest of the workspace green.
+
+**A green suite is not the same as a tested change.** `mutate-diff` breaks your
+new code on purpose and checks that something fails. If a mutant survives, the
+suite is passing for a reason unrelated to the behaviour you added.
 
 If any check fails, fix the violation and re-run until the gate exits 0. Report
 the result honestly: if something is still failing, say which and why, rather
