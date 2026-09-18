@@ -1,0 +1,173 @@
+import { Mapper } from '@automapper/core'
+import { InjectMapper } from '@automapper/nestjs'
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { Authentication } from '@vidya/api/auth/decorators'
+import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
+import { UserAuthentication } from '@vidya/api/auth/utils'
+import * as dto from '@vidya/api/edu/dto'
+import { CoursesService, GroupsService } from '@vidya/api/edu/services'
+import { CrudDecorators } from '@vidya/api/shared/decorators'
+import * as entities from '@vidya/entities'
+import { Routes } from '@vidya/protocol'
+
+const Crud = CrudDecorators({
+  entityName: 'Group',
+  getOneResponseDto: dto.GetGroupResponse,
+  getManyResponseDto: dto.GetGroupsResponse,
+  createOneResponseDto: dto.CreateGroupResponse,
+  updateOneResponseDto: dto.UpdateGroupResponse,
+  deleteOneResponseDto: dto.DeleteGroupResponse,
+})
+
+@Controller()
+@ApiTags('🎓 Education :: Groups')
+@ApiBearerAuth()
+@UseGuards(AuthenticatedUserGuard)
+export class GroupsController {
+  constructor(
+    private readonly groups: GroupsService,
+    private readonly courses: CoursesService,
+    @InjectMapper() private readonly mapper: Mapper,
+  ) {}
+
+  /* -------------------------------------------------------------------------- */
+  /*                            GET /edu/groups/:id                            */
+  /* -------------------------------------------------------------------------- */
+
+  @Crud.GetOne(Routes().edu.groups.get(':id'))
+  async getOne(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Authentication() auth: UserAuthentication,
+  ): Promise<dto.GetGroupResponse> {
+    if (!auth.permissions.has(['groups:read'])) {
+      throw new ForbiddenException('User does not have permission')
+    }
+
+    const group = await this.groups
+      .scopedBy({ permissions: auth.permissions })
+      .findOne({ where: { id } })
+
+    if (!group) {
+      throw new NotFoundException(`Group with id ${id} not found`)
+    }
+
+    return this.mapper.map(group, entities.Group, dto.GetGroupResponse)
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                              GET /edu/groups                              */
+  /* -------------------------------------------------------------------------- */
+
+  @Crud.GetMany(Routes().edu.groups.find())
+  async getMany(
+    @Query() query: dto.GetGroupsQuery,
+    @Authentication() auth: UserAuthentication,
+  ): Promise<dto.GetGroupsResponse> {
+    if (!auth.permissions.has(['groups:read'])) {
+      throw new ForbiddenException('User does not have permission')
+    }
+
+    const groups = await this.groups
+      .scopedBy({ permissions: auth.permissions })
+      .findAll({ where: { courseId: query.courseId } })
+
+    return {
+      items: groups.map((c) => this.mapper.map(c, entities.Group, dto.GroupSummary)),
+    }
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                              POST /edu/groups                             */
+  /* -------------------------------------------------------------------------- */
+
+  @Crud.CreateOne(Routes().edu.groups.create())
+  async createOne(
+    @Body() request: dto.CreateGroupRequest,
+    @Authentication() auth: UserAuthentication,
+  ): Promise<dto.CreateGroupResponse> {
+    // A group belongs to a course, and the course carries the school. The
+    // request does not name a school, so it is read from the course the caller
+    // must already be allowed to see.
+    const course = await this.courses
+      .scopedBy({ permissions: auth.permissions })
+      .findOne({ where: { id: request.courseId } })
+
+    if (!course) {
+      throw new NotFoundException(`Course with id ${request.courseId} not found`)
+    }
+
+    if (!auth.permissions.has(['groups:create'], { schoolId: course.schoolId })) {
+      throw new ForbiddenException('User does not have permission')
+    }
+
+    const created = await this.groups.create({
+      courseId: request.courseId,
+      name: request.name,
+      description: request.description,
+      schoolId: course.schoolId,
+    })
+
+    return this.mapper.map(created, entities.Group, dto.CreateGroupResponse)
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                           PATCH /edu/groups/:id                           */
+  /* -------------------------------------------------------------------------- */
+
+  @Crud.UpdateOne(Routes().edu.groups.update(':id'))
+  async updateOne(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() request: dto.UpdateGroupRequest,
+    @Authentication() auth: UserAuthentication,
+  ): Promise<dto.UpdateGroupResponse> {
+    if (!auth.permissions.has(['groups:update'])) {
+      throw new ForbiddenException('User does not have permission')
+    }
+
+    const group = await this.groups
+      .scopedBy({ permissions: auth.permissions })
+      .findOne({ where: { id } })
+
+    if (!group) {
+      throw new NotFoundException(`Group with id ${id} not found`)
+    }
+
+    const updated = await this.groups.updateOneBy({ id }, request)
+    return this.mapper.map(updated, entities.Group, dto.UpdateGroupResponse)
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                          DELETE /edu/groups/:id                           */
+  /* -------------------------------------------------------------------------- */
+
+  @Crud.DeleteOne(Routes().edu.groups.delete(':id'))
+  async deleteOne(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Authentication() auth: UserAuthentication,
+  ): Promise<dto.DeleteGroupResponse> {
+    if (!auth.permissions.has(['groups:delete'])) {
+      throw new ForbiddenException('User does not have permission')
+    }
+
+    const group = await this.groups
+      .scopedBy({ permissions: auth.permissions })
+      .findOne({ where: { id } })
+
+    if (!group) {
+      throw new NotFoundException(`Group with id ${id} not found`)
+    }
+
+    await this.groups.deleteOneBy({ id })
+    return { success: true }
+  }
+}

@@ -56,11 +56,10 @@ db-run:
 db-drop:
 	./scripts/vidya-db-drop
 
+# Migrations are applied by the API at startup; this target exists for the case
+# where you want the schema without running the service.
 db-migrate:
 	./scripts/vidya-db-migrations-run
-
-db-migrate-generate:
-	./scripts/vidya-db-migrations-generate
 
 seed:
 	$(NPM) run seed -w @vidya/seeder

@@ -37,6 +37,55 @@ export const Routes = (baseUrl: string = '') => ({
         delete: (roleId: string) => `${baseUrl}/edu/users/${userId}/schools/${roleId}`,
       },
     }),
+    courses: {
+      find: () => `${baseUrl}/edu/courses`,
+      get: (id: string) => `${baseUrl}/edu/courses/${id}`,
+      create: () => `${baseUrl}/edu/courses`,
+      update: (id: string) => `${baseUrl}/edu/courses/${id}`,
+      delete: (id: string) => `${baseUrl}/edu/courses/${id}`,
+    },
+    lessons: {
+      find: () => `${baseUrl}/edu/lessons`,
+      get: (id: string) => `${baseUrl}/edu/lessons/${id}`,
+      create: () => `${baseUrl}/edu/lessons`,
+      update: (id: string) => `${baseUrl}/edu/lessons/${id}`,
+      delete: (id: string) => `${baseUrl}/edu/lessons/${id}`,
+      versions: {
+        all: (lessonId: string) => `${baseUrl}/edu/lessons/${lessonId}/versions`,
+        get: (lessonId: string, versionId: string) =>
+          `${baseUrl}/edu/lessons/${lessonId}/versions/${versionId}`,
+        create: (lessonId: string) => `${baseUrl}/edu/lessons/${lessonId}/versions`,
+        update: (lessonId: string, versionId: string) =>
+          `${baseUrl}/edu/lessons/${lessonId}/versions/${versionId}`,
+        publish: (lessonId: string, versionId: string) =>
+          `${baseUrl}/edu/lessons/${lessonId}/versions/${versionId}/publish`,
+      },
+    },
+    groups: {
+      find: () => `${baseUrl}/edu/groups`,
+      get: (id: string) => `${baseUrl}/edu/groups/${id}`,
+      create: () => `${baseUrl}/edu/groups`,
+      update: (id: string) => `${baseUrl}/edu/groups/${id}`,
+      delete: (id: string) => `${baseUrl}/edu/groups/${id}`,
+    },
+    enrollments: {
+      find: () => `${baseUrl}/edu/enrollments`,
+      get: (id: string) => `${baseUrl}/edu/enrollments/${id}`,
+      create: () => `${baseUrl}/edu/enrollments`,
+      moderate: (id: string) => `${baseUrl}/edu/enrollments/${id}/moderation`,
+      group: (id: string) => `${baseUrl}/edu/enrollments/${id}/group`,
+      delete: (id: string) => `${baseUrl}/edu/enrollments/${id}`,
+    },
+    homework: {
+      find: () => `${baseUrl}/edu/homework`,
+      get: (id: string) => `${baseUrl}/edu/homework/${id}`,
+      submit: () => `${baseUrl}/edu/homework`,
+      review: (id: string) => `${baseUrl}/edu/homework/${id}/review`,
+    },
+    progress: {
+      find: () => `${baseUrl}/edu/progress`,
+      save: () => `${baseUrl}/edu/progress`,
+    },
     schools: {
       configs: {
         getAll: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/configs`,

@@ -8,6 +8,7 @@ import {
   DbConfig,
   JwtConfig,
   MailerConfig,
+  MigrationsConfig,
   OtpConfig,
   RedisConfig,
 } from '@vidya/api/configs'
@@ -20,7 +21,15 @@ import { EduModule } from './edu/edu.module'
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [DbConfig, OtpConfig, RedisConfig, JwtConfig, AuthConfig, MailerConfig],
+      load: [
+        DbConfig,
+        OtpConfig,
+        RedisConfig,
+        JwtConfig,
+        AuthConfig,
+        MailerConfig,
+        MigrationsConfig,
+      ],
     }),
     AutomapperModule.forRoot({
       strategyInitializer: classes(),

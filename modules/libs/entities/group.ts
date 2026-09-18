@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 import { Course } from './course'
+import { School } from './school'
 
 export enum GroupStatus {
   Pending = 'pending',
@@ -25,6 +26,13 @@ export class Group {
   @ManyToOne(() => Course)
   @JoinColumn()
   course: Course
+
+  @Column({ nullable: false })
+  schoolId: string
+
+  @ManyToOne(() => School)
+  @JoinColumn()
+  school: School
 
   @Column({ nullable: true })
   startsAt: Date
