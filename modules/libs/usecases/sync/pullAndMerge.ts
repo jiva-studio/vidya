@@ -102,7 +102,11 @@ export async function pullAndMerge(
     }
   }
 
-  totals.ackFailed = await acknowledge(deps, deviceId)
+  // Not while the device is taking the database back: the acknowledgement is a
+  // hint, and taking a lock on the way into the background is the one thing
+  // D-14 forbids. The next run repeats it.
+  totals.ackFailed = totals.paused ? false : await acknowledge(deps, deviceId)
+
   return toResult(totals)
 }
 

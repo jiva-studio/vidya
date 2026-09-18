@@ -2,6 +2,7 @@ import type { SyncScopeRef } from '@vidya/domain'
 import { syncScopeKey } from '@vidya/domain'
 
 import {
+  isSyncPausedError,
   isSyncTransportError,
   type MillisClock,
   type Random,
@@ -143,6 +144,14 @@ async function cycle(deps: SyncRunnerDeps, policy: RetryPolicy): Promise<SyncRun
   }
 }
 
+/**
+ * The safety net for a suspend the halves did not catch themselves.
+ *
+ * A suspended database is not a failure and must not count towards the circuit
+ * breaker: the app is going into the background, not the server going away.
+ */
+const pausedRun = (): SyncRunResult => idle('paused')
+
 /** Push, pull, and refetch any scope whose checksum disagreed. */
 async function attempt(deps: SyncRunnerDeps): Promise<SyncRunResult> {
   const push = await pushLocal(deps)
@@ -197,6 +206,8 @@ async function handle(
   policy: RetryPolicy,
   error: unknown,
 ): Promise<SyncRunResult> {
+  if (isSyncPausedError(error)) return pausedRun()
+
   if (!isSyncTransportError(error)) {
     return { ...idle('retryLater', policy.recordFailure()), failure: error }
   }

@@ -1,0 +1,492 @@
+import type { HomeworkId, SyncPayload } from '@vidya/domain'
+import { asId, syncScopeKey } from '@vidya/domain'
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import { openTestDatabase } from '@/infra/persistence/testing'
+
+import {
+  COURSE_ID,
+  COURSE_SCOPE,
+  ENROLLMENT_ID,
+  HOMEWORK_ID,
+  LESSON_ID,
+  LESSON_VERSION_ID,
+  SCHOOL_ID,
+  SECTION_ID,
+  serverHlc,
+  USER_SCOPE,
+} from './fakeSyncServer'
+import { failingDatabase, type Harness, openHarness, OWNER } from './harness'
+
+/**
+ * Pulling and merging: T-M-6, T-M-7, T-M-11, T-M-15, T-M-22, T-M-24, T-M-26,
+ * T-M-27, and the crooked-data family T-X-1 … T-X-14.
+ *
+ * All of it against real SQLite, because the claims are about transactions,
+ * cursors and what survives a rollback — none of which a fake repository has.
+ */
+
+const homework = (fields: SyncPayload = {}): SyncPayload => ({
+  id: HOMEWORK_ID,
+  schoolId: SCHOOL_ID,
+  enrollmentId: ENROLLMENT_ID,
+  lessonVersionId: LESSON_VERSION_ID,
+  sectionId: SECTION_ID,
+  status: 'open',
+  text: '',
+  ...fields,
+})
+
+const version = (fields: SyncPayload = {}): SyncPayload => ({
+  id: LESSON_VERSION_ID,
+  schoolId: SCHOOL_ID,
+  lessonId: LESSON_ID,
+  version: 3,
+  status: 'published',
+  content: { schemaVersion: 1, sections: [] },
+  ...fields,
+})
+
+const course = (fields: SyncPayload = {}): SyncPayload => ({
+  id: COURSE_ID,
+  schoolId: SCHOOL_ID,
+  name: 'Bhagavad-gita',
+  learningType: 'group',
+  ...fields,
+})
+
+const answerKey = {
+  enrollmentId: asId<never>(ENROLLMENT_ID),
+  lessonVersionId: asId<never>(LESSON_VERSION_ID),
+  sectionId: asId<never>(SECTION_ID),
+}
+
+describe('pulling a page', () => {
+  let harness: Harness
+
+  beforeEach(async () => {
+    harness = await openHarness()
+  })
+
+  it('T-M-6: applying a pull journals nothing — there is no echo', async () => {
+    harness.server.journal({
+      collection: 'courses',
+      docId: COURSE_ID,
+      scope: COURSE_SCOPE,
+      data: course(),
+    })
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: homework({ text: 'from the other phone' }),
+    })
+
+    await harness.engine.runner.run()
+
+    expect(await harness.count('outbox')).toBe(0)
+    expect(harness.server.pushRequests.flatMap((request) => request.changes)).toEqual([])
+    expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('from the other phone')
+  })
+
+  it('T-M-7: an incoming row below the recorded HLC does not roll the document back', async () => {
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      hlc: serverHlc(500),
+      data: homework({ text: 'tuesday' }),
+    })
+    await harness.engine.runner.run()
+    expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('tuesday')
+
+    // The backfill hands over current state while the journal hands over
+    // history; monday must not land on top of tuesday (D-4).
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      hlc: serverHlc(100),
+      data: homework({ text: 'monday' }),
+    })
+    const result = await harness.engine.runner.run()
+
+    expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('tuesday')
+    expect(result.pull?.stale).toBe(1)
+    expect(result.pull?.applied).toBe(0)
+  })
+
+  it('T-M-11: an arriving review status does not wipe out unsent text', async () => {
+    await harness.engine.homework.saveAnswer({
+      id: asId<HomeworkId>(HOMEWORK_ID),
+      schoolId: asId<never>(SCHOOL_ID),
+      ...answerKey,
+      text: 'not sent yet',
+    })
+
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: homework({ status: 'in_review', text: 'an older copy', grade: null }),
+    })
+
+    // Pull only. A full run would push the answer first, and then there would
+    // be no unsent write left to protect — which is a different test.
+    await harness.engine.pull()
+
+    expect(harness.server.pushRequests).toHaveLength(0)
+
+    const row = await harness.row('homework', HOMEWORK_ID)
+    expect(row!.text).toBe('not sent yet')
+    expect(row!.status).toBe('in_review')
+  })
+
+  it('T-M-15: a lesson version tombstone does not take the homework with it', async () => {
+    harness.server.journal({
+      collection: 'lesson_versions',
+      docId: LESSON_VERSION_ID,
+      scope: COURSE_SCOPE,
+      data: version(),
+    })
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: homework({ text: 'answered against version 3' }),
+    })
+    await harness.engine.runner.run()
+
+    harness.server.journal({
+      collection: 'lesson_versions',
+      docId: LESSON_VERSION_ID,
+      scope: COURSE_SCOPE,
+      op: 'delete',
+    })
+    await harness.engine.runner.run()
+
+    const tombstoned = await harness.row('lesson_versions', LESSON_VERSION_ID)
+    expect(tombstoned!.deleted_at).not.toBeNull()
+
+    const answer = await harness.row('homework', HOMEWORK_ID)
+    expect(answer).not.toBeNull()
+    expect(answer!.text).toBe('answered against version 3')
+  })
+
+  it('T-M-22: a child arriving before its parent applies, and the whole page stands', async () => {
+    // Homework rides the `user` scope, the version rides `course`. The
+    // positions move independently, so this order is legal (D-13).
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: homework({ text: 'answered early' }),
+    })
+
+    const result = await harness.engine.runner.run()
+
+    expect(result.pull?.applied).toBe(1)
+    expect(await harness.row('homework', HOMEWORK_ID)).not.toBeNull()
+    // The parent is simply absent; the reader says so rather than throwing.
+    expect(await harness.engine.lessonVersions.getById(asId<never>(LESSON_VERSION_ID))).toBeNull()
+  })
+
+  it('T-M-24: the transaction does not outlive one page', async () => {
+    harness.server.pageSize = 1
+    for (let index = 0; index < 3; index += 1) {
+      harness.server.journal({
+        collection: 'lessons',
+        docId: lessonId(index),
+        scope: COURSE_SCOPE,
+        data: { id: lessonId(index), schoolId: SCHOOL_ID, courseId: COURSE_ID, title: `L${index}` },
+      })
+    }
+
+    // The app goes to the background after the first page. If the run held one
+    // transaction across the pages, the committed page would not be there.
+    harness.server.onPull = async (index) => {
+      if (index === 1) await harness.db.suspend()
+    }
+
+    const first = await harness.engine.runner.run()
+    expect(first.outcome).toBe('paused')
+    expect(await harness.count('lessons')).toBe(1)
+
+    harness.db.resume()
+    harness.server.onPull = null
+    const second = await harness.engine.runner.run()
+
+    expect(second.outcome).toBe('completed')
+    expect(await harness.count('lessons')).toBe(3)
+    // Resumed from the stored position, not from the beginning.
+    expect(harness.server.pullRequests[1]!.cursors[syncScopeKey(COURSE_SCOPE)]).toBe(1)
+  })
+
+  it('T-M-26: the scope position and the page commit together', async () => {
+    const database = await openTestDatabase()
+    const broken = await openHarness({
+      db: failingDatabase(database.db, (sql) => sql.includes('INTO sync_scopes')),
+      server: harness.server,
+    })
+    harness.server.journal({
+      collection: 'courses',
+      docId: COURSE_ID,
+      scope: COURSE_SCOPE,
+      data: course(),
+    })
+
+    await broken.engine.runner.run()
+
+    // Neither half landed: no row, and no position claiming there is one.
+    expect(await broken.count('courses')).toBe(0)
+    expect(await broken.count('sync_scopes')).toBe(0)
+  })
+
+  it('T-M-27: hasMore with an empty page stops the loop instead of spinning', async () => {
+    harness.server.journal({
+      collection: 'courses',
+      docId: COURSE_ID,
+      scope: COURSE_SCOPE,
+      data: course(),
+    })
+    await harness.engine.runner.run()
+
+    const before = harness.server.pullRequests.length
+    harness.server.alwaysHasMore = true
+    const result = await harness.engine.runner.run()
+
+    expect(harness.server.pullRequests.length - before).toBe(1)
+    expect(result.pull?.pages).toBe(1)
+    expect(result.pull?.reachedEnd).toBe(false)
+  })
+})
+
+describe('crooked data from the server', () => {
+  let harness: Harness
+
+  beforeEach(async () => {
+    harness = await openHarness()
+    // A scope the device already knows, so a page cannot count as progress
+    // merely by reporting a new one.
+    harness.server.journal({
+      collection: 'courses',
+      docId: COURSE_ID,
+      scope: COURSE_SCOPE,
+      data: course(),
+    })
+    harness.server.grant(USER_SCOPE)
+    await harness.engine.runner.run()
+  })
+
+  const skipped = async (): Promise<string[]> => {
+    const result = await harness.engine.runner.run()
+    return (result.pull?.skipped ?? []).map((row) => row.reason)
+  }
+
+  it('T-X-1: an unknown collection is skipped, the position still advances', async () => {
+    harness.server.malformed({ collection: 'grimoires', scope: USER_SCOPE })
+
+    expect(await skipped()).toEqual(['unknownCollection'])
+    const scopes = await harness.engine.state.listScopes()
+    expect(scopes.find((scope) => scope.scope.kind === 'user')!.cursor).toBeGreaterThan(0)
+  })
+
+  it('T-X-2: an unknown field is ignored and the row still lands', async () => {
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: homework({ text: 'fine', astrologicalSign: 'libra' }),
+    })
+
+    const result = await harness.engine.runner.run()
+    expect(result.pull?.applied).toBe(1)
+    expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('fine')
+  })
+
+  it('T-X-3: a row missing a field that addresses it is skipped', async () => {
+    harness.server.malformed({
+      collection: 'homework',
+      scope: USER_SCOPE,
+      data: { id: HOMEWORK_ID, schoolId: SCHOOL_ID, text: 'no enrolment, no section' },
+    })
+
+    expect(await skipped()).toEqual(['missingField'])
+    expect(await harness.count('homework')).toBe(0)
+  })
+
+  it('T-X-4: an upsert with null data is skipped', async () => {
+    harness.server.malformed({
+      collection: 'homework',
+      scope: USER_SCOPE,
+      op: 'upsert',
+      data: null,
+    })
+    expect(await skipped()).toEqual(['missingData'])
+  })
+
+  it('T-X-5: an unparseable HLC is skipped', async () => {
+    harness.server.malformed({ scope: USER_SCOPE, hlc: 'yesterday', data: homework() })
+    expect(await skipped()).toEqual(['invalidHlc'])
+  })
+
+  it('T-X-6: a docId that is not a uuid is skipped', async () => {
+    harness.server.malformed({ scope: USER_SCOPE, docId: 'the-one-i-wrote', data: homework() })
+    expect(await skipped()).toEqual(['invalidDocId'])
+  })
+
+  it('T-X-7: an unknown content schemaVersion is stored whole, not truncated', async () => {
+    harness.server.journal({
+      collection: 'lesson_versions',
+      docId: LESSON_VERSION_ID,
+      scope: COURSE_SCOPE,
+      data: version({ content: { schemaVersion: 99, sections: [], newShape: ['?'] } }),
+    })
+
+    await harness.engine.runner.run()
+    const stored = await harness.engine.lessonVersions.getById(asId<never>(LESSON_VERSION_ID))
+
+    expect(stored!.content).toMatchObject({ schemaVersion: 99, newShape: ['?'] })
+  })
+
+  it('T-X-8: an unfamiliar status value is stored as it came', async () => {
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: homework({ status: 'awaiting_oracle' }),
+    })
+
+    await harness.engine.runner.run()
+    expect((await harness.row('homework', HOMEWORK_ID))!.status).toBe('awaiting_oracle')
+  })
+
+  it('T-X-9: a duplicated serverSeq on one page applies once', async () => {
+    const payload = homework({ text: 'said twice' })
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: payload,
+    })
+    harness.server.malformed({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      serverSeq: harness.server.rows.at(-1)!.serverSeq,
+      hlc: harness.server.rows.at(-1)!.hlc,
+      data: payload,
+    })
+
+    const result = await harness.engine.runner.run()
+
+    expect(result.pull?.applied).toBe(1)
+    expect(result.pull?.stale).toBe(1)
+    expect(await harness.count('homework')).toBe(1)
+  })
+
+  it('T-X-10: rows out of sequence still leave the position at the maximum', async () => {
+    harness.server.malformed({
+      collection: 'lessons',
+      docId: lessonId(1),
+      scope: COURSE_SCOPE,
+      serverSeq: 900,
+      data: { id: lessonId(1), schoolId: SCHOOL_ID, courseId: COURSE_ID, title: 'later' },
+    })
+    harness.server.malformed({
+      collection: 'lessons',
+      docId: lessonId(2),
+      scope: COURSE_SCOPE,
+      serverSeq: 400,
+      data: { id: lessonId(2), schoolId: SCHOOL_ID, courseId: COURSE_ID, title: 'earlier' },
+    })
+
+    await harness.engine.runner.run()
+
+    const scopes = await harness.engine.state.listScopes()
+    expect(scopes.find((scope) => scope.scope.kind === 'course')!.cursor).toBe(900)
+  })
+
+  it('T-X-11: an oversized payload is refused with a reason, not a crash', async () => {
+    harness.server.malformed({
+      collection: 'lesson_versions',
+      docId: LESSON_VERSION_ID,
+      scope: COURSE_SCOPE,
+      data: version({ content: { schemaVersion: 1, sections: ['x'.repeat(1_100_000)] } }),
+    })
+
+    expect(await skipped()).toEqual(['payloadTooLarge'])
+    expect(await harness.count('lesson_versions')).toBe(0)
+  })
+
+  it('T-X-12: unicode, emoji and RTL survive the round trip unchanged', async () => {
+    const text = 'श्री · 🙏🏽 · مرحبا · שלום'
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: homework({ text }),
+    })
+
+    await harness.engine.runner.run()
+    expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe(text)
+  })
+
+  it('T-X-13: a very long answer hits the ceiling with a reason', async () => {
+    harness.server.malformed({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: homework({ text: '🙏'.repeat(300_000) }),
+    })
+
+    expect(await skipped()).toEqual(['payloadTooLarge'])
+  })
+
+  it('T-X-14: empty strings and empty arrays are stored, not defaulted away', async () => {
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: homework({ text: '', grade: null, submittedAt: null, reviewedById: null }),
+    })
+    harness.server.journal({
+      collection: 'lesson_versions',
+      docId: LESSON_VERSION_ID,
+      scope: COURSE_SCOPE,
+      data: version({ content: { schemaVersion: 1, sections: [] }, publishedAt: null }),
+    })
+
+    await harness.engine.runner.run()
+
+    const answer = await harness.row('homework', HOMEWORK_ID)
+    expect(answer!.text).toBe('')
+    expect(answer!.grade).toBeNull()
+
+    const stored = await harness.engine.lessonVersions.getById(asId<never>(LESSON_VERSION_ID))
+    expect(stored!.content.sections).toEqual([])
+    expect(stored!.publishedAt).toBeNull()
+  })
+
+  it('T-X-15: instants are stored in UTC and the device time zone changes nothing', async () => {
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: homework({ submittedAt: '2026-09-17T23:30:00.000Z' }),
+    })
+
+    await harness.engine.runner.run()
+    const stored = await harness.row('homework', HOMEWORK_ID)
+
+    expect(stored!.submitted_at).toBe('2026-09-17T23:30:00.000Z')
+    expect(String(stored!.submitted_at)).toMatch(/Z$/)
+  })
+})
+
+/** Ids that differ in their last digit and are still valid uuids. */
+const lessonId = (index: number): string =>
+  `c92b48e1-0f77-4d35-a8b2-6e1d3c05f4${String(80 + index).padStart(2, '0')}`
+
+/** Every outbox row belongs to the identity that wrote it, and only that one. */
+export const ownerOf = OWNER
