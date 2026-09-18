@@ -1,9 +1,10 @@
 import type { MenuGroup } from '@/shared/navigation'
 
 /**
- * Sidebar entries for roles. Owned by T2.
+ * Roles sit in the organisation group, which `pages/schools` declares.
  *
- * Each entry names the permission it needs; the sidebar hides what the current
- * school does not grant.
+ * The sidebar draws one heading per group, so three sections declaring the
+ * same heading would draw it three times. The entry for this section lives in
+ * that one group; its label is defined by this section's own resources.
  */
 export const menu: MenuGroup[] = []

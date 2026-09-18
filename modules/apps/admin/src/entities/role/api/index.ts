@@ -1,2 +1,2 @@
-// Requests for the role entity. Owned by T2.
-export {}
+export type { RoleApi } from './roles'
+export { roleApi, useRoleApi } from './roles'

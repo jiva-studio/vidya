@@ -1,2 +1,4 @@
-// View model and rules for the role entity. Owned by T2.
-export {}
+export { actionOf, groupPermissions, prefixOf } from './permissionGroups'
+export { reason } from './reason'
+export type * from './types'
+export { useRoles } from './useRoles'
