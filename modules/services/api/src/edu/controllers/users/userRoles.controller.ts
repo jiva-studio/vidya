@@ -8,9 +8,7 @@ import { Routes } from '@vidya/protocol'
 
 import { toUserRoles } from '../../mappers/org.mapper'
 
-// TODO Add documentation configurations, to change doc:
-//      Get many UserRoles    -> Get all roles of a user
-//      Create a new UserRole -> Set roles for a user
+// TODO: relabel the generated Swagger operations for this resource.
 const Crud = CrudDecorators({
   entityName: 'UserRole',
   getManyResponseDto: dto.GetUserRolesListResponse,

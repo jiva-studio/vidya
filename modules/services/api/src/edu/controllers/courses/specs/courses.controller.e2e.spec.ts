@@ -47,8 +47,7 @@ describe('/edu/courses', () => {
   })
 
   it("hides another school's course behind a 404 rather than a 403", async () => {
-    // Answering 403 would confirm the id exists, which is a disclosure in a
-    // multi-tenant system: an id is enough to learn a competitor runs a course.
+    // A 403 would confirm the id exists, which in a multi-tenant system is a disclosure.
     return request(app.getHttpServer())
       .get(routes.get(ctx.two.courseId))
       .auth(ctx.one.tokens.admin, { type: 'bearer' })

@@ -112,8 +112,7 @@ export class LessonsController {
       schoolId: course.schoolId,
     })
 
-    // A lesson is useless without somewhere to write its content, so it starts
-    // life with an empty draft rather than making the editor create one.
+    // A lesson starts with an empty draft rather than making the editor create one.
     await this.versions.create({
       lessonId: created.id,
       version: 1,

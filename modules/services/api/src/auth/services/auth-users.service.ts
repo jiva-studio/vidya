@@ -91,9 +91,7 @@ export class AuthUsersService {
       const userRoles = await this.getRolesOfUser(userId)
       const permissions = toUserPermissions(userRoles)
 
-      // Cache the permissions if cache TTL is set to a positive value
-      // otherwise, users permissions will be fetched from the database
-      // on every request (which is good for development only)
+      // A non-positive TTL disables the cache, which is a development convenience.
       if (this.authConfig.userPermissionsCacheTtl > 0) {
         await this.redis.set(
           UserPermissionsStorageKey(userId),

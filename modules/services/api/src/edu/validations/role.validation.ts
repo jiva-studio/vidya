@@ -22,8 +22,7 @@ export class IsRoleExistConstraint implements ValidatorConstraintInterface {
   }
 
   defaultMessage(validationArguments?: ValidationArguments): string {
-    // TODO: Message is not clear. It joins all items in the array with a comma.
-    //       "Role 'ca2c9698-f740-4a24-9b35-b3b6d28a61ac,incorrecyt,ca2c9698-f740-4a24-9b35-b3b6d28a61ac' not found for 'roleIds'"
+    // TODO: the message joins the whole array with commas, so it reads as one absurd id.
     return `Role '${validationArguments.value}' not found for '${validationArguments.property}'`
   }
 }

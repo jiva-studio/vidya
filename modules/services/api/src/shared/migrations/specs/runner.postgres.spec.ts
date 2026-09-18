@@ -83,14 +83,13 @@ describeOnPostgres('runMigrations against Postgres', () => {
     const kept = await client.query("SELECT to_regclass('public.kept') AS t")
     const half = await client.query("SELECT to_regclass('public.half') AS t")
     expect(kept.rows[0].t).toBe('kept')
-    // The failing file ran two statements; the first would have survived without
-    // a transaction around the file.
+
+    // The failing file ran two statements; without a per-file transaction the first would survive.
     expect(half.rows[0].t).toBeNull()
   })
 
   it('serialises two runners so a migration is never applied twice', async () => {
-    // The property the in-memory suite cannot test: pg-mem's advisory lock is a
-    // stub that always succeeds, so concurrent runners would both proceed there.
+    // pg-mem's advisory lock is a stub that always succeeds, so only postgres proves this.
     const dir = migrations({
       '001_once.sql': 'CREATE TABLE only_once (id int)',
     })

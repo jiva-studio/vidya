@@ -75,6 +75,7 @@ describe('/edu/roles', () => {
       payload: { name: faker.lorem.paragraphs(5) },
       errors: ['name must be shorter than or equal to 32 characters'],
     },
+
     // Description
     {
       payload: { description: '' },
@@ -92,6 +93,7 @@ describe('/edu/roles', () => {
       payload: { permissions: ['*'] },
       errors: ['permissions cannot contain *'],
     },
+
     // Permissions
     {
       payload: { permissions: ['invalid'] },

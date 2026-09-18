@@ -144,8 +144,7 @@ export class LessonVersionsController {
     @Param('versionId', new ParseUUIDPipe()) versionId: string,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.PublishLessonVersionResponse> {
-    // Publishing freezes content that students then work against, so it is a
-    // separate permission from ordinary editing.
+    // Publishing freezes what students work against, so it is its own permission.
     if (!auth.permissions.has(['lessons:publish'])) {
       throw new ForbiddenException('User does not have permission')
     }

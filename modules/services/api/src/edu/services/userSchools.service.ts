@@ -24,12 +24,10 @@ export class UserSchoolsService {
     })
     const allUserRolesId = user.roles.map((role) => role.id)
 
-    // get all school roles for the user roles
     const schoolRoles = await this.roles.find({
       where: { id: In(allUserRolesId) },
     })
 
-    // return school ids from the school roles
     return schoolRoles.map((role) => role.schoolId)
   }
 

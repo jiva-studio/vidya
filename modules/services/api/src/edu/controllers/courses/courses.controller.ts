@@ -88,9 +88,7 @@ export class CoursesController {
     @Body() request: dto.CreateCourseRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.CreateCourseResponse> {
-    // A course is created inside a school, so the permission is checked against
-    // that school specifically — holding courses:create somewhere else is not
-    // authority here.
+    // The permission is checked against this school; holding it elsewhere is not authority.
     if (!auth.permissions.has(['courses:create'], { schoolId: request.schoolId })) {
       throw new ForbiddenException('User does not have permission')
     }

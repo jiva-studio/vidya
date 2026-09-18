@@ -64,8 +64,7 @@ export class OtpController {
 
     // send the OTP to the user
     if (request.type === 'email') {
-      // TODO: select template based on the users preferred language
-      // TODO: inject or save images from template somwhere
+      // TODO: pick the template by the user's language, and resolve its images.
       const lang = 'en'
       this.mailService.sendMail({
         from: {
@@ -83,7 +82,6 @@ export class OtpController {
       // send the OTP to the phone number
     }
 
-    // return success message
     return new dto.GetOtpResponse()
   }
 }

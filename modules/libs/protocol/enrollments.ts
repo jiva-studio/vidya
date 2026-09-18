@@ -9,11 +9,10 @@ import * as crud from './crud'
 export type EnrollmentDetails = {
   id: string
   courseId: string
-  /**
-   * Empty until a group is assigned. A student may be accepted onto a course
-   * before any suitable group exists and waits in the queue until one does.
-   */
+
+  /** Empty until a group is assigned; an accepted student waits in the queue. */
   groupId?: string
+
   studentId: string
   schoolId: string
   status: domain.EnrollmentStatus

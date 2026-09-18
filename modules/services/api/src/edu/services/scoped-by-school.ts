@@ -14,8 +14,7 @@ import { Scope } from './entities.service'
 export const scopedBySchool =
   <TEntity extends { schoolId: string }>(permission: PermissionKey) =>
   (query: FindManyOptions<TEntity>, scope: Scope): FindManyOptions<TEntity> => {
-    // FindOptionsWhere<TEntity> does not surface the entity's own fields here,
-    // so the cast is how we read back what the caller asked for.
+    // FindOptionsWhere<TEntity> does not surface the entity's own fields, hence the cast.
     const requested = (query?.where as { schoolId?: string })?.schoolId
 
     const scopes = scope.permissions

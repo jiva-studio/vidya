@@ -30,8 +30,8 @@ export const PermissionKeys = [
   'lessons:read',
   'lessons:update',
   'lessons:delete',
-  // Publishing freezes a version students then work against, so it is granted
-  // separately from ordinary editing.
+
+  // Publishing freezes what students work against, so it is its own permission.
   'lessons:publish',
 
   // Groups
@@ -42,6 +42,7 @@ export const PermissionKeys = [
 
   // Enrollments
   'enrollments:read',
+
   // Accepting or declining a request, and moving a student between groups.
   'enrollments:moderate',
 

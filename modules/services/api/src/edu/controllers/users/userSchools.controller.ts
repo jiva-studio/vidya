@@ -17,9 +17,7 @@ import { Routes } from '@vidya/protocol'
 
 import { UserExistsPipe } from '../../pipes'
 
-// TODO Add documentation configurations, to change doc:
-//      Get many UserSchools    -> Get all schools of a user
-//      Create a new UserSchool -> Set schools for a user
+// TODO: relabel the generated Swagger operations for this resource.
 const Crud = CrudDecorators({
   entityName: 'UserSchools',
   getManyResponseDto: dto.GetUserSchoolsListResponse,

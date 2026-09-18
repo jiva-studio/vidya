@@ -94,8 +94,7 @@ export class HomeworkController {
       return { items: toHomeworkSummaries(found) }
     }
 
-    // A student without the permission sees only their own work, which is found
-    // through their enrollments rather than by trusting an id in the query.
+    // Without the permission a student sees only their own work, found via enrollments.
     const mine = await this.enrollments.findAll({ where: { studentId: auth.userId } })
     const found = await this.homework.forEnrollments(mine, query.status)
 

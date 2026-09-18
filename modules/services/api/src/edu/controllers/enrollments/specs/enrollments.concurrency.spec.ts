@@ -38,8 +38,7 @@ describeOnPostgres('/edu/enrollments under concurrency', () => {
 
     const responses = await Promise.all([enrol(), enrol()])
 
-    // One wins. The other must be refused — never a second row, and never a
-    // raw 500 leaking the constraint name.
+    // One wins; the other is refused — never a second row, never a raw constraint 500.
     const statuses = responses.map((r) => r.status).sort()
     expect(statuses[0]).toBe(201)
     expect(statuses[1]).not.toBe(201)

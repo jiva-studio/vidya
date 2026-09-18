@@ -84,8 +84,7 @@ export class EnrollmentsController {
       status: query.status,
     }
 
-    // Staff see the school's enrollments; everyone else sees their own, which is
-    // how a student reads the status of a request they made.
+    // Staff see the school's enrollments; everyone else sees only their own.
     const found = auth.permissions.has(['enrollments:read'])
       ? await this.enrollments
           .scopedBy({ permissions: auth.permissions })

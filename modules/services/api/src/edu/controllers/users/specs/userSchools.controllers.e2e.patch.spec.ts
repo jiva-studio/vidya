@@ -35,17 +35,15 @@ describe('/edu/users/:id/schools', () => {
   })
 
   it(`PATCH /edu/users/:id/schools returns 403 for unauthorized user`, async () => {
-    return (
-      request(app.getHttpServer())
-        .patch(Routes().edu.user(ctx.one.users.oneAdmin.id).schools.create())
-        .set('Authorization', await ctx.getAuthTokenFor(ctx.two.users.twoAdmin))
-        .send({ schoolId: ctx.two.school.id })
-        // .expect(403)
-        .expect({
-          message: 'User does not have permission',
-          error: 'Forbidden',
-          statusCode: 403,
-        })
-    )
+    return request(app.getHttpServer())
+      .patch(Routes().edu.user(ctx.one.users.oneAdmin.id).schools.create())
+      .set('Authorization', await ctx.getAuthTokenFor(ctx.two.users.twoAdmin))
+      .send({ schoolId: ctx.two.school.id })
+      .expect(403)
+      .expect({
+        message: 'User does not have permission',
+        error: 'Forbidden',
+        statusCode: 403,
+      })
   })
 })

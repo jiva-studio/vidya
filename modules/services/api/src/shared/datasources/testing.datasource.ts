@@ -78,10 +78,7 @@ const inMemoryDataSource = async (): Promise<DataSource> => {
     impure: true,
   })
 
-  // pg-mem is single-session by construction, so there is nothing for an
-  // advisory lock to serialise. The calls still have to resolve, or the runner
-  // fails before it reaches the first migration — which is exactly why the
-  // lock's real behaviour is only provable under `VIDYA_TEST_DB=postgres`.
+  // pg-mem is single-session, so these only need to resolve; the lock is proved under postgres.
   for (const name of ['pg_advisory_lock', 'pg_advisory_unlock']) {
     db.public.registerFunction({
       name,
@@ -168,14 +165,11 @@ const ensureDatabase = async (database: string): Promise<void> => {
     const { rows } = await admin.query('SELECT 1 FROM pg_database WHERE datname = $1', [database])
 
     if (rows.length === 0) {
-      // Not parameterisable: CREATE DATABASE takes an identifier, not a value.
-      // The name is built from a worker id we generated, never from input.
+      // CREATE DATABASE takes an identifier, not a value; the name is our own worker id.
       await admin.query(`CREATE DATABASE "${database}"`)
     }
   } catch (error) {
-    // Two workers can reach this at the same moment on a cold database; the
-    // loser sees a duplicate and can carry on, because the database it wanted
-    // now exists.
+    // Two workers can race here on a cold database; the loser carries on, the database exists.
     if (!/already exists/.test((error as Error).message)) throw error
   } finally {
     await admin.end()

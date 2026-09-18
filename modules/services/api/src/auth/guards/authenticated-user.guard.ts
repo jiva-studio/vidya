@@ -41,8 +41,7 @@ export class AuthenticatedUserGuard implements CanActivate {
         throw new UnauthorizedException()
       }
 
-      // Create final access token object with user permissions
-      // (if not already present in the token)
+      // A token minted before the permissions claim existed still has to resolve them.
       const userPermissions = accessToken.permissions
         ? accessToken.permissions
         : await this.usersService.getUserPermissions(accessToken.sub)

@@ -12,19 +12,14 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
     @InjectRepository(UserRole) private userRolesRepo: Repository<UserRole>,
   ) {
     super(repository, (query, scope) => {
-      // HACK: For some reason FindOptionsWhere<Role> doesn't
-      //       work here, so we have to cast it to any. It doesn't contain
-      //       any fields like id, name, etc. But it should.
+      // FindOptionsWhere<Role> does not surface the entity's own fields, hence the cast.
       const { schoolId } = query?.where as any
 
-      // Get all scopes that have the required permission
-      // and match the school ids in the query if they are provided
       const scopes = scope.permissions
         .getScopes(['roles:read'])
         .filter((s) => !schoolId || s.schoolId === schoolId)
 
-      // Return the query with the scopes applied or an empty query
-      // if no scopes were found for the user permissions
+      // No scope means no access, so the empty list is a deliberate fail-closed result.
       return scopes.length > 0
         ? {
             where: scopes.map((s) => ({

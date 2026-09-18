@@ -72,8 +72,7 @@ describe('/edu/lessons/:lessonId/versions', () => {
   /* -------------------------------------------------------------------------- */
 
   it('requires a separate permission to publish', () => {
-    // Editing a draft and freezing content students will work against are
-    // different acts of authority.
+    // Editing a draft and freezing what students work against are different authorities.
     return publish(ctx.draftVersionId, ctx.tokens.editor).expect(403)
   })
 
@@ -87,8 +86,7 @@ describe('/edu/lessons/:lessonId/versions', () => {
   it('freezes content once published', async () => {
     await publish(ctx.draftVersionId, ctx.tokens.publisher).expect(201)
 
-    // Homework points at this version. Editing it would change a question a
-    // student may already have answered.
+    // Homework points at this version; editing it would change an answered question.
     return request(app.getHttpServer())
       .patch(routes.update(ctx.lessonId, ctx.draftVersionId))
       .auth(ctx.tokens.editor, { type: 'bearer' })

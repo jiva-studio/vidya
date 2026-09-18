@@ -3,10 +3,8 @@ import * as ms from 'ms'
 
 type StringValue = ms.StringValue
 
-// `jsonwebtoken` types `expiresIn` as `number | StringValue`, where StringValue is
-// the `ms` template literal type ('15d', '90d', ...). Reading it from the
-// environment yields a plain string, so the cast is where we accept that the
-// value is validated by deployment rather than by the compiler.
+// `jsonwebtoken` types `expiresIn` as the `ms` template literal ('15d', '90d'), but the
+// environment hands us a plain string, so the cast is where deployment vouches for the value.
 const duration = (value: string | undefined, fallback: StringValue): StringValue =>
   (value as StringValue) || fallback
 

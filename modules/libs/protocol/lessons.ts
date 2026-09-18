@@ -56,6 +56,7 @@ export type LessonSection = {
   id: string
   title: string
   blocks: LessonBlock[]
+
   /** Whether this section asks for homework, and who marks it. */
   assessment: 'none' | 'auto' | 'teacher'
 }

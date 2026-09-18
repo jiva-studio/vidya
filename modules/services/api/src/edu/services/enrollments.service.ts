@@ -77,8 +77,7 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
       status: 'accepted',
     })
 
-    // Access to course content comes from being enrolled, not from a
-    // permission. A pending or declined request is not a place on the course.
+    // Access comes from being enrolled; a pending or declined request is not a place.
     if (!enrollment) {
       throw new ForbiddenException('Not enrolled on the course this lesson belongs to')
     }

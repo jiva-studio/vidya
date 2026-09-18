@@ -31,8 +31,7 @@ describe('/edu/enrollments', () => {
   /* -------------------------------------------------------------------------- */
 
   it('lets a student with no permissions enrol', async () => {
-    // Access to a course comes from being enrolled, not from a permission key.
-    // Requiring one here would make enrolling impossible.
+    // Access comes from being enrolled; requiring a permission would make enrolling impossible.
     const response = await enrol(ctx.tokens.student).expect(201)
 
     expect(response.body.id).toBeDefined()

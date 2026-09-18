@@ -11,8 +11,7 @@ import { bootstrapMigrations } from './shared/migrations'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
-  // Before anything is served. A request answered against a half-migrated
-  // schema is worse than a slow start.
+  // Before anything is served: a half-migrated schema is worse than a slow start.
   await bootstrapMigrations(app.get(ConfigService))
 
   // TODO Use on development environment only

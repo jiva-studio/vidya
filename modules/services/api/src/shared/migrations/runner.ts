@@ -41,9 +41,7 @@ const readMigrationNames = (dir: string): string[] => {
 
   const names = entries.filter((name) => name.endsWith('.sql')).sort()
 
-  // An empty directory almost always means the .sql files never made it into
-  // the image. Reporting success here would start the service against an
-  // unmigrated database, and the first query would be the one to fail.
+  // An empty directory means the .sql files never reached the image; refuse rather than serve one.
   if (names.length === 0) {
     throw new Error(`no migrations found in ${dir}`)
   }

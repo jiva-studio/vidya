@@ -63,8 +63,7 @@ describe('/edu/homework', () => {
   })
 
   it('accepts work answered against a superseded version, and flags it', async () => {
-    // The student was offline while the teacher published a revision. Rejecting
-    // the answer would punish them for an edit they could not have seen.
+    // The student was offline when the revision was published; rejecting would punish them.
     const { LessonVersionsService } = await import('@vidya/api/edu/services')
     const versions = app.get(LessonVersionsService)
     const answered = await versions.findOneBy({ id: ctx.publishedVersionId })
@@ -122,8 +121,7 @@ describe('/edu/homework', () => {
     const created = await submit(ctx.tokens.student).expect(201)
     await review(created.body.id, { status: 'accepted', grade: 5 }, ctx.tokens.teacher).expect(200)
 
-    // The one real conflict: work left a device's outbox after the server had
-    // already accepted it.
+    // The one real conflict: work left a device's outbox after the server accepted it.
     const response = await submit(ctx.tokens.student, 'Too late').expect(409)
     expect(response.body.message).toMatch(/already been accepted/)
   })
@@ -159,9 +157,7 @@ describe('/edu/homework', () => {
   })
 
   it('shows nothing to a student with no enrollments at all', async () => {
-    // Regression: the query was built as an OR over the student's enrollments,
-    // and an empty list becomes `where: []`, which TypeORM reads as "no filter"
-    // and answers with every row in the table — every school's homework.
+    // Regression: an empty OR list becomes `where: []`, which TypeORM reads as no filter.
     await submit(ctx.tokens.student).expect(201)
 
     const response = await request(app.getHttpServer())

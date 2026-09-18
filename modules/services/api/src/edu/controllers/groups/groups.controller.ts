@@ -91,9 +91,7 @@ export class GroupsController {
     @Body() request: dto.CreateGroupRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.CreateGroupResponse> {
-    // A group belongs to a course, and the course carries the school. The
-    // request does not name a school, so it is read from the course the caller
-    // must already be allowed to see.
+    // The request names no school, so it comes from the course the caller may already see.
     const course = await this.courses
       .scopedBy({ permissions: auth.permissions })
       .findOne({ where: { id: request.courseId } })

@@ -10,12 +10,10 @@ import { LessonBlockState } from './lessons'
 export type HomeworkDetails = {
   id: string
   enrollmentId: string
-  /**
-   * The lesson version answered, not the lesson. Published versions are
-   * immutable, so a teacher editing the lesson afterwards can never change the
-   * question a submitted answer was written against.
-   */
+
+  /** The version answered, not the lesson: published versions are frozen. */
   lessonVersionId: string
+
   sectionId: string
   schoolId: string
   status: domain.HomeworkStatus
@@ -24,12 +22,8 @@ export type HomeworkDetails = {
   reviewedById?: string
   submittedAt?: string
   reviewedAt?: string
-  /**
-   * Set when the student answered a version that is no longer the published
-   * one. The work is still accepted — nobody is penalised for an edit made
-   * while they were offline — but the reviewer is told, and can open the
-   * version actually answered.
-   */
+
+  /** Set when the answered version is no longer the published one: accepted, but flagged. */
   answeredSupersededVersion?: boolean
 }
 
