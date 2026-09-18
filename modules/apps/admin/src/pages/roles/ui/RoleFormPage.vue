@@ -7,7 +7,7 @@ import { useRouter } from 'vue-router'
 
 import { reasonOf } from '@/shared/lib'
 import { PermissionsPicker, useRoleApi } from '@/entities/role'
-import { useCurrentSchool } from '@/shared/access'
+import { useCan, useCurrentSchool } from '@/shared/access'
 
 import { formClasses } from './styles'
 import type { RoleFormPageProps } from './types'
@@ -26,6 +26,9 @@ const api = useRoleApi()
 // switcher moved must belong to the school on screen, not the one loaded with.
 const { schoolId } = useCurrentSchool()
 
+const canCreate = useCan('roles:create')
+const canUpdate = useCan('roles:update')
+
 const name = ref('')
 const description = ref('')
 const permissions = ref<PermissionKey[]>([])
@@ -38,6 +41,7 @@ const title = computed(() =>
 )
 // Creating a role needs a school to create it in; editing one does not.
 const canSubmit = computed(() => Boolean(props.id) || Boolean(schoolId.value))
+const canEdit = computed(() => (props.id ? canUpdate.value : canCreate.value))
 const nameError = computed(() => (invalid.value ? $t('roles-form-name-required') : undefined))
 const errorText = computed(() => (error.value ? $t(error.value) : undefined))
 
@@ -111,12 +115,7 @@ async function send(): Promise<void> {
 <template>
   <PageHeader :title="title" />
   <form :class="formClasses" @submit.prevent="onSubmit">
-    <FormField
-      :label="$t('roles-form-name')"
-      :hint="$t('roles-form-name-hint')"
-      :error="nameError"
-      required
-    >
+    <FormField :label="$t('roles-form-name')" :error="nameError" required>
       <template #default="field">
         <Input
           :id="field.id"
@@ -128,7 +127,7 @@ async function send(): Promise<void> {
         />
       </template>
     </FormField>
-    <FormField :label="$t('roles-form-description')" :hint="$t('roles-form-description-hint')">
+    <FormField :label="$t('roles-form-description')">
       <template #default="field">
         <Textarea
           :id="field.id"
@@ -140,7 +139,7 @@ async function send(): Promise<void> {
       </template>
     </FormField>
     <FormSection :title="$t('roles-form-permissions')">
-      <PermissionsPicker v-model="permissions" :disabled="busy" />
+      <PermissionsPicker v-model="permissions" :disabled="busy" :readonly="!canEdit" />
     </FormSection>
     <FormActions
       :submit-label="$t('action-save')"

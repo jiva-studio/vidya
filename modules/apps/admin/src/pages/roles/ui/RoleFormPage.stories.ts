@@ -20,13 +20,13 @@ const over =
       return { props }
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><RoleFormPage v-bind="props" /></div>',
+    template: '<div class="p-[var(--space-6)]"><RoleFormPage v-bind="props" /></div>',
   })
 
 const role = {
   id: 'role-1',
-  name: 'Преподаватель',
-  description: 'Ведёт группу и проверяет работы',
+  name: 'Teacher',
+  description: 'Leads a group and reviews work',
   schoolId: 'school-1',
   permissions: ['courses:read', 'homework:read', 'homework:grade'],
 }
@@ -37,24 +37,24 @@ export default meta
 type Story = StoryObj<typeof RoleFormPage>
 
 export const WithData: Story = {
-  name: 'Данные',
+  name: 'Data',
   render: over({ [ROLE]: role }, { id: 'role-1' }),
 }
 
-export const Empty: Story = { name: 'Пусто', render: over({ 'POST /edu/roles': { id: 'role-2' } }) }
+export const Empty: Story = { name: 'Empty', render: over({ 'POST /edu/roles': { id: 'role-2' } }) }
 
 export const Loading: Story = {
-  name: 'Загрузка',
+  name: 'Loading',
   render: over({ [ROLE]: pending() }, { id: 'role-1' }),
 }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   render: over({ [ROLE]: refusal(404, 'Такой роли нет') }, { id: 'role-1' }),
 }
 
 export const WithoutRights: Story = {
-  name: 'Без прав',
+  name: 'No permission',
   render: over(
     { 'POST /edu/roles': refusal(403, 'Недостаточно прав, чтобы создать роль') },
     {},

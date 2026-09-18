@@ -23,13 +23,13 @@ const over =
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><UserCardPage id="user-1" /></div>',
+    template: '<div class="p-[var(--space-6)]"><UserCardPage id="user-1" /></div>',
   })
 
 const card: FakeAnswers = {
   [USER]: {
     id: 'user-1',
-    name: 'Анна Смирнова',
+    name: 'Anna Smirnova',
     email: 'anna@example.com',
     phone: '+7 900 000-00-00',
     roles: [],
@@ -39,11 +39,11 @@ const card: FakeAnswers = {
   [USER_SCHOOLS]: { userSchools: ['school-1'] },
   '/edu/roles': {
     items: [
-      { id: 'role-1', name: 'Владелец', description: 'Может всё в этой школе' },
-      { id: 'role-2', name: 'Преподаватель', description: 'Ведёт группу' },
+      { id: 'role-1', name: 'Owner', description: 'Can do everything in this school' },
+      { id: 'role-2', name: 'Teacher', description: 'Leads a group' },
     ],
   },
-  '/edu/schools': { items: [{ id: 'school-1', name: 'Первая школа' }] },
+  '/edu/schools': { items: [{ id: 'school-1', name: 'First school' }] },
 }
 
 const meta: Meta<typeof UserCardPage> = { title: 'Org/UserCard', component: UserCardPage }
@@ -51,10 +51,10 @@ const meta: Meta<typeof UserCardPage> = { title: 'Org/UserCard', component: User
 export default meta
 type Story = StoryObj<typeof UserCardPage>
 
-export const WithData: Story = { name: 'Данные', render: over(card) }
+export const WithData: Story = { name: 'Data', render: over(card) }
 
 export const Empty: Story = {
-  name: 'Пусто',
+  name: 'Empty',
   render: over({
     ...card,
     [USER_ROLES]: { userRoles: [] },
@@ -63,11 +63,11 @@ export const Empty: Story = {
   }),
 }
 
-export const Loading: Story = { name: 'Загрузка', render: over({ ...card, [USER]: pending() }) }
+export const Loading: Story = { name: 'Loading', render: over({ ...card, [USER]: pending() }) }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   render: over({ ...card, [USER]: refusal(404, 'Такого человека нет') }),
 }
 
-export const WithoutRights: Story = { name: 'Без прав', render: over(card, READER) }
+export const WithoutRights: Story = { name: 'No permission', render: over(card, READER) }

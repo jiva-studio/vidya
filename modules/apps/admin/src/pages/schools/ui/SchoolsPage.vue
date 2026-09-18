@@ -66,7 +66,7 @@ function asSchool(row: TableRowData): SchoolRow {
 
 <template>
   <section :class="sectionClasses">
-    <PageHeader :title="$t('schools-title')" :description="$t('schools-description')">
+    <PageHeader :title="$t('schools-title')">
       <template #actions>
         <Button v-if="canCreate" @click="onCreate">{{ $t('schools-create') }}</Button>
       </template>

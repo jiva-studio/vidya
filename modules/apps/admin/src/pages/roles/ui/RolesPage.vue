@@ -60,7 +60,7 @@ function asRole(row: TableRowData): RoleRow {
 
 <template>
   <section :class="sectionClasses">
-    <PageHeader :title="$t('roles-title')" :description="$t('roles-description')">
+    <PageHeader :title="$t('roles-title')">
       <template #actions>
         <Button v-if="canCreate" @click="onCreate">{{ $t('roles-create') }}</Button>
       </template>

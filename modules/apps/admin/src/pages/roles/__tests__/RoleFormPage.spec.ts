@@ -50,6 +50,19 @@ const mountForm = async (answers: FakeAnswers, props: Record<string, unknown> = 
   return { transport, page }
 }
 
+const boxOf = (page: Awaited<ReturnType<typeof mountForm>>['page'], key: string) =>
+  page.find(`[data-permission="${key}"] [role="checkbox"]`)
+
+const tick = async (page: Awaited<ReturnType<typeof mountForm>>['page'], key: string) => {
+  await boxOf(page, key).trigger('click')
+  await flushPromises()
+}
+
+const whole = async (page: Awaited<ReturnType<typeof mountForm>>['page'], prefix: string) => {
+  await page.find(`[data-permission-group="${prefix}"] [role="checkbox"]`).trigger('click')
+  await flushPromises()
+}
+
 const save = async (page: Awaited<ReturnType<typeof mountForm>>['page']) => {
   const button = page.findAll('button').find((candidate) => candidate.text() === 'Сохранить')
   await button?.trigger('click')
@@ -68,16 +81,19 @@ describe('RoleFormPage', () => {
   it('offers every permission the domain declares, and no list of its own', async () => {
     const { page } = await mountForm({ 'POST /edu/roles': { id: 'role-1' } })
 
-    expect(page.findAll('[role="checkbox"]')).toHaveLength(PermissionKeys.length)
+    const offered = page
+      .findAll('[data-permission]')
+      .map((box) => box.attributes('data-permission'))
+
+    expect(offered).toEqual([...PermissionKeys].filter((key) => key !== '*'))
   })
 
-  it('groups them by the resource they act on', async () => {
+  it('lays them out as one list per area, headed by the name of the area', async () => {
     const { page } = await mountForm({ 'POST /edu/roles': { id: 'role-1' } })
 
-    const legends = page.findAll('legend').map((legend) => legend.text())
-
-    expect(legends).toContain('Роли')
-    expect(legends).toContain('Домашние работы')
+    expect(page.text()).toContain('Роли')
+    expect(page.text()).toContain('Домашние работы')
+    expect(page.text()).toContain('Публикация')
   })
 
   it('sends exactly the permissions that were ticked', async () => {
@@ -85,10 +101,8 @@ describe('RoleFormPage', () => {
 
     await page.find('input[name="name"]').setValue('Teacher')
 
-    const boxes = page.findAll('[role="checkbox"]')
-    await boxes[1].trigger('click')
-    await boxes[2].trigger('click')
-    await flushPromises()
+    await tick(page, 'courses:read')
+    await tick(page, 'homework:grade')
 
     await save(page)
 
@@ -98,10 +112,70 @@ describe('RoleFormPage', () => {
       body: {
         name: 'Teacher',
         description: '',
-        permissions: [PermissionKeys[1], PermissionKeys[2]],
+        permissions: ['courses:read', 'homework:grade'],
         schoolId: 'school-1',
       },
     })
+  })
+
+  it('takes a whole area at once when its heading is ticked', async () => {
+    const { transport, page } = await mountForm({ 'POST /edu/roles': { id: 'role-1' } })
+
+    await page.find('input[name="name"]').setValue('Teacher')
+
+    await whole(page, 'homework')
+
+    await save(page)
+
+    expect(transport.calls[0]).toMatchObject({
+      body: { permissions: ['homework:read', 'homework:grade'] },
+    })
+  })
+
+  it('lets one switch stand for everything and overrides the rest with it', async () => {
+    const { transport, page } = await mountForm({ 'POST /edu/roles': { id: 'role-1' } })
+
+    await page.find('input[name="name"]').setValue('Teacher')
+
+    await tick(page, 'courses:read')
+    await page.find('[role="switch"]').trigger('click')
+    await flushPromises()
+
+    expect(boxOf(page, 'courses:delete').attributes('data-state')).toBe('checked')
+    expect(boxOf(page, 'courses:delete').attributes('data-disabled')).toBeDefined()
+
+    await save(page)
+
+    expect(transport.calls[0]).toMatchObject({ body: { permissions: ['*'] } })
+  })
+
+  it('shows an odd set exactly as it is, ticking nothing of its own', async () => {
+    const { page } = await mountForm(
+      {
+        '/edu/roles/role-1': {
+          id: 'role-1',
+          name: 'Odd',
+          description: '',
+          schoolId: 'school-1',
+          permissions: ['courses:delete', 'lessons:publish'],
+        },
+      },
+      { id: 'role-1' },
+    )
+
+    expect(boxOf(page, 'courses:delete').attributes('data-state')).toBe('checked')
+    expect(boxOf(page, 'courses:read').attributes('data-state')).toBe('unchecked')
+    expect(boxOf(page, 'lessons:publish').attributes('data-state')).toBe('checked')
+  })
+
+  it('is read-only for someone who may not edit roles', async () => {
+    useSession().end()
+    signIn([] as PermissionKey[])
+
+    const { page } = await mountForm({ 'POST /edu/roles': { id: 'role-1' } })
+
+    expect(boxOf(page, 'courses:read').attributes('data-disabled')).toBeDefined()
+    expect(page.find('[role="switch"]').attributes('data-disabled')).toBeDefined()
   })
 
   it('sends nothing until the role has a name', async () => {
@@ -110,7 +184,7 @@ describe('RoleFormPage', () => {
     await save(page)
 
     expect(transport.calls).toHaveLength(0)
-    expect(page.text()).toContain('У роли должно быть название')
+    expect(page.text()).toContain('Укажите название.')
   })
 
   it('loads the role it is editing and patches it', async () => {

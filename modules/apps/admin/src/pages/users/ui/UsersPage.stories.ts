@@ -20,12 +20,12 @@ const over =
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><UsersPage /></div>',
+    template: '<div class="p-[var(--space-6)]"><UsersPage /></div>',
   })
 
 const items = [
-  { id: 'user-1', name: 'Анна Смирнова' },
-  { id: 'user-2', name: 'Пётр Иванов' },
+  { id: 'user-1', name: 'Anna Smirnova' },
+  { id: 'user-2', name: 'Pyotr Ivanov' },
 ]
 
 const meta: Meta<typeof UsersPage> = { title: 'Org/Users', component: UsersPage }
@@ -33,18 +33,18 @@ const meta: Meta<typeof UsersPage> = { title: 'Org/Users', component: UsersPage 
 export default meta
 type Story = StoryObj<typeof UsersPage>
 
-export const WithData: Story = { name: 'Данные', render: over({ [USERS]: { items } }) }
+export const WithData: Story = { name: 'Data', render: over({ [USERS]: { items } }) }
 
-export const Empty: Story = { name: 'Пусто', render: over({ [USERS]: { items: [] } }) }
+export const Empty: Story = { name: 'Empty', render: over({ [USERS]: { items: [] } }) }
 
-export const Loading: Story = { name: 'Загрузка', render: over({ [USERS]: pending() }) }
+export const Loading: Story = { name: 'Loading', render: over({ [USERS]: pending() }) }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   render: over({ [USERS]: refusal(500, 'Список людей не читается') }),
 }
 
 export const WithoutRights: Story = {
-  name: 'Без прав',
+  name: 'No permission',
   render: over({ [USERS]: { items } }, ['users:read'] as PermissionKey[]),
 }

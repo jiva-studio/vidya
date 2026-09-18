@@ -103,7 +103,8 @@ describe('UsersPage', () => {
   it('shows the reason the server gave and offers another attempt', async () => {
     const { transport, page } = await mountPage({ [USERS]: refusal(500, 'People are unreadable') })
 
-    expect(page.find('[role="alert"]').text()).toContain('People are unreadable')
+    expect(page.find('[role="alert"]').text()).not.toContain('People are unreadable')
+    expect(page.find('[role="alert"]').text()).toContain('Сервер не смог это выполнить')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
     await retry?.trigger('click')

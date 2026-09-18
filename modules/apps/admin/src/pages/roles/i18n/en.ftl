@@ -3,25 +3,21 @@
 nav-roles = Roles
 
 roles-title = Roles
-roles-description = What a person is allowed to do in this school.
 roles-column-name = Name
 roles-column-description = Description
 roles-column-actions = Actions
 roles-empty-title = No roles yet
-roles-empty-body = Create a role, tick what it may do, then give it to someone.
-roles-create = New role
+roles-empty-body = Create a role and give it to someone.
+roles-create = Create a role
 roles-edit = Edit
 
 roles-form-create-title = New role
-roles-form-edit-title = Edit role
+roles-form-edit-title = Role
 roles-form-name = Name
-roles-form-name-hint = How the role is listed when someone is given it.
-roles-form-name-required = A role needs a name.
+roles-form-name-required = Enter a name.
 roles-form-description = Description
-roles-form-description-hint = One line on who this role is for.
-roles-form-permissions = What this role may do
+roles-form-permissions = Permissions
 
-permission-group-all = Everything
 permission-group-roles = Roles
 permission-group-schools = Schools
 permission-group-users = People
@@ -32,6 +28,7 @@ permission-group-enrollments = Requests
 permission-group-homework = Homework
 
 permission-action-all = Everything, in this school
+permission-all-hint = The role gets every right, including the ones added later.
 permission-action-create = Create
 permission-action-read = See
 permission-action-update = Change

@@ -7,7 +7,7 @@ users-description = Everyone with a role in this school.
 users-column-name = Name
 users-column-actions = Actions
 users-empty-title = Nobody here yet
-users-empty-body = People appear once they sign in and are given a role in this school.
+users-empty-body = A person appears here once they are given a role in this school.
 users-open = Open
 
 users-card-title = Person
@@ -19,7 +19,7 @@ users-form-title = Details
 users-form-name = Name
 users-form-email = Email
 users-form-phone = Phone
-users-form-name-required = A person needs a name.
+users-form-name-required = Enter a name.
 users-form-saved = Saved
 
 users-roles-title = Roles in this school

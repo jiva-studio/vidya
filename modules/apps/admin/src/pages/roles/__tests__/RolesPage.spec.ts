@@ -85,10 +85,13 @@ describe('RolesPage', () => {
     expect(page.text()).toContain('Создайте роль')
   })
 
-  it('shows the reason the server gave and offers another attempt', async () => {
+  it("keeps the server's own words out of a failure and offers another attempt", async () => {
     const { transport, page } = await mountPage({ [ROLES]: refusal(500, 'The database is away') })
 
-    expect(page.find('[role="alert"]').text()).toContain('The database is away')
+    const alert = page.find('[role="alert"]').text()
+
+    expect(alert).not.toContain('The database is away')
+    expect(alert).toContain('Сервер не смог')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
     await retry?.trigger('click')
@@ -103,12 +106,12 @@ describe('RolesPage', () => {
 
     const { page } = await mountPage({ [ROLES]: { items: [] } })
 
-    expect(page.findAll('button').map((button) => button.text())).not.toContain('Новая роль')
+    expect(page.findAll('button').map((button) => button.text())).not.toContain('Создать роль')
   })
 
   it('draws it for someone who may create a role', async () => {
     const { page } = await mountPage({ [ROLES]: { items: [] } })
 
-    expect(page.findAll('button').map((button) => button.text())).toContain('Новая роль')
+    expect(page.findAll('button').map((button) => button.text())).toContain('Создать роль')
   })
 })

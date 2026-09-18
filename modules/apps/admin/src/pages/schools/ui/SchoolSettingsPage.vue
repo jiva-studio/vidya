@@ -119,10 +119,7 @@ async function load(): Promise<void> {
 </script>
 
 <template>
-  <PageHeader
-    :title="$t('schools-settings-title')"
-    :description="$t('schools-settings-description')"
-  />
+  <PageHeader :title="$t('schools-settings-title')" />
   <Skeleton v-if="loading" shape="block" :lines="4" />
   <ErrorState
     v-else-if="loadFailed"

@@ -14,8 +14,8 @@ const FULL = ['schools:read', 'schools:update', 'roles:read'] as PermissionKey[]
 
 const roles = {
   items: [
-    { id: 'role-1', name: 'Студент', description: 'Учится' },
-    { id: 'role-2', name: 'Преподаватель', description: 'Ведёт группу' },
+    { id: 'role-1', name: 'Student', description: 'Учится' },
+    { id: 'role-2', name: 'Teacher', description: 'Leads a group' },
   ],
 }
 
@@ -28,7 +28,7 @@ const over =
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><SchoolSettingsPage id="school-1" /></div>',
+    template: '<div class="p-[var(--space-6)]"><SchoolSettingsPage id="school-1" /></div>',
   })
 
 const meta: Meta<typeof SchoolSettingsPage> = {
@@ -40,7 +40,7 @@ export default meta
 type Story = StoryObj<typeof SchoolSettingsPage>
 
 export const WithData: Story = {
-  name: 'Данные',
+  name: 'Data',
   render: over({
     [CONFIGS]: { defaultStudentRoleId: 'role-1', studentRoleIds: ['role-1'] },
     [ROLES]: roles,
@@ -48,22 +48,22 @@ export const WithData: Story = {
 }
 
 export const Empty: Story = {
-  name: 'Пусто',
+  name: 'Empty',
   render: over({ [CONFIGS]: { studentRoleIds: [] }, [ROLES]: { items: [] } }),
 }
 
 export const Loading: Story = {
-  name: 'Загрузка',
+  name: 'Loading',
   render: over({ [CONFIGS]: pending(), [ROLES]: pending() }),
 }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   render: over({ [CONFIGS]: refusal(500, 'Настройки не читаются'), [ROLES]: roles }),
 }
 
 export const WithoutRights: Story = {
-  name: 'Без прав',
+  name: 'No permission',
   render: over(
     {
       [CONFIGS]: { studentRoleIds: [] },

@@ -20,7 +20,7 @@ const over =
       return { props }
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><SchoolFormPage v-bind="props" /></div>',
+    template: '<div class="p-[var(--space-6)]"><SchoolFormPage v-bind="props" /></div>',
   })
 
 const meta: Meta<typeof SchoolFormPage> = { title: 'Org/SchoolForm', component: SchoolFormPage }
@@ -29,24 +29,24 @@ export default meta
 type Story = StoryObj<typeof SchoolFormPage>
 
 export const WithData: Story = {
-  name: 'Данные',
-  render: over({ [SCHOOL]: { id: 'school-1', name: 'Первая школа' } }, { id: 'school-1' }),
+  name: 'Data',
+  render: over({ [SCHOOL]: { id: 'school-1', name: 'First school' } }, { id: 'school-1' }),
 }
 
-export const Empty: Story = { name: 'Пусто', render: over({ 'POST /edu/schools': { id: 'x' } }) }
+export const Empty: Story = { name: 'Empty', render: over({ 'POST /edu/schools': { id: 'x' } }) }
 
 export const Loading: Story = {
-  name: 'Загрузка',
+  name: 'Loading',
   render: over({ [SCHOOL]: pending() }, { id: 'school-1' }),
 }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   render: over({ [SCHOOL]: refusal(404, 'Такой школы нет') }, { id: 'school-1' }),
 }
 
 export const WithoutRights: Story = {
-  name: 'Без прав',
+  name: 'No permission',
   render: over(
     { 'POST /edu/schools': refusal(403, 'Недостаточно прав, чтобы создать школу') },
     {},

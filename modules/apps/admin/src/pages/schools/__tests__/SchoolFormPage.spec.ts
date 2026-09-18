@@ -84,7 +84,7 @@ describe('SchoolFormPage', () => {
     await save(page)
 
     expect(transport.calls).toHaveLength(0)
-    expect(page.text()).toContain('У школы должно быть название')
+    expect(page.text()).toContain('Укажите название.')
   })
 
   it('loads the school it is editing and patches it', async () => {

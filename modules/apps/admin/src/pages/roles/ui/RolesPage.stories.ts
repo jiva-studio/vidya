@@ -20,12 +20,12 @@ const over =
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><RolesPage /></div>',
+    template: '<div class="p-[var(--space-6)]"><RolesPage /></div>',
   })
 
 const items = [
-  { id: 'role-1', name: 'Владелец', description: 'Может всё в этой школе' },
-  { id: 'role-2', name: 'Преподаватель', description: 'Ведёт группу и проверяет работы' },
+  { id: 'role-1', name: 'Owner', description: 'Can do everything in this school' },
+  { id: 'role-2', name: 'Teacher', description: 'Leads a group and reviews work' },
 ]
 
 const meta: Meta<typeof RolesPage> = { title: 'Org/Roles', component: RolesPage }
@@ -33,18 +33,18 @@ const meta: Meta<typeof RolesPage> = { title: 'Org/Roles', component: RolesPage 
 export default meta
 type Story = StoryObj<typeof RolesPage>
 
-export const WithData: Story = { name: 'Данные', render: over({ [ROLES]: { items } }) }
+export const WithData: Story = { name: 'Data', render: over({ [ROLES]: { items } }) }
 
-export const Empty: Story = { name: 'Пусто', render: over({ [ROLES]: { items: [] } }) }
+export const Empty: Story = { name: 'Empty', render: over({ [ROLES]: { items: [] } }) }
 
-export const Loading: Story = { name: 'Загрузка', render: over({ [ROLES]: pending() }) }
+export const Loading: Story = { name: 'Loading', render: over({ [ROLES]: pending() }) }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   render: over({ [ROLES]: refusal(500, 'Роли не читаются') }),
 }
 
 export const WithoutRights: Story = {
-  name: 'Без прав',
+  name: 'No permission',
   render: over({ [ROLES]: { items } }, ['roles:read'] as PermissionKey[]),
 }

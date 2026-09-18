@@ -22,12 +22,12 @@ const over =
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><SchoolsPage /></div>',
+    template: '<div class="p-[var(--space-6)]"><SchoolsPage /></div>',
   })
 
 const items = [
-  { id: 'school-1', name: 'Первая школа' },
-  { id: 'school-2', name: 'Вечерние курсы' },
+  { id: 'school-1', name: 'First school' },
+  { id: 'school-2', name: 'Evening courses' },
 ]
 
 const meta: Meta<typeof SchoolsPage> = { title: 'Org/Schools', component: SchoolsPage }
@@ -35,18 +35,18 @@ const meta: Meta<typeof SchoolsPage> = { title: 'Org/Schools', component: School
 export default meta
 type Story = StoryObj<typeof SchoolsPage>
 
-export const WithData: Story = { name: 'Данные', render: over({ [SCHOOLS]: { items } }) }
+export const WithData: Story = { name: 'Data', render: over({ [SCHOOLS]: { items } }) }
 
-export const Empty: Story = { name: 'Пусто', render: over({ [SCHOOLS]: { items: [] } }) }
+export const Empty: Story = { name: 'Empty', render: over({ [SCHOOLS]: { items: [] } }) }
 
-export const Loading: Story = { name: 'Загрузка', render: over({ [SCHOOLS]: pending() }) }
+export const Loading: Story = { name: 'Loading', render: over({ [SCHOOLS]: pending() }) }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   render: over({ [SCHOOLS]: refusal(503, 'Хранилище недоступно') }),
 }
 
 export const WithoutRights: Story = {
-  name: 'Без прав',
+  name: 'No permission',
   render: over({ [SCHOOLS]: { items } }, READER),
 }

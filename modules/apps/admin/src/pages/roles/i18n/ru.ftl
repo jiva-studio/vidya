@@ -3,25 +3,21 @@
 nav-roles = Роли
 
 roles-title = Роли
-roles-description = Что человек может делать в этой школе.
 roles-column-name = Название
 roles-column-description = Описание
 roles-column-actions = Действия
 roles-empty-title = Ролей пока нет
-roles-empty-body = Создайте роль, отметьте, что она может, и выдайте её человеку.
-roles-create = Новая роль
+roles-empty-body = Создайте роль и выдайте её человеку.
+roles-create = Создать роль
 roles-edit = Изменить
 
 roles-form-create-title = Новая роль
-roles-form-edit-title = Изменение роли
+roles-form-edit-title = Роль
 roles-form-name = Название
-roles-form-name-hint = Под этим названием роль видно при выдаче.
-roles-form-name-required = У роли должно быть название.
+roles-form-name-required = Укажите название.
 roles-form-description = Описание
-roles-form-description-hint = Одна строка о том, кому эта роль.
-roles-form-permissions = Что разрешено этой роли
+roles-form-permissions = Права
 
-permission-group-all = Всё
 permission-group-roles = Роли
 permission-group-schools = Школы
 permission-group-users = Люди
@@ -32,6 +28,7 @@ permission-group-enrollments = Заявки
 permission-group-homework = Домашние работы
 
 permission-action-all = Всё в этой школе
+permission-all-hint = Роль получает все права, включая те, что появятся позже.
 permission-action-create = Создание
 permission-action-read = Просмотр
 permission-action-update = Изменение
