@@ -16,7 +16,9 @@
     "!src/**/*.spec.ts",
     "!src/main.ts",
     "!src/**/*.module.ts",
-    "!src/**/index.ts"
+    "!src/**/index.ts",
+    "!src/shared/datasources/**",
+    "!src/edu/shared/testing-app.ts"
   ],
   "reporters": ["clear-text", "progress"],
   "clearTextReporter": {
