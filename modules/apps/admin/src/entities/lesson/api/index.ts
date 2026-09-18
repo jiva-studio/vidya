@@ -1,2 +1,2 @@
 // Requests for the lesson entity. Owned by T3.
-export {}
+export { createLesson, getLesson, getLessons, getLessonVersions } from './lessons'

@@ -1,9 +1,10 @@
 import type { MenuGroup } from '@/shared/navigation'
 
 /**
- * Sidebar entries for lessons. Owned by T3.
+ * Lessons have no sidebar entry. Owned by T3.
  *
- * Each entry names the permission it needs; the sidebar hides what the current
- * school does not grant.
+ * They are reached from their course, because the screen needs a course to
+ * mean anything, and an entry that lands on "choose a course first" is a
+ * detour rather than navigation.
  */
 export const menu: MenuGroup[] = []

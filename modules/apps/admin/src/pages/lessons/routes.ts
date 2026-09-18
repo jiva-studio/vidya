@@ -3,7 +3,14 @@ import type { RouteRecordRaw } from 'vue-router'
 /**
  * Routes for lessons. Owned by T3.
  *
- * The composition root reads this file by name, so filling it is the whole of
- * what a section has to do to appear in the application.
+ * Lessons belong to a course, so the course is in the path rather than in a
+ * filter: a lessons screen with no course chosen has nothing to show.
  */
-export const routes: RouteRecordRaw[] = []
+export const routes: RouteRecordRaw[] = [
+  {
+    path: '/courses/:courseId/lessons',
+    name: 'lessons',
+    component: () => import('./ui/LessonsPage.vue'),
+    meta: { permission: 'lessons:read', breadcrumbs: ['nav-courses', 'lessons-title'] },
+  },
+]

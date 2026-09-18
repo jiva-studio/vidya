@@ -1,6 +1,4 @@
-// Public API of the lesson entity. Owned by T3.
-//
-// Requests live in `api/`, the view model in `model/`, small pieces of the
-// entity's own interface in `ui/`. Nothing outside this slice reaches past
-// this file.
-export {}
+// Public API of the lesson entity. Owned by T3; read by T5 for the editor.
+export { createLesson, getLesson, getLessons, getLessonVersions } from './api'
+export { draftVersionOf, lessonVersionState, publishedVersionOf, useCourseLessons } from './model'
+export type * from './types'
