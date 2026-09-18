@@ -31,6 +31,22 @@ function mountTable(props: Record<string, unknown>) {
 }
 
 describe('Table', () => {
+  it('gives a column the width it declares', () => {
+    const wrapper = mountTable({
+      columns: [{ key: 'name', label: 'Course', width: 'var(--col-index)' }, columns[1]],
+    })
+
+    expect(wrapper.get('colgroup col').attributes('style')).toContain('var(--col-index)')
+    expect(wrapper.get('th').attributes('style')).toContain('var(--col-index)')
+  })
+
+  it('keeps a row action in the middle of its row', () => {
+    const wrapper = mount(TableCell, { props: { actions: true }, slots: { default: 'x' } })
+
+    expect(wrapper.get('td').classes()).toContain('align-middle')
+    expect(wrapper.get('td div').classes()).toContain('items-center')
+  })
+
   it('renders a row per record', () => {
     const wrapper = mountTable({})
 

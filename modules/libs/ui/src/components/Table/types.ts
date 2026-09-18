@@ -6,6 +6,8 @@ export interface TableColumn {
   align?: TableAlign
   // Figures read as a column only when they are right-aligned and tabular.
   numeric?: boolean
+  // A token-sized width for a column whose content has a known, short shape.
+  width?: string
 }
 
 export type TableRowData = Record<string, unknown>
@@ -44,10 +46,15 @@ export interface TableRowEmits {
   select: []
 }
 
+export type TableCellTone = 'primary' | 'secondary'
+
 export interface TableCellProps {
   align?: TableAlign
+  // The cell that names the row; every other cell is secondary.
+  tone?: TableCellTone
   numeric?: boolean
-  muted?: boolean
-  strong?: boolean
+  nowrap?: boolean
+  truncate?: boolean
+  actions?: boolean
   class?: string
 }

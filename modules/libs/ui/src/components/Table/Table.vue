@@ -75,6 +75,9 @@ function keyOf(row: TableRowData, index: number): string {
       <caption v-if="props.caption" :class="captionClasses">
         {{ props.caption }}
       </caption>
+      <colgroup>
+        <col v-for="column in props.columns" :key="column.key" :style="{ width: column.width }" />
+      </colgroup>
       <TableHead :columns="props.columns" />
       <tbody>
         <slot

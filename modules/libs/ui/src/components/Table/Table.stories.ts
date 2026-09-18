@@ -3,15 +3,16 @@ import TableCell from './TableCell.vue'
 import TableRow from './TableRow.vue'
 
 const columns = [
+  { key: 'index', label: '#', width: 'var(--col-index)' },
   { key: 'name', label: 'Course' },
   { key: 'type', label: 'Learning type' },
   { key: 'lessons', label: 'Lessons', numeric: true },
 ]
 
 const rows = [
-  { id: '1', name: 'Sanskrit grammar', type: 'Guided', lessons: 12 },
-  { id: '2', name: 'Bhagavad-gita study', type: 'Self-paced', lessons: 18 },
-  { id: '3', name: 'Kirtan practice', type: 'Guided', lessons: 6 },
+  { id: '1', index: 1, name: 'Sanskrit grammar', type: 'Guided', lessons: 12 },
+  { id: '2', index: 2, name: 'Bhagavad-gita study', type: 'Self-paced', lessons: 18 },
+  { id: '3', index: 3, name: 'Kirtan practice', type: 'Guided', lessons: 6 },
 ]
 
 const render = (args: Record<string, unknown>) => ({
@@ -21,8 +22,9 @@ const render = (args: Record<string, unknown>) => ({
     <Table v-bind="args">
       <template #row="{ row }">
         <TableRow>
-          <TableCell strong>{{ row.name }}</TableCell>
-          <TableCell muted>{{ row.type }}</TableCell>
+          <TableCell align="start" numeric>{{ row.index }}</TableCell>
+          <TableCell tone="primary" nowrap>{{ row.name }}</TableCell>
+          <TableCell nowrap>{{ row.type }}</TableCell>
           <TableCell numeric>{{ row.lessons }}</TableCell>
         </TableRow>
       </template>

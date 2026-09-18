@@ -23,6 +23,7 @@ function alignOf(align: 'start' | 'end' | undefined, numeric: boolean | undefine
         :key="column.key"
         scope="col"
         :class="cn(headCellVariants({ align: alignOf(column.align, column.numeric) }))"
+        :style="{ width: column.width }"
       >
         {{ column.label }}
       </th>
