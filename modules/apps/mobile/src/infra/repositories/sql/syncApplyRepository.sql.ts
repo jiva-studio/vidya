@@ -10,7 +10,7 @@ import type { IDatabase } from '@/ports'
 
 import type { UtcClock } from '../../persistence/migrations'
 import { projectionOf, rowToPayload } from './collectionProjections'
-import { renameLocalDoc } from './docRename'
+import { dropLocalRival, renameLocalDoc } from './docRename'
 import {
   deleteSyncRow,
   isTombstoned,
@@ -148,7 +148,10 @@ export function createSqlSyncApplyRepository(
 
       const ref = { owner: ownerId(), collection, docId: doc.docId }
       if (doc.deleted || doc.data === null) await deleteSyncRow(db, ref, now)
-      else await writeSyncRow(db, ref, doc.data)
+      else {
+        await dropLocalRival(db, ref, doc.data)
+        await writeSyncRow(db, ref, doc.data)
+      }
 
       await recordServerHlc(collection, doc.docId, serverHlc)
       return true

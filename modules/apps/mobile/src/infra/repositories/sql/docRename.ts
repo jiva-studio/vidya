@@ -1,9 +1,9 @@
-import type { SyncCollection } from '@vidya/domain'
+import type { SyncCollection, SyncPayload } from '@vidya/domain'
 
-import type { IDatabase } from '@/ports'
+import type { IDatabase, QueryValue } from '@/ports'
 
-import { projectionOf } from './collectionProjections'
-import { readSyncRow } from './rowWriter'
+import { projectionOf, toColumnValue } from './collectionProjections'
+import { readSyncRow, type SyncRowRef } from './rowWriter'
 
 /**
  * Reconciling a local name for a document with the server's name for it.
@@ -12,6 +12,19 @@ import { readSyncRow } from './rowWriter'
  * is: the statement list is per-collection knowledge, and a second hand-written
  * copy of it is a second place for it to fall out of step with migration `001`.
  */
+
+/**
+ * The columns the local unique indexes of migration `001` are built on.
+ *
+ * Only these, and not every key the server holds: this table drives the one
+ * thing that cannot wait, which is a write the index would refuse. An
+ * enrolment named twice is not refused by anything here, so its two names are
+ * reconciled when the push answers, where nothing has to be guessed.
+ */
+const UNIQUE_KEYS: Partial<Record<SyncCollection, readonly string[]>> = {
+  homework: ['enrollment_id', 'lesson_version_id', 'section_id'],
+  block_states: ['enrollment_id', 'lesson_version_id', 'block_id'],
+}
 
 /** A local column that addresses a document of another collection by its id. */
 interface SyncReference {
@@ -73,4 +86,41 @@ export async function renameLocalDoc(db: IDatabase, rename: DocRename): Promise<
       [serverDocId, owner, docId],
     )
   }
+}
+
+/**
+ * Remove a local row holding this document's unique key under another id.
+ *
+ * The incoming row and the local one are the same piece of work under two
+ * names, and the local name is one only this device has ever used. Leaving it
+ * there fails the unique index and takes the whole page down with it, page
+ * after page, so the document that arrives is the one that stays. No text is
+ * lost: the unsent edit is still in the journal, and the server merges it by
+ * HLC when the push that renames the row is answered.
+ */
+export async function dropLocalRival(
+  db: IDatabase,
+  ref: SyncRowRef,
+  data: SyncPayload,
+): Promise<void> {
+  const projection = projectionOf(ref.collection)
+  const key = UNIQUE_KEYS[ref.collection]
+  if (key === undefined) return
+
+  const values: QueryValue[] = []
+  for (const column of key) {
+    const projected = projection.columns.find((candidate) => candidate.column === column)
+    const value = projected === undefined ? null : toColumnValue(projected, data[projected.field])
+
+    // A row that does not carry its whole key addresses nothing, so there is
+    // nothing it can be a second name for.
+    if (value === null) return
+    values.push(value)
+  }
+
+  await db.execute(
+    `DELETE FROM ${projection.table}
+      WHERE owner_id = ? AND id <> ? AND ${key.map((column) => `${column} = ?`).join(' AND ')}`,
+    [ref.owner, ref.docId, ...values],
+  )
 }
