@@ -18,19 +18,20 @@ Run the full automated verification suite:
 make check
 ```
 
-It chains, across every workspace in `modules/`: `typecheck` (`tsc --noEmit`),
-`lint` (ESLint flat config), `format:check` (Prettier) and `test` (Jest).
+The gate is whatever the project's `check` target chains — typically a type
+check, a linter, a formatter check and the test suite. The
+[`makefile`](../../makefile/SKILL.md) skill documents the targets this project
+actually defines.
 
-**Auto-Rejection Criteria**:
-- If `tsc` fails -> **REJECT** (Type errors).
-- If `eslint` fails -> **REJECT**. The structural rules carry specific meaning:
-  - `max-lines` / `vue/max-lines-per-block` -> a file or block outgrew its ceiling.
-  - `complexity` / `max-depth` -> branching that needs decomposition, not a bigger limit.
-  - `no-restricted-syntax` in `libs/` -> ambient clock or RNG where a port belongs.
-  - `no-empty` -> a swallowed error.
-  - `simple-import-sort` -> run `make lint-fix`.
-- If `prettier` fails -> **REJECT** (Unformatted files).
-- If `jest` fails -> **REJECT** (Broken tests).
+**Auto-Rejection Criteria** — reject on the first failure, whichever stage it is:
+
+- **Type check fails** -> REJECT. Type errors are never "fixed later".
+- **Linter fails** -> REJECT. The structural rules carry meaning, not taste:
+  a file over its line ceiling, branching past the complexity limit, ambient
+  clocks or RNG where the project requires a port, a swallowed error, unsorted
+  imports. [`architecture.md`](../../../rules/architecture.md) states the limits.
+- **Formatter fails** -> REJECT. Formatting is decided once, by the tool.
+- **Tests fail** -> REJECT.
 
 **Never accept a partial gate as a passing gate.**
 `make lint` alone proves nothing about types, formatting or behaviour, and a
@@ -38,33 +39,36 @@ decomposition that satisfies `max-lines` routinely breaks the build in the same
 commit. The gate is `make check` exiting 0, in full.
 
 ### Level 2: Semantic & Architectural Inspection (Manual)
-Once programmatic checks pass, inspect the diff for:
 
-1. **Component Sizing & Decomposition**:
-   - Are components modular and single-responsibility?
-   - Is template logic completely absent (no hidden business logic in template)?
-2. **Component Sections**:
-   - Do `.vue` components follow the standardized section banners?
-     (`Props` -> `Events` -> `State` -> `Hooks` -> `Handlers` -> `Helpers`)
-3. **Composable File Naming & Scope**:
-   - Is every composable (`useXxx`) defined in a file strictly named `useXxx.ts`?
-   - Reject any composable living in a plain noun file (e.g. `director.ts`).
-   - **Reject God / Junk-Drawer Composables**: Reject any composable that dumps an entire component's script into one file (>8 exports or >200 LOC orchestrating everything). Require proper UI decomposition into subcomponents instead.
-4. **Type Isolation**:
-   - Are props and emits extracted into adjacent `types.ts`?
-   - Are types re-exported through `index.ts` and `src/index.ts`?
-5. **Tailwind Styling Discipline & Extraction**:
-   - Are static class arrays and CVA variants extracted to adjacent `styles.ts`? (Forbidden in `<script>`: enforced by `vidya/no-static-styles-in-script`).
-   - Are class chains split into multi-line arrays with concise English intent comments explaining their visual purpose?
-6. **No DOM Leakage**:
-   - Does any component query the DOM for user input or state? (Forbidden: enforced by `vidya/no-dom-state-query`). State must flow through props/emits/models.
-7. **Domain Purity & Cohesion Audit (Frontend & Backend)**:
-   - **REJECT** any service combining concerns from disparate functional areas. A service must have high cohesion and represent a single bounded context.
-   - **REJECT** any service designed to mirror a composite HTTP response payload ("endpoint-driven design"). Composition of multiple domains belongs in the transport layer (Router / Controller), never in a mutated domain service.
-   - **REJECT** any flat `api.ts` dumping ground or direct `fetch()` calls in components or composables. All HTTP interactions must live in dedicated domain services utilizing a typed `HttpClient`.
-8. **Anti-God-Object & Transport Separation (Backend)**:
-   - **REJECT** any struct combining multiple responsibilities (e.g. HTTP routing, domain logic, and I/O watching).
-   - Domain services must be cleanly separated and completely decoupled from HTTP transport (`Router`).
+Once the programmatic checks pass, read the diff against
+[`../../../rules/`](../../../rules/). The rules are the authority on what each
+item below means in this project; this stage is the checklist that makes sure
+each is actually looked at.
+
+1. **Sizing & decomposition**
+   - Is each unit single-responsibility, or did it grow into a grab-bag?
+   - Was a limit satisfied by genuine decomposition, or by moving code somewhere
+     the linter does not look?
+2. **Declared structure**
+   - Do files follow the section order, naming and layout the style rule requires?
+   - Is a helper named for what it is, rather than dumped in a noun-named file?
+3. **Type and contract placement**
+   - Are public types declared and re-exported where the rules say, so consumers
+     import from the package entry point rather than reaching inside?
+   - Do both sides of a wire contract still agree, including optional fields?
+4. **Presentation vs logic**
+   - Is business logic absent from templates and views?
+   - Does any component read state out of the DOM instead of through its inputs?
+   - Are style definitions extracted where the rules require, not inlined?
+5. **Domain purity & cohesion**
+   - REJECT a service that combines concerns from different bounded contexts.
+   - REJECT a service shaped after one endpoint's composite response.
+     Composition across domains belongs in the transport layer.
+   - REJECT a flat catch-all API module or direct network calls made from
+     components. Network access goes through a typed client behind a domain service.
+6. **Transport separation & god objects**
+   - REJECT a unit that routes, validates, persists and notifies at once.
+   - Domain code must not know about the transport it is served over.
 
 ### Output Integration
 All findings from this stage must be integrated into **Stage 1 (Gatekeeper & Architecture)** of the Unified Report defined in [`../SKILL.md`](../SKILL.md). Do not output a separate standalone report.

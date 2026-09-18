@@ -1,6 +1,6 @@
 ---
 name: adversary
-description: Specialized dynamic red-team and stress-testing agent that writes and executes adversarial tests (Jest / Go test) to expose hidden bugs, regressions, and extreme edge cases in pull requests.
+description: Specialized dynamic red-team and stress-testing agent that writes and executes adversarial tests to expose hidden bugs, regressions, and extreme edge cases in pull requests.
 ---
 
 # Vidya Adversary (Red Team) Agent
@@ -14,7 +14,7 @@ This skill guides dynamic stress testing and chaos verification of code changes.
 1. **Empirical Verification (Code Over Opinion)**:
    - The Adversary does not merely speculate about potential bugs; it writes concrete, executable tests to prove or disprove them.
 2. **Zero False Positives**:
-   - A bug is only confirmed when a test execution (`jest`) fails against the current implementation.
+   - A bug is only confirmed when a test execution fails against the current implementation.
 3. **Regression Asset Value**:
    - Every adversarial test crafted to uncover a bug remains in the test suite as a permanent regression test once fixed.
 
@@ -31,7 +31,7 @@ When inspecting a diff or hypothesis (from `bug-hunter`), the Adversary construc
 
 ### 2. Async Chaos & Race Condition Simulation
 - **Out-of-Order Resolution**:
-  - In Jest, mock network responses to resolve out of order (Request 1 sent first, Request 2 sent second, Request 1 resolves last).
+  - Mock network responses to resolve out of order (Request 1 sent first, Request 2 sent second, Request 1 resolves last).
 - **Rapid-Fire Interactions**:
   - Multiple rapid clicks, rapid keyboard navigation before animation/async settle.
 - **Aborted / Unmounted Execution**:
@@ -59,7 +59,7 @@ Read the diff (`git diff HEAD` or `git diff origin/main...HEAD`):
 1. Locate or create adjacent test files:
    - Frontend: adjacent `[name].spec.ts` inside `modules/libs/*` or `modules/apps/*`.
    - Controllers: a suite under `specs/` beside the controller, sharing `context.ts`.
-2. Write concise, targeted test cases using Jest or Go `testing`:
+2. Write concise, targeted test cases with the project's test framework:
    - Setup minimal fixtures.
    - Inject the boundary or race condition.
    - Assert expected vs actual behavior.
@@ -72,12 +72,12 @@ Execute the targeted test:
 npm --prefix modules run test -- <path-to-test-file>.spec.ts
 
 # Backend test with race detector
-npx jest --runInBand <path>
+<the project's test runner, scoped to the new test>
 ```
 
 ### Step 4: Evaluate, Retain & Hand Off to Stage 4
 - **If Test FAILS**: 
-  - Bug proven! Provide the exact failure trace, the minimal reproduction test, and request [`coder`](../coder/SKILL.md) to fix the underlying implementation until the test passes. Once fixed, retain the test permanently in the codebase as a regression test.
+  - Bug proven! Provide the exact failure trace, the minimal reproduction test, and request [`coder`](../../coder/SKILL.md) to fix the underlying implementation until the test passes. Once fixed, retain the test permanently in the codebase as a regression test.
 - **If Test PASSES**:
   - Code is resilient against this attack vector. Retain the test permanently in the test suite as an edge-case asset.
 - **Hand-off to Stage 4**:

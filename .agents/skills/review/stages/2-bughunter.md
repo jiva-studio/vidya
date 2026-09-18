@@ -12,7 +12,7 @@ This skill guides deep semantic inspection of pull requests and code changes. Th
 ## Core Principles & Boundaries
 
 1. **Zero Style & Linter Noise**:
-   - Strictly IGNORE formatting, indentation, naming conventions, and file size limits. These are already enforced by [`reviewer`](../reviewer/SKILL.md) and automated linters.
+   - Strictly IGNORE formatting, indentation, naming conventions, and file size limits. These are already enforced by [Stage 1](./1-gatekeeper.md) and automated linters.
    - Every comment must point to a tangible defect that affects runtime correctness, data integrity, or user experience.
 2. **Adversarial Mindset**:
    - Do not read code assuming it works. Assume the author made a subtle false assumption about state, order of execution, or edge values.
@@ -34,7 +34,7 @@ This skill guides deep semantic inspection of pull requests and code changes. Th
 
 ### Phase 2: Logic Defect Matrix
 
-#### 1. Vue 3 Reactivity & State Management
+#### 1. Reactivity & State Management
 - **Reactivity Loss**:
   - Destructuring reactive objects (`const { a, b } = props` or `store`) without `toRefs()` / `storeToRefs()`.
   - Mutating props directly or mutating `readonly()` structures.
@@ -53,10 +53,10 @@ This skill guides deep semantic inspection of pull requests and code changes. Th
   - Promises started without being awaited, leaving work in flight after the request returns.
   - Read-then-write sequences without a transaction or unique constraint: two concurrent
     requests both pass the existence check, both insert.
-  - TypeORM operations issued outside the surrounding transaction's `EntityManager`,
-    so a rollback leaves them committed.
+  - Writes issued outside the surrounding transaction handle, so a rollback
+    leaves them committed.
 
-#### 3. Domain Logic & Pure Layers (`@vidya/domain`, `@vidya/protocol`)
+#### 3. Domain Logic & Pure Layers
 - **Deterministic Ports Violation**:
   - Any direct call to `Date.now()`, `new Date()`, `setTimeout`, or `Math.random()` in
     pure code without explicit port injection.

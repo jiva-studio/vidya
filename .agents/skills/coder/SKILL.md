@@ -1,83 +1,71 @@
 ---
 name: coder
-description: Specialized software engineering agent for implementing features, fixing bugs, and refactoring in Vidya following strict architectural and coding style guidelines.
+description: Implementation agent for features, bug fixes and refactors. Reads the project's architecture and coding-style rules, respects the spec if one exists, and finishes only when the quality gate passes.
 ---
 
-# Vidya Coder Agent
+# Coder Agent
 
-This skill defines the mandatory implementation workflow for all coding tasks in `vidya`.
+The mandatory implementation workflow. This skill is the **method**; every
+project-specific constraint lives in [`../../rules/`](../../rules/) and is read
+at Phase 1, never duplicated here.
 
-## Mandatory Implementation Workflow
+## Phase 1: Load the rules
 
-Whenever implementing changes, you MUST follow these phases in order:
+1. Read [`../../rules/architecture.md`](../../rules/architecture.md) — layout,
+   layering, dependency direction, structural limits.
+2. Read the coding-style rule for the layer you are touching, from
+   [`../../rules/`](../../rules/).
+3. If a spec exists for the current branch at `.agents/specs/<branch-slug>.md`,
+   read it. It is the contract: its acceptance criteria define done, and its
+   non-goals define where to stop.
 
-### Phase 1: Context & Rule Retrieval
-1. Read `.agents/rules/architecture.md`.
-2. If working on a service (NestJS / TypeORM):
-   - Read `.agents/rules/coding-style-backend.md`.
-3. If working on an app (Vue 3):
-   - Read `.agents/rules/coding-style-frontend.md`.
+Never infer a convention from surrounding code when a rule states it. Code drifts;
+the rules are what the review enforces.
 
-### Phase 2: Design & Sizing Constraints
+## Phase 2: Design within the constraints
 
-Before writing code, verify:
+Before writing anything, confirm the change fits:
 
-**Everywhere**
-- **File size**: max 350 lines, blanks and comments excluded.
-- **Complexity**: max cyclomatic complexity 10; max control-flow nesting 3.
-- **Package boundaries**: cross-package imports use `@vidya/*`, never a relative
-  path that climbs out of the package. Libs never import from apps or services.
-- **Determinism in `libs/`**: no `Date.now()`, `new Date()`, `setTimeout`,
-  `setInterval`, `Math.random()`. Inject a port.
-- **No error swallowing**: an empty `catch` block fails lint. Handle, rethrow,
-  log, or explain in a comment.
+- **Size and complexity limits** — if the target file is already near its
+  ceiling, decompose first, then implement. Retrofitting a split afterwards is
+  the expensive order.
+- **Layer boundaries** — transport does not hold domain logic; domain code does
+  not know about transport; pure layers stay pure.
+- **Package boundaries** — cross-package imports go through the package's public
+  entry point, never a relative path that climbs out of it.
+- **Determinism** — in pure layers, ambient clocks, timers and randomness are
+  injected as ports, not called directly.
+- **No swallowed errors** — handle, rethrow, log, or write the comment that
+  explains why ignoring is safe.
 
-**Services (NestJS)**
-- Controllers parse and dispatch; they never hold domain logic and never return a
-  TypeORM entity.
-- Domain services never import `express` types, never set HTTP status codes.
-- **Domain purity**: one service, one bounded context.
-- **Domain-driven, not endpoint-driven**: never model a service on the composite
-  payload of one endpoint. Compose in the controller instead.
-- **Anti-god-object**: a class that routes, validates, persists and notifies must
-  be split.
-- Validation lives on the DTO via `class-validator`, not in the handler body.
-- Every route carries its `@ApiOperation` / `@ApiResponse` metadata.
+If the change cannot fit the constraints, say so and propose the refactor. Do not
+quietly exceed a limit.
 
-**Apps (Vue)**
-- `<template>` <= 100 lines, `<script>` <= 300 lines, template depth <= 4.
-- Section banners in order: `Props` -> `Events` -> `State` -> `Hooks` -> `Handlers` -> `Helpers`.
-- Props and emits extracted to an adjacent `types.ts`.
-- No nested ternaries in templates, no logic in event handlers, no `querySelector`
-  to read state, no monolithic class strings.
-- No flat `api.ts` dumping ground — one typed domain service per entity over a
-  shared typed HTTP client.
+## Phase 3: Implement
 
-### Phase 3: Implementation
+Prefer decomposing early over refactoring at the ceiling: a second focused file
+is always cheaper than one that has to be split later.
 
-Implement the change respecting the constraints above. Prefer decomposing early
-over refactoring at the ceiling: a second focused file is always cheaper than a
-350-line one that has to be split later.
+Leave nothing unwired. A new module that nothing imports, a handler nothing
+routes to, a component nothing renders — these read as complete and are not.
+Stage 0 of [`../review/SKILL.md`](../review/SKILL.md) rejects exactly this.
 
-### Phase 4: Mandatory Gatekeeper Verification (Strict Requirement)
+## Phase 4: Gatekeeper (strict)
 
-Before finishing any task, run the full verification command from the repository root:
+Before reporting the task complete, run the project gate from the repository root:
 
 ```bash
 make check
 ```
 
-This runs, across every workspace in `modules/`:
+The [`../makefile/SKILL.md`](../makefile/SKILL.md) skill documents what this
+project's gate chains and which targets exist for a faster inner loop.
 
-1. `typecheck` — `tsc --noEmit` in each package
-2. `lint` — ESLint flat config: structural limits, purity rules, import order
-3. `format:check` — Prettier (`semi: false`, `singleQuote`, `printWidth: 100`)
-4. `test` — Jest
+**A partial gate is not a gate.** Running only the linter or only one package's
+tests leaves the rest unverified, and a change that satisfies one stage routinely
+fails another — a decomposition that fixes a line-count violation still has to
+compile, stay formatted and keep the tests green.
 
-A partial gate is not a gate. Running only `make lint` or only `make api-test`
-leaves the other three stages unverified, and a change that passes one stage
-routinely fails another — a decomposition that satisfies `max-lines` still has to
-typecheck and stay formatted.
-
-If ANY check fails, you MUST fix the violation immediately and re-run until all
-checks pass with exit code 0.
+If any check fails, fix the violation and re-run until the gate exits 0. Report
+the result honestly: if something is still failing, say which and why, rather
+than describing the task as done.

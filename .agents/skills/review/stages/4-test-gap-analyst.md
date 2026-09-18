@@ -7,14 +7,14 @@ description: Stage 4 Test Gap Analyst & Coverage Strategy agent that evaluates s
 
 This stage formalizes the test strategy following dynamic stress verification. The Test Gap Analyst ensures that:
 1. **Tests are Never Lost**: Dynamic stress tests authored in Stage 3 (`adversary`) are permanently retained in the codebase as regression assets.
-2. **Coverage is Empirically Measured**: Coverage tooling (`make test`, `jest --coverage`) measures statement and branch coverage across modified packages.
+2. **Coverage is Empirically Measured**: Coverage tooling (`make coverage`) measures statement and branch coverage across modified packages.
 3. **Blind Spots are Systematically Identified**: Uncovered error handling paths, boundary conditions, race windows, and schema drift risks are uncovered.
 4. **Actionable Test Expansion is Prescribed**: Clear, prioritized test scenarios (*Given -> When -> Then*) are provided to guide future hardening.
 
 ```mermaid
 flowchart LR
     Stage3["Stage 3: Adversary\n(Dynamic Stress Tests)"] --> Retain["1. Promote & Retain Tests\n(Permanent Regression Assets)"]
-    Retain --> Measure["2. Measure Coverage\n(make coverage / jest)"]
+    Retain --> Measure["2. Measure Coverage\n(make coverage)"]
     Measure --> Gaps["3. Identify Blind Spots\n(Error Paths, Concurrency, Boundaries)"]
     Gaps --> Recommend["4. Prioritized Recommendations\n(P1/P2/P3 Given-When-Then)"]
 ```

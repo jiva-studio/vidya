@@ -53,7 +53,7 @@ When the user triggers `/review` (or `review`), resolve the repository root and 
    make -C "$REPO_ROOT" check
    ```
    Audit the output:
-   - Frontend (`make check`): TypeScript (`tsc`), ESLint rules, Prettier formatting, Jest test suite.
+   - Run the project gate (`make check`): type check, linter, formatter, tests.
 
 2. **Fail-Fast Rule**:
    - If `make check` fails with syntax/type/lint errors, broken existing tests, or if `-race` was skipped due to missing dependencies: mark Gatekeeper as **FAIL**. Stop and reject immediately with exact error logs unless explicitly instructed to continue.
@@ -62,7 +62,7 @@ When the user triggers `/review` (or `review`), resolve the repository root and 
    - **Template Purity**: Zero nested ternaries, zero inline expressions in event handlers.
    - **Section Headers**: Props -> Events -> State -> Hooks -> Handlers -> Helpers.
    - **Type Extraction**: Props and emits extracted into adjacent `types.ts`.
-   - **Tailwind Discipline**: Static styles extracted to `styles.ts` or split into multi-line arrays with English intent comments.
+   - **Styling discipline**: style definitions extracted where the style rule requires, not inlined.
    - **Service Layer Discipline**: No flat `api.ts`, no direct `fetch()`, domain services represent single bounded contexts.
 
 ---
@@ -73,7 +73,7 @@ When the user triggers `/review` (or `review`), resolve the repository root and 
 1. **Blast Radius Mapping**:
    - Identify callers, upstream state sources, and downstream watchers/renderers.
 2. **Defect Inspection Matrix**:
-   - **Vue 3 Reactivity**: Destructuring without `toRefs()`, direct prop mutation, missed `flush: 'post'`.
+   - **Reactivity & state**: see the frontend conventions in [`../../rules/coding-style-frontend.md`](../../rules/coding-style-frontend.md).
    - **Concurrency & Races**: Out-of-order network responses, unmounted component mutations, unawaited promises outliving a request.
    - **Boundary & Null Errors**: Empty collections, single-element cases, and null vs. undefined under `strictNullChecks: false`, where the compiler will not catch them.
    - **Error Handling**: Swallowed exceptions, dirty UI state on rejected promises.
@@ -94,7 +94,7 @@ When the user triggers `/review` (or `review`), resolve the repository root and 
    - Run the test:
      ```bash
      npm --prefix "$REPO_ROOT/modules" run test -- <target>.spec.ts
-     npx jest --runInBand <path>
+     <the project's test runner, scoped to the new test>
      ```
    - If the test **fails**: defect is empirically confirmed! Provide reproduction test for [`coder`](../coder/SKILL.md).
    - If the test **passes**: resilience is confirmed; retain tests permanently in the test suite.
@@ -142,10 +142,10 @@ To guarantee that the user receives an identical, predictable report structure e
 
 | Check | Status | Details |
 | :--- | :---: | :--- |
-| **Typecheck** (`tsc` / `tsc`) | `PASS / FAIL` | <details or '0 errors'> |
-| **Lint** (`eslint`) | `PASS / FAIL` | <details or '0 errors'> |
-| **Formatting** (`prettier`) | `PASS / FAIL` | <details or 'clean'> |
-| **Unit Tests** (`jest`) | `PASS / FAIL` | <details or 'X passed'> |
+| **Typecheck** | `PASS / FAIL` | <details or '0 errors'> |
+| **Lint** | `PASS / FAIL` | <details or '0 errors'> |
+| **Formatting** | `PASS / FAIL` | <details or 'clean'> |
+| **Unit Tests** | `PASS / FAIL` | <details or 'X passed'> |
 | **File / Block Size Limits** | `PASS / FAIL` | <template <= 100, script <= 300> |
 | **Template Purity** | `PASS / FAIL` | <no nested ternaries, clean handlers> |
 | **Service Layer Discipline** | `PASS / FAIL` | <domain purity, typed client> |

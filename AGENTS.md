@@ -10,9 +10,25 @@ clients for school administration and students, in one npm-workspace monorepo.
 - **Architecture Guidelines**: [`.agents/rules/architecture.md`](./.agents/rules/architecture.md)
 - **Backend Coding Style (NestJS)**: [`.agents/rules/coding-style-backend.md`](./.agents/rules/coding-style-backend.md)
 - **Frontend Coding Style (Vue)**: [`.agents/rules/coding-style-frontend.md`](./.agents/rules/coding-style-frontend.md)
+- **Specification Skill (`/spec`)**: [`.agents/skills/spec/SKILL.md`](./.agents/skills/spec/SKILL.md)
 - **Unified Review Skill (`/review`)**: [`.agents/skills/review/SKILL.md`](./.agents/skills/review/SKILL.md)
 - **Coder Agent Skill**: [`.agents/skills/coder/SKILL.md`](./.agents/skills/coder/SKILL.md)
 - **Makefile Skill**: [`.agents/skills/makefile/SKILL.md`](./.agents/skills/makefile/SKILL.md)
+
+---
+
+## Skills describe method, rules describe this project
+
+`.agents/skills/` holds workflows that carry across repositories — how to spec a
+task, how to implement one, how to review a diff. They name no framework and no
+tool, and they read the project's constraints instead of restating them.
+
+`.agents/rules/` holds everything specific to Vidya — the layout, the layering,
+the coding styles. When a convention changes, it changes here, in one place, and
+every skill picks it up.
+
+A skill that mentions a library belongs in the rules. A rule that explains a
+workflow belongs in a skill.
 
 ---
 
@@ -63,13 +79,28 @@ never a relative path that climbs out of the package.
 
 ---
 
+## Specification-Driven Development
+
+Before implementing a non-trivial task, author a spec with
+[`/spec`](./.agents/skills/spec/SKILL.md). It interviews you on business intent
+and failure modes, then writes `.agents/specs/<branch-slug>.md` from
+[`.agents/specs/TEMPLATE.md`](./.agents/specs/TEMPLATE.md) with observable
+acceptance criteria, a blast radius, a phased plan and a verification gate.
+
+The spec is the contract downstream: `coder` executes it and ticks the boxes,
+and Stage 0 of `/review` rejects the diff if any criterion is undelivered.
+
+---
+
 ## Code Review Protocol: The 4-Agent Review Pipeline (`/review`)
 
 When requested to review code or pull requests (e.g. via `/review`), the lead agent executes the unified pipeline defined in [`.agents/skills/review/SKILL.md`](./.agents/skills/review/SKILL.md):
 
 ```mermaid
 flowchart LR
-    Request["Review Request"] --> Stage1["1. reviewer"]
+    Request["Review Request"] --> Stage0["0. completeness"]
+    Stage0 -->|"Incomplete"| Stop0["STOP (Fail-Fast)"]
+    Stage0 -->|"Complete"| Stage1["1. reviewer"]
     Stage1 -->|"Fail"| Stop["STOP (Fail-Fast)"]
     Stage1 -->|"Pass"| Stage2["2. bug-hunter"]
     Stage2 --> Stage3["3. adversary"]
@@ -77,6 +108,11 @@ flowchart LR
     Stage4 --> Report["Unified Report"]
 ```
 
+0. **Stage 0: Spec Compliance & Completeness**:
+   - Guide: [`.agents/skills/review/stages/0-completeness.md`](./.agents/skills/review/stages/0-completeness.md)
+   - Reconcile the diff against the spec's acceptance criteria, hunt stubs and
+     placeholders, verify new code is actually wired and reachable.
+   - **Fail-Fast**: reject before spending cycles on the later stages.
 1. **Stage 1: Gatekeeper & Architecture**:
    - Guide: [`.agents/skills/review/stages/1-gatekeeper.md`](./.agents/skills/review/stages/1-gatekeeper.md)
    - Run `make check` (`tsc`, `eslint`, `prettier`, `jest`).
