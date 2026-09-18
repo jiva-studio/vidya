@@ -1,5 +1,13 @@
-import type { SyncPayload, SyncScopeRef } from '@vidya/domain'
-import { syncScopeKey } from '@vidya/domain'
+import type {
+  EnrollmentId,
+  HomeworkId,
+  LessonVersionId,
+  SchoolId,
+  SectionId,
+  SyncPayload,
+  SyncScopeRef,
+} from '@vidya/domain'
+import { asId, syncScopeKey } from '@vidya/domain'
 import { SYNC_MAX_CHANGE_BYTES } from '@vidya/protocol'
 import { INCOMPLETE_CHECKSUM } from '@vidya/usecases'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -45,6 +53,15 @@ const course = (fields: SyncPayload = {}): SyncPayload => ({
   name: 'Bhagavad-gita',
   learningType: 'group',
   ...fields,
+})
+
+const answer = (text: string) => ({
+  id: asId<HomeworkId>(HOMEWORK_ID),
+  schoolId: asId<SchoolId>(SCHOOL_ID),
+  enrollmentId: asId<EnrollmentId>(ENROLLMENT_ID),
+  lessonVersionId: asId<LessonVersionId>(LESSON_VERSION_ID),
+  sectionId: asId<SectionId>(SECTION_ID),
+  text,
 })
 
 /** A scope of a kind this build has never heard of, as an old server might grant. */
@@ -222,5 +239,51 @@ describe('the seven defects', () => {
     // stood, rather than read from the beginning on every pull forever.
     await harness.engine.runner.run()
     expect(lastCursors()[syncScopeKey(COURSE_SCOPE)]).toBe(reached)
+  })
+
+  it('D-5: a refused row goes on protecting the answer it carries', async () => {
+    harness.server.rejectIf = (change) => (change.collection === 'homework' ? 'malformed' : null)
+
+    await harness.engine.homework.saveAnswer(answer('the answer I wrote'))
+    await harness.engine.runner.run()
+
+    const rows = await harness.outboxOf(OWNER)
+    expect(rows[0]).toMatchObject({ status: 'rejected', reason: 'malformed' })
+    expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('the answer I wrote')
+
+    // The server hands down its own copy of the row, which never received the
+    // text — the push that carried it was refused.
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: homework({ status: 'open', text: '' }),
+    })
+    await harness.engine.runner.run()
+
+    // The work is still on the screen. It exists nowhere else: no code reads a
+    // text back out of the outbox (AC-18, AC-19).
+    expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('the answer I wrote')
+  })
+
+  it('D-5: work refused as already accepted yields to the copy the teacher graded', async () => {
+    harness.server.rejectIf = (change) =>
+      change.collection === 'homework' ? 'alreadyAccepted' : null
+
+    await harness.engine.homework.saveAnswer(answer('written after it was marked'))
+    await harness.engine.runner.run()
+
+    harness.server.journal({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      scope: USER_SCOPE,
+      data: homework({ status: 'accepted', text: 'the text that was accepted' }),
+    })
+    await harness.engine.runner.run()
+
+    // The one refusal that says the text is frozen for good: there is no later
+    // push that could deliver the edit, so holding it on top of the server's
+    // copy would show an answer nobody will ever read.
+    expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('the text that was accepted')
   })
 })

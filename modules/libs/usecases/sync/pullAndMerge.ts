@@ -139,15 +139,23 @@ async function applyOnePage(
 }
 
 /**
- * Documents this device still holds unsent writes for.
+ * Documents whose local work is still only on this device.
  *
  * The merge needs it to know whether it may take the server's version whole or
  * has to keep this device's fields on top of it — which is what stops an
  * arriving review status from wiping out an answer that has not been sent yet
  * (AC-19, T-M-11).
+ *
+ * Asked of `listUnsettled`, not of `listPending`, and the difference is a
+ * student's answer (D-5). A refused row stops being pending the moment the
+ * answer is recorded, but a refusal delivered nothing: the text still exists
+ * nowhere but here. Reading the pending list alone drops the document out of
+ * this set, the next pull takes the server's empty copy whole, and the answer
+ * disappears from the screen while its only remaining copy sits in an outbox
+ * row no code ever reads back (AC-18).
  */
 async function pendingDocs(deps: SyncEngineDeps): Promise<ReadonlySet<string>> {
-  const rows = await deps.outbox.listPending({ ownerId: deps.ownerId })
+  const rows = await deps.outbox.listUnsettled({ ownerId: deps.ownerId })
   return new Set(rows.map((row) => docKey(row.collection, row.docId)))
 }
 

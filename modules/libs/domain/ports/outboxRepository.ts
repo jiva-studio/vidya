@@ -100,6 +100,23 @@ export interface IOutboxRepository {
    */
   listPending(scope: OutboxScope, limit?: number): Promise<readonly OutboxEntry[]>
 
+  /**
+   * Rows whose work the server has not taken: every pending one, plus every
+   * refused one whose reason leaves the text the student's, as
+   * `rejectionKeepsLocalWork` decides.
+   *
+   * Not the same question as {@link listPending}, and the difference is the
+   * student's answer. A push may refuse a row, and a refusal is a state the row
+   * keeps rather than a delivery — the text still exists only on this device.
+   * The merge asks *this* list whether it may take a document whole, because
+   * "no longer pending" is not "the server has it", and answering the first
+   * question with the second lets the next pull overwrite work nobody else
+   * holds a copy of (AC-18, AC-19).
+   *
+   * Not narrowed by the watermark: a refused row is below it by construction.
+   */
+  listUnsettled(scope: OutboxScope): Promise<readonly OutboxEntry[]>
+
   /** Append a journaled change. Called by the journal decorator, in its transaction. */
   append(entry: NewOutboxEntry): Promise<void>
 
