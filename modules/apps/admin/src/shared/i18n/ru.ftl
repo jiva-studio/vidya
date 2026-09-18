@@ -10,14 +10,14 @@ action-retry = Повторить
 action-sign-out = Выйти
 
 state-loading = Загрузка…
-state-empty = Пока пусто
-state-error = Что-то пошло не так
+state-error = Не получилось. Попробуйте ещё раз.
 
-error-offline = Нет связи. Ничего не удалось загрузить.
-error-forbidden = У вас нет доступа к этому разделу.
-error-not-found = Такой страницы нет.
+error-offline = Нет связи с интернетом. Проверьте подключение и попробуйте снова.
+error-server = Сервер не смог это выполнить. Попробуйте через минуту.
+error-forbidden = Нет доступа. Попросите роль у администратора школы.
+error-not-found = Этого больше нет — возможно, удалили.
 
-language-label = Язык интерфейса
+language-label = Язык
 
 school-switcher-label = Школа
 school-unnamed = Школа { $id }
@@ -27,12 +27,14 @@ nav-label = Разделы
 nav-dashboard = Главная
 
 page-dashboard-title = Главная
-page-dashboard-subtitle = Что требует внимания
+page-dashboard-no-access-title = В этой школе вам пока ничего не разрешено
+page-dashboard-no-access-body = Роль назначает владелец школы. Попросите его выдать доступ — после этого разделы появятся в меню слева.
+page-dashboard-empty = Показывать пока нечего. Заявки и домашние работы — в меню слева.
 
 page-forbidden-title = Нет доступа
-page-forbidden-body = Ваша роль в этой школе не покрывает этот экран.
+page-forbidden-body = Этот экран не входит в вашу роль. Попросите доступ у администратора школы.
 page-forbidden-back = На главную
 
 page-not-found-title = Страница не найдена
-page-not-found-body = Адрес неверен или экран переехал.
+page-not-found-body = Проверьте адрес — возможно, в нём опечатка.
 page-not-found-back = На главную

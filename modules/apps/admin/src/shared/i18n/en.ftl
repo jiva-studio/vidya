@@ -11,14 +11,14 @@ action-retry = Try again
 action-sign-out = Sign out
 
 state-loading = Loading…
-state-empty = Nothing here yet
-state-error = Something went wrong
+state-error = That did not work. Try again.
 
-error-offline = No connection. Nothing could be loaded.
-error-forbidden = You do not have access to this.
-error-not-found = This page does not exist.
+error-offline = No internet connection. Check it and try again.
+error-server = The server could not do this. Try again in a minute.
+error-forbidden = No access. Ask a school administrator for the role.
+error-not-found = This no longer exists — it may have been deleted.
 
-language-label = Interface language
+language-label = Language
 
 school-switcher-label = School
 school-unnamed = School { $id }
@@ -28,12 +28,14 @@ nav-label = Sections
 nav-dashboard = Dashboard
 
 page-dashboard-title = Dashboard
-page-dashboard-subtitle = What needs attention today
+page-dashboard-no-access-title = Nothing is allowed to you in this school yet
+page-dashboard-no-access-body = The school owner assigns roles. Ask them for access and the sections will appear in the menu on the left.
+page-dashboard-empty = Nothing to show yet. Requests and homework are in the menu on the left.
 
 page-forbidden-title = No access
-page-forbidden-body = Your role in this school does not cover this screen.
+page-forbidden-body = This screen is not part of your role. Ask a school administrator for access.
 page-forbidden-back = Back to the dashboard
 
 page-not-found-title = Page not found
-page-not-found-body = The address is wrong, or the screen has moved.
+page-not-found-body = Check the address — it may have a typo.
 page-not-found-back = Back to the dashboard

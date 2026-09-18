@@ -1,23 +1,17 @@
-export const headerClasses = ['pb-[--space-5]']
+export const headerClasses = ['pb-[var(--space-5)]']
 
 export const titleClasses = [
-  'text-[length:--text-lg]',
-  'font-[--weight-semibold]',
-  'text-[--color-text]',
-]
-
-export const subtitleClasses = [
-  'pt-[--space-1]',
-  'text-[length:--text-sm]',
-  'text-[--color-text-muted]',
+  'text-[length:var(--text-lg)]',
+  'font-[var(--weight-semibold)]',
+  'text-[var(--color-text)]',
 ]
 
 export const cardClasses = [
-  'rounded-[--radius-lg]',
+  'rounded-[var(--radius-lg)]',
   'border',
-  'border-[--color-border]',
-  'bg-[--color-surface]',
-  'p-[--space-5]',
-  'text-[length:--text-base]',
-  'text-[--color-text-muted]',
+  'border-[var(--color-border)]',
+  'bg-[var(--color-surface)]',
+  'p-[var(--space-5)]',
+  'text-[length:var(--text-base)]',
+  'text-[var(--color-text-muted)]',
 ]
