@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common'
 import { HomeworkService, LessonVersionsService } from '@vidya/api/edu/services'
 import { createTestingApp } from '@vidya/api/edu/shared'
-import { CLOCK } from '@vidya/api/sync'
+import { CLOCK, isServerDeviceId } from '@vidya/api/sync'
 import * as domain from '@vidya/domain'
 import { BlockState, Homework } from '@vidya/entities'
 import * as protocol from '@vidya/protocol'
@@ -372,7 +372,7 @@ describe('POST /sync/push', () => {
 
       expect(result.status).toBe('accepted')
       expect(result.restamped).toBe(true)
-      expect(domain.parseHlc(result.serverHlc).deviceId).toBe('server')
+      expect(isServerDeviceId(domain.parseHlc(result.serverHlc).deviceId)).toBe(true)
       expect(domain.parseHlc(result.serverHlc).physical).toBeLessThanOrEqual(NOW)
 
       // The work is kept, and the journal is not anchored in the future: no
