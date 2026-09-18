@@ -1,6 +1,7 @@
 import { MigrationClient, runMigrations } from '@vidya/api/shared/migrations'
 import { Entities } from '@vidya/entities'
-import { join } from 'path'
+import { createHash } from 'crypto'
+import { basename, join, resolve } from 'path'
 import { Client } from 'pg'
 import { DataType, newDb } from 'pg-mem'
 import { DataSource } from 'typeorm'
@@ -24,7 +25,42 @@ export type TestDatabase = 'memory' | 'postgres'
 export const testDatabase = (): TestDatabase =>
   process.env.VIDYA_TEST_DB === 'postgres' ? 'postgres' : 'memory'
 
-const BASE_DATABASE = process.env.VIDYA_TEST_DB_DATABASE || 'vidya_test'
+/** Repository root: six levels up from `services/api/src/shared/datasources`. */
+const REPO_ROOT = resolve(__dirname, '..', '..', '..', '..', '..', '..')
+
+/**
+ * A database name unique to the checkout the tests are running from.
+ *
+ * Several worktrees of this repository share one Postgres server, and each
+ * suite starts by dropping and recreating `public`. A name shared between
+ * checkouts therefore has one run deleting the schema another is mid-query on,
+ * which surfaces as unrelated-looking failures — a missing column, "no schema
+ * has been selected", a deadlock — that disappear when the suite is run alone.
+ *
+ * The name is derived, not random, so the same checkout reuses its database
+ * instead of leaving a new one behind on every run. The readable part is for
+ * whoever lists the databases later; the hash is what actually makes it unique,
+ * since directory names can collide once stripped to identifier characters.
+ */
+const checkoutDatabase = (): string => {
+  const slug = basename(REPO_ROOT)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 16)
+  const digest = createHash('sha1').update(REPO_ROOT).digest('hex').slice(0, 8)
+
+  return slug ? `vidya_test_${slug}_${digest}` : `vidya_test_${digest}`
+}
+
+const BASE_DATABASE = process.env.VIDYA_TEST_DB_DATABASE || checkoutDatabase()
+
+/**
+ * Names a database beside the checkout's own, for a suite that needs one of its
+ * own. Going through here rather than composing a literal keeps the suite
+ * inside this checkout's namespace, and inside `make db-testdb-drop`'s reach.
+ */
+export const testDatabaseName = (scope: string): string => `${BASE_DATABASE}_${scope}`
 
 const connection = (database: string) => ({
   host: process.env.VIDYA_TEST_DB_HOST || '127.0.0.1',
@@ -50,7 +86,7 @@ export const postgresTestConfig = (database: string = BASE_DATABASE) => {
 }
 
 /**
- * One database per Jest worker.
+ * One database per Jest worker, within this checkout's namespace.
  *
  * Suites run in parallel and each starts by recreating its schema, so sharing a
  * database would have one worker dropping the tables another is mid-query on.
@@ -59,7 +95,7 @@ export const postgresTestConfig = (database: string = BASE_DATABASE) => {
  */
 const workerDatabase = (): string => {
   const worker = process.env.JEST_WORKER_ID
-  return worker ? `${BASE_DATABASE}_${worker}` : BASE_DATABASE
+  return worker ? testDatabaseName(worker) : BASE_DATABASE
 }
 
 /* -------------------------------------------------------------------------- */
