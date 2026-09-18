@@ -14,13 +14,16 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import { Routes } from '@vidya/protocol'
 
 import * as dto from '../dto'
-import { SyncCursorsService, SyncPullService } from '../services'
+import { SyncCursorsService, SyncPullService, SyncPushService } from '../services'
 
 /**
- * The endpoints a device speaks to.
+ * The three endpoints a device speaks to.
  *
  * Transport only: the caller's identity comes from the token and everything
  * else is decided in the services, because none of these rules belong to HTTP.
+ * A push in particular is answered row by row with `200`, never with a status
+ * code describing the batch — a refusal is a state of one row and the rows
+ * beside it were applied.
  */
 @Controller()
 @ApiTags('🔄 Sync')
@@ -29,6 +32,7 @@ import { SyncCursorsService, SyncPullService } from '../services'
 export class SyncController {
   constructor(
     private readonly pullService: SyncPullService,
+    private readonly pushService: SyncPushService,
     private readonly cursors: SyncCursorsService,
   ) {}
 
@@ -50,6 +54,26 @@ export class SyncController {
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.PullResponseDto> {
     return this.pullService.pull(auth.userId, request)
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                               POST /sync/push                              */
+  /* -------------------------------------------------------------------------- */
+
+  @Post(Routes().sync.push())
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Apply a batch of local changes, answering each row on its own',
+    operationId: 'Sync::push',
+  })
+  @ApiOkResponse({ type: dto.PushResponseDto, description: 'One answer per pushed row' })
+  @ApiBadRequestResponse({ description: 'More rows than the batch may carry' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  async push(
+    @Body() request: dto.PushRequestDto,
+    @Authentication() auth: UserAuthentication,
+  ): Promise<dto.PushResponseDto> {
+    return this.pushService.push(auth.userId, request)
   }
 
   /* -------------------------------------------------------------------------- */

@@ -1,8 +1,10 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common'
+import { NestExpressApplication } from '@nestjs/platform-express'
 import { Test } from '@nestjs/testing'
 import { AppModule } from '@vidya/api/app.module'
 import { testingDataSource } from '@vidya/api/shared/datasources'
 import { RedisService } from '@vidya/api/shared/services'
+import { SYNC_MAX_BATCH_BYTES } from '@vidya/protocol'
 import { useContainer } from 'class-validator'
 import { DataSource } from 'typeorm'
 
@@ -38,7 +40,12 @@ export const createTestingApp = async (
 
   const module = await builder.compile()
 
-  const app = module.createNestApplication()
+  const app = module.createNestApplication<NestExpressApplication>()
+
+  // The same ceiling `main.ts` sets. Without it the framework default of 100kB
+  // refuses a sync batch before any handler sees it, and the suite would be
+  // testing a limit production does not have.
+  app.useBodyParser('json', { limit: SYNC_MAX_BATCH_BYTES })
   useContainer(app.select(AppModule), { fallbackOnErrors: true })
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
   await app.init()

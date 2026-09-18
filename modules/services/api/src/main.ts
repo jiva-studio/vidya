@@ -1,15 +1,22 @@
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
+import { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { AppName } from '@vidya/domain'
+import { SYNC_MAX_BATCH_BYTES } from '@vidya/protocol'
 import { useContainer } from 'class-validator'
 
 import { AppModule } from './app.module'
 import { bootstrapMigrations } from './shared/migrations'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule)
+
+  // A sync push is answered row by row, so the batch has to reach the handler:
+  // the framework default of 100kB would turn a long homework answer into a 413
+  // with no reason code, and the device could not tell which row to blame.
+  app.useBodyParser('json', { limit: SYNC_MAX_BATCH_BYTES })
 
   // Before anything is served: a half-migrated schema is worse than a slow start.
   await bootstrapMigrations(app.get(ConfigService))
@@ -36,6 +43,7 @@ async function bootstrap() {
     .addTag('🎓 Education :: Enrollments', 'Joining a course, and moderating who joins')
     .addTag('🎓 Education :: Homework', 'Submitting and reviewing work')
     .addTag('🎓 Education :: Progress', 'Per-block progress through a lesson')
+    .addTag('🔄 Sync', 'Offline synchronisation: pull, push and the applied position')
     .addServer('http://localhost:8001', 'Development server')
     .addServer('https://api.vidya.com', 'Production server')
     .build()
