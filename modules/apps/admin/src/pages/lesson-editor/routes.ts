@@ -17,4 +17,16 @@ export const routes: RouteRecordRaw[] = [
       breadcrumbs: ['nav-courses', 'lessons-title', 'editor-title'],
     },
   },
+  {
+    // One version, read-only. A reviewer reaches it from a piece of work
+    // answered against a version that has since been replaced, and reading a
+    // published version is `lessons:read` work rather than editing.
+    path: '/lessons/:lessonId/versions/:versionId',
+    name: 'lesson-version',
+    component: () => import('./ui/LessonVersionPage.vue'),
+    meta: {
+      permission: 'lessons:read',
+      breadcrumbs: ['nav-courses', 'lessons-title', 'version-title'],
+    },
+  },
 ]

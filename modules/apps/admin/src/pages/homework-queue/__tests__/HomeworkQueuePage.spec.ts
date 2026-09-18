@@ -65,6 +65,13 @@ const world = (over: FakeAnswers = {}): FakeAnswers => ({
   '/edu/enrollments/e1': enrollment('e1', 'u1'),
   '/edu/enrollments/e2': enrollment('e2', 'u1'),
   '/edu/users/u1': { id: 'u1', name: 'Аня Иванова', email: 'a@example.com', roles: [] },
+
+  // A version is read through its lesson, so the notice's link is only drawn
+  // once the lesson holding it has been found among the course's lessons.
+  '/edu/lessons': { items: [{ id: 'l1', lessonNumber: 1, title: 'Алфавит' }] },
+  '/edu/lessons/l1/versions': {
+    items: [{ id: 'v7', lessonId: 'l1', version: 1, status: 'published' }],
+  },
   ...over,
 })
 
@@ -78,7 +85,7 @@ const mountPage = async (answers: FakeAnswers, settle = true) => {
     history: createMemoryHistory(),
     routes: [
       { path: '/homework', name: 'homework-queue', component: blank },
-      { path: '/lessons/versions/:id', name: 'lesson-version', component: blank },
+      { path: '/lessons/:lessonId/versions/:versionId', name: 'lesson-version', component: blank },
     ],
   })
   await router.push('/homework')
@@ -227,7 +234,7 @@ describe('HomeworkQueuePage', () => {
     await press('j')
 
     expect(page.text()).toContain('больше не опубликована')
-    expect(page.find('a').attributes('href')).toBe('/lessons/versions/v7')
+    expect(page.find('a').attributes('href')).toBe('/lessons/l1/versions/v7')
   })
 
   it('shows who reviewed the work and when', async () => {

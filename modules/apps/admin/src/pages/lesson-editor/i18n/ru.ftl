@@ -9,6 +9,10 @@ editor-new-revision = Новая редакция
 editor-unsaved = Есть несохранённые правки
 editor-retry = Повторить
 
+version-title = Версия, по которой отвечали
+version-subtitle = Опубликованная версия ровно в том виде, в каком её читал студент. Здесь ничего не редактируется.
+version-back = Назад
+
 editor-state-draft = Черновик v{ $version }
 editor-state-published = Опубликована v{ $version }
 

@@ -9,6 +9,10 @@ editor-new-revision = New revision
 editor-unsaved = Unsaved changes
 editor-retry = Try again
 
+version-title = The version answered
+version-subtitle = A published version, exactly as the student read it. Nothing here can be edited.
+version-back = Back
+
 editor-state-draft = Draft v{ $version }
 editor-state-published = Published v{ $version }
 

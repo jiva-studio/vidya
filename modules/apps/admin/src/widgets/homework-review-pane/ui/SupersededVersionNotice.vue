@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
 
 import type { SupersededVersionNoticeProps } from '../types'
 import { linkClasses, noticeClasses } from './styles'
@@ -11,15 +11,15 @@ const props = defineProps<SupersededVersionNoticeProps>()
 
 /* --------------------------------- State ---------------------------------- */
 
-const router = useRouter()
-
-// The lesson editor is written on another branch. Until its route exists the
-// notice still says what happened; it gains the link the moment it does.
-const linked = computed(() => router.hasRoute('lesson-version'))
+// A version is read through its lesson, and a piece of work names only the
+// version, so the lesson is resolved by the pane. Until it arrives — or if it
+// never does — the notice still says what happened, without a link that would
+// lead nowhere.
+const linked = computed(() => props.lessonId !== undefined)
 
 const target = computed(() => ({
   name: 'lesson-version',
-  params: { id: props.lessonVersionId },
+  params: { lessonId: props.lessonId, versionId: props.lessonVersionId },
 }))
 </script>
 

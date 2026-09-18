@@ -7,7 +7,7 @@ import type { HomeworkFilters, HomeworkRow } from '@/entities/homework'
 import { ReviewActions, useGradeHomework } from '@/features/grade-homework'
 import { useCan } from '@/shared/access'
 
-import { useCurrentWork, useQueueKeyboard, useQueueRows } from '../model'
+import { useAnsweredLesson, useCurrentWork, useQueueKeyboard, useQueueRows } from '../model'
 import type { HomeworkReviewPaneProps } from '../types'
 import HomeworkAnswer from './HomeworkAnswer.vue'
 import HomeworkQueueTable from './HomeworkQueueTable.vue'
@@ -23,6 +23,7 @@ const props = withDefaults(defineProps<HomeworkReviewPaneProps>(), { initialId: 
 const queue = useQueueRows()
 const current = useCurrentWork(queue.rows)
 const grading = useGradeHomework()
+const answered = useAnsweredLesson()
 const canGrade = useCan('homework:grade')
 
 const grade = ref<number | undefined>(undefined)
@@ -42,6 +43,7 @@ onMounted(async () => {
 watch(current.work, (opened) => {
   grade.value = opened?.grade
   confirming.value = false
+  void resolveAnsweredLesson(opened?.answeredSupersededVersion)
 })
 
 useQueueKeyboard({
@@ -52,6 +54,13 @@ useQueueKeyboard({
 })
 
 /* -------------------------------- Handlers -------------------------------- */
+
+// Only for a work whose version has been replaced: everyone else's answer is
+// the version on the shelf, and the search costs a request per lesson.
+async function resolveAnsweredLesson(superseded?: boolean) {
+  const version = superseded ? current.work.value?.lessonVersionId : undefined
+  await answered.resolve(selectedRow.value?.courseId, version)
+}
 
 function onSelect(id: HomeworkId) {
   current.select(id)
@@ -131,6 +140,7 @@ function advance(id: HomeworkId) {
           :work="current.work.value"
           :row="selectedRow"
           :reviewer-name="current.reviewerName.value"
+          :answered-lesson-id="answered.lessonId.value"
         />
         <ReviewActions
           v-if="current.work.value"

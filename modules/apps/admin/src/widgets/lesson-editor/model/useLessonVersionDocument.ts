@@ -28,8 +28,10 @@ export const useLessonVersionDocument = (lessonId: LessonId) => {
     error.value = undefined
 
     try {
-      const { items } = await getLessonVersions(http, lessonId)
-      const target = preferred ?? versionToOpen(items)?.id
+      // A caller that names the version it wants — a reviewer opening the one a
+      // student answered — is not asking which version to open, so the list is
+      // not read at all.
+      const target = preferred ?? (await versionOnEntry())
 
       if (!target) {
         error.value = 'editor-no-versions'
@@ -42,6 +44,11 @@ export const useLessonVersionDocument = (lessonId: LessonId) => {
     } finally {
       loading.value = false
     }
+  }
+
+  const versionOnEntry = async (): Promise<LessonVersionId | undefined> => {
+    const { items } = await getLessonVersions(http, lessonId)
+    return versionToOpen(items)?.id
   }
 
   return { loading, error, version, open }

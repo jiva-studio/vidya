@@ -11,6 +11,7 @@ import SupersededVersionNotice from './SupersededVersionNotice.vue'
 const props = withDefaults(defineProps<HomeworkAnswerProps>(), {
   row: undefined,
   reviewerName: undefined,
+  answeredLessonId: undefined,
 })
 </script>
 
@@ -28,6 +29,7 @@ const props = withDefaults(defineProps<HomeworkAnswerProps>(), {
     <SupersededVersionNotice
       v-if="props.work.answeredSupersededVersion"
       :lesson-version-id="props.work.lessonVersionId"
+      :lesson-id="props.answeredLessonId"
     />
     <p :class="answerClasses">{{ props.work.text }}</p>
     <p v-if="props.work.reviewedAt" :class="metaClasses">

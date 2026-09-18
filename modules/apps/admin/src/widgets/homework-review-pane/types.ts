@@ -1,4 +1,4 @@
-import type { HomeworkId, LessonVersionId } from '@vidya/domain'
+import type { HomeworkId, LessonId, LessonVersionId } from '@vidya/domain'
 import type { HomeworkDetails } from '@vidya/protocol'
 import type { SelectOption } from '@vidya/ui'
 
@@ -44,6 +44,9 @@ export interface HomeworkAnswerProps {
   work: HomeworkDetails
   row?: HomeworkRow
 
+  /** The lesson holding the answered version, when it was found. */
+  answeredLessonId?: LessonId
+
   /** Who decided, once the name has been resolved. */
   reviewerName?: string
 }
@@ -51,4 +54,7 @@ export interface HomeworkAnswerProps {
 export interface SupersededVersionNoticeProps {
   /** The version the student answered, which is no longer the published one. */
   lessonVersionId: LessonVersionId
+
+  /** The lesson that version belongs to, once it has been resolved. */
+  lessonId?: LessonId
 }
