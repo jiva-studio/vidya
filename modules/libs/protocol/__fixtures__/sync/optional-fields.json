@@ -35,8 +35,7 @@
           "status": "pending",
           "groupId": null,
           "decidedById": null,
-          "decidedAt": null,
-          "comment": ""
+          "decidedAt": null
         },
         "hlc": "001789689609500:00000:server",
         "scope": {

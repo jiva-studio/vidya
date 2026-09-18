@@ -39,7 +39,7 @@
         "docId": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10",
         "op": "upsert",
         "data": {
-          "title": "Renamed from the device"
+          "name": "Renamed from the device"
         },
         "hlc": "001789686000000:00002:device-8f2a6c14",
         "baseHlc": null

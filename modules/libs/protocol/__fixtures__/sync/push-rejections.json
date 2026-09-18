@@ -12,10 +12,10 @@
         "docId": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10",
         "op": "upsert",
         "data": {
-          "state": {
-            "type": "text",
-            "read": true
-          }
+          "id": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10",
+          "schoolId": "3a1e7b90-42cd-4c6b-8f15-7d2e9a4c6b83",
+          "name": "A course the student has no business writing to",
+          "description": "Content travels down only; the collection is read-only for a device."
         },
         "hlc": "001789682400000:00000:device-8f2a6c14",
         "baseHlc": null
