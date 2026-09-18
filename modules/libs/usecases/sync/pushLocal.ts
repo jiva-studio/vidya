@@ -19,8 +19,10 @@ import { isSyncPausedError, type SyncEngineDeps } from './ports'
  *   device, where the student's work is. The watermark is what stops a refused
  *   row being sent forever — not a delete.
  * - **The watermark may only cover a contiguous run of answered rows.** A row
- *   the server answered about neither way holds it where it is, or the rows
- *   behind it would be stepped over without ever having been sent.
+ *   the server answered about neither way would let the rows behind it be
+ *   stepped over without ever having been sent, so the batch is refused whole
+ *   before anything is written: `assertAnswersMatch` throws, nothing moves, and
+ *   every row stays pending. There is no half-answered batch to record.
  */
 
 /** Rows one round sends. Never above the contract's ceiling. */
@@ -149,28 +151,25 @@ interface Recorded {
  * next edit has to descend from it. A refused row keeps its reason. Neither is
  * removed, and the watermark is re-read inside the transaction so a value
  * raised while the request was in flight is not written back down.
+ *
+ * Answers are read by position, because that is what the contract says they
+ * are and what {@link assertAnswersMatch} has just proved of this batch: one
+ * answer per row, in the order sent. That check is also what keeps the
+ * watermark honest — a batch with a row unanswered never reaches here at all,
+ * so the run of answered rows this moves over cannot have a hole in it.
  */
 async function record(
   deps: SyncEngineDeps,
   pending: readonly OutboxEntry[],
   results: readonly PushResult[],
 ): Promise<Recorded | null> {
-  const byId = new Map(results.map((result) => [result.outboxId, result]))
-
   try {
     return await deps.unitOfWork(async () => {
       const acknowledgements: OutboxAcknowledgement[] = []
-      let watermark = 0
-      let stalled = false
       let accepted = 0
 
-      for (const entry of pending) {
-        const result = byId.get(entry.id)
-        if (result === undefined) {
-          stalled = true
-          continue
-        }
-
+      for (const [index, entry] of pending.entries()) {
+        const result = results[index]!
         if (result.status === 'accepted') {
           await deps.apply.recordServerHlc(entry.collection, entry.docId, result.serverHlc)
           accepted += 1
@@ -178,12 +177,10 @@ async function record(
         } else {
           acknowledgements.push({ id: entry.id, status: 'rejected', reason: result.reason })
         }
-
-        if (!stalled) watermark = entry.id
       }
 
       await deps.outbox.acknowledge(acknowledgements)
-      await advanceWatermark(deps, watermark)
+      await advanceWatermark(deps, pending.at(-1)?.id ?? 0)
 
       return { accepted, rejected: acknowledgements.length - accepted }
     })

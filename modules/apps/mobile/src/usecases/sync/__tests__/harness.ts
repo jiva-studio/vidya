@@ -1,5 +1,5 @@
 import type { OutboxEntry, SyncPayload } from '@vidya/domain'
-import type { RetryPolicyOptions, TokenRefresher } from '@vidya/usecases'
+import type { ISyncClient, RetryPolicyOptions, TokenRefresher } from '@vidya/usecases'
 
 import type { UtcClock } from '@/infra/persistence'
 import { openTestDatabase } from '@/infra/persistence/testing'
@@ -30,6 +30,15 @@ export interface HarnessOptions {
   readonly ownerId?: string
   readonly deviceId?: string
   readonly server?: FakeSyncServer
+
+  /**
+   * The transport the engine talks to, when it must not be the fake server
+   * itself. Wrap {@link server} to stage an answer the server would never
+   * compose — a grant list that arrived empty, a cursor map naming a position
+   * no row in the page reaches — while still staging the journal through it.
+   */
+  readonly client?: ISyncClient
+
   readonly refreshToken?: TokenRefresher
   readonly retry?: RetryPolicyOptions
   readonly pullLimit?: number
@@ -88,7 +97,7 @@ export async function openHarness(options: HarnessOptions = {}): Promise<Harness
   Object.assign(harness, {
     engine: createSyncEngine({
       db,
-      client: server,
+      client: options.client ?? server,
       deviceId: async () => options.deviceId ?? DEVICE,
       ownerId: () => harness.ownerId,
       now,
