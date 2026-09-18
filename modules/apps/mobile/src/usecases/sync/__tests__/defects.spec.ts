@@ -1,6 +1,7 @@
 import type { SyncPayload, SyncScopeRef } from '@vidya/domain'
 import { syncScopeKey } from '@vidya/domain'
 import { SYNC_MAX_CHANGE_BYTES } from '@vidya/protocol'
+import { INCOMPLETE_CHECKSUM } from '@vidya/usecases'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
@@ -57,6 +58,11 @@ describe('the seven defects', () => {
   beforeEach(async () => {
     harness = await openHarness()
   })
+
+  const scopeState = async (scope: SyncScopeRef) => {
+    const scopes = await harness.engine.state.listScopes()
+    return scopes.find((state) => syncScopeKey(state.scope) === syncScopeKey(scope)) ?? null
+  }
 
   const lastCursors = () => harness.server.pullRequests.at(-1)!.cursors as Record<string, number>
 
@@ -142,5 +148,48 @@ describe('the seven defects', () => {
     expect(result.pull?.skipped).toEqual([])
     expect(result.pull?.applied).toBe(1)
     expect(await harness.row('lesson_versions', LESSON_VERSION_ID)).not.toBeNull()
+  })
+
+  it('D-3: a page that stepped over a row does not claim the scope is complete', async () => {
+    harness.server.journal({
+      collection: 'courses',
+      docId: COURSE_ID,
+      scope: COURSE_SCOPE,
+      data: course(),
+    })
+
+    // A row this build cannot store, on the course's scope. Its position still
+    // moves past it — a skipped row is handled, not lost — so the only thing
+    // left to notice the gap is the checksum.
+    harness.server.malformed({ scope: COURSE_SCOPE, collection: 'planets', docId: COURSE_ID })
+
+    const first = await harness.engine.runner.run()
+    expect(first.pull?.skipped).toHaveLength(1)
+
+    const scope = await scopeState(COURSE_SCOPE)
+    expect(scope!.cursor).toBeGreaterThan(0)
+    expect(scope!.checksum).toBe(INCOMPLETE_CHECKSUM)
+
+    // And the detector it exists for does fire: the next run finds a summary
+    // that cannot match and refetches that one scope (I-5, AC-10m).
+    const second = await harness.engine.runner.run()
+    expect(second.resynced.map(syncScopeKey)).toEqual([syncScopeKey(COURSE_SCOPE)])
+  })
+
+  it('D-3: a page applied whole records the summary the server sent', async () => {
+    harness.server.journal({
+      collection: 'courses',
+      docId: COURSE_ID,
+      scope: COURSE_SCOPE,
+      data: course(),
+    })
+
+    const result = await harness.engine.runner.run()
+
+    expect(result.pull?.skipped).toEqual([])
+    const scope = await scopeState(COURSE_SCOPE)
+    expect(scope!.checksum).not.toBeNull()
+    expect(scope!.checksum).not.toBe(INCOMPLETE_CHECKSUM)
+    expect(result.resynced).toEqual([])
   })
 })

@@ -92,7 +92,11 @@ export async function applyPage(deps: SyncEngineDeps, input: ApplyPageInput): Pr
     const diverged = divergedScopes(response, known, positions)
 
     for (const [key, position] of positions) {
-      await deps.state.setScopeCursor(position.scope, position.cursor, checksumOf(response, key))
+      await deps.state.setScopeCursor(
+        position.scope,
+        position.cursor,
+        checksumFor(response, key, rows),
+      )
     }
 
     return {
@@ -116,8 +120,19 @@ interface RowOutcome {
   skipped: SkippedChange[]
   /** Highest `serverSeq` observed per scope, skipped rows included. */
   seen: Map<SyncScopeKey, number>
+
+  /** Scopes this page stepped over a row of — see {@link checksumFor}. */
+  missing: Set<SyncScopeKey>
   maxSeq: number
 }
+
+/**
+ * Stored in place of a scope summary the device has not earned.
+ *
+ * Deliberately not a checksum: no digest the server can compute is equal to it,
+ * so the comparison that follows can only come out "different".
+ */
+export const INCOMPLETE_CHECKSUM = '!incomplete'
 
 /**
  * Merge and write every row of the page.
@@ -128,7 +143,14 @@ interface RowOutcome {
  * would fetch them again on the next page, forever.
  */
 async function applyRows(deps: SyncEngineDeps, input: ApplyPageInput): Promise<RowOutcome> {
-  const outcome: RowOutcome = { applied: 0, stale: 0, skipped: [], seen: new Map(), maxSeq: 0 }
+  const outcome: RowOutcome = {
+    applied: 0,
+    stale: 0,
+    skipped: [],
+    seen: new Map(),
+    missing: new Set(),
+    maxSeq: 0,
+  }
 
   for (const change of input.response.changes) {
     const verdict = validateChange(change, input.required)
@@ -141,6 +163,7 @@ async function applyRows(deps: SyncEngineDeps, input: ApplyPageInput): Promise<R
         detail: verdict.detail,
       })
       noteSeq(outcome, change.scope, change.serverSeq)
+      noteMissing(outcome, change.scope)
       continue
     }
 
@@ -186,6 +209,12 @@ async function applyOne(
   )
 
   return deps.apply.applyRemote(change.collection, merged, remote.hlc)
+}
+
+/** Record that a scope of this page is short a row this build did not store. */
+function noteMissing(outcome: RowOutcome, scope: unknown): void {
+  const ref = asStorableScope(scope)
+  if (ref !== null) outcome.missing.add(syncScopeKey(ref))
 }
 
 function noteSeq(outcome: RowOutcome, scope: unknown, seq: number): void {
@@ -315,5 +344,22 @@ function storableGrants(response: PullResponse): SyncScopeRef[] {
   return grants
 }
 
-const checksumOf = (response: PullResponse, key: SyncScopeKey): string | null =>
-  response.checksums[key] ?? null
+/**
+ * The checksum to record for a scope this page moved.
+ *
+ * The server's summary describes the server's rows; claiming it is a statement
+ * that this device now holds them all. A page that stepped over a row of this
+ * scope has not, so the sentinel goes down instead: the position still moves —
+ * a skipped row is handled, not lost — but the next pull finds a summary that
+ * cannot match, reports the scope diverged and refetches it from `0` (I-5,
+ * AC-10m). Recording the server's summary over incomplete data is what blinds
+ * that detector permanently, which is exactly how a single skipped lesson
+ * version becomes content the student never sees.
+ *
+ * A row refused as stale is *not* missing: `applyRemote` refuses it because the
+ * device already holds that version or a newer one, so the content is there and
+ * the summary is honestly ours to claim. Treating it as a gap would make every
+ * refetch end in a scope that disagrees with itself and refetch again, forever.
+ */
+const checksumFor = (response: PullResponse, key: SyncScopeKey, rows: RowOutcome): string | null =>
+  rows.missing.has(key) ? INCOMPLETE_CHECKSUM : (response.checksums[key] ?? null)
