@@ -35,3 +35,23 @@ export const buttonVariants = cva(buttonBase, {
 // only its ink is hidden, and the spinner sits on top of it.
 export const busyLabelClasses = ['invisible']
 export const busyOverlayClasses = ['absolute inset-0 grid place-items-center']
+
+export const iconButtonVariants = cva([...buttonBase, 'p-0 [&_svg]:size-[var(--space-4)]'], {
+  variants: {
+    variant: {
+      primary:
+        'bg-[var(--color-primary)] text-[var(--color-text-inverse)] hover:bg-[var(--color-primary-hover)]',
+      secondary:
+        'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border-strong)] hover:bg-[var(--color-surface-hover)]',
+      ghost:
+        'bg-transparent text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)]',
+      danger: 'bg-transparent text-[var(--color-danger-fg)] hover:bg-[var(--color-danger-surface)]',
+    },
+    size: {
+      sm: 'size-[var(--control-sm)]',
+      md: 'size-[var(--control-md)]',
+      lg: 'size-[var(--control-lg)]',
+    },
+  },
+  defaultVariants: { variant: 'ghost', size: 'sm' },
+})

@@ -118,6 +118,12 @@
   --control-lg: 2.25rem; /* 36px — primary action, inputs in forms */
 
   --row-height: 2.75rem; /* 44px — table row, comfortable but dense */
+
+  /* Table columns that hold a known, short thing and must not take a share of
+     the width proportional to their heading. */
+  --col-index: 3.5rem; /*  56px — a position in a list, not a figure */
+  --col-text: 24rem; /*   384px — where free text starts to truncate */
+
   --sidebar-width: 15rem;
   --content-max: 80rem;
 

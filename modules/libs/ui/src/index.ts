@@ -10,7 +10,7 @@ export { cn } from './lib/utils'
 
 /* ---------------------------- Input and forms ----------------------------- */
 
-export { default as Button } from './components/Button'
+export { default as Button, IconButton } from './components/Button'
 export type * from './components/Button/types'
 export { default as Checkbox } from './components/Checkbox'
 export type * from './components/Checkbox/types'
