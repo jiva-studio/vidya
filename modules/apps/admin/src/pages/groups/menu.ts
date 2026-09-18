@@ -3,7 +3,12 @@ import type { MenuGroup } from '@/shared/navigation'
 /**
  * Sidebar entries for groups. Owned by T3.
  *
- * Each entry names the permission it needs; the sidebar hides what the current
- * school does not grant.
+ * Declared under the same heading as courses; the composition root gathers the
+ * sections, so the two entries meet only there.
  */
-export const menu: MenuGroup[] = []
+export const menu: MenuGroup[] = [
+  {
+    label: 'nav-group-edu',
+    items: [{ route: 'groups', label: 'nav-groups', icon: 'users', permission: 'groups:read' }],
+  },
+]

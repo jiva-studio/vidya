@@ -1,6 +1,12 @@
 // Public API of the group entity. Owned by T3.
-//
-// Requests live in `api/`, the view model in `model/`, small pieces of the
-// entity's own interface in `ui/`. Nothing outside this slice reaches past
-// this file.
-export {}
+export {
+  createGroup,
+  getEnrollment,
+  getGroup,
+  getGroupEnrollments,
+  getGroups,
+  getSchoolUserNames,
+  updateGroup,
+} from './api'
+export { useGroupForm, useGroupMembers, useGroups } from './model'
+export type * from './types'

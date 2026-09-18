@@ -1,2 +1,3 @@
 // Requests for the group entity. Owned by T3.
-export {}
+export { createGroup, getGroup, getGroups, updateGroup } from './groups'
+export { getEnrollment, getGroupEnrollments, getSchoolUserNames } from './members'

@@ -3,7 +3,32 @@ import type { RouteRecordRaw } from 'vue-router'
 /**
  * Routes for groups. Owned by T3.
  *
- * The composition root reads this file by name, so filling it is the whole of
- * what a section has to do to appear in the application.
+ * The roster is its own screen rather than a tab of the form: who is in a
+ * group is read far more often than the group's name is edited.
  */
-export const routes: RouteRecordRaw[] = []
+export const routes: RouteRecordRaw[] = [
+  {
+    path: '/groups',
+    name: 'groups',
+    component: () => import('./ui/GroupsPage.vue'),
+    meta: { permission: 'groups:read', breadcrumbs: ['nav-groups'] },
+  },
+  {
+    path: '/groups/new',
+    name: 'group-create',
+    component: () => import('./ui/GroupFormPage.vue'),
+    meta: { permission: 'groups:create', breadcrumbs: ['nav-groups', 'group-form-create-title'] },
+  },
+  {
+    path: '/groups/:groupId/edit',
+    name: 'group-edit',
+    component: () => import('./ui/GroupFormPage.vue'),
+    meta: { permission: 'groups:update', breadcrumbs: ['nav-groups', 'group-form-edit-title'] },
+  },
+  {
+    path: '/groups/:groupId/members',
+    name: 'group-members',
+    component: () => import('./ui/GroupMembersPage.vue'),
+    meta: { permission: 'enrollments:read', breadcrumbs: ['nav-groups', 'group-members-title'] },
+  },
+]
