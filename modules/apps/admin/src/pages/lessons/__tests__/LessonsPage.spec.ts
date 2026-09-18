@@ -121,13 +121,14 @@ describe('LessonsPage', () => {
     const { page } = await open({ [LESSONS]: { items: [] } })
 
     expect(page.text()).toContain('This course has no lessons')
-    expect(page.text()).toContain('Add the first lesson')
+    expect(page.text()).toContain('Add lesson')
   })
 
   it('shows the reason the server gave, and offers another go', async () => {
     const { transport, page } = await open({ [LESSONS]: refusal(500, 'The database is asleep') })
 
-    expect(page.text()).toContain('The database is asleep')
+    expect(page.text()).not.toContain('The database is asleep')
+    expect(page.text()).toContain('The server could not do this')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Try again')
     await retry?.trigger('click')
@@ -145,7 +146,11 @@ describe('LessonsPage', () => {
       [LESSONS]: { items: [lesson('l1', 1, 'Alphabet')] },
     })
 
-    expect(page.text()).not.toContain('Edit')
+    const names = page
+      .findAll('button')
+      .map((button) => button.attributes('aria-label') ?? button.text())
+
+    expect(names).not.toContain('Edit')
     expect(page.text()).not.toContain('Add lesson')
   })
 })

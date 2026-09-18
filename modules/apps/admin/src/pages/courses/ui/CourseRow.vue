@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Button, TableCell, TableRow } from '@vidya/ui'
+import { IconButton, TableCell, TableRow } from '@vidya/ui'
+import { BookOpen, Pencil } from 'lucide-vue-next'
 
 import type { CourseRowEmits, CourseRowProps } from './types'
-import { rowActionsClasses } from './styles'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -25,13 +25,17 @@ function onEdit() {
 
 <template>
   <TableRow>
-    <TableCell strong>{{ props.row.name }}</TableCell>
-    <TableCell muted>{{ props.row.description || $t('courses-no-description') }}</TableCell>
-    <TableCell align="end" :class="rowActionsClasses">
-      <Button size="sm" variant="ghost" @click="onLessons">{{ $t('courses-open-lessons') }}</Button>
-      <Button v-if="props.canEdit" size="sm" variant="ghost" @click="onEdit">
-        {{ $t('courses-edit') }}
-      </Button>
+    <TableCell tone="primary" truncate :title="props.row.name">{{ props.row.name }}</TableCell>
+    <TableCell truncate :title="props.row.description">
+      {{ props.row.description || $t('courses-no-description') }}
+    </TableCell>
+    <TableCell actions>
+      <IconButton :label="$t('courses-open-lessons')" @click="onLessons">
+        <BookOpen />
+      </IconButton>
+      <IconButton v-if="props.canEdit" :label="$t('courses-edit')" @click="onEdit">
+        <Pencil />
+      </IconButton>
     </TableCell>
   </TableRow>
 </template>

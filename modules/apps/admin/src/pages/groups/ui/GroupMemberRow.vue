@@ -39,10 +39,10 @@ function nameText(): string {
 
 <template>
   <TableRow>
-    <TableCell strong>{{ name }}</TableCell>
-    <TableCell>
+    <TableCell tone="primary" truncate :title="name">{{ name }}</TableCell>
+    <TableCell nowrap>
       <Badge :tone="tone">{{ $t(status) }}</Badge>
     </TableCell>
-    <TableCell muted>{{ since }}</TableCell>
+    <TableCell nowrap>{{ since }}</TableCell>
   </TableRow>
 </template>

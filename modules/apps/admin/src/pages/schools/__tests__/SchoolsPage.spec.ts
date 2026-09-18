@@ -75,13 +75,14 @@ describe('SchoolsPage', () => {
     const { page } = await mountPage({ [SCHOOLS]: { items: [] } })
 
     expect(page.text()).toContain('Школ пока нет')
-    expect(page.text()).toContain('Создайте первую школу')
+    expect(page.text()).toContain('Создайте школу')
   })
 
   it('shows the reason the server gave and offers another attempt', async () => {
     const { transport, page } = await mountPage({ [SCHOOLS]: refusal(503, 'Try again later') })
 
-    expect(page.find('[role="alert"]').text()).toContain('Try again later')
+    expect(page.find('[role="alert"]').text()).not.toContain('Try again later')
+    expect(page.find('[role="alert"]').text()).toContain('Сервер не смог это выполнить')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
     await retry?.trigger('click')
@@ -96,7 +97,9 @@ describe('SchoolsPage', () => {
 
     const { page } = await mountPage({ [SCHOOLS]: { items: [{ id: 'school-1', name: 'First' }] } })
 
-    const labels = page.findAll('button').map((button) => button.text())
+    const labels = page
+      .findAll('button')
+      .map((button) => button.attributes('aria-label') ?? button.text())
 
     expect(labels).not.toContain('Новая школа')
     expect(labels).not.toContain('Изменить')
@@ -107,7 +110,9 @@ describe('SchoolsPage', () => {
       [SCHOOLS]: { items: [{ id: 'school-1', name: 'First' }] },
     })
 
-    const settings = page.findAll('button').find((button) => button.text() === 'Настройки')
+    const settings = page
+      .findAll('button')
+      .find((button) => button.attributes('aria-label') === 'Настройки')
     await settings?.trigger('click')
     await flushPromises()
 

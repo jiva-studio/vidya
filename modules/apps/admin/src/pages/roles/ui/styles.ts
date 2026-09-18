@@ -1,14 +1,12 @@
-export const sectionClasses = ['grid', 'gap-[--space-5]']
+export const sectionClasses = ['grid', 'gap-[var(--space-5)]']
 
 export const formClasses = [
   'grid',
-  'gap-[--space-5]',
-  'max-w-[--form-max]',
-  'rounded-[--radius-lg]',
+  'gap-[var(--space-5)]',
+  'max-w-[var(--form-max)]',
+  'rounded-[var(--radius-lg)]',
   'border',
-  'border-[--color-border]',
-  'bg-[--color-surface]',
-  'p-[--space-5]',
+  'border-[var(--color-border)]',
+  'bg-[var(--color-surface)]',
+  'p-[var(--space-5)]',
 ]
-
-export const actionsClass = 'flex justify-end gap-[--space-2]'

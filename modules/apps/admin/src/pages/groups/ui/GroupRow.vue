@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Button, TableCell, TableRow } from '@vidya/ui'
+import { IconButton, TableCell, TableRow } from '@vidya/ui'
+import { Pencil, Users } from 'lucide-vue-next'
 
-import { rowActionsClasses } from './styles'
 import type { GroupRowEmits, GroupRowProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -25,12 +25,14 @@ function onEdit() {
 
 <template>
   <TableRow>
-    <TableCell strong>{{ props.row.name }}</TableCell>
-    <TableCell align="end" :class="rowActionsClasses">
-      <Button size="sm" variant="ghost" @click="onMembers">{{ $t('groups-open-members') }}</Button>
-      <Button v-if="props.canEdit" size="sm" variant="ghost" @click="onEdit">
-        {{ $t('groups-edit') }}
-      </Button>
+    <TableCell tone="primary" truncate :title="props.row.name">{{ props.row.name }}</TableCell>
+    <TableCell actions>
+      <IconButton :label="$t('groups-open-members')" @click="onMembers">
+        <Users />
+      </IconButton>
+      <IconButton v-if="props.canEdit" :label="$t('groups-edit')" @click="onEdit">
+        <Pencil />
+      </IconButton>
     </TableCell>
   </TableRow>
 </template>

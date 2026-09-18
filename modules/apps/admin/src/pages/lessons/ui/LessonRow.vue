@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Button, TableCell, TableRow } from '@vidya/ui'
+import { IconButton, TableCell, TableRow } from '@vidya/ui'
+import { Pencil } from 'lucide-vue-next'
 
 import LessonVersionBadge from './LessonVersionBadge.vue'
-import { rowActionsClasses } from './styles'
 import type { LessonRowEmits, LessonRowProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -22,19 +22,19 @@ function onEdit() {
 
 <template>
   <TableRow>
-    <TableCell numeric>{{ props.row.lessonNumber }}</TableCell>
-    <TableCell strong>{{ props.row.title }}</TableCell>
-    <TableCell>
+    <TableCell align="start" numeric nowrap>{{ props.row.lessonNumber }}</TableCell>
+    <TableCell tone="primary" truncate :title="props.row.title">{{ props.row.title }}</TableCell>
+    <TableCell nowrap>
       <LessonVersionBadge
         :state="props.row.state"
         :published-version="props.row.publishedVersion"
         :draft-version="props.row.draftVersion"
       />
     </TableCell>
-    <TableCell align="end" :class="rowActionsClasses">
-      <Button v-if="props.canEdit" size="sm" variant="ghost" @click="onEdit">
-        {{ $t('lessons-edit') }}
-      </Button>
+    <TableCell actions>
+      <IconButton v-if="props.canEdit" :label="$t('lessons-edit')" @click="onEdit">
+        <Pencil />
+      </IconButton>
     </TableCell>
   </TableRow>
 </template>

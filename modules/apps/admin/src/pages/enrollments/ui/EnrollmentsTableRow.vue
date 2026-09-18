@@ -6,8 +6,9 @@ import { computed } from 'vue'
 
 import { EnrollmentStatusBadge } from '@/entities/enrollment'
 import { ModerationActions } from '@/features/moderate-enrollment'
-import { formatDate, formatDateTime } from '@/shared/lib'
+import { formatDate } from '@/shared/lib'
 
+import { primaryLineClasses, secondaryLineClasses, stackClasses } from './styles'
 import type { EnrollmentsTableRowEmits, EnrollmentsTableRowProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -45,29 +46,37 @@ function onAssign(id: EnrollmentId) {
 
 <template>
   <TableRow>
-    <TableCell strong>
-      {{ props.enrollment.studentName ?? $t('enrollments-student-unknown') }}
+    <TableCell tone="primary">
+      <div :class="stackClasses">
+        <span :class="primaryLineClasses">
+          {{ props.enrollment.studentName ?? $t('enrollments-student-unknown') }}
+        </span>
+        <span :class="secondaryLineClasses">
+          {{ $t('enrollments-requested-at', { at: formatDate(props.enrollment.createdAt) }) }}
+        </span>
+      </div>
     </TableCell>
-    <TableCell muted>{{ props.enrollment.courseName }}</TableCell>
-    <TableCell muted>{{ group }}</TableCell>
+    <TableCell truncate :title="props.enrollment.courseName">
+      {{ props.enrollment.courseName }}
+    </TableCell>
+    <TableCell truncate :title="group">{{ group }}</TableCell>
     <TableCell>
-      <EnrollmentStatusBadge
-        :status="props.enrollment.status"
-        :in-queue="props.enrollment.inQueue"
-      />
+      <div :class="stackClasses">
+        <EnrollmentStatusBadge
+          :status="props.enrollment.status"
+          :in-queue="props.enrollment.inQueue"
+        />
+        <span v-if="props.enrollment.decidedAt" :class="secondaryLineClasses">
+          {{
+            $t('enrollments-decided-by', {
+              who: decidedBy,
+              at: formatDate(props.enrollment.decidedAt),
+            })
+          }}
+        </span>
+      </div>
     </TableCell>
-    <TableCell muted>{{ formatDate(props.enrollment.createdAt) }}</TableCell>
-    <TableCell muted>
-      <span v-if="props.enrollment.decidedAt">
-        {{
-          $t('enrollments-decided-by', {
-            who: decidedBy,
-            at: formatDateTime(props.enrollment.decidedAt),
-          })
-        }}
-      </span>
-    </TableCell>
-    <TableCell align="end">
+    <TableCell actions>
       <ModerationActions
         :enrollment="props.enrollment"
         :can-moderate="props.canModerate"

@@ -27,7 +27,13 @@ const emit = defineEmits<LessonsTableEmits>()
 const { $t } = useFluent()
 
 const columns = computed<TableColumn[]>(() => [
-  { key: 'lessonNumber', label: $t('lessons-column-number'), numeric: true },
+  {
+    key: 'lessonNumber',
+    label: $t('lessons-column-number'),
+    numeric: true,
+    align: 'start',
+    width: 'var(--col-index)',
+  },
   { key: 'title', label: $t('lessons-column-title') },
   { key: 'state', label: $t('lessons-column-state') },
   { key: 'actions', label: $t('lessons-column-actions'), align: 'end' },

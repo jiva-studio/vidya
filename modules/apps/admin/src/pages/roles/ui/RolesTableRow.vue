@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Button, TableCell, TableRow } from '@vidya/ui'
+import { IconButton, TableCell, TableRow } from '@vidya/ui'
+import { Pencil } from 'lucide-vue-next'
 
-import { actionsClass } from './styles'
 import type { RolesTableRowEmits, RolesTableRowProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -21,12 +21,12 @@ function onEdit() {
 
 <template>
   <TableRow>
-    <TableCell strong>{{ props.role.name }}</TableCell>
-    <TableCell muted>{{ props.role.description }}</TableCell>
-    <TableCell align="end" :class="actionsClass">
-      <Button v-if="props.canUpdate" variant="ghost" size="sm" @click="onEdit">
-        {{ $t('roles-edit') }}
-      </Button>
+    <TableCell tone="primary" truncate :title="props.role.name">{{ props.role.name }}</TableCell>
+    <TableCell truncate :title="props.role.description">{{ props.role.description }}</TableCell>
+    <TableCell actions>
+      <IconButton v-if="props.canUpdate" :label="$t('roles-edit')" @click="onEdit">
+        <Pencil />
+      </IconButton>
     </TableCell>
   </TableRow>
 </template>

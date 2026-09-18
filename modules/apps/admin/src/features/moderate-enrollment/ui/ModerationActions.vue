@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { AlertDialog, Button } from '@vidya/ui'
+import { AlertDialog, IconButton } from '@vidya/ui'
+import { Check, Users, X } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { ModerationActionsEmits, ModerationActionsProps } from '../types'
@@ -46,15 +47,25 @@ function onAssign() {
 
 <template>
   <div :class="actionsClasses">
-    <Button v-if="canDecide" size="sm" :busy="props.busy" @click="onAccept">
-      {{ $t('enrollments-accept') }}
-    </Button>
-    <Button v-if="canDecide" variant="ghost" size="sm" @click="onDeclineAsked">
-      {{ $t('enrollments-decline') }}
-    </Button>
-    <Button v-if="canPlace" variant="secondary" size="sm" @click="onAssign">
-      {{ $t('enrollments-assign-group') }}
-    </Button>
+    <IconButton
+      v-if="canDecide"
+      :label="$t('enrollments-accept')"
+      :busy="props.busy"
+      @click="onAccept"
+    >
+      <Check />
+    </IconButton>
+    <IconButton
+      v-if="canDecide"
+      variant="danger"
+      :label="$t('enrollments-decline')"
+      @click="onDeclineAsked"
+    >
+      <X />
+    </IconButton>
+    <IconButton v-if="canPlace" :label="$t('enrollments-assign-group')" @click="onAssign">
+      <Users />
+    </IconButton>
     <AlertDialog
       v-model:open="confirming"
       destructive

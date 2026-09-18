@@ -74,8 +74,11 @@ const mountPage = async (answers: FakeAnswers, settle = true) => {
   return { transport, page }
 }
 
+const nameOf = (button: { text: () => string; attributes: (name: string) => string | undefined }) =>
+  button.attributes('aria-label') ?? button.text()
+
 const click = async (page: Awaited<ReturnType<typeof mountPage>>['page'], label: string) => {
-  const button = page.findAll('button').find((candidate) => candidate.text() === label)
+  const button = page.findAll('button').find((candidate) => nameOf(candidate) === label)
   await button?.trigger('click')
   await flushPromises()
 }
@@ -135,7 +138,7 @@ describe('EnrollmentsPage', () => {
     await click(page, 'Отклонить')
 
     expect(transport.calls.some((call) => call.method === 'PATCH')).toBe(false)
-    expect(document.body.textContent).toContain('Решение потом не изменить')
+    expect(document.body.textContent).toContain('Решение не изменить')
 
     const confirm = [...document.body.querySelectorAll('button')].find(
       (button) => button.textContent?.trim() === 'Отклонить',
@@ -176,7 +179,7 @@ describe('EnrollmentsPage', () => {
     save?.click()
     await flushPromises()
 
-    expect(document.body.textContent).toContain('Отменить')
+    expect(document.body.textContent).toContain('Вернуть как было')
   })
 
   it('places a student in a group through the group route', async () => {
@@ -206,7 +209,7 @@ describe('EnrollmentsPage', () => {
     const { page } = await mountPage(world({ [ENROLLMENTS]: { items: [] } }))
 
     expect(page.text()).toContain('Заявок нет')
-    expect(page.text()).toContain('подаёт студент')
+    expect(page.text()).toContain('из приложения')
   })
 
   it('shows the reason the server gave and offers another attempt', async () => {
@@ -214,7 +217,8 @@ describe('EnrollmentsPage', () => {
       world({ [ENROLLMENTS]: refusal(500, 'База недоступна') }),
     )
 
-    expect(page.find('[role="alert"]').text()).toContain('База недоступна')
+    expect(page.find('[role="alert"]').text()).not.toContain('База недоступна')
+    expect(page.find('[role="alert"]').text()).toContain('Сервер не смог это выполнить')
 
     await click(page, 'Повторить')
 
@@ -244,7 +248,7 @@ describe('EnrollmentsPage', () => {
 
     const { page } = await mountPage(world())
 
-    const labels = page.findAll('button').map((button) => button.text())
+    const labels = page.findAll('button').map(nameOf)
     expect(labels).not.toContain('Принять')
     expect(labels).not.toContain('Отклонить')
   })

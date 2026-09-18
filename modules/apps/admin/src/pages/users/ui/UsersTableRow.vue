@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Button, TableCell, TableRow } from '@vidya/ui'
+import { IconButton, TableCell, TableRow } from '@vidya/ui'
+import { ArrowRight } from 'lucide-vue-next'
 
 import type { UsersTableRowEmits, UsersTableRowProps } from './types'
 
@@ -20,9 +21,11 @@ function onOpen() {
 
 <template>
   <TableRow>
-    <TableCell strong>{{ props.user.name }}</TableCell>
-    <TableCell align="end">
-      <Button variant="ghost" size="sm" @click="onOpen">{{ $t('users-open') }}</Button>
+    <TableCell tone="primary" truncate :title="props.user.name">{{ props.user.name }}</TableCell>
+    <TableCell actions>
+      <IconButton :label="$t('users-open')" @click="onOpen">
+        <ArrowRight />
+      </IconButton>
     </TableCell>
   </TableRow>
 </template>
