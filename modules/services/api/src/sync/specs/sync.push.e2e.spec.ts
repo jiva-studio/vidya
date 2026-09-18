@@ -121,16 +121,59 @@ describe('POST /sync/push', () => {
 
   /* ------------------------------- T-S-21 ------------------------------- */
 
-  it('T-S-21: the same row pushed twice is accepted once and journalled once', async () => {
+  it('T-S-21: the same row pushed twice is accepted without being applied twice', async () => {
     const change = answer()
 
     const first = (await push(ctx.tokens.student, [change]).expect(200))
       .body as protocol.PushResponse
+    const written = await storedAnswer(change.docId)
+
+    // The connection dropped and the device retried, a minute later by its own
+    // clock. The gap matters: `updatedAt` is stamped from the server clock, so
+    // a second application of the row would move it. Pushing the identical row
+    // at the identical instant could not tell "answered from the journal" apart
+    // from "applied all over again".
+    now = NOW + 60_000
+
     const second = (await push(ctx.tokens.student, [change]).expect(200))
       .body as protocol.PushResponse
 
     expect(second.results[0]).toEqual(first.results[0])
     expect(await journalFor(change.docId)).toHaveLength(1)
+
+    // Nothing was touched at all: the repeat was answered from the journal
+    // before the applier was reached (D-3).
+    const after = await storedAnswer(change.docId)
+    expect(after.updatedAt.getTime()).toBe(written.updatedAt.getTime())
+  })
+
+  it('T-S-21: a repeat that does reach the table is absorbed by the index', async () => {
+    const first = answer({ data: { ...answer().data, text: 'Written on the train.' } })
+
+    // The same answer to the same section under a second document id — a device
+    // that rebuilt its outbox reissues the row with a fresh id and the stamp it
+    // had. The natural key `(enrolment, version, section)` sends it to the row
+    // the first push already journalled under that stamp, so the insert this
+    // time really does collide and must not raise (D-3).
+    const again = answer({
+      outboxId: 2,
+      docId: uuid(),
+      hlc: first.hlc,
+      data: { ...first.data, text: 'Written on the train, sent twice.' },
+    })
+
+    const body = (await push(ctx.tokens.student, [first]).expect(200)).body as protocol.PushResponse
+    const repeat = (await push(ctx.tokens.student, [again]).expect(200))
+      .body as protocol.PushResponse
+
+    expect(body.results[0].status).toBe('accepted')
+    expect(repeat.results[0].status).toBe('accepted')
+
+    // One row, under the first id, carrying the later text; one journal entry,
+    // because the stamp is the same and the index says so.
+    expect(await storedAnswer(again.docId)).toBeNull()
+    expect((await storedAnswer(first.docId)).text).toBe('Written on the train, sent twice.')
+    expect(await journalFor(first.docId)).toHaveLength(1)
   })
 
   /* ------------------------------- T-S-22 ------------------------------- */
