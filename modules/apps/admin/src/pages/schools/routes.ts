@@ -6,4 +6,39 @@ import type { RouteRecordRaw } from 'vue-router'
  * The composition root reads this file by name, so filling it is the whole of
  * what a section has to do to appear in the application.
  */
-export const routes: RouteRecordRaw[] = []
+export const routes: RouteRecordRaw[] = [
+  {
+    path: '/schools',
+    name: 'schools',
+    component: () => import('./ui/SchoolsPage.vue'),
+    meta: { permission: 'schools:read', breadcrumbs: ['nav-schools'] },
+  },
+  {
+    path: '/schools/new',
+    name: 'school-new',
+    component: () => import('./ui/SchoolFormPage.vue'),
+    meta: {
+      permission: 'schools:create',
+      breadcrumbs: ['nav-schools', 'schools-form-create-title'],
+    },
+  },
+  {
+    path: '/schools/:id',
+    name: 'school-edit',
+    props: true,
+    component: () => import('./ui/SchoolFormPage.vue'),
+    meta: { permission: 'schools:update', breadcrumbs: ['nav-schools', 'schools-form-edit-title'] },
+  },
+  {
+    // The identifier is a prop rather than something read from the router, so
+    // the screen mounts in a test and in a story without one.
+    path: '/schools/:id/settings',
+    name: 'school-settings',
+    props: true,
+    component: () => import('./ui/SchoolSettingsPage.vue'),
+    meta: {
+      permission: 'schools:update',
+      breadcrumbs: ['nav-schools', 'schools-settings-title'],
+    },
+  },
+]

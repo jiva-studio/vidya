@@ -1,2 +1,3 @@
-// Requests for the school entity. Owned by T2.
-export {}
+export type { SchoolApi } from './schools'
+export { schoolApi, useSchoolApi } from './schools'
+export type * from './types'

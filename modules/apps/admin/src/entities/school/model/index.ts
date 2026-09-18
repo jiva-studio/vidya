@@ -1,2 +1,3 @@
-// View model and rules for the school entity. Owned by T2.
-export {}
+export { reason } from './reason'
+export type * from './types'
+export { useSchools } from './useSchools'

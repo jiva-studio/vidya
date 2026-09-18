@@ -1,6 +1,5 @@
 // Public API of the school entity. Owned by T2.
-//
-// Requests live in `api/`, the view model in `model/`, small pieces of the
-// entity's own interface in `ui/`. Nothing outside this slice reaches past
-// this file.
-export {}
+export type { SchoolApi, SchoolConfigs, UpdateSchoolConfigsRequest } from './api'
+export { schoolApi, useSchoolApi } from './api'
+export type { SchoolConfigsValues, SchoolFormValues, SchoolRow } from './model'
+export { reason, useSchools } from './model'
