@@ -4,5 +4,10 @@
     "noEmit": true,
     "baseUrl": "../.."
   },
-  "include": ["**/*.ts", "../../libs/**/*.ts"]
+  "include": [
+    "**/*.ts",
+    "../../libs/domain/**/*.ts",
+    "../../libs/entities/**/*.ts",
+    "../../libs/protocol/**/*.ts"
+  ]
 }

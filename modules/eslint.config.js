@@ -91,6 +91,7 @@ export default tseslint.config(
       // An empty catch silently swallows a failure; say why or handle it.
       'no-empty': ['error', { allowEmptyCatch: false }],
 
+
       // Cross-package imports go through the package's public entry point.
       // A relative path that climbs out of a package bypasses it, and with it
       // the dependency rules in .agents/rules/architecture.md.
@@ -270,6 +271,17 @@ export default tseslint.config(
         { patterns: upward(['pages', 'widgets', 'features', 'entities']) },
       ],
     },
+  },
+
+  /* ------------------------------ Design system ----------------------------- */
+
+  {
+    // The component set of @vidya/ui is named in the specification, and those
+    // names are one word each: Button, Input, Table, Dialog. A design system is
+    // the one place where that reads as a vocabulary rather than as a clash
+    // with an HTML element, because every component is imported explicitly.
+    files: ['libs/ui/**/*.vue'],
+    rules: { 'vue/multi-word-component-names': 'off' },
   },
 
   prettier,

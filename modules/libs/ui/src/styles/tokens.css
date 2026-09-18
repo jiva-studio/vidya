@@ -50,6 +50,7 @@
   --color-danger-surface: #fee2e2;
   --color-danger-border: #fca5a5;
   --color-danger-fg: #b91c1c;
+  --color-danger-fg-hover: #991b1b; /* the destructive button under the pointer */
 
   --color-info-surface: #dbeafe;
   --color-info-border: #93c5fd;
@@ -67,6 +68,8 @@
   --color-text-inverse: var(--color-neutral-0);
   --color-primary: var(--color-accent-700);
   --color-primary-hover: var(--color-accent-800);
+  --color-primary-surface: var(--color-accent-50);
+  --color-primary-border: var(--color-accent-200);
   --color-focus: var(--color-accent-500);
 
   /* ------------------------------------------------------------------ */
