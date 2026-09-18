@@ -82,6 +82,7 @@ function focusTitle() {
         :id="homeworkId"
         :model-value="props.section.assessment"
         :options="options"
+        :placeholder="$t('editor-homework-placeholder')"
         :disabled="props.frozen"
         :class="propertyControlClasses"
         @update:model-value="onAssessment"

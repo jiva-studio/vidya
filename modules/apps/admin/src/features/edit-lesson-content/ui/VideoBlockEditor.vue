@@ -47,6 +47,7 @@ function onPoster(posterUrl: string) {
           :id="field.id"
           :model-value="props.block.source"
           :options="options"
+          :placeholder="$t('editor-source-placeholder')"
           :disabled="props.frozen"
           @update:model-value="onSource"
         />

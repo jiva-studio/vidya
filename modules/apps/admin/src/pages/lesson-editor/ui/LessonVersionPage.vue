@@ -50,6 +50,7 @@ function onRetry() {
     <Skeleton v-if="document.loading.value" shape="block" :lines="6" />
     <ErrorState
       v-else-if="document.error.value"
+      :title="$t('state-error-title')"
       :description="$t(document.error.value)"
       :retry-label="$t('action-retry')"
       @retry="onRetry"

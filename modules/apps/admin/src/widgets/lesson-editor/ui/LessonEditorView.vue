@@ -140,6 +140,7 @@ async function store(): Promise<boolean> {
     <Skeleton v-if="versionDoc.loading.value" shape="block" />
     <ErrorState
       v-else-if="versionDoc.error.value"
+      :title="$t('state-error-title')"
       :description="$t(versionDoc.error.value)"
       :retry-label="$t('editor-retry')"
       @retry="onRetry"

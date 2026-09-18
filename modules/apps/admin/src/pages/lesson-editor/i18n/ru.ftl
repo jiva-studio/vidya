@@ -47,6 +47,7 @@ editor-section-remove-cancel = Оставить
 # Домашняя работа. Заданием служит сама секция: отдельного поля для текста
 # задания в документе нет, поэтому спрашиваем, нужна ли работа и кто её проверит.
 
+editor-homework-placeholder = Нужна ли работа?
 editor-homework-label = Домашняя работа
 editor-homework-none = Не задаётся
 editor-homework-auto = Задаётся, проверяется автоматически
@@ -74,6 +75,7 @@ editor-text-edit = Редактировать текст
 editor-text-hint = Markdown: # заголовок, **жирный**, *курсив*, - список, [ссылка](https://example.org), > цитата
 editor-text-placeholder = Наберите текст урока здесь.
 
+editor-source-placeholder = Выберите источник
 editor-source-label = Источник
 editor-source-hint = YouTube и Vimeo принимают ссылки только со своих сайтов
 editor-source-url = Прямая ссылка

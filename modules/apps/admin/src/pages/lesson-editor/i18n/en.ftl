@@ -47,6 +47,7 @@ editor-section-remove-cancel = Keep it
 # Homework. The section itself is the assignment: nothing in the document holds
 # a task text, so the wording asks whether work is expected and who marks it.
 
+editor-homework-placeholder = Is work asked for?
 editor-homework-label = Homework
 editor-homework-none = Not asked for
 editor-homework-auto = Asked for, marked automatically
@@ -74,6 +75,7 @@ editor-text-edit = Edit this text
 editor-text-hint = Markdown: # heading, **bold**, *italic*, - list, [link](https://example.org), > quote
 editor-text-placeholder = Write the lesson text here.
 
+editor-source-placeholder = Choose a source
 editor-source-label = Source
 editor-source-hint = YouTube and Vimeo accept links from their own sites only
 editor-source-url = Direct link
