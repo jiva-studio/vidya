@@ -10,6 +10,7 @@ import type { IDatabase } from '@/ports'
 
 import type { UtcClock } from '../../persistence/migrations'
 import { projectionOf, rowToPayload } from './collectionProjections'
+import { renameLocalDoc } from './docRename'
 import {
   deleteSyncRow,
   isTombstoned,
@@ -155,6 +156,20 @@ export function createSqlSyncApplyRepository(
 
     lastServerHlc,
     recordServerHlc,
+
+    /**
+     * Move the row, the rows that name it and the server pointer onto the id
+     * the server wrote under, and forget the pointer the local name held.
+     */
+    async renameDoc(collection, docId, serverDocId): Promise<void> {
+      if (docId === serverDocId) return
+
+      await renameLocalDoc(db, { owner: ownerId(), collection, docId, serverDocId })
+      await db.execute(
+        'DELETE FROM sync_doc_hlc WHERE owner_id = ? AND collection = ? AND doc_id = ?',
+        [ownerId(), collection, docId],
+      )
+    },
 
     /**
      * The highest server pointer on record for this identity, or `null` before

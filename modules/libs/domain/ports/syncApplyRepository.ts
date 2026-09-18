@@ -73,6 +73,19 @@ export interface ISyncApplyRepository {
   recordServerHlc(collection: SyncCollection, docId: string, hlc: string): Promise<void>
 
   /**
+   * Give a locally named document the id the server wrote it under.
+   *
+   * The row, the local rows that reference it and its server pointer all move
+   * to `serverDocId`. When the server's row is already here — the pull arrived
+   * before the push was answered — the local one is dropped instead: the two
+   * names are one document, and the server's is the one that exists. Nothing
+   * is merged, because the server has already merged it.
+   *
+   * Idempotent: with no row left under `docId` there is nothing to move.
+   */
+  renameDoc(collection: SyncCollection, docId: string, serverDocId: string): Promise<void>
+
+  /**
    * Whether the payload a pull is about to write differs from what is stored.
    * Cheap guard for the screens: an identical page must not repaint them.
    */

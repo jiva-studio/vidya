@@ -92,6 +92,14 @@ export interface OutboxAcknowledgement {
   readonly reason?: SyncRejectionReason
 }
 
+/** A document renamed to the id the server wrote it under. */
+export interface OutboxDocRename {
+  readonly ownerId: string
+  readonly collection: SyncCollection
+  readonly docId: string
+  readonly serverDocId: string
+}
+
 export interface IOutboxRepository {
   /**
    * Pending rows in insertion order, oldest first, narrowed to the owner and
@@ -126,6 +134,13 @@ export interface IOutboxRepository {
    * row is marked `pushed`, a refused one keeps its reason.
    */
   acknowledge(results: readonly OutboxAcknowledgement[]): Promise<void>
+
+  /**
+   * Point every journaled row of a document at the id the server wrote it
+   * under, so the next edit is sent under the name the server knows rather
+   * than under one only this device ever used.
+   */
+  renameDoc(rename: OutboxDocRename): Promise<void>
 
   /**
    * The highest HLC ever journaled by this owner, or `null` on an empty

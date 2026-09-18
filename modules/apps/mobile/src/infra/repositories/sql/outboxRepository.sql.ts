@@ -2,6 +2,7 @@ import type {
   IOutboxRepository,
   NewOutboxEntry,
   OutboxAcknowledgement,
+  OutboxDocRename,
   OutboxEntry,
   OutboxScope,
   OutboxStatus,
@@ -67,6 +68,7 @@ export function createSqlOutboxRepository(deps: SqlOutboxRepositoryDeps): IOutbo
     listUnsettled: (scope) => listUnsettled(db, scope),
     append: (entry) => append(db, now, entry),
     acknowledge: (results) => acknowledge(db, results),
+    renameDoc: (rename) => renameDoc(db, rename),
     latestHlc: (ownerId) => latestHlc(db, ownerId),
     latestHlcOnDevice: () => latestHlcOnDevice(db),
     latestId: (ownerId) => latestId(db, ownerId),
@@ -162,6 +164,34 @@ async function acknowledge(
       result.status,
       result.reason ?? null,
       result.id,
+    ])
+  }
+}
+
+/**
+ * Point every journaled row of one document at the id the server wrote under.
+ *
+ * Both the row just answered and the edits still waiting behind it: an edit
+ * left under the local name would be sent under a name the server has to
+ * translate again, and the answer to that would rename a document that no
+ * longer exists. The payload carries the id too, so it moves with the row.
+ */
+async function renameDoc(db: IDatabase, rename: OutboxDocRename): Promise<void> {
+  const rows = await db.query<OutboxRow>(
+    'SELECT id, data FROM outbox WHERE owner_id = ? AND collection = ? AND doc_id = ?',
+    [rename.ownerId, rename.collection, rename.docId],
+  )
+
+  for (const row of rows) {
+    const data =
+      row.data === null
+        ? null
+        : JSON.stringify({ ...(JSON.parse(row.data) as SyncPayload), id: rename.serverDocId })
+
+    await db.execute('UPDATE outbox SET doc_id = ?, data = ? WHERE id = ?', [
+      rename.serverDocId,
+      data,
+      row.id,
     ])
   }
 }
