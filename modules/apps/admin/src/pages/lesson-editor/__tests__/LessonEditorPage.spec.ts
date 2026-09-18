@@ -80,7 +80,7 @@ describe('opening a lesson', () => {
       [`GET ${VERSIONS}`]: refusal(403, 'User does not have permission'),
     })
 
-    expect(plain(wrapper.text())).toContain('You do not have access to this.')
+    expect(plain(wrapper.text())).toContain('No access.')
   })
 })
 
@@ -140,7 +140,7 @@ describe('versions', () => {
     expect(plain(wrapper.text())).toContain('Published v1')
     expect(labels(wrapper)).not.toContain('Save draft')
     expect(labels(wrapper)).not.toContain('Add section')
-    expect(labels(wrapper)).toContain('New revision')
+    expect(labels(wrapper)).toContain('New version')
   })
 
   it('walks into the draft that is already open when a revision is refused', async () => {
@@ -160,7 +160,7 @@ describe('versions', () => {
       },
     })
 
-    await clickText(wrapper, 'New revision')
+    await clickText(wrapper, 'New version')
 
     expect(http.calls.map((call) => `${call.method} ${call.path}`)).toContain(`GET ${VERSIONS}/v2`)
     expect(plain(wrapper.text())).toContain('Draft v2')

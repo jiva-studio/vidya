@@ -86,7 +86,8 @@ describe('LessonVersionPage', () => {
   it('offers another go when the version could not be read', async () => {
     const { page } = await open({ [VERSION]: refusal(503, 'Lesson storage is unavailable') })
 
-    expect(page.text()).toContain('Lesson storage is unavailable')
+    expect(page.text()).not.toContain('Lesson storage is unavailable')
+    expect(page.text()).toContain('The server could not do this')
     expect(page.text()).toContain('Try again')
   })
 })

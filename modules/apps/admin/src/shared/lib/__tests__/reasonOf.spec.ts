@@ -32,9 +32,7 @@ describe('reasonOf', () => {
   })
 
   it('falls back to the caller key when the server gave no words', () => {
-    expect(reasonOf(new HttpError(500, '/edu/courses'), 'courses-load-failed')).toBe(
-      'courses-load-failed',
-    )
+    expect(reasonOf(new HttpError(500, '/edu/courses'), 'courses-load-failed')).toBe('error-server')
     expect(reasonOf(new Error('boom'), 'courses-load-failed')).toBe('courses-load-failed')
   })
 

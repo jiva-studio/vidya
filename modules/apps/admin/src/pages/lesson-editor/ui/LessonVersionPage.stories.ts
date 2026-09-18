@@ -9,7 +9,7 @@ import LessonVersionPage from './LessonVersionPage.vue'
 /**
  * One published version, read and never written.
  *
- * "Без прав" is absent on purpose: the screen is behind `lessons:read`, and a
+ * "No permission" is absent on purpose: the screen is behind `lessons:read`, and a
  * reader without it never arrives (AC-7). There is nothing to hide within it.
  */
 const VERSION = '/edu/lessons/l1/versions/v7'
@@ -21,9 +21,9 @@ const content = {
   sections: [
     {
       id: 's1',
-      title: 'Алфавит',
+      title: 'Alphabet',
       assessment: 'none',
-      blocks: [{ id: 'b1', type: 'text', content: '# Деванагари\n\nЧитаем **слева направо**.' }],
+      blocks: [{ id: 'b1', type: 'text', content: '# Devanagari\n\nЧитаем **слева направо**.' }],
     },
   ],
 }
@@ -35,7 +35,7 @@ const over = (answers: FakeAnswers) => () => ({
     return {}
   },
   provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-  template: '<div class="p-[--space-6]"><LessonVersionPage /></div>',
+  template: '<div class="p-[var(--space-6)]"><LessonVersionPage /></div>',
 })
 
 const version = (over: Record<string, unknown> = {}) => ({
@@ -48,7 +48,7 @@ const version = (over: Record<string, unknown> = {}) => ({
 })
 
 const meta: Meta<typeof LessonVersionPage> = {
-  title: 'Edu/LessonVersion',
+  title: 'Edu/LessonEditor',
   component: LessonVersionPage,
 }
 
@@ -56,25 +56,25 @@ export default meta
 type Story = StoryObj<typeof LessonVersionPage>
 
 export const WithData: Story = {
-  name: 'Данные',
+  name: 'Data',
   parameters: route,
   render: over({ [VERSION]: version() }),
 }
 
-export const Empty: Story = {
-  name: 'Пусто',
+export const AnsweredVersionEmpty: Story = {
+  name: 'Empty',
   parameters: route,
   render: over({ [VERSION]: version({ content: { schemaVersion: 1, sections: [] } }) }),
 }
 
-export const Loading: Story = {
-  name: 'Загрузка',
+export const AnsweredVersionLoading: Story = {
+  name: 'Loading',
   parameters: route,
   render: over({ [VERSION]: pending() }),
 }
 
-export const Failed: Story = {
-  name: 'Ошибка',
+export const AnsweredVersionFailed: Story = {
+  name: 'Error',
   parameters: route,
-  render: over({ [VERSION]: refusal(503, 'Версия урока сейчас не читается') }),
+  render: over({ [VERSION]: refusal(503, 'Lesson storage is unavailable') }),
 }
