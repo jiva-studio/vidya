@@ -21,9 +21,7 @@ describe('/edu/progress without an enrollment', () => {
   const routes = protocol.Routes().edu.progress
 
   const find = (token: string, query = '') =>
-    request(app.getHttpServer())
-      .get(`${routes.find()}${query}`)
-      .auth(token, { type: 'bearer' })
+    request(app.getHttpServer()).get(`${routes.find()}${query}`).auth(token, { type: 'bearer' })
 
   const items = (response: request.Response) =>
     (response.body as protocol.GetBlockStatesResponse).items
@@ -36,9 +34,11 @@ describe('/edu/progress without an enrollment', () => {
     // The id used to be required, which a client on its first run cannot supply.
     const response = await find(ctx.tokens.student).expect(200)
 
-    expect(items(response).map((s) => s.enrollmentId).sort()).toEqual(
-      [ctx.firstEnrollmentId, ctx.secondEnrollmentId].sort(),
-    )
+    expect(
+      items(response)
+        .map((s) => s.enrollmentId)
+        .sort(),
+    ).toEqual([ctx.firstEnrollmentId, ctx.secondEnrollmentId].sort())
   })
 
   it('does not mix in the progress of another student on the same course', async () => {

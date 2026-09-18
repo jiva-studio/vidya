@@ -93,8 +93,7 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
   await progress(secondEnrollment.id, second.versionId, '22222222-2222-4222-8222-222222222222')
   await progress(otherEnrollment.id, first.versionId, '33333333-3333-4333-8333-333333333333')
 
-  const token = async (userId: domain.UserId) =>
-    (await auth.generateTokens(userId, [])).accessToken
+  const token = async (userId: domain.UserId) => (await auth.generateTokens(userId, [])).accessToken
 
   return {
     firstEnrollmentId: firstEnrollment.id,

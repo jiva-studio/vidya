@@ -28,9 +28,7 @@ describe('/edu/enrollments/my', () => {
       .expect(201)
 
   const my = (token: string, query = '') =>
-    request(app.getHttpServer())
-      .get(`${routes.my()}${query}`)
-      .auth(token, { type: 'bearer' })
+    request(app.getHttpServer()).get(`${routes.my()}${query}`).auth(token, { type: 'bearer' })
 
   const items = (response: request.Response) =>
     (response.body as protocol.GetEnrollmentsResponse).items
@@ -48,9 +46,11 @@ describe('/edu/enrollments/my', () => {
     const response = await my(ctx.tokens.student).expect(200)
 
     expect(items(response)).toHaveLength(2)
-    expect(items(response).map((e) => e.courseId).sort()).toEqual(
-      [ctx.courseId, ctx.otherCourseId].sort(),
-    )
+    expect(
+      items(response)
+        .map((e) => e.courseId)
+        .sort(),
+    ).toEqual([ctx.courseId, ctx.otherCourseId].sort())
   })
 
   it('does not show one student the places of another', async () => {

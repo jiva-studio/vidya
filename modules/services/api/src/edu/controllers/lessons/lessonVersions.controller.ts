@@ -13,11 +13,7 @@ import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
-import {
-  EnrollmentsService,
-  LessonsService,
-  LessonVersionsService,
-} from '@vidya/api/edu/services'
+import { EnrollmentsService, LessonsService, LessonVersionsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
 import * as domain from '@vidya/domain'
 import * as entities from '@vidya/entities'

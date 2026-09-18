@@ -60,10 +60,7 @@ export type LessonVersionSummary = Omit<LessonVersionDetails, 'content'>
 export type StudentQuizBlock = Omit<domain.QuizBlock, 'rightAnswer'>
 
 export type StudentLessonBlock =
-  | domain.TextBlock
-  | domain.VideoBlock
-  | domain.AudioBlock
-  | StudentQuizBlock
+  domain.TextBlock | domain.VideoBlock | domain.AudioBlock | StudentQuizBlock
 
 export type StudentLessonSection = Omit<domain.LessonSection, 'blocks'> & {
   blocks: StudentLessonBlock[]
@@ -95,8 +92,7 @@ export type GetLessonVersionsResponse = crud.GetItemsListResponse<LessonVersionS
 export type GetLessonVersionResponse = crud.GetItemResponse<LessonVersionDetails>
 
 /** The version a student works against, with the quiz keys withheld. */
-export type GetPublishedLessonVersionResponse =
-  crud.GetItemResponse<StudentLessonVersionDetails>
+export type GetPublishedLessonVersionResponse = crud.GetItemResponse<StudentLessonVersionDetails>
 
 /* -------------------------------------------------------------------------- */
 /*                                   Update                                   */

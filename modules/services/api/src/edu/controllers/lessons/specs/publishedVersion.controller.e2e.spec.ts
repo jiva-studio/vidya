@@ -130,9 +130,7 @@ describe('/edu/lessons/:lessonId/versions/published', () => {
     // is there, not because it looks in the wrong place.
     const withKey = { content: { sections: [{ blocks: [{ rightAnswer: RIGHT_ANSWER }] }] } }
 
-    expect(pathsOf('rightAnswer', withKey)).toEqual([
-      '$.content.sections[0].blocks[0].rightAnswer',
-    ])
+    expect(pathsOf('rightAnswer', withKey)).toEqual(['$.content.sections[0].blocks[0].rightAnswer'])
   })
 
   /* -------------------------------------------------------------------------- */
