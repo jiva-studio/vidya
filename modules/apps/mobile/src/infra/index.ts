@@ -1,3 +1,6 @@
 export * from './http/fetchHttpClient'
 export * from './persistence'
+export * from './repositories'
+export * from './storage/preferencesDeviceId'
 export * from './storage/preferencesSessionStore'
+export * from './sync/http/syncClient'

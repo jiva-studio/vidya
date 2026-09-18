@@ -1,9 +1,12 @@
 import {
+  hlcToString,
   type IsoDateTime,
+  parseHlc,
   SYNC_DIRECTION,
   type SyncCollection,
   type SyncOp,
   type SyncPayload,
+  type SyncRejectionReason,
   type SyncScopeKey,
   syncScopeKey,
   type SyncScopeRef,
@@ -20,6 +23,7 @@ import type {
   SyncChecksums,
   SyncCursors,
 } from '@vidya/protocol'
+import { SYNC_CLOCK_SKEW_TOLERANCE_MS } from '@vidya/protocol'
 import type { ISyncClient } from '@vidya/usecases'
 
 /**
@@ -85,6 +89,30 @@ export class FakeSyncServer implements ISyncClient {
 
   /** Runs after each page is handed out — a seam for suspending the database. */
   onPull: ((index: number) => void | Promise<void>) | null = null
+
+  /**
+   * Runs after a push has been applied but before the answer is returned — the
+   * seam for "the server did the work and the answer never arrived" (T-N-2).
+   */
+  onPushApplied: ((index: number) => void | Promise<void>) | null = null
+
+  /** Every call in order — 'pull' | 'push' | 'ack' — so a test can see the sequence. */
+  readonly calls: string[] = []
+
+  /** Refuses a pushed row, to stage a per-row rejection (AC-6, T-M-9). */
+  rejectIf: (change: PushChange) => SyncRejectionReason | null = () => null
+
+  /**
+   * The server's own wall clock, in unix milliseconds.
+   *
+   * A stamp sitting further ahead than {@link SYNC_CLOCK_SKEW_TOLERANCE_MS}
+   * allows is restamped rather than refused (I-2, AC-10h): one phone whose
+   * clock is a year fast would otherwise anchor the ordering of the whole
+   * system in the future, because every device seeds its clock from the highest
+   * HLC it has seen and an HLC's physical part never comes back down. Refusing
+   * is not an option — it would mean losing the student's work.
+   */
+  serverNowMs = 1_789_689_600_000
 
   readonly pullRequests: PullRequest[] = []
   readonly pushRequests: PushRequest[] = []
@@ -159,6 +187,7 @@ export class FakeSyncServer implements ISyncClient {
 
   async pull(request: PullRequest): Promise<PullResponse> {
     this.pullRequests.push(request)
+    this.calls.push('pull')
     await intercept(this.pullFailures)
     if (this.onPull !== null) await this.onPull(this.pullRequests.length - 1)
 
@@ -182,15 +211,18 @@ export class FakeSyncServer implements ISyncClient {
 
   async push(request: PushRequest): Promise<PushResponse> {
     this.pushRequests.push(request)
+    this.calls.push('push')
     await intercept(this.pushFailures)
 
     const results = request.changes.map((change) => this.apply(change, request.deviceId))
+    if (this.onPushApplied !== null) await this.onPushApplied(this.pushRequests.length - 1)
 
     return { results, journaledOutboxId: highestOutboxId(request.changes) }
   }
 
   async ackCursor(request: AckCursorRequest): Promise<void> {
     this.ackRequests.push(request)
+    this.calls.push('ack')
     await intercept(this.ackFailures)
   }
 
@@ -217,6 +249,9 @@ export class FakeSyncServer implements ISyncClient {
       return { ...answer, status: 'rejected', reason: 'readOnlyCollection' }
     }
 
+    const refusal = this.rejectIf(change)
+    if (refusal !== null) return { ...answer, status: 'rejected', reason: refusal }
+
     const existing = this.rows.find(
       (row) =>
         row.collection === change.collection &&
@@ -227,17 +262,31 @@ export class FakeSyncServer implements ISyncClient {
       return { ...answer, status: 'accepted', serverHlc: existing.hlc, restamped: false }
     }
 
+    const stamped = this.restamp(change.hlc)
     this.journal({
       collection: change.collection,
       docId: change.docId,
       scope: this.scopeFor(change.collection, change.docId),
       op: change.op,
       data: change.data,
-      hlc: change.hlc,
+      hlc: stamped,
       deviceId,
     })
 
-    return { ...answer, status: 'accepted', serverHlc: change.hlc, restamped: false }
+    return {
+      ...answer,
+      status: 'accepted',
+      serverHlc: stamped,
+      restamped: stamped !== change.hlc,
+    }
+  }
+
+  /** Pull a stamp from too far in the future back to the server's own clock. */
+  private restamp(hlc: string): string {
+    const ceiling = this.serverNowMs + SYNC_CLOCK_SKEW_TOLERANCE_MS
+    if (parseHlc(hlc).physical <= ceiling) return hlc
+
+    return hlcToString({ physical: this.serverNowMs, counter: 0, deviceId: 'server' })
   }
 
   private isGranted(scope: SyncScopeRef): boolean {
