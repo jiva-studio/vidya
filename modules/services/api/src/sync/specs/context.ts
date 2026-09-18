@@ -15,6 +15,15 @@ import { DataSource } from 'typeorm'
 
 export const SECTION_ID = domain.asId<domain.SectionId>('11111111-1111-4111-8111-111111111111')
 export const BLOCK_ID = domain.asId<domain.BlockId>('22222222-2222-4222-8222-222222222222')
+export const QUIZ_BLOCK_ID = domain.asId<domain.BlockId>('33333333-3333-4333-8333-333333333333')
+
+/**
+ * The key the fixture carries so a leak has something to leak.
+ *
+ * Deliberately not `0`: an index that is falsy would let a check written as
+ * `if (block.rightAnswer)` pass while the key sat in the payload.
+ */
+export const RIGHT_ANSWER = 2
 
 /** A course with a lesson, a published version and a draft nobody may see. */
 export interface CourseWorld {
@@ -51,7 +60,21 @@ const content = (): domain.LessonContent => ({
       id: SECTION_ID,
       title: 'Introduction',
       assessment: 'teacher',
-      blocks: [{ id: BLOCK_ID, type: 'text', content: 'Read this' }],
+      blocks: [
+        { id: BLOCK_ID, type: 'text', content: 'Read this' },
+
+        // A quiz, because the whole point of AC-10a is the key inside one. The
+        // sync fixtures carried only `text` blocks, which is exactly why the
+        // journal shipped raw content for as long as it did without failing a
+        // single test.
+        {
+          id: QUIZ_BLOCK_ID,
+          type: 'quiz',
+          question: 'Who speaks the Gita?',
+          answers: ['Arjuna', 'Sanjaya', 'Krishna'],
+          rightAnswer: RIGHT_ANSWER,
+        },
+      ],
     },
   ],
 })

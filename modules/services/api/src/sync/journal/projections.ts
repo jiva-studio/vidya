@@ -1,3 +1,4 @@
+import { toStudentContent } from '@vidya/api/edu/mappers/studentContent'
 import { asId, EnrollmentId, SchoolId, SyncCollection } from '@vidya/domain'
 import {
   BlockState,
@@ -95,6 +96,29 @@ const lessons: CollectionProjection<Lesson> = {
  *
  * The scope comes from the lesson, which is what carries the course — a version
  * knows only its lesson.
+ *
+ * **The content is the student projection, never the raw document** (AC-10a).
+ * The journal has exactly one reader — a student's device — and what reaches
+ * that device reaches a SQLite file no later server change can recall, so a
+ * quiz key journalled once is a quiz key given away for good. The REST path
+ * has withheld it since `toStudentContent` was written; this path sent
+ * `version.content` verbatim and nothing noticed, because the sync fixtures
+ * carried a `text` block and no quiz. It is the same function on both paths on
+ * purpose: two implementations of "what a student may be handed" is one
+ * implementation and one hole.
+ *
+ * Staff are not a reason to loosen this. A reviewer needs the key at review
+ * time, and `GET versions/:versionId` hands it over against a permission —
+ * which is where an answer key belongs, behind a check, and not in a log that
+ * is replicated to phones by construction.
+ *
+ * Rows journalled before this fix keep whatever they were written with: the
+ * journal is append-only, and rewriting `data` in place would reach no device
+ * anyway, because a device applies a row by its HLC and an edited row issues no
+ * new one. The repair is to republish the affected versions, which journals
+ * them again — stripped — with a fresh stamp that does overwrite the copy on
+ * the device. No migration ships for it: the schema is not deployed anywhere
+ * yet, and one that scrubbed the table would buy nothing a republish does not.
  */
 const lessonVersions: CollectionProjection<LessonVersion> = {
   collection: 'lesson_versions',
@@ -114,7 +138,7 @@ const lessonVersions: CollectionProjection<LessonVersion> = {
     lessonId: version.lessonId,
     version: version.version,
     status: version.status,
-    content: version.content,
+    content: toStudentContent(version.content),
     publishedAt: version.publishedAt ?? null,
   }),
 }
