@@ -26,6 +26,7 @@ interface JournalRow {
   scope_kind: string
   scope_id: string
   school_id: string
+  device_id: string | null
   created_at: Date
 }
 
@@ -78,12 +79,17 @@ export class SyncPullService {
     }))
 
     const limit = clamp(request.limit)
-    const found = await this.read(positions, request.deviceId, limit)
-    const page = found.slice(0, limit).map(toChange)
+    const found = await this.read(positions, limit)
+
+    // What this page covered, and what of it the caller is handed. The two
+    // differ by the echo filter alone, and the cursor follows the first (D-1):
+    // see `advanced`.
+    const scanned = found.slice(0, limit)
+    const changes = scanned.filter((row) => row.device_id !== request.deviceId).map(toChange)
 
     return {
-      changes: page,
-      cursors: advanced(page),
+      changes,
+      cursors: advanced(scanned),
       scopes: grants,
       checksums: await this.checksums.checksumsFor(grants.map((grant) => grant.scope)),
       hasMore: found.length > limit,
@@ -115,15 +121,13 @@ export class SyncPullService {
    * One indexed read per scope, merged and ordered by the journal's own
    * sequence, plus one row to answer `hasMore` without a second query.
    *
-   * A row written by the calling device is not handed back to it (D-5): it
-   * already has the change, and echoing it would have the device apply its own
-   * write on top of whatever it has done since.
+   * The calling device's own rows are read too, and dropped afterwards rather
+   * than in SQL. They are not handed back (D-5) — the device already has the
+   * change, and echoing it would have it apply its own write on top of
+   * whatever it has done since — but the page has to know they went by, or
+   * the cursor cannot be told where the page ended.
    */
-  private async read(
-    positions: readonly ReadPosition[],
-    deviceId: string,
-    limit: number,
-  ): Promise<JournalRow[]> {
+  private async read(positions: readonly ReadPosition[], limit: number): Promise<JournalRow[]> {
     if (positions.length === 0) return []
 
     const values = positions
@@ -133,38 +137,50 @@ export class SyncPullService {
       )
       .join(', ')
 
-    const device = `$${positions.length * 3 + 1}`
-
     return this.dataSource.query(
       `WITH asked AS (
          SELECT * FROM (VALUES ${values}) AS v(scope_kind, scope_id, cursor)
        )
        SELECT j.global_seq, j.collection, j.doc_id, j.op, j.data, j.hlc,
-              j.scope_kind, j.scope_id, j.school_id, j.created_at
+              j.scope_kind, j.scope_id, j.school_id, j.device_id, j.created_at
          FROM sync_journal j
          JOIN asked a ON a.scope_kind = j.scope_kind AND a.scope_id = j.scope_id
         WHERE j.global_seq > a.cursor
-          AND (j.device_id IS NULL OR j.device_id <> ${device})
         ORDER BY j.global_seq
         LIMIT ${limit + 1}`,
-      [
-        ...positions.flatMap((position) => [
-          position.scope.kind,
-          position.scope.id,
-          String(position.cursor),
-        ]),
-        deviceId,
-      ],
+      positions.flatMap((position) => [
+        position.scope.kind,
+        position.scope.id,
+        String(position.cursor),
+      ]),
     )
   }
 }
 
-/** The position each scope reached on this page — and no entry for the rest. */
-const advanced = (changes: readonly SyncChange[]): SyncCursors => {
+/**
+ * The position each scope reached on this page — and no entry for the rest.
+ *
+ * It counts every row the page *read*, not every row it hands back, and the
+ * difference is the whole of D-1. A device's own rows are filtered out of the
+ * answer, and their `serverSeq` is reported nowhere else — `PushResult` names
+ * the stamp, not the sequence. Advancing by the returned rows therefore left
+ * the cursor stuck below `headSeq` whenever a scope's tail was the caller's
+ * own work: "behind" never cleared, and `ackedSeq` never reached the rows the
+ * device demonstrably holds, so a compaction could not drop them.
+ *
+ * The two filters are not alike and are not treated alike. A scope the caller
+ * has no claim to is never read at all — `pull` intersects the asked positions
+ * with the grants before the first row (AC-10l) — so no rights-filtered row can
+ * appear here and no cursor is returned for such a scope. Echo is a filter on
+ * delivery; rights is a filter on existence.
+ */
+const advanced = (scanned: readonly JournalRow[]): SyncCursors => {
   const reached: Record<string, number> = {}
 
-  for (const change of changes) {
-    reached[domain.syncScopeKey(change.scope)] = change.serverSeq
+  for (const row of scanned) {
+    const scope = { kind: row.scope_kind as domain.SyncScopeKind, id: row.scope_id }
+
+    reached[domain.syncScopeKey(scope)] = Number(row.global_seq)
   }
 
   return reached

@@ -83,6 +83,57 @@ describe('POST /sync/pull', () => {
     expect(seeded(theirs.body as protocol.PullResponse)).toHaveLength(4)
   })
 
+  /* ------------------------------- T-S-44 ------------------------------- */
+
+  /**
+   * D-1. The echo filter used to stop the cursor as well as the delivery: the
+   * page advanced by the highest `serverSeq` it *returned*, and a scope whose
+   * tail is the caller's own work returns nothing from that tail. The device's
+   * own rows carry a `serverSeq` it is told nowhere else — `PushResult` names
+   * the stamp, not the sequence — so the gap to `headSeq` never closed, no
+   * matter how many times it pulled.
+   */
+  it('T-S-44: reaches headSeq even when the tail of the scope is its own work', async () => {
+    await seedJournal(ds, own(), { schoolId: ctx.schoolId, count: 4 })
+    await seedJournal(ds, own(), { schoolId: ctx.schoolId, count: 4, deviceId: DEVICE, from: 10 })
+
+    const response = await pull(ctx.tokens.student, {}).expect(200)
+    const body = response.body as protocol.PullResponse
+
+    const key = domain.syncScopeKey(own())
+    const grant = body.scopes.find((g) => domain.syncScopeKey(g.scope) === key)
+
+    // Its own four rows are still not echoed back to it...
+    expect(body.changes.filter((c) => c.collection === 'block_states')).toHaveLength(4)
+
+    // ...and the scope is nonetheless up to date, in one pull.
+    expect(body.hasMore).toBe(false)
+    expect(body.cursors[key]).toBe(grant.headSeq)
+  })
+
+  /* ------------------------------- T-S-45 ------------------------------- */
+
+  /**
+   * The other half of D-1: echo and rights are different filters. A row the
+   * caller never had a claim to was never delivered and must never be counted
+   * as applied, so no position comes back for that scope at all — otherwise a
+   * later enrolment would start above the history it is entitled to.
+   */
+  it('T-S-45: a scope refused for rights advances no cursor', async () => {
+    const stranger: domain.SyncScopeRef = { kind: 'user', id: ctx.stranger.id }
+
+    await seedJournal(ds, stranger, { schoolId: ctx.schoolId, count: 3 })
+
+    const response = await pull(ctx.tokens.student, {
+      cursors: { [domain.syncScopeKey(stranger)]: 0 },
+    }).expect(200)
+
+    const body = response.body as protocol.PullResponse
+
+    expect(body.cursors[domain.syncScopeKey(stranger)]).toBeUndefined()
+    expect(Object.keys(body.cursors)).not.toContain(domain.syncScopeKey(stranger))
+  })
+
   /* ------------------------------- T-S-12 ------------------------------- */
 
   it('T-S-12: a position of zero hands over the scope from the beginning', async () => {
