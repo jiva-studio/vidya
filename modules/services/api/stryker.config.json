@@ -19,10 +19,7 @@
     "!src/**/*.module.ts",
     "!src/**/index.ts"
   ],
-  "reporters": [
-    "clear-text",
-    "progress"
-  ],
+  "reporters": ["clear-text", "progress"],
   "clearTextReporter": {
     "maxTestsToLog": 0
   },
