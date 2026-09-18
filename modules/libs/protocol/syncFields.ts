@@ -115,10 +115,6 @@ export const SYNC_WIRE_FIELDS: Readonly<Record<domain.SyncCollection, readonly s
  */
 export const SYNC_ENVELOPE_FIELD = 'schoolId'
 
-/** The fields of `collection`, sorted, for comparing two sets by value. */
-export const syncWireFields = (collection: domain.SyncCollection): readonly string[] =>
-  [...SYNC_WIRE_FIELDS[collection]].sort()
-
 /** What one side has that the other does not, in both directions. */
 export interface FieldDifference {
   readonly unexpected: readonly string[]

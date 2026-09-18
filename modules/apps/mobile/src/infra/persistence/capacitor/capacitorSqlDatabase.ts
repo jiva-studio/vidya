@@ -3,6 +3,26 @@ import type { SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseSuspendedError, type IDatabase, type QueryParams } from '@/ports'
 
 /**
+ * The part of the plugin's connection this adapter uses.
+ *
+ * Narrowed from {@link SQLiteDBConnection} rather than taking the class, for
+ * two reasons. It states exactly what the adapter depends on, and it lets the
+ * conformance suite drive the adapter against a stand-in connection — this code
+ * had never been executed at all before that, on a device or anywhere else.
+ *
+ * `close` is deliberately absent: see {@link createCapacitorSqlDatabase}.
+ */
+export type CapacitorConnection = Pick<
+  SQLiteDBConnection,
+  | 'query'
+  | 'run'
+  | 'beginTransaction'
+  | 'commitTransaction'
+  | 'rollbackTransaction'
+  | 'isTransactionActive'
+>
+
+/**
  * Wraps an open `@capacitor-community/sqlite` connection in the app's
  * {@link IDatabase} port.
  *
@@ -10,11 +30,13 @@ import { DatabaseSuspendedError, type IDatabase, type QueryParams } from '@/port
  * in lectorium, reduced to the one writable database this app has and extended
  * with suspend/resume for the background-lock problem below.
  *
- * `release` is called on {@link IDatabase.close} to hand the connection back to
- * the plugin.
+ * **Closing is `release` and nothing else.** The plugin's `closeConnection`
+ * closes the database and then drops it from its registry, so calling
+ * `db.close()` first asked it to close a database it was about to close again —
+ * harmless today only because nothing signs out yet.
  */
 export function createCapacitorSqlDatabase(
-  db: SQLiteDBConnection,
+  db: CapacitorConnection,
   release: () => Promise<void>,
 ): IDatabase {
   // SQLite has no nested transactions, and this is one connection: two
@@ -27,22 +49,46 @@ export function createCapacitorSqlDatabase(
   let suspended = false
 
   async function runBlock(fn: () => Promise<void>): Promise<void> {
+    await healOpenTransaction()
     await db.beginTransaction()
+
     try {
       await fn()
       await db.commitTransaction()
     } catch (error) {
-      await rollbackQuietly()
+      await rollbackAfterFailure()
       throw error
     }
   }
 
-  async function rollbackQuietly(): Promise<void> {
+  /**
+   * Roll back a transaction a previous block could not.
+   *
+   * A rollback can fail on the device — this is one connection to a real file,
+   * not an in-memory image — and a failed rollback leaves the transaction open.
+   * Without this, every later block would hit "cannot start a transaction
+   * within a transaction" until the app was restarted: one failed write, and
+   * the database is dead for the rest of the session. sql.js will never show
+   * that, which is precisely why it went unnoticed.
+   *
+   * A failure here is not swallowed. If the transaction is open and cannot be
+   * rolled back, the caller is told before any work is attempted, rather than
+   * finding out from a BEGIN that cannot explain itself.
+   */
+  async function healOpenTransaction(): Promise<void> {
+    const { result } = await db.isTransactionActive()
+    if (result !== true) return
+
+    await db.rollbackTransaction()
+  }
+
+  async function rollbackAfterFailure(): Promise<void> {
     try {
       await db.rollbackTransaction()
     } catch {
-      // A rollback can fail on its own — the connection may already be gone —
-      // and letting that surface would hide the error that broke the block.
+      // The caller is owed the error that broke the block, not the one from
+      // cleaning up after it. The transaction this failed to close is not left
+      // to poison the connection: the next block rolls it back first.
     }
   }
 
@@ -68,8 +114,9 @@ export function createCapacitorSqlDatabase(
     },
 
     // COMMIT is durability here: the plugin writes to a real file, so there is
-    // no image to export. The method stays because the port has it and the
-    // sql.js adapter genuinely needs it.
+    // no image to export. That is true on a native platform and only there,
+    // which is why `useCapacitorSqlPersistence` refuses to open anywhere else
+    // rather than leaving this method to lose data quietly.
     async save(): Promise<void> {},
 
     async suspend(): Promise<void> {
@@ -87,7 +134,6 @@ export function createCapacitorSqlDatabase(
     },
 
     async close(): Promise<void> {
-      await db.close()
       await release()
     },
   }
