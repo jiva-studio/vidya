@@ -5,11 +5,13 @@ import { DataSource, EntityManager } from 'typeorm'
 
 import { CLOCK, Clock, withSyncWriteContext } from '../../journal'
 import { blockStatesApplier } from './blockStates.applier'
+import { enrollmentsApplier } from './enrollments.applier'
 import { homeworkApplier } from './homework.applier'
 import { SyncStampingService } from './stamping.service'
 import { isRejection, PushApplier, PushRowContext, reject, Rejection } from './types'
 
 const APPLIERS: Partial<Record<domain.SyncCollection, PushApplier>> = {
+  enrollments: enrollmentsApplier,
   homework: homeworkApplier,
   block_states: blockStatesApplier,
 }
@@ -17,17 +19,22 @@ const APPLIERS: Partial<Record<domain.SyncCollection, PushApplier>> = {
 /**
  * Why a collection with no applier takes nothing from a device.
  *
- * `enrollments` is the interesting one. Its direction is two-way, but the only
- * field a client owns there is `status`, which the server owns as well and wins
- * on — a decision supersedes the request that asked for it. So there is nothing
- * a device may write to an existing enrolment, and asking for a new place on a
- * course is an online action with its own endpoint.
+ * What is left here is the school's content. It is written in the admin console
+ * and replicates downward only, so a course arriving from a phone is a bug on
+ * the phone rather than a change anyone meant to make.
+ *
+ * `enrollments` is deliberately not one of them, though its `status` is a field
+ * the server wins on. Up goes the request, down comes the decision — that is
+ * the collection's direction in the plan's "what goes where" table, and the two
+ * sides are kept apart by the field split, not by a ban on the collection. A
+ * device must be able to ask for a place while it is offline, which is the case
+ * offline mode exists for; refusing it would leave an outbox row that is never
+ * deleted and never accepted, refused for a reason the model itself denies.
  */
 const READ_ONLY: Partial<Record<domain.SyncCollection, string>> = {
   courses: 'courses replicate downward only',
   lessons: 'lessons replicate downward only',
   lesson_versions: 'lesson versions replicate downward only',
-  enrollments: 'an enrolment decision is the school’s; ask to join through /edu/enrollments',
 }
 
 const accepted = (change: PushChange, hlc: string, restamped: boolean): PushResult => ({

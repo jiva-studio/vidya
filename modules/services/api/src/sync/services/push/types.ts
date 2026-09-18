@@ -1,5 +1,5 @@
 import * as domain from '@vidya/domain'
-import { Enrollment, LessonVersion } from '@vidya/entities'
+import { Course, Enrollment, LessonVersion } from '@vidya/entities'
 import { PushChange } from '@vidya/protocol'
 import { EntityManager } from 'typeorm'
 
@@ -29,9 +29,16 @@ export interface RowAccess {
  * `body` is only the fields the client owns; whatever else arrived has already
  * been dropped, silently (AC-8). It doubles as what a repeated push is compared
  * against, which is why it is kept rather than applied straight away.
+ *
+ * What the row was checked *against* differs by collection, so both references
+ * are optional and each applier fills the one it resolved. Work done inside a
+ * lesson carries `access` — the place on the course and the version answered.
+ * A request for a place carries `course` instead: there is no enrolment to
+ * resolve it against, because the row is the enrolment.
  */
 export interface PreparedRow {
-  access: RowAccess
+  access?: RowAccess
+  course?: Course
   body: domain.SyncPayload
 }
 
