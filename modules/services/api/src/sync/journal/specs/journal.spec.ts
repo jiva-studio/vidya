@@ -263,7 +263,7 @@ describe('sync journal', () => {
       expect(rows).toHaveLength(1)
       expect(rows[0].device_id).toBeNull()
       expect(rows[0].author_id).toBeNull()
-      expect(rows[0].hlc).toMatch(/^\d{15}-\d{6}-server$/)
+      expect(rows[0].hlc).toMatch(/^\d{15}:\d{5}:server$/)
     })
 
     it('issues server stamps that only ever go up', async () => {
