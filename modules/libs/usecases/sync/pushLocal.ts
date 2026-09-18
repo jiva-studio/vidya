@@ -1,0 +1,228 @@
+import type { OutboxAcknowledgement, OutboxEntry } from '@vidya/domain'
+import { type PushChange, type PushResult, SYNC_MAX_PUSH_CHANGES } from '@vidya/protocol'
+
+import { isSyncPausedError, type SyncEngineDeps } from './ports'
+
+/**
+ * Draining the local journal to the server.
+ *
+ * Copied in shape from Lectorium's `usecases/sync/pushLocal.ts`: the rounds,
+ * the watermark re-read inside the transaction, and the contiguity rule that
+ * keeps the watermark honest. What is gone is its conflict re-merge — there is
+ * nothing to re-merge here, because the writing sides are split and the server
+ * answers each row `accepted` or `rejected` rather than handing back a master.
+ *
+ * Two invariants this file exists to hold:
+ *
+ * - **No outbox row is ever deleted, on any path** (AC-18, T-M-10). An accepted
+ *   row is marked `pushed`; a refused one keeps its reason and stays on the
+ *   device, where the student's work is. The watermark is what stops a refused
+ *   row being sent forever — not a delete.
+ * - **The watermark may only cover a contiguous run of answered rows.** A row
+ *   the server answered about neither way holds it where it is, or the rows
+ *   behind it would be stepped over without ever having been sent.
+ */
+
+/** Rows one round sends. Never above the contract's ceiling. */
+export const PUSH_BATCH = Math.min(200, SYNC_MAX_PUSH_CHANGES)
+
+/** Rounds one run drains before leaving the rest to the next trigger. */
+export const MAX_PUSH_ROUNDS = 5
+
+export interface PushLocalResult {
+  readonly rounds: number
+  readonly sent: number
+  readonly accepted: number
+  readonly rejected: number
+
+  /**
+   * How far this device's own rows have reached the journal (I-6, AC-22n).
+   * The interface must not paint a state below this id, or it would show a
+   * lesson without the answer the student just wrote.
+   */
+  readonly journaledOutboxId: number
+
+  /** `true` when the device suspended the database mid-run (D-14). */
+  readonly paused: boolean
+}
+
+/** Thrown when a push answer does not match the batch it answers. */
+export class PushContractError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'PushContractError'
+  }
+}
+
+export async function pushLocal(deps: SyncEngineDeps): Promise<PushLocalResult> {
+  const deviceId = await deps.state.getDeviceId()
+  const totals = {
+    rounds: 0,
+    sent: 0,
+    accepted: 0,
+    rejected: 0,
+    journaledOutboxId: 0,
+    paused: false,
+  }
+
+  for (let round = 0; round < MAX_PUSH_ROUNDS; round += 1) {
+    const watermark = await deps.state.getPushedOutboxId()
+    const pending = await deps.outbox.listPending(
+      { ownerId: deps.ownerId, afterId: watermark },
+      PUSH_BATCH,
+    )
+    if (pending.length === 0) break
+
+    const response = await deps.client.push({
+      deviceId,
+      changes: await toChanges(deps, pending),
+    })
+
+    assertAnswersMatch(pending, response.results)
+
+    const recorded = await record(deps, pending, response.results)
+    if (recorded === null) {
+      totals.paused = true
+      break
+    }
+
+    totals.rounds += 1
+    totals.sent += pending.length
+    totals.accepted += recorded.accepted
+    totals.rejected += recorded.rejected
+    totals.journaledOutboxId = Math.max(totals.journaledOutboxId, response.journaledOutboxId)
+
+    if (pending.length < PUSH_BATCH) break
+  }
+
+  return totals
+}
+
+/**
+ * Turn journaled rows into wire changes.
+ *
+ * `baseHlc` is re-read here rather than taken from the row, because the pull
+ * may have moved the document's server pointer since the edit was journaled.
+ * The fresher value is what lets the server tell an edit of the version it
+ * holds from an edit of one two revisions old; the journaled value is the
+ * fallback for a document the pull has never touched.
+ */
+async function toChanges(
+  deps: SyncEngineDeps,
+  pending: readonly OutboxEntry[],
+): Promise<PushChange[]> {
+  const changes: PushChange[] = []
+
+  for (const entry of pending) {
+    changes.push({
+      outboxId: entry.id,
+      collection: entry.collection,
+      docId: entry.docId,
+      op: entry.op,
+      data: entry.op === 'delete' ? null : entry.data,
+      hlc: entry.hlc,
+      baseHlc: (await deps.apply.lastServerHlc(entry.collection, entry.docId)) ?? entry.baseHlc,
+    })
+  }
+
+  return changes
+}
+
+interface Recorded {
+  readonly accepted: number
+  readonly rejected: number
+}
+
+/**
+ * Write the server's answers back, in one transaction.
+ *
+ * An accepted row gets its `serverHlc` recorded as the document's pointer — the
+ * push has just made this device's change the version the server holds, and the
+ * next edit has to descend from it. A refused row keeps its reason. Neither is
+ * removed, and the watermark is re-read inside the transaction so a value
+ * raised while the request was in flight is not written back down.
+ */
+async function record(
+  deps: SyncEngineDeps,
+  pending: readonly OutboxEntry[],
+  results: readonly PushResult[],
+): Promise<Recorded | null> {
+  const byId = new Map(results.map((result) => [result.outboxId, result]))
+
+  try {
+    return await deps.unitOfWork(async () => {
+      const acknowledgements: OutboxAcknowledgement[] = []
+      let watermark = 0
+      let stalled = false
+      let accepted = 0
+
+      for (const entry of pending) {
+        const result = byId.get(entry.id)
+        if (result === undefined) {
+          stalled = true
+          continue
+        }
+
+        if (result.status === 'accepted') {
+          await deps.apply.recordServerHlc(entry.collection, entry.docId, result.serverHlc)
+          accepted += 1
+          acknowledgements.push({ id: entry.id, status: 'pushed' })
+        } else {
+          acknowledgements.push({ id: entry.id, status: 'rejected', reason: result.reason })
+        }
+
+        if (!stalled) watermark = entry.id
+      }
+
+      await deps.outbox.acknowledge(acknowledgements)
+      await advanceWatermark(deps, watermark)
+
+      return { accepted, rejected: acknowledgements.length - accepted }
+    })
+  } catch (error) {
+    if (isSyncPausedError(error)) return null
+    throw error
+  }
+}
+
+/** Move the watermark, never backwards. Re-reads inside the transaction. */
+async function advanceWatermark(deps: SyncEngineDeps, watermark: number): Promise<void> {
+  if (watermark === 0) return
+
+  const current = await deps.state.getPushedOutboxId()
+  if (watermark > current) await deps.state.setPushedOutboxId(watermark)
+}
+
+/**
+ * The contract says one answer per row, in the order sent (AC-5).
+ *
+ * Checked rather than assumed: a mismatch means the device and the server
+ * disagree about what was just written, and guessing would mark the wrong rows
+ * pushed. Failing loudly leaves every row pending and the watermark where it
+ * was, which is the safe state.
+ */
+function assertAnswersMatch(pending: readonly OutboxEntry[], results: readonly PushResult[]): void {
+  if (results.length !== pending.length) {
+    throw new PushContractError(
+      `push answered ${results.length} rows for a batch of ${pending.length}`,
+    )
+  }
+
+  for (let index = 0; index < pending.length; index += 1) {
+    if (results[index]!.outboxId !== pending[index]!.id) {
+      throw new PushContractError(
+        `push answer ${index} names outbox row ${results[index]!.outboxId}, not ${pending[index]!.id}`,
+      )
+    }
+  }
+}
+
+/**
+ * Whether the journal already holds every row this device has written (I-6).
+ *
+ * The interface asks this before painting: `false` means the state on the
+ * server does not yet contain the answer the student just typed, and showing it
+ * would show their work missing (AC-22n, T-M-21).
+ */
+export const journalHasLocalWrites = (journaledOutboxId: number, latestOutboxId: number): boolean =>
+  latestOutboxId === 0 || journaledOutboxId >= latestOutboxId
