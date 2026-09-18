@@ -12,18 +12,6 @@ import { fakeHttpClient, mountWithApp } from '@/shared/testing'
 import { routes } from '../routes'
 import LessonEditorPage from '../ui/LessonEditorPage.vue'
 
-// jsdom has no layout, so it implements neither of these, and reka's dialogs
-// call both while moving focus. The same two lines as libs/ui's own setup.
-if (!Element.prototype.scrollIntoView) {
-  Element.prototype.scrollIntoView = () => {}
-}
-
-if (!Element.prototype.hasPointerCapture) {
-  Element.prototype.hasPointerCapture = () => false
-  Element.prototype.setPointerCapture = () => {}
-  Element.prototype.releasePointerCapture = () => {}
-}
-
 export const SCHOOL = asId<SchoolId>('11111111-1111-1111-1111-111111111111')
 export const VERSIONS = '/edu/lessons/l1/versions'
 export const LESSON_PATH = '/edu/lessons/l1'

@@ -1,7 +1,3 @@
-// jsdom implements neither of the two calls Reka's listbox makes while moving
-// the highlight, and the library's own setup already says so once.
-import '@ui/../vitest.setup'
-
 import type { SchoolId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
 import { flushPromises } from '@vue/test-utils'

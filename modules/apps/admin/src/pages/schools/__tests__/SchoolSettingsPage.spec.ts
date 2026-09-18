@@ -17,12 +17,6 @@ const ROLES = '/edu/roles'
 
 const blank = { template: '<div />' }
 
-// jsdom has no layout, so it implements neither of these, and the listbox of
-// the select calls both. The same shim the component library keeps.
-if (!Element.prototype.scrollIntoView) {
-  Element.prototype.scrollIntoView = () => {}
-}
-
 const signIn = (permissions: PermissionKey[]) => {
   const claims = {
     sub: 'u1',
