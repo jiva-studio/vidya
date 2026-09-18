@@ -1,7 +1,7 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { AppModule } from '@vidya/api/app.module'
-import { inMemoryDataSource } from '@vidya/api/shared/datasources'
+import { testingDataSource } from '@vidya/api/shared/datasources'
 import { RedisService } from '@vidya/api/shared/services'
 import { useContainer } from 'class-validator'
 import { DataSource } from 'typeorm'
@@ -11,7 +11,7 @@ export const createTestingApp = async (): Promise<INestApplication> => {
     imports: [AppModule],
   })
     .overrideProvider(DataSource)
-    .useValue(await inMemoryDataSource())
+    .useValue(await testingDataSource())
     .overrideProvider(RedisService)
     .useValue({
       get: jest.fn(),

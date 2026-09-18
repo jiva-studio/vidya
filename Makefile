@@ -1,4 +1,4 @@
-.PHONY: install check typecheck lint lint-fix format format-check test \
+.PHONY: install check typecheck lint lint-fix format format-check test test-postgres \
         api-build api-run api-test db-run db-drop db-migrate db-migrate-generate seed clean
 
 NPM := npm --prefix modules
@@ -32,6 +32,12 @@ format-check:
 
 test:
 	$(NPM) run test
+
+# The same suite against a real Postgres, plus the cases the in-memory database
+# cannot model at all — advisory locks, real constraints under concurrency.
+# Needs a server; see VIDYA_TEST_DB_* for where to find it.
+test-postgres:
+	VIDYA_TEST_DB=postgres $(NPM) run test
 
 # ---------------------------------------------------------------------------
 # API service
