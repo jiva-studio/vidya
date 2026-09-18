@@ -1,2 +1,10 @@
-// Public API of the homework-review-pane widget — the list on the left and the work on the right. Owned by T4.
-export {}
+// Public API of the homework review pane. Owned by T4.
+export { useCurrentWork, useQueueKeyboard, useQueueRows } from './model'
+export type * from './types'
+export {
+  HomeworkAnswer,
+  HomeworkQueueTable,
+  HomeworkReviewPane,
+  QueueFilters,
+  SupersededVersionNotice,
+} from './ui'

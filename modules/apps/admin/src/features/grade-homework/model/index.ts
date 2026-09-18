@@ -1,2 +1,2 @@
-// What the grade-homework action sends and what counts as success. Owned by T4.
-export {}
+// The reviewer's decisions, without the screen they happen on. Owned by T4.
+export { useGradeHomework } from './useGradeHomework'

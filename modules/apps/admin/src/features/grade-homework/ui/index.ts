@@ -1,2 +1,2 @@
-// The controls that trigger grade-homework. Owned by T4.
-export {}
+export { default as GradeInput } from './GradeInput.vue'
+export { default as ReviewActions } from './ReviewActions.vue'

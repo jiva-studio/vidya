@@ -1,2 +1,5 @@
-// The homework-review-pane widget's components. Owned by T4.
-export {}
+export { default as HomeworkAnswer } from './HomeworkAnswer.vue'
+export { default as HomeworkQueueTable } from './HomeworkQueueTable.vue'
+export { default as HomeworkReviewPane } from './HomeworkReviewPane.vue'
+export { default as QueueFilters } from './QueueFilters.vue'
+export { default as SupersededVersionNotice } from './SupersededVersionNotice.vue'

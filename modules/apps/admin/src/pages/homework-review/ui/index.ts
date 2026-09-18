@@ -1,2 +1,2 @@
 // Screens of the homework-review section: composition only, no logic.
-export {}
+export { default as HomeworkReviewPage } from './HomeworkReviewPage.vue'

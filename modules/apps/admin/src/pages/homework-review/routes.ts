@@ -3,7 +3,16 @@ import type { RouteRecordRaw } from 'vue-router'
 /**
  * Routes for the homework review screen. Owned by T4.
  *
- * The composition root reads this file by name, so filling it is the whole of
- * what a section has to do to appear in the application.
+ * An address for one work, so a link can point at it. It opens the same
+ * workplace with that work already selected rather than a screen of its own:
+ * deciding on it and carrying on with the queue is the same job.
  */
-export const routes: RouteRecordRaw[] = []
+export const routes: RouteRecordRaw[] = [
+  {
+    path: '/homework/:id',
+    name: 'homework-review',
+    props: true,
+    component: () => import('./ui/HomeworkReviewPage.vue'),
+    meta: { permission: 'homework:read', breadcrumbs: ['nav-homework-queue', 'homework-one'] },
+  },
+]

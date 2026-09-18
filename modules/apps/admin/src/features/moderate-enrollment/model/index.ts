@@ -1,2 +1,2 @@
-// What the moderate-enrollment action sends and what counts as success. Owned by T4.
-export {}
+// Moderation of a request, without the screen it happens on. Owned by T4.
+export { useModerateEnrollment } from './useModerateEnrollment'

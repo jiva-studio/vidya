@@ -1,2 +1,2 @@
 // Screens of the enrollments section: composition only, no logic.
-export {}
+export { default as EnrollmentsPage } from './EnrollmentsPage.vue'

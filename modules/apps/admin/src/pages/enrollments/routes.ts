@@ -3,7 +3,15 @@ import type { RouteRecordRaw } from 'vue-router'
 /**
  * Routes for enrollments. Owned by T4.
  *
- * The composition root reads this file by name, so filling it is the whole of
- * what a section has to do to appear in the application.
+ * One screen and no form: a request is made by the student from the phone —
+ * `POST /edu/enrollments` enrols whoever is signed in — so there is nothing
+ * here to create, only requests to decide on.
  */
-export const routes: RouteRecordRaw[] = []
+export const routes: RouteRecordRaw[] = [
+  {
+    path: '/enrollments',
+    name: 'enrollments',
+    component: () => import('./ui/EnrollmentsPage.vue'),
+    meta: { permission: 'enrollments:read', breadcrumbs: ['nav-enrollments'] },
+  },
+]

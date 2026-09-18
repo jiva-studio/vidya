@@ -1,2 +1,3 @@
-// What the assign-group action sends and what counts as success. Owned by T4.
-export {}
+// Group assignment, without the screen it happens on. Owned by T4.
+export { useAssignGroup } from './useAssignGroup'
+export { useGroupAssignment } from './useGroupAssignment'
