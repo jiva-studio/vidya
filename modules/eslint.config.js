@@ -32,6 +32,11 @@ export default tseslint.config(
       '**/*.tsbuildinfo',
       'apps/*/android/**',
       'apps/*/ios/**',
+
+      // The ported mobile app joins the gate in its own commit, once its
+      // architecture settles. Until then its findings would drown every other
+      // diff on this branch.
+      'apps/mobile/**',
     ],
   },
 

@@ -50,10 +50,7 @@ import { addCircle } from 'ionicons/icons'
 /*                                  Interface                                 */
 /* -------------------------------------------------------------------------- */
 
-const model = defineModel<TimeRange[]>({
-  default: [],
-  required: true
-})
+const model = defineModel<TimeRange[]>({ required: true })
 
 defineProps<{
   presets: TimeRangePreset[]

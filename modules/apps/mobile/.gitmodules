@@ -1,3 +1,0 @@
-[submodule "protocol"]
-	path = modules/protocol
-	url = git@github.com:akdasa-studios/classroom-protocol.git
