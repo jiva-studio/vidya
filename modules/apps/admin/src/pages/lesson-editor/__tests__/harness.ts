@@ -15,8 +15,8 @@ import LessonEditorPage from '../ui/LessonEditorPage.vue'
 export const SCHOOL = asId<SchoolId>('11111111-1111-1111-1111-111111111111')
 export const VERSIONS = '/edu/lessons/l1/versions'
 export const LESSON_PATH = '/edu/lessons/l1'
-export const EDITOR_PATH = '/courses/c1/lessons/l1/editor'
-export const AWAY_PATH = '/courses/c1/lessons'
+export const EDITOR_PATH = `/s/${SCHOOL}/courses/c1/lessons/l1/editor`
+export const AWAY_PATH = `/s/${SCHOOL}/courses/c1/lessons`
 
 const token = (permissions: unknown) =>
   `header.${btoa(JSON.stringify({ sub: 'u1', exp: 2_000_000_000, permissions }))
@@ -64,7 +64,7 @@ export const openEditor = async (
     // dynamic import inside the first navigation is a timeout, not a test.
     routes: [
       ...editorRoutes,
-      { path: '/courses/:courseId/lessons', name: 'lessons', component: Away },
+      { path: '/s/:schoolId/courses/:courseId/lessons', name: 'lessons', component: Away },
     ],
   })
 

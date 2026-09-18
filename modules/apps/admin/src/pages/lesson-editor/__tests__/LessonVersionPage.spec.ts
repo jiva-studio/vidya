@@ -6,7 +6,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { httpClientKey, resetApi } from '@/shared/api'
 import { addMessages, locale } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
-import { fakeHttpClient, mountWithApp, refusal, signInAs } from '@/shared/testing'
+import { fakeHttpClient, mountWithApp, refusal, signInAs, STORY_SCHOOL } from '@/shared/testing'
 
 import { messages } from '../i18n'
 import { routes } from '../routes'
@@ -16,7 +16,7 @@ addMessages(messages)
 locale.value = 'en'
 
 const VERSION = '/edu/lessons/l1/versions/v7'
-const PATH = '/lessons/l1/versions/v7'
+const PATH = `/s/${STORY_SCHOOL}/lessons/l1/versions/v7`
 
 const content = (): LessonContent =>
   ({
