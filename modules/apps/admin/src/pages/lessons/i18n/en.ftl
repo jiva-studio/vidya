@@ -16,6 +16,7 @@ lessons-load-failed = The lessons could not be loaded.
 lesson-create-title = New lesson
 lesson-create-body = The lesson number is assigned automatically — the next one in the course.
 lesson-create-title-label = Title
+lesson-create-title-hint = For example: The Devanagari alphabet
 lesson-create-title-required = Enter a title.
 lesson-create-submit = Add
 lesson-create-cancel = Cancel

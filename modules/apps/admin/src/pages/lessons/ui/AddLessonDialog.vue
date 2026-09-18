@@ -67,7 +67,12 @@ function titleErrorText(): string | undefined {
     :description="$t('lesson-create-body')"
     @update:open="onOpen"
   >
-    <FormField :label="$t('lesson-create-title-label')" :error="titleError ?? props.error" required>
+    <FormField
+      :label="$t('lesson-create-title-label')"
+      :hint="$t('lesson-create-title-hint')"
+      :error="titleError ?? props.error"
+      required
+    >
       <template #default="field">
         <Input
           :id="field.id"

@@ -75,6 +75,7 @@ editor-text-hint = Markdown: # заголовок, **жирный**, *курси
 editor-text-placeholder = Наберите текст урока здесь.
 
 editor-source-label = Источник
+editor-source-hint = YouTube и Vimeo принимают ссылки только со своих сайтов
 editor-source-url = Прямая ссылка
 editor-source-youtube = YouTube
 editor-source-vimeo = Vimeo
@@ -82,6 +83,7 @@ editor-source-upload = Загруженный файл
 editor-url-label = Ссылка
 editor-url-hint = Адрес по http или https.
 editor-poster-label = Обложка
+editor-poster-hint = Ссылка на картинку — её видно до запуска видео
 
 editor-quiz-question-label = Вопрос
 editor-quiz-question-placeholder = О чём спрашиваете?

@@ -90,7 +90,12 @@ async function send(): Promise<void> {
 <template>
   <PageHeader :title="title" />
   <form :class="formClasses" @submit.prevent="onSubmit">
-    <FormField :label="$t('schools-form-name')" :error="nameError" required>
+    <FormField
+      :label="$t('schools-form-name')"
+      :hint="$t('schools-form-name-hint')"
+      :error="nameError"
+      required
+    >
       <template #default="field">
         <Input
           :id="field.id"

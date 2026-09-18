@@ -17,8 +17,11 @@ users-card-unknown = Not given
 
 users-form-title = Details
 users-form-name = Name
+users-form-name-hint = For example: Anna Ivanova
 users-form-email = Email
+users-form-email-hint = The person signs in to Vidya with this address
 users-form-phone = Phone
+users-form-phone-hint = For contact only: signing in by phone is not possible
 users-form-name-required = Enter a name.
 users-form-saved = Saved
 

@@ -15,6 +15,7 @@ schools-settings = Settings
 schools-form-create-title = New school
 schools-form-edit-title = School
 schools-form-name = Name
+schools-form-name-hint = Up to 32 characters. For example: Bhakti Shastra School
 schools-form-name-required = Enter a name.
 
 schools-settings-title = School settings

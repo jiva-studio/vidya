@@ -75,6 +75,7 @@ editor-text-hint = Markdown: # heading, **bold**, *italic*, - list, [link](https
 editor-text-placeholder = Write the lesson text here.
 
 editor-source-label = Source
+editor-source-hint = YouTube and Vimeo accept links from their own sites only
 editor-source-url = Direct link
 editor-source-youtube = YouTube
 editor-source-vimeo = Vimeo
@@ -82,6 +83,7 @@ editor-source-upload = Uploaded file
 editor-url-label = Link
 editor-url-hint = An http or https address.
 editor-poster-label = Poster image
+editor-poster-hint = A link to an image — it shows before the video plays
 
 editor-quiz-question-label = Question
 editor-quiz-question-placeholder = What are you asking?

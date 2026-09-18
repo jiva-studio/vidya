@@ -16,6 +16,7 @@ lessons-load-failed = Не удалось загрузить уроки.
 lesson-create-title = Новый урок
 lesson-create-body = Номер урока присвоится сам — следующий в курсе.
 lesson-create-title-label = Название
+lesson-create-title-hint = Например: Алфавит деванагари
 lesson-create-title-required = Укажите название.
 lesson-create-submit = Добавить
 lesson-create-cancel = Отмена

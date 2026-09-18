@@ -61,17 +61,22 @@ function onCancel() {
 
 <template>
   <form :class="formClasses" @submit.prevent="onSubmit">
-    <FormField :label="$t('users-form-name')" :error="nameError" required>
+    <FormField
+      :label="$t('users-form-name')"
+      :hint="$t('users-form-name-hint')"
+      :error="nameError"
+      required
+    >
       <template #default="field">
         <Input :id="field.id" v-model="name" name="name" :disabled="busy" />
       </template>
     </FormField>
-    <FormField :label="$t('users-form-email')">
+    <FormField :label="$t('users-form-email')" :hint="$t('users-form-email-hint')">
       <template #default="field">
         <Input :id="field.id" v-model="email" name="email" type="email" :disabled="busy" />
       </template>
     </FormField>
-    <FormField :label="$t('users-form-phone')">
+    <FormField :label="$t('users-form-phone')" :hint="$t('users-form-phone-hint')">
       <template #default="field">
         <Input :id="field.id" v-model="phone" name="phone" :disabled="busy" />
       </template>

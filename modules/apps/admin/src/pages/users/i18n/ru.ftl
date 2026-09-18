@@ -17,8 +17,11 @@ users-card-unknown = Не указано
 
 users-form-title = Данные
 users-form-name = Имя
+users-form-name-hint = Например: Анна Иванова
 users-form-email = Электронная почта
+users-form-email-hint = По этому адресу человек входит в Vidya
 users-form-phone = Телефон
+users-form-phone-hint = Только для связи: войти по телефону нельзя
 users-form-name-required = Укажите имя.
 users-form-saved = Сохранено
 

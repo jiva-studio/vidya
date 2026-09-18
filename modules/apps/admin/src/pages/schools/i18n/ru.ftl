@@ -15,6 +15,7 @@ schools-settings = Настройки
 schools-form-create-title = Новая школа
 schools-form-edit-title = Школа
 schools-form-name = Название
+schools-form-name-hint = До 32 символов. Например: Школа Бхакти-шастр
 schools-form-name-required = Укажите название.
 
 schools-settings-title = Настройки школы
