@@ -1,6 +1,5 @@
 {
   "name": "push-mixed",
-  "covers": ["T-C-2"],
   "endpoint": "POST /sync/push",
   "description": "A batch whose rows are answered one by one: results has the length of changes and the same order, and a refusal leaves its neighbours applied.",
   "request": {

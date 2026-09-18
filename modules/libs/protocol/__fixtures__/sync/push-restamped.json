@@ -1,6 +1,5 @@
 {
   "name": "push-restamped",
-  "covers": ["T-C-2", "T-C-5"],
   "endpoint": "POST /sync/push",
   "description": "serverHlc comes back on every accepted row, not only when it differs. Here the first row is a genuine repeat (same stamp, same body) and keeps its HLC; the second arrived from a device whose clock is a year fast, or whose id is shared with another phone restored from the same backup, and the server restamped it. Both records are kept; neither write is swallowed as an imagined repeat.",
   "request": {

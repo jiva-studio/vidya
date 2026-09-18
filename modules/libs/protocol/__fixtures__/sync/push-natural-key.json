@@ -1,6 +1,5 @@
 {
   "name": "push-natural-key",
-  "covers": ["T-C-2"],
   "endpoint": "POST /sync/push",
   "description": "The second device of one student hands in a section the first has already handed in, under a local id of its own. The table's key is the natural one (enrolment, version, section), so the server writes onto the row that key already holds and the HLC decides the text. The answer names both ids: docId is what was sent, serverDocId is the row it landed in. Without the second the device would keep a local row the server has never heard of — carried by no pull, removed by no tombstone — beside the winning row arriving as a second answer to one section.",
   "request": {

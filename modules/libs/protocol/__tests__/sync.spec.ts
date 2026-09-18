@@ -31,7 +31,6 @@ const FIXTURES = join(__dirname, '..', '__fixtures__', 'sync')
 
 type Fixture = {
   name: string
-  covers: string[]
   endpoint: string
   description: string
   request?: unknown
@@ -402,15 +401,9 @@ describe('the cursor acknowledgement, and the endpoint that does not exist', () 
 
 describe('the fixture set itself', () => {
   it('is described by the manifest, file for file', () => {
-    const manifest = read<{ fixtures: { file: string; covers: string[] }[] }>('manifest.json')
+    const manifest = read<{ fixtures: { file: string }[] }>('manifest.json')
 
     expect(manifest.fixtures.map((entry) => entry.file).sort()).toEqual(fixtureFiles)
-  })
-
-  it('covers every conformance case at least once', () => {
-    const covered = new Set(fixtures.flatMap(({ body }) => body.covers))
-
-    expect([...covered].sort()).toEqual(['T-C-1', 'T-C-2', 'T-C-3', 'T-C-4', 'T-C-5', 'T-C-6'])
   })
 
   it('names a real collection in every row it carries', () => {

@@ -1,6 +1,5 @@
 {
   "name": "pull-new-scope",
-  "covers": ["T-C-1", "T-C-6"],
   "endpoint": "POST /sync/pull",
   "description": "A course the student has just been enrolled on. The client has no position for it, the server reports it in scopes, and its history arrives through this ordinary pull. There is no backfill endpoint: this fixture IS the backfill.",
   "request": {

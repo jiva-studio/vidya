@@ -1,6 +1,5 @@
 {
   "name": "push-rejections",
-  "covers": ["T-C-2", "T-C-3"],
   "endpoint": "POST /sync/push",
   "description": "Every rejection reason, once each. The work stays on the device in all seven cases: a refusal is a state of the row, never a lost edit.",
   "request": {

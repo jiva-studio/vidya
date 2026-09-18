@@ -1,6 +1,5 @@
 {
   "name": "pull-page",
-  "covers": ["T-C-1"],
   "endpoint": "POST /sync/pull",
   "description": "A pull page mixing two scopes: the course content going down and the student own rows. hasMore is true, so cursors carry the position each scope reached.",
   "request": {

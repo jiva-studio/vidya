@@ -5,70 +5,60 @@
       "file": "cursor-ack.json",
       "name": "cursor-ack",
       "endpoint": "POST /sync/cursor",
-      "covers": ["T-C-6"],
-      "description": "Acknowledges the highest serverSeq applied across all scopes, and is answered with 204 and no body. The other half of T-C-6 is a negative: there is no backfill endpoint and no backfill response shape — a new scope starts at 0 and is pulled (see pull-new-scope.json)."
+      "description": "Acknowledges the highest serverSeq applied across all scopes, and is answered with 204 and no body. there is no backfill endpoint and no backfill response shape — a new scope starts at 0 and is pulled (see pull-new-scope.json)."
     },
     {
       "file": "hlc-format.json",
       "name": "hlc-format",
       "endpoint": "n/a",
-      "covers": ["T-C-5"],
       "description": "The HLC as it travels: physical unix milliseconds zero-padded to 15 digits, counter to 5, then the device id, which may itself contain colons. The padding is the point — the server compares the column as text, and that order has to be the domain order. Times beside them are UTC ISO 8601 with milliseconds (Д-17)."
     },
     {
       "file": "optional-fields.json",
       "name": "optional-fields",
       "endpoint": "POST /sync/pull, POST /sync/push",
-      "covers": ["T-C-4"],
       "description": "Every optional and nullable field at its edge, so both sides read them the same way: a pull request without limit, a delete tombstone whose data is null, a row whose nullable fields are all null, an empty text, an empty page with no scopes advanced, and an accepted result with no detail."
     },
     {
       "file": "pull-new-scope.json",
       "name": "pull-new-scope",
       "endpoint": "POST /sync/pull",
-      "covers": ["T-C-1", "T-C-6"],
       "description": "A course the student has just been enrolled on. The client has no position for it, the server reports it in scopes, and its history arrives through this ordinary pull. There is no backfill endpoint: this fixture IS the backfill."
     },
     {
       "file": "pull-page.json",
       "name": "pull-page",
       "endpoint": "POST /sync/pull",
-      "covers": ["T-C-1"],
       "description": "A pull page mixing two scopes: the course content going down and the student own rows. hasMore is true, so cursors carry the position each scope reached."
     },
     {
       "file": "push-mixed.json",
       "name": "push-mixed",
       "endpoint": "POST /sync/push",
-      "covers": ["T-C-2"],
       "description": "A batch whose rows are answered one by one: results has the length of changes and the same order, and a refusal leaves its neighbours applied."
     },
     {
       "file": "push-natural-key.json",
       "name": "push-natural-key",
       "endpoint": "POST /sync/push",
-      "covers": ["T-C-2"],
       "description": "A row written under an id other than the one it was sent with. The natural key of a homework answer is (enrolment, version, section), so the second device of one student lands on the row the first created; serverDocId names it, and is absent on every other accepted row."
     },
     {
       "file": "push-rejections.json",
       "name": "push-rejections",
       "endpoint": "POST /sync/push",
-      "covers": ["T-C-2", "T-C-3"],
       "description": "Every rejection reason, once each. The work stays on the device in all seven cases: a refusal is a state of the row, never a lost edit."
     },
     {
       "file": "push-restamped.json",
       "name": "push-restamped",
       "endpoint": "POST /sync/push",
-      "covers": ["T-C-2", "T-C-5"],
       "description": "serverHlc comes back on every accepted row, not only when it differs. Here the first row is a genuine repeat (same stamp, same body) and keeps its HLC; the second arrived from a device whose clock is a year fast, or whose id is shared with another phone restored from the same backup, and the server restamped it. Both records are kept; neither write is swallowed as an imagined repeat."
     },
     {
       "file": "request-errors.json",
       "name": "request-errors",
       "endpoint": "POST /sync/pull",
-      "covers": ["T-C-1", "T-C-6"],
       "description": "The failures that are not per-row. Too many scopes is refused with a code rather than answered with a silently truncated list (Д-20)."
     }
   ]

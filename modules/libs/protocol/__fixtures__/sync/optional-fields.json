@@ -1,6 +1,5 @@
 {
   "name": "optional-fields",
-  "covers": ["T-C-4"],
   "endpoint": "POST /sync/pull, POST /sync/push",
   "description": "Every optional and nullable field at its edge, so both sides read them the same way: a pull request without limit, a delete tombstone whose data is null, a row whose nullable fields are all null, an empty text, an empty page with no scopes advanced, and an accepted result with no detail.",
   "request": {
