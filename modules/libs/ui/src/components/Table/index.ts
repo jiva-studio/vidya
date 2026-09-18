@@ -1,0 +1,5 @@
+export { default } from './Table.vue'
+export { default as TableCell } from './TableCell.vue'
+export { default as TableHead } from './TableHead.vue'
+export { default as TableRow } from './TableRow.vue'
+export type * from './types'
