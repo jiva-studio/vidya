@@ -17,6 +17,7 @@ syncResources.ru.forEach((x) => ruBundle.addResource(x))
 
 // en:
 authResources.en.forEach((x) => enBundle.addResource(x))
+educationResources.en.forEach((x) => enBundle.addResource(x))
 sharedResources.en.forEach((x) => enBundle.addResource(x))
 syncResources.en.forEach((x) => enBundle.addResource(x))
 
