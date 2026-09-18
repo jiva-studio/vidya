@@ -98,7 +98,8 @@ describe('CoursesPage', () => {
     const { transport, page } = open({ [COURSES]: refusal(500, 'The database is asleep') })
     await flushPromises()
 
-    expect(page.text()).toContain('The database is asleep')
+    expect(page.text()).not.toContain('The database is asleep')
+    expect(page.text()).toContain('The server could not do this')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Try again')
     await retry?.trigger('click')
@@ -114,7 +115,6 @@ describe('CoursesPage', () => {
     const { page } = open({ [COURSES]: { items: [] } })
     await flushPromises()
 
-    expect(page.text()).not.toContain('New course')
-    expect(page.text()).not.toContain('Create a course')
+    expect(page.findAll('button').map((button) => button.text())).not.toContain('Create a course')
   })
 })

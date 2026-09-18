@@ -33,7 +33,7 @@ const versions = (lessonId: string, entries: [number, string][]) => ({
 
 const world: FakeAnswers = {
   [LESSONS]: {
-    items: [lesson('l1', 1, 'Алфавит'), lesson('l2', 2, 'Сандхи'), lesson('l3', 3, 'Падежи')],
+    items: [lesson('l1', 1, 'Alphabet'), lesson('l2', 2, 'Сандхи'), lesson('l3', 3, 'Падежи')],
   },
   [`${LESSONS}/l1/versions`]: versions('l1', [[1, 'published']]),
   [`${LESSONS}/l2/versions`]: versions('l2', [
@@ -41,7 +41,7 @@ const world: FakeAnswers = {
     [2, 'draft'],
   ]),
   [`${LESSONS}/l3/versions`]: versions('l3', [[1, 'draft']]),
-  '/edu/courses/c1': { id: 'c1', name: 'Санскрит с нуля' },
+  '/edu/courses/c1': { id: 'c1', name: 'Sanskrit from scratch' },
 }
 
 const over =
@@ -53,7 +53,7 @@ const over =
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><LessonsPage /></div>',
+    template: '<div class="p-[var(--space-6)]"><LessonsPage /></div>',
   })
 
 const meta: Meta<typeof LessonsPage> = { title: 'Edu/Lessons', component: LessonsPage }
@@ -61,28 +61,28 @@ const meta: Meta<typeof LessonsPage> = { title: 'Edu/Lessons', component: Lesson
 export default meta
 type Story = StoryObj<typeof LessonsPage>
 
-export const WithData: Story = { name: 'Данные', parameters: route, render: over(world) }
+export const WithData: Story = { name: 'Data', parameters: route, render: over(world) }
 
 export const Empty: Story = {
-  name: 'Пусто',
+  name: 'Empty',
   parameters: route,
   render: over({ ...world, [LESSONS]: { items: [] } }),
 }
 
 export const Loading: Story = {
-  name: 'Загрузка',
+  name: 'Loading',
   parameters: route,
   render: over({ ...world, [LESSONS]: pending() }),
 }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   parameters: route,
   render: over({ ...world, [LESSONS]: refusal(503, 'Уроки сейчас не читаются') }),
 }
 
 export const WithoutRights: Story = {
-  name: 'Без прав',
+  name: 'No permission',
   parameters: route,
   render: over(world, ['lessons:read'] as PermissionKey[]),
 }

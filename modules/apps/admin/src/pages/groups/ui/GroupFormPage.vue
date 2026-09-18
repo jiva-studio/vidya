@@ -22,9 +22,6 @@ const courses = useCourses()
 
 const editing = computed(() => groupId !== undefined)
 const title = computed(() => (editing.value ? 'group-form-edit-title' : 'group-form-create-title'))
-const subtitle = computed(() =>
-  editing.value ? 'group-form-edit-subtitle' : 'group-form-create-subtitle',
-)
 
 const options = computed(() =>
   courses.items.value.map((course) => ({ value: course.id, label: course.name })),
@@ -62,7 +59,7 @@ function idFromRoute(): GroupId | undefined {
 
 <template>
   <section :class="pageClasses">
-    <PageHeader :title="$t(title)" :description="$t(subtitle)" />
+    <PageHeader :title="$t(title)" />
     <div v-if="form.loading.value" :class="formLoadingClasses">
       <Skeleton shape="text" :lines="2" />
       <Skeleton shape="block" :lines="4" />

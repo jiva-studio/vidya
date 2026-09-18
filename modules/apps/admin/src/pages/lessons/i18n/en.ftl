@@ -1,23 +1,22 @@
 # Texts for lessons. Owned by T3.
 
 lessons-title = Lessons
-lessons-subtitle = In the order students read them
 lessons-column-number = No.
-lessons-column-title = Lesson
-lessons-column-state = Content
+lessons-column-title = Title
+lessons-column-state = Version
 lessons-column-actions = Actions
 lessons-edit = Edit
 lessons-add = Add lesson
 lessons-back = All courses
 lessons-empty-title = This course has no lessons
-lessons-empty-body = Add the first lesson, then write its content in the editor.
-lessons-empty-action = Add the first lesson
+lessons-empty-body = Add a lesson, then write its content in the editor.
+lessons-empty-action = Add lesson
 lessons-load-failed = The lessons could not be loaded.
 
-lesson-create-title = Add a lesson
-lesson-create-body = The number is the next one in the course. Content is written in the editor afterwards.
+lesson-create-title = New lesson
+lesson-create-body = The lesson number is assigned automatically — the next one in the course.
 lesson-create-title-label = Title
-lesson-create-title-required = A lesson needs a title.
+lesson-create-title-required = Enter a title.
 lesson-create-submit = Add
 lesson-create-cancel = Cancel
 lesson-create-failed = The lesson could not be added.

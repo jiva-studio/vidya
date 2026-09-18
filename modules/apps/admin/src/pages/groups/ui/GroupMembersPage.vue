@@ -30,7 +30,7 @@ function onRetry() {
 
 <template>
   <section :class="pageClasses">
-    <PageHeader :title="$t('group-members-title')" :description="$t('group-members-subtitle')">
+    <PageHeader :title="$t('group-members-title')">
       <template #actions>
         <Button variant="ghost" @click="onBack">{{ $t('group-members-back') }}</Button>
       </template>

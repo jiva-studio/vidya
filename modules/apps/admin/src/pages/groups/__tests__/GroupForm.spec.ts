@@ -112,8 +112,8 @@ describe('GroupFormPage', () => {
     await flushPromises()
 
     expect(transport.callsTo(GROUPS)).toHaveLength(0)
-    expect(page.text()).toContain('A group needs a name.')
-    expect(page.text()).toContain('Choose the course this group is taught.')
+    expect(page.text()).toContain('Enter a name.')
+    expect(page.text()).toContain('Choose a course.')
   })
 
   it('locks the course of a group that already exists', async () => {
@@ -127,7 +127,7 @@ describe('GroupFormPage', () => {
       },
     })
 
-    expect(page.text()).toContain('The course is fixed once the group exists.')
+    expect(page.text()).toContain('The course cannot be changed once the group exists.')
   })
 
   it('shows the reason a save was refused', async () => {

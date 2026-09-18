@@ -1,26 +1,25 @@
 # Тексты раздела уроков. Владелец — T3.
 
 lessons-title = Уроки
-lessons-subtitle = В том порядке, в котором их читают
 lessons-column-number = №
-lessons-column-title = Урок
-lessons-column-state = Содержание
+lessons-column-title = Название
+lessons-column-state = Версия
 lessons-column-actions = Действия
 lessons-edit = Редактировать
 lessons-add = Добавить урок
 lessons-back = Все курсы
 lessons-empty-title = В этом курсе нет уроков
-lessons-empty-body = Добавьте первый урок, а содержание наберите в редакторе.
-lessons-empty-action = Добавить первый урок
-lessons-load-failed = Уроки загрузить не удалось.
+lessons-empty-body = Добавьте урок, а его содержание наберите в редакторе.
+lessons-empty-action = Добавить урок
+lessons-load-failed = Не удалось загрузить уроки.
 
-lesson-create-title = Добавление урока
-lesson-create-body = Номер — следующий в курсе. Содержание набирается в редакторе.
+lesson-create-title = Новый урок
+lesson-create-body = Номер урока присвоится сам — следующий в курсе.
 lesson-create-title-label = Название
-lesson-create-title-required = Уроку нужно название.
+lesson-create-title-required = Укажите название.
 lesson-create-submit = Добавить
 lesson-create-cancel = Отмена
-lesson-create-failed = Урок добавить не удалось.
+lesson-create-failed = Не удалось добавить урок.
 
 lesson-version-draft = Черновик v{ $draft }
 lesson-version-published = Опубликован v{ $published }

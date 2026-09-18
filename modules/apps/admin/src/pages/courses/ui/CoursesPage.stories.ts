@@ -18,9 +18,9 @@ const COURSES = '/edu/courses'
 const FULL = ['courses:read', 'courses:create', 'courses:update'] as PermissionKey[]
 
 const items = [
-  { id: 'c1', name: 'Санскрит с нуля', description: 'Алфавит, падежи и сандхи' },
-  { id: 'c2', name: 'Бхагавад-гита', description: 'Читаем с комментарием' },
-  { id: 'c3', name: 'Практика киртана', description: '' },
+  { id: 'c1', name: 'Sanskrit from scratch', description: 'Alphabet, cases and sandhi' },
+  { id: 'c2', name: 'Bhagavad-gita', description: 'Читаем с комментарием' },
+  { id: 'c3', name: 'Kirtan practice', description: '' },
 ]
 
 const over =
@@ -32,7 +32,7 @@ const over =
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><CoursesPage /></div>',
+    template: '<div class="p-[var(--space-6)]"><CoursesPage /></div>',
   })
 
 const meta: Meta<typeof CoursesPage> = { title: 'Edu/Courses', component: CoursesPage }
@@ -40,18 +40,18 @@ const meta: Meta<typeof CoursesPage> = { title: 'Edu/Courses', component: Course
 export default meta
 type Story = StoryObj<typeof CoursesPage>
 
-export const WithData: Story = { name: 'Данные', render: over({ [COURSES]: { items } }) }
+export const WithData: Story = { name: 'Data', render: over({ [COURSES]: { items } }) }
 
-export const Empty: Story = { name: 'Пусто', render: over({ [COURSES]: { items: [] } }) }
+export const Empty: Story = { name: 'Empty', render: over({ [COURSES]: { items: [] } }) }
 
-export const Loading: Story = { name: 'Загрузка', render: over({ [COURSES]: pending() }) }
+export const Loading: Story = { name: 'Loading', render: over({ [COURSES]: pending() }) }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   render: over({ [COURSES]: refusal(503, 'Курсы сейчас не читаются') }),
 }
 
 export const WithoutRights: Story = {
-  name: 'Без прав',
+  name: 'No permission',
   render: over({ [COURSES]: { items } }, ['courses:read'] as PermissionKey[]),
 }

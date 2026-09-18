@@ -95,7 +95,7 @@ describe('CourseFormPage', () => {
     await flushPromises()
 
     expect(transport.calls).toHaveLength(0)
-    expect(page.text()).toContain('A course needs a name.')
+    expect(page.text()).toContain('Enter a name.')
   })
 
   it('fills the form from the course it is editing', async () => {
@@ -129,7 +129,8 @@ describe('CourseFormPage', () => {
       [`${COURSES}/${COURSE}`]: refusal(500, 'The database is asleep'),
     })
 
-    expect(page.text()).toContain('The database is asleep')
+    expect(page.text()).not.toContain('The database is asleep')
+    expect(page.text()).toContain('The server could not do this')
     expect(page.find('form').exists()).toBe(false)
   })
 })

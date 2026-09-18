@@ -22,9 +22,6 @@ const editing = computed(() => courseId.value !== undefined)
 const title = computed(() =>
   editing.value ? 'course-form-edit-title' : 'course-form-create-title',
 )
-const subtitle = computed(() =>
-  editing.value ? 'course-form-edit-subtitle' : 'course-form-create-subtitle',
-)
 
 // A course that could not be read leaves nothing to edit, so the screen offers
 // a retry instead of an empty form that would save over what it never loaded.
@@ -60,7 +57,7 @@ function idFromRoute(): CourseId | undefined {
 
 <template>
   <section :class="pageClasses">
-    <PageHeader :title="$t(title)" :description="$t(subtitle)" />
+    <PageHeader :title="$t(title)" />
     <div v-if="form.loading.value" :class="formLoadingClasses">
       <Skeleton shape="text" :lines="2" />
       <Skeleton shape="block" :lines="4" />

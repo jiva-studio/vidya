@@ -84,7 +84,8 @@ describe('GroupsPage', () => {
   it('shows the reason the server gave, and offers another go', async () => {
     const { transport, page } = await open({ [GROUPS]: refusal(500, 'The database is asleep') })
 
-    expect(page.text()).toContain('The database is asleep')
+    expect(page.text()).not.toContain('The database is asleep')
+    expect(page.text()).toContain('The server could not do this')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Try again')
     await retry?.trigger('click')
@@ -99,7 +100,6 @@ describe('GroupsPage', () => {
 
     const { page } = await open({ [GROUPS]: { items: [] } })
 
-    expect(page.text()).not.toContain('New group')
-    expect(page.text()).not.toContain('Create a group')
+    expect(page.findAll('button').map((button) => button.text())).not.toContain('Create a group')
   })
 })

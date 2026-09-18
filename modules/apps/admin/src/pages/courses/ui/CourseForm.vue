@@ -81,12 +81,7 @@ function nameErrorText(): string | undefined {
 
 <template>
   <form :class="formClasses" novalidate @submit.prevent="onSubmit">
-    <FormField
-      :label="$t('course-form-name-label')"
-      :hint="$t('course-form-name-hint')"
-      :error="nameError"
-      required
-    >
+    <FormField :label="$t('course-form-name-label')" :error="nameError" required>
       <template #default="field">
         <Input
           :id="field.id"
@@ -98,10 +93,7 @@ function nameErrorText(): string | undefined {
       </template>
     </FormField>
 
-    <FormField
-      :label="$t('course-form-description-label')"
-      :hint="$t('course-form-description-hint')"
-    >
+    <FormField :label="$t('course-form-description-label')">
       <template #default="field">
         <Textarea
           :id="field.id"

@@ -119,7 +119,7 @@ describe('GroupMembersPage', () => {
     const { page } = await open({ [ENROLLMENTS]: { items: [] } })
 
     expect(page.text()).toContain('Nobody is in this group yet')
-    expect(page.text()).toContain('accept a request into this group')
+    expect(page.text()).toContain('Accept a request into this group')
   })
 
   it('shows the reason the server gave, and offers another go', async () => {
@@ -127,7 +127,8 @@ describe('GroupMembersPage', () => {
       [ENROLLMENTS]: refusal(500, 'The database is asleep'),
     })
 
-    expect(page.text()).toContain('The database is asleep')
+    expect(page.text()).not.toContain('The database is asleep')
+    expect(page.text()).toContain('The server could not do this')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Try again')
     await retry?.trigger('click')

@@ -39,7 +39,7 @@ function onRetry() {
 
 <template>
   <section :class="pageClasses">
-    <PageHeader :title="$t('courses-title')" :description="$t('courses-subtitle')">
+    <PageHeader :title="$t('courses-title')">
       <template #actions>
         <Button v-if="canCreate" @click="onCreate">{{ $t('courses-create') }}</Button>
       </template>
