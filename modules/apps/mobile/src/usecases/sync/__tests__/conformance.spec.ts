@@ -12,6 +12,7 @@ import optionalFields from '@vidya/protocol/__fixtures__/sync/optional-fields.js
 import pullNewScope from '@vidya/protocol/__fixtures__/sync/pull-new-scope.json'
 import pullPage from '@vidya/protocol/__fixtures__/sync/pull-page.json'
 import pushMixed from '@vidya/protocol/__fixtures__/sync/push-mixed.json'
+import pushNaturalKey from '@vidya/protocol/__fixtures__/sync/push-natural-key.json'
 import pushRejections from '@vidya/protocol/__fixtures__/sync/push-rejections.json'
 import pushRestamped from '@vidya/protocol/__fixtures__/sync/push-restamped.json'
 import type { ISyncClient } from '@vidya/usecases'
@@ -21,6 +22,7 @@ import { openTestDatabase } from '@/infra/persistence/testing'
 import type { IDatabase } from '@/ports'
 
 import { createSyncEngine, type SyncEngine } from '../engine'
+import { COURSE_SCOPE, FakeSyncServer } from './fakeSyncServer'
 import { DEVICE, OWNER } from './harness'
 
 /**
@@ -255,6 +257,59 @@ describe('reading a push answer as the contract prints it', () => {
 
     // Nothing was marked, so the row is still there to be sent again.
     expect(await engine.outbox.listPending({ ownerId: OWNER })).toHaveLength(1)
+  })
+})
+
+describe('the row the natural key already held', () => {
+  const request = pushNaturalKey.request as unknown as PushRequest
+  const expected = pushNaturalKey.response as unknown as PushResponse
+
+  /** What the fixture's answer says the row was written under. */
+  const serverDocId = (expected.results[0] as { serverDocId: string }).serverDocId
+
+  it('push-natural-key — the fake server answers it exactly as the contract prints it', async () => {
+    const server = new FakeSyncServer()
+    server.serverNowMs = 1_789_729_700_000
+    server.journal({
+      collection: 'homework',
+      docId: serverDocId,
+      scope: COURSE_SCOPE,
+      data: { ...request.changes[0]!.data, id: serverDocId, text: 'written on the phone' },
+      deviceId: 'device-phone',
+    })
+
+    expect(await server.push(request)).toEqual(expected)
+  })
+
+  it('push-natural-key — the device takes the name the answer gives it', async () => {
+    const client = new FixtureClient(EMPTY_PAGE, (sent) => ({
+      results: sent.changes.map((change) => ({
+        ...(expected.results[0] as PushResult),
+        outboxId: change.outboxId,
+        collection: change.collection,
+        docId: change.docId,
+      })),
+      journaledOutboxId: sent.changes.at(-1)?.outboxId ?? 0,
+    }))
+    const { engine, db } = await engineOver(client)
+    const sent = request.changes[0]!
+
+    await engine.homework.saveAnswer({
+      id: sent.docId as never,
+      schoolId: '5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915' as never,
+      enrollmentId: sent.data!.enrollmentId as never,
+      lessonVersionId: sent.data!.lessonVersionId as never,
+      sectionId: sent.data!.sectionId as never,
+      text: sent.data!.text as string,
+    })
+
+    await engine.push()
+
+    const rows = await db.query<{ id: string }>('SELECT id FROM homework')
+    expect(rows.map((row) => row.id)).toEqual([serverDocId])
+    expect(await engine.apply.lastServerHlc('homework', serverDocId)).toBe(
+      (expected.results[0] as { serverHlc: string }).serverHlc,
+    )
   })
 })
 

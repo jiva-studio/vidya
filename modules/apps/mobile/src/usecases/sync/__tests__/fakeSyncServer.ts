@@ -252,21 +252,22 @@ export class FakeSyncServer implements ISyncClient {
     const refusal = this.rejectIf(change)
     if (refusal !== null) return { ...answer, status: 'rejected', reason: refusal }
 
+    const docId = this.locate(change)
+    const named = { ...answer, ...(docId === change.docId ? {} : { serverDocId: docId }) }
+
     const existing = this.rows.find(
       (row) =>
-        row.collection === change.collection &&
-        row.docId === change.docId &&
-        row.hlc === change.hlc,
+        row.collection === change.collection && row.docId === docId && row.hlc === change.hlc,
     )
     if (existing !== undefined) {
-      return { ...answer, status: 'accepted', serverHlc: existing.hlc, restamped: false }
+      return { ...named, status: 'accepted', serverHlc: existing.hlc, restamped: false }
     }
 
     const stamped = this.restamp(change.hlc)
     this.journal({
       collection: change.collection,
-      docId: change.docId,
-      scope: this.scopeFor(change.collection, change.docId),
+      docId,
+      scope: this.scopeFor(change.collection, docId),
       op: change.op,
       data: change.data,
       hlc: stamped,
@@ -274,11 +275,37 @@ export class FakeSyncServer implements ISyncClient {
     })
 
     return {
-      ...answer,
+      ...named,
       status: 'accepted',
       serverHlc: stamped,
       restamped: stamped !== change.hlc,
     }
+  }
+
+  /**
+   * The id this row is written under: the one it was sent with, or the one the
+   * natural key already holds.
+   *
+   * A device names the rows it writes offline, so two devices of one student
+   * hand in the same section under two ids. The server's tables are keyed
+   * naturally, so the second push lands on the row the first created and the
+   * answer says so with `serverDocId`.
+   */
+  private locate(change: PushChange): string {
+    const known = this.rows.some(
+      (row) => row.collection === change.collection && row.docId === change.docId,
+    )
+    const key = NATURAL_KEYS[change.collection]
+    if (known || key === undefined || change.data === null) return change.docId
+
+    const natural = this.rows.find(
+      (row) =>
+        row.collection === change.collection &&
+        row.data !== null &&
+        key.every((field) => row.data![field] === change.data![field]),
+    )
+
+    return natural?.docId ?? change.docId
   }
 
   /** Pull a stamp from too far in the future back to the server's own clock. */
@@ -346,6 +373,18 @@ export const SECTION_ID = 'b18f4c60-27d9-4e51-a3c8-5f0b9e2d7614'
 export const BLOCK_STATE_ID = '4e8a1c93-7b25-4f60-8d31-2a9c5e0b7f43'
 export const BLOCK_ID = '9c1d2e34-5a67-4b89-8c01-2d3e4f5a6b70'
 export const STUDENT_ID = '7b3d5e90-1c44-4a2b-8f61-2d9e0c4a5b73'
+
+/**
+ * What addresses a row besides its id, per collection.
+ *
+ * The same keys the server's tables are unique on. A collection absent from
+ * here is addressed by its id alone.
+ */
+const NATURAL_KEYS: Partial<Record<SyncCollection, readonly string[]>> = {
+  homework: ['enrollmentId', 'lessonVersionId', 'sectionId'],
+  block_states: ['enrollmentId', 'lessonVersionId', 'blockId'],
+  enrollments: ['courseId', 'studentId'],
+}
 
 /** A server-issued stamp, one millisecond apart per row so ordering is plain. */
 export const serverHlc = (tick: number): string =>
