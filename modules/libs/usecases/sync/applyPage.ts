@@ -81,10 +81,12 @@ export async function applyPage(deps: SyncEngineDeps, input: ApplyPageInput): Pr
 
   const grants = storableGrants(response)
   const added = grants.filter((scope) => !known.has(syncScopeKey(scope)))
+  const restored = grants.filter((scope) => known.get(syncScopeKey(scope))?.removedAt != null)
   const removed = removedScopes(before, grants, grants.length > 0)
 
   return deps.unitOfWork(async () => {
     for (const scope of added) await deps.state.addScope(scope)
+    for (const scope of restored) await deps.state.restoreScope(scope)
     for (const scope of removed) await deps.state.markScopeRemoved(scope, deps.now())
 
     const rows = await applyRows(deps, input)

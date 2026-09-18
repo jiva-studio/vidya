@@ -57,6 +57,19 @@ export interface ISyncStateRepository {
   markScopeRemoved(scope: SyncScopeRef, at: IsoDateTime): Promise<void>
 
   /**
+   * Take the removal mark off a scope the server grants again — the student was
+   * enrolled on the course a second time (AC-22c).
+   *
+   * Its own call rather than a second meaning for {@link addScope}: adding
+   * starts a scope at `0`, and a re-enrolled course must keep the position it
+   * reached, or every pull would fetch its whole history again. Without this,
+   * nothing in the system ever clears the mark: the position is excluded from
+   * the cursors a pull sends, so the server reads the scope from the beginning
+   * every time, and the screens go on telling the student they were withdrawn.
+   */
+  restoreScope(scope: SyncScopeRef): Promise<void>
+
+  /**
    * Put a scope back to `0` so its content is fetched again — the answer to a
    * checksum that does not match (I-5). One scope, never the whole database.
    */

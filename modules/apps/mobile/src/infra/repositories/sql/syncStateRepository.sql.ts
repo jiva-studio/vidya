@@ -154,6 +154,21 @@ export function createSqlSyncStateRepository(
     },
 
     /**
+     * Take the removal mark off a scope granted again (D-4, AC-22c).
+     *
+     * The position and the checksum are left exactly where they stand: the rows
+     * this scope brought were never deleted, so the device does not need them
+     * again — it needs what happened while it was away, which is precisely what
+     * the kept position asks for.
+     */
+    restoreScope: async (scope: SyncScopeRef) => {
+      await db.execute(
+        'UPDATE sync_scopes SET removed_at = NULL WHERE owner_id = ? AND kind = ? AND id = ?',
+        [ownerId(), scope.kind, scope.id],
+      )
+    },
+
+    /**
      * Put one scope back to `0` so its history is fetched again — the answer to
      * a checksum that does not match (I-5, AC-10m).
      *

@@ -13,6 +13,7 @@ import {
   LESSON_VERSION_ID,
   SCHOOL_ID,
   SECTION_ID,
+  USER_SCOPE,
 } from './fakeSyncServer'
 import { type Harness, openHarness, OWNER } from './harness'
 
@@ -191,5 +192,35 @@ describe('the seven defects', () => {
     expect(scope!.checksum).not.toBeNull()
     expect(scope!.checksum).not.toBe(INCOMPLETE_CHECKSUM)
     expect(result.resynced).toEqual([])
+  })
+
+  it('D-4: enrolling a student again brings the scope back, at the position it reached', async () => {
+    harness.server.journal({
+      collection: 'courses',
+      docId: COURSE_ID,
+      scope: COURSE_SCOPE,
+      data: course(),
+    })
+    harness.server.grant(USER_SCOPE)
+    await harness.engine.runner.run()
+    const reached = (await scopeState(COURSE_SCOPE))!.cursor
+    expect(reached).toBeGreaterThan(0)
+
+    harness.server.revoke(COURSE_SCOPE)
+    await harness.engine.runner.run()
+    expect((await scopeState(COURSE_SCOPE))!.removedAt).not.toBeNull()
+
+    // The school enrols them a second time.
+    harness.server.grant(COURSE_SCOPE)
+    await harness.engine.runner.run()
+
+    const back = await scopeState(COURSE_SCOPE)
+    expect(back!.removedAt).toBeNull()
+    expect(back!.cursor).toBe(reached)
+
+    // Which is the whole point: the scope is asked about again, from where it
+    // stood, rather than read from the beginning on every pull forever.
+    await harness.engine.runner.run()
+    expect(lastCursors()[syncScopeKey(COURSE_SCOPE)]).toBe(reached)
   })
 })
