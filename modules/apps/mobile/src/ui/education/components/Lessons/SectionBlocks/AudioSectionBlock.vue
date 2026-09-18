@@ -5,12 +5,16 @@
     class="media"
     :src="block.url"
     @timeupdate="onTimeUpdate"
+    @pause="onSettled"
+    @ended="onSettled"
     @loadedmetadata="onLoadedMetadata"
   />
 </template>
 
 <script lang="ts" setup>
 import { ref } from 'vue'
+
+import { useProgressReporter } from './useProgressReporter'
 import type { AudioSectionBlockEmits, AudioSectionBlockProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -25,6 +29,10 @@ const emit = defineEmits<AudioSectionBlockEmits>()
 
 const audio = ref<HTMLAudioElement>()
 
+const reporter = useProgressReporter((element) =>
+  emit('change', { type: 'audio', listened: element.currentTime, duration: element.duration }),
+)
+
 /* -------------------------------- Handlers -------------------------------- */
 
 function onLoadedMetadata() {
@@ -32,9 +40,11 @@ function onLoadedMetadata() {
 }
 
 function onTimeUpdate() {
-  const element = audio.value
-  if (!element) return
-  emit('change', { type: 'audio', listened: element.currentTime, duration: element.duration })
+  reporter.tick(audio.value)
+}
+
+function onSettled() {
+  reporter.settled(audio.value)
 }
 </script>
 

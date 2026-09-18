@@ -70,15 +70,10 @@ const errorMessage = useFailureMessage(failure)
 const sections = computed(() => data.value?.version.content.sections ?? [])
 const selectedSection = computed(() => sections.value[selected.value])
 
-// The tab strip wants a title and an id; the section carries the rest.
+// The strip is a row of labels; everything else about a section is read from
+// the section itself once it is the selected one.
 const sectionViews = computed(() =>
-  sections.value.map((section) => ({
-    id: section.id,
-    title: section.title,
-    state: homeworkFor(section.id)?.status ?? ('unknown' as const),
-    homeworkId: homeworkFor(section.id)?.id,
-    blocks: section.blocks,
-  })),
+  sections.value.map((section) => ({ id: section.id, title: section.title })),
 )
 
 const blockStates = computed(

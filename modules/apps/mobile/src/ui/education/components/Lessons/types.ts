@@ -1,14 +1,10 @@
-import type { BlockId, HomeworkId, HomeworkStatus, SectionId } from '@vidya/domain'
+import type { BlockId, SectionId } from '@vidya/domain'
 import type { LessonBlock, LessonBlockState, LessonSummary } from '@vidya/protocol'
 
+/** What the section strip shows: a label to press, and which one is pressed. */
 export interface LessonSectionViewModel {
   id: SectionId
   title: string
-
-  /** `unknown` while the section's homework has not been loaded or asked for. */
-  state: HomeworkStatus | 'unknown'
-  homeworkId?: HomeworkId
-  blocks: LessonBlock[]
 }
 
 export interface LessonsListProps {

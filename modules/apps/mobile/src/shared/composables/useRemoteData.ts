@@ -39,16 +39,24 @@ export function useRemoteData<TData>(
   const loaded = ref(false)
   const failure = ref<RemoteFailure | undefined>(undefined)
 
+  // Loads can overlap — mount, view-enter and a parameter change all start one —
+  // and they do not come back in the order they left. Only the newest may write.
+  let issued = 0
+
   const reload = async () => {
+    const attempt = ++issued
     busy.value = true
     failure.value = undefined
     try {
-      data.value = await load()
+      const result = await load()
+      if (attempt !== issued) return
+      data.value = result
       loaded.value = true
     } catch (error) {
+      if (attempt !== issued) return
       failure.value = classify(error)
     } finally {
-      busy.value = false
+      if (attempt === issued) busy.value = false
     }
   }
 

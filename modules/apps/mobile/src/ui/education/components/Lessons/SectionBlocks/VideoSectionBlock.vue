@@ -7,6 +7,8 @@
     :src="block.url"
     :poster="block.posterUrl"
     @timeupdate="onTimeUpdate"
+    @pause="onSettled"
+    @ended="onSettled"
     @loadedmetadata="onLoadedMetadata"
   />
 
@@ -15,6 +17,8 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
+
+import { useProgressReporter } from './useProgressReporter'
 import type { VideoSectionBlockEmits, VideoSectionBlockProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -34,6 +38,10 @@ const video = ref<HTMLVideoElement>()
 // on the iframe and simply do not track how much was watched.
 const isPlayable = computed(() => props.block.source === 'upload' || props.block.source === 'url')
 
+const reporter = useProgressReporter((element) =>
+  emit('change', { type: 'video', watched: element.currentTime, duration: element.duration }),
+)
+
 /* -------------------------------- Handlers -------------------------------- */
 
 function onLoadedMetadata() {
@@ -41,9 +49,11 @@ function onLoadedMetadata() {
 }
 
 function onTimeUpdate() {
-  const element = video.value
-  if (!element) return
-  emit('change', { type: 'video', watched: element.currentTime, duration: element.duration })
+  reporter.tick(video.value)
+}
+
+function onSettled() {
+  reporter.settled(video.value)
 }
 </script>
 
