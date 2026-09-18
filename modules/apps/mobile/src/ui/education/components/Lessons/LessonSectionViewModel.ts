@@ -1,10 +1,12 @@
-import { LessonSectionBlock } from '@/ui/education'
+import type { HomeworkId, HomeworkStatus, SectionId } from '@vidya/domain'
+import type { LessonBlock } from '@vidya/protocol'
 
 export interface LessonSectionViewModel {
-  id: string
-  title: string,
-  state: 'unknown' | 'open' | 'in-review' | 'returned' | 'accepted'
-  homeworkId?: string
-  blocks: LessonSectionBlock[]
-  work: any
+  id: SectionId
+  title: string
+
+  /** `unknown` while the section's homework has not been loaded or asked for. */
+  state: HomeworkStatus | 'unknown'
+  homeworkId?: HomeworkId
+  blocks: LessonBlock[]
 }

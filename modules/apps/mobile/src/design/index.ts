@@ -5,7 +5,6 @@ export { default as ContentAndButtonAtBottomLayout } from './layouts/ContentAndB
 export { default as ImageAndButtonLayout } from './layouts/ImageAndButtonLayout.vue'
 export { default as PageWithHeaderLayout } from './layouts/PageWithHeaderLayout.vue'
 
-export { default as CachedImage } from './containers/CachedImage.vue'
 export { default as WithLoader } from './containers/WithLoader.vue'
 
 export { default as AsyncButton } from './components/AsyncButton.vue'

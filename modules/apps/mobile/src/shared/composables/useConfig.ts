@@ -1,12 +1,13 @@
 import { createGlobalState } from '@vueuse/core'
 import { ref } from 'vue'
 
+/**
+ * What the sign-in wizard carries between its two steps.
+ *
+ * Tokens are not here: they belong to the session, which is persisted and
+ * cleared as one thing.
+ */
 export const useConfig = createGlobalState(() => {
-  const userId = ref('')
-  const accessToken = ref('')
-  const refreshToken = ref('')
   const email = ref('')
-  const baseUrl = ref(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000')
-
-  return { userId, accessToken, refreshToken, email, baseUrl }
+  return { email }
 })

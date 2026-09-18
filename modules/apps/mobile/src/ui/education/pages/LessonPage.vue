@@ -1,160 +1,128 @@
 <template>
   <PageWithHeaderLayout
-    :title="lesson?.title || ''"
-    :has-data="lesson !== undefined"
-    @sync-completed="onEnter"
+    :title="$t('lesson')"
+    :busy="busy"
+    :has-data="loaded"
+    :error="failure && $t(failure)"
   >
     <template #toolbar>
       <IonToolbar>
         <LessonSectionsList
           v-model="selected"
-          :items="sections"
+          :items="sectionViews"
         />
       </IonToolbar>
     </template>
 
     <LessonSectionView
-      v-if="selectedSection !== undefined"
+      v-if="selectedSection"
       :blocks="selectedSection.blocks"
-      :states="selectedHomework?.work || []"
-      @change="onLessonSectionStateChanged"
+      :states="blockStates"
+      @change="onBlockStateChanged"
     />
 
-    <IonButton
-      v-if="showSendToReview"
-      class="ion-padding"
-      expand="block"
-      :disabled="!enabledSentToReview"
-      @click="onLessonSectionCopleted"
-    >
-      {{ enabledSentToReview ? $t('send-to-review') : $t('sent-to-review') }}
-    </IonButton>
+    <HomeworkAnswer
+      v-if="selectedSection && selectedSection.assessment !== 'none'"
+      :status="selectedHomework?.status ?? 'open'"
+      @submit="onHomeworkSubmitted"
+    />
   </PageWithHeaderLayout>
 </template>
 
-
 <script lang="ts" setup>
+import type { BlockId, EnrollmentId, LessonId, SectionId } from '@vidya/domain'
+import type { LessonBlockState } from '@vidya/protocol'
+import { IonToolbar } from '@ionic/vue'
+import { computed, ref } from 'vue'
+
+import { useApi } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
-import {
-  LessonSectionsList, LessonSectionView,
-  Database, LessonSection, Lesson, FetchLessonSections, StudentHomework,
-  FetchLessonSectionsHomeworks
-} from '@/ui/education'
-import { computed, onMounted, ref, shallowRef, toRefs, watch } from 'vue'
-import { IonToolbar, IonButton, onIonViewWillEnter, useIonRouter } from '@ionic/vue'
-import { useRoute } from 'vue-router'
+import { useRemoteData } from '@/shared'
+import { HomeworkAnswer, LessonSectionsList, LessonSectionView } from '@/ui/education'
+import { education } from '@/usecases'
 
-/* -------------------------------------------------------------------------- */
-/*                                Dependencies                                */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------- Props ---------------------------------- */
 
-const userId = 'a243727d-57ab-4595-ba17-69f3a0679bf6'
-const route = useRoute()
-const router = useIonRouter()
+const props = defineProps<{ enrollmentId: EnrollmentId; lessonId: LessonId }>()
 
+/* --------------------------------- State ---------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/*                                  Interface                                 */
-/* -------------------------------------------------------------------------- */
+const api = useApi()
+const selected = ref(0)
 
-const props = defineProps<{
-  lessonId: string
-}>()
+const { data, busy, loaded, failure, reload } = useRemoteData(async () => {
+  const version = await education.getPublishedLessonVersion(api, props.lessonId)
+  if (!version) return undefined
 
-
-/* -------------------------------------------------------------------------- */
-/*                                    State                                   */
-/* -------------------------------------------------------------------------- */
-
-const { query } = toRefs(route)
-
-const selected  = ref(0)
-const lesson    = shallowRef<Lesson>()
-const sections  = shallowRef<readonly LessonSection[]>([])
-const homeworks = shallowRef<readonly StudentHomework[]>([])
-
-const selectedSection  = computed(() => sections.value[selected.value])
-const selectedHomework = computed(() => homeworks.value.find(x => x.lessonSectionId === selectedSection.value.id))
-
-const showSendToReview = computed(() => selectedHomework.value?.assessmentMethod !== 'not-required')
-const enabledSentToReview = computed(() => selectedHomework.value && ['open', 'returned'].includes(selectedHomework.value.status) )
-
-/* -------------------------------------------------------------------------- */
-/*                                    Hooks                                   */
-/* -------------------------------------------------------------------------- */
-
-onMounted(onEnter)
-onIonViewWillEnter(onEnter)
-
-watch(selected, (v) => {
-  if (sections.value[v]) {
-    router.replace({
-      name:   'lesson',
-      params: { lessonId:  props.lessonId },
-      query:  { sectionId: sections.value[v].id },
-    })
-  }
-})
-
-watch([query, sections], () => {
-  if (query.value.sectionId) {
-    selected.value = sections.value.findIndex(x => x.id === query.value.sectionId)
-  }
-})
-
-
-/* -------------------------------------------------------------------------- */
-/*                                  Handlers                                  */
-/* -------------------------------------------------------------------------- */
-
-async function onEnter() {
-  await fetchLessonData(props.lessonId)
-}
-
-async function onLessonSectionStateChanged(
-  data: any
-) {
-  if (!selectedHomework.value) { return }
-  selectedHomework.value.setWork(data)
-  Database.StudentHomeworks.save(selectedHomework.value)
-}
-
-async function onLessonSectionCopleted() {
-  if (!selectedHomework.value) { return }
-  selectedHomework.value.submit()
-  await Database.StudentHomeworks.save(selectedHomework.value)
-  // TODO: fetch only homework
-  await fetchLessonData(props.lessonId)
-}
-
-
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-async function fetchLessonData(
-  lessonId: string
-) {
-  [
-    lesson.value,
-    sections.value,
-  ] = await Promise.all([
-    Database.Lessons.get(lessonId),
-    FetchLessonSections(lessonId),
+  const [states, homework] = await Promise.all([
+    education.listBlockStates(api, props.enrollmentId, version.id),
+    education.listHomeworkOfEnrollment(api, props.enrollmentId),
   ])
-  homeworks.value = await FetchLessonSectionsHomeworks(userId, sections.value.map(x => x.id))
-  console.log(homeworks.value)
+  return { version, states, homework }
+}, undefined)
+
+const sections = computed(() => data.value?.version.content.sections ?? [])
+const selectedSection = computed(() => sections.value[selected.value])
+
+// The tab strip wants a title and an id; the section carries the rest.
+const sectionViews = computed(() =>
+  sections.value.map((section) => ({
+    id: section.id,
+    title: section.title,
+    state: homeworkFor(section.id)?.status ?? ('unknown' as const),
+    homeworkId: homeworkFor(section.id)?.id,
+    blocks: section.blocks,
+  })),
+)
+
+const blockStates = computed(() =>
+  Object.fromEntries(
+    (data.value?.states ?? []).map((state) => [state.blockId, state.state]),
+  ) as Record<BlockId, LessonBlockState>,
+)
+
+const selectedHomework = computed(() =>
+  selectedSection.value ? homeworkFor(selectedSection.value.id) : undefined,
+)
+
+/* -------------------------------- Handlers -------------------------------- */
+
+async function onBlockStateChanged(blockId: BlockId, state: LessonBlockState) {
+  const version = data.value?.version
+  if (!version) return
+  await education.saveBlockState(api, { lessonVersionId: version.id, blockId, state })
+}
+
+async function onHomeworkSubmitted(text: string) {
+  const version = data.value?.version
+  const section = selectedSection.value
+  if (!version || !section) return
+
+  await education.submitHomework(api, {
+    lessonVersionId: version.id,
+    sectionId: section.id,
+    text,
+  })
+  await reload()
+}
+
+/* -------------------------------- Helpers --------------------------------- */
+
+function homeworkFor(sectionId: SectionId) {
+  return data.value?.homework.find((item) => item.sectionId === sectionId)
 }
 </script>
 
-
-
 <fluent locale="en">
-send-to-review = Send to review
-sent-to-review = Sent
+lesson = Lesson
+offline = No connection. The lesson could not be loaded.
+unauthorized = Your session has expired. Sign in again.
+failed = The lesson could not be loaded.
 </fluent>
 
 <fluent locale="ru">
-send-to-review = Отправить на проверку
-sent-to-review = Отправлено
+lesson = Урок
+offline = Нет соединения. Урок не загрузился.
+unauthorized = Сессия истекла. Войдите заново.
+failed = Урок не загрузился.
 </fluent>

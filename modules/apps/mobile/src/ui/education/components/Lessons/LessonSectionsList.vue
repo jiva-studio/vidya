@@ -15,11 +15,11 @@
 
 
 <script setup lang="ts">
-import { LessonSection } from '@/ui/education'
+import type { LessonSectionViewModel } from './LessonSectionViewModel'
 import { IonLabel, IonSegment, IonSegmentButton } from '@ionic/vue'
 
 defineProps<{
-  items: readonly LessonSection[]
+  items: readonly LessonSectionViewModel[]
 }>()
 
 const selected = defineModel<number>({ default: 0 })

@@ -5,38 +5,16 @@
   />
 </template>
 
-
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import type { TextBlock } from '@vidya/protocol'
 import { Marked } from '@ts-stack/markdown'
+import { computed } from 'vue'
 
-/* -------------------------------------------------------------------------- */
-/*                                  Interface                                 */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<{
-  content: string
-}>()
+const props = defineProps<{ block: TextBlock }>()
 
+/* --------------------------------- State ---------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/*                                    State                                   */
-/* -------------------------------------------------------------------------- */
-
-const renderedContent = ref('')
-
-/* -------------------------------------------------------------------------- */
-/*                                    Hooks                                   */
-/* -------------------------------------------------------------------------- */
-
-onMounted(onEnter)
-
-
-/* -------------------------------------------------------------------------- */
-/*                                  Handlers                                  */
-/* -------------------------------------------------------------------------- */
-
-async function onEnter() {
-  renderedContent.value = Marked.parse(props.content)
-}
+const renderedContent = computed(() => Marked.parse(props.block.content))
 </script>

@@ -1,94 +1,57 @@
 <template>
-  <IonItemSliding ref="slidingItem">
-    <IonItem
-      :detail="true"
-      lines="none"
-      @click="onClicked"
-    >
-      <IonAvatar
-        slot="start"
-        aria-hidden="true"
-      >
-        <CachedImage :url="imageUrl" />
-      </IonAvatar>
+  <IonItem
+    :detail="true"
+    lines="none"
+    @click="onClicked"
+  >
+    <IonLabel>
+      <h2>{{ courseName }}</h2>
+      <p class="ion-text-wrap">
+        {{ groupName ?? $t('no-group-yet') }}
 
-      <IonLabel>
-        <h2>{{ courseName }}</h2>
-        <p class="ion-text-wrap">
-          {{ groupName }}
-
-          <IonText
-            v-if="showStatus"
-            color="primary"
-          >
-            {{ $t(status) }}
-          </IonText>
-        </p>
-      </IonLabel>
-    </IonItem>
-
-    <IonItemOptions>
-      <IonItemOption
-        color="danger"
-        expandable
-        @click="onDeleteClicked"
-      >
-        {{ $t('delete') }}
-      </IonItemOption>
-    </IonItemOptions>
-  </IonItemSliding>
+        <IonText color="primary">{{ $t(status) }}</IonText>
+      </p>
+    </IonLabel>
+  </IonItem>
 </template>
 
-
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { IonItem, IonLabel, IonAvatar, IonText, IonItemSliding, IonItemOption, IonItemOptions } from '@ionic/vue'
-import { CachedImage } from '@/design'
+import type { EnrollmentStatus } from '@vidya/domain'
+import { IonItem, IonLabel, IonText } from '@ionic/vue'
 
-// --- Interface -------------------------------------------------------------
-const props = defineProps<{
-  id: string
-  courseName: string,
-  groupName?: string,
-  imageUrl: string
-  status: string
-}>()
+/* --------------------------------- Props ---------------------------------- */
 
-const emit = defineEmits<{
-  click: [],
-  delete: [],
-}>()
+withDefaults(
+  defineProps<{
+    id: string
+    courseName: string
+    groupName?: string
+    status: EnrollmentStatus
+  }>(),
+  { groupName: undefined },
+)
 
-// --- State -----------------------------------------------------------------
-const showStatus = computed(() => props.status !== 'approved')
-const slidingItem = ref<typeof IonItemSliding>()
+/* --------------------------------- Events --------------------------------- */
 
-// --- Handlers --------------------------------------------------------------
+const emit = defineEmits<{ click: [] }>()
+
+/* -------------------------------- Handlers -------------------------------- */
+
 function onClicked() {
   emit('click')
 }
-
-async function onDeleteClicked() {
-  await slidingItem.value?.$el.close()
-  emit('delete')
-}
 </script>
 
-
 <fluent locale="en">
-not-submitted = Not submitted
 pending = Pending
-in-review = In Review
-approved = Approved
+accepted = Accepted
 declined = Declined
-delete = Delete
+no-group-yet = Waiting for a group
 </fluent>
 
 <fluent locale="ru">
-not-submitted = Не отправлено
-pending = В ожидании
-in-review = На рассмотрении
-approved = Одобрено
+pending = На рассмотрении
+accepted = Принято
 declined = Отклонено
-delete = Удалить
+no-group-yet = Ожидает группу
 </fluent>

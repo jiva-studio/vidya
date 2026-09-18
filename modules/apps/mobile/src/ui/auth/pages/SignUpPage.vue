@@ -1,5 +1,5 @@
 <template>
-  <ion-page class="ion-padding">
+  <IonPage class="ion-padding">
     <IonList>
       <h1>{{ $t('sign-up') }}</h1>
       {{ $t('need-some-information') }}
@@ -25,15 +25,6 @@
       />
       <br>
 
-      <IonInput
-        v-model="location"
-        :label="$t('location')"
-        label-placement="stacked"
-        fill="outline"
-        :placeholder="$t('location-placeholder')"
-      />
-      <br>
-
       <IonCheckbox
         v-model="conditionsAccepted"
         label-placement="end"
@@ -43,61 +34,85 @@
       </IonCheckbox>
     </IonList>
 
+    <IonNote
+      v-if="error"
+      color="danger"
+    >
+      {{ error }}
+    </IonNote>
+
     <AsyncButton
       expand="block"
-      :disabled="!isSugnUpButtonEmabled"
+      :disabled="!canSubmit"
       :busy="busy"
-      :error-code="undefined"
       @click="onSignUpButtonClicked"
     >
       {{ $t('sign-up') }}
     </AsyncButton>
-  </ion-page>
+  </IonPage>
 </template>
 
-
 <script lang="ts" setup>
+import { IonCheckbox, IonInput, IonList, IonNote, IonPage, useIonRouter } from '@ionic/vue'
+import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
-import { IonPage, IonInput, IonList, IonCheckbox, useIonRouter } from '@ionic/vue'
+
+import { useApi } from '@/app'
 import { AsyncButton } from '@/design'
-import { useProfileService } from '@/ui/auth'
+import { auth } from '@/usecases'
 
-// --- Dependencies ----------------------------------------------------------
+/* --------------------------------- State ---------------------------------- */
+
+const api = useApi()
 const router = useIonRouter()
-const profileService = useProfileService()
+const fluent = useFluent()
 
-// --- State -----------------------------------------------------------------
-const name = ref()
-const location = ref()
-const phoneNumber = ref()
+const name = ref('')
+const phoneNumber = ref('')
 const conditionsAccepted = ref(false)
 const busy = ref(false)
-const isSugnUpButtonEmabled = computed(
-  () => true || name.value && phoneNumber.value && conditionsAccepted.value && location.value
-)
+const error = ref<string | undefined>(undefined)
 
-// --- Handlers --------------------------------------------------------------
+const canSubmit = computed(() => name.value.trim().length > 0 && conditionsAccepted.value)
+
+/* -------------------------------- Handlers -------------------------------- */
+
 async function onSignUpButtonClicked() {
   busy.value = true
-  // TODO: handle eerors and exceptions
-  await profileService.update({
-    name: name.value,
-    phone: phoneNumber.value,
-    location: location.value
-  })
-  router.navigate({name: 'courses'}, 'root', 'replace')
-  busy.value = false
+  error.value = undefined
+  try {
+    // The profile the token belongs to is the one being filled in, so its id
+    // comes from the server rather than from anything the form holds.
+    const profile = await auth.getProfile(api)
+    await auth.updateProfile(api, profile.userId, {
+      name: name.value,
+      phone: phoneNumber.value || undefined,
+    })
+    router.navigate({ name: 'courses' }, 'root', 'replace')
+  } catch {
+    error.value = fluent.$t('could-not-save')
+  } finally {
+    busy.value = false
+  }
 }
 </script>
 
-
 <fluent locale="en">
 sign-up = Sign Up
-need-some-information = We need some information to complete registration
+need-some-information = We need a few details before you start.
 name = Name
-name-placeholder = Krishna das
-phone-number = Phone Number
-i-agree-to-the-terms = I agree to the terms and conditions
-location = City
-location-placeholder = Vrindavan
+name-placeholder = How should we address you?
+phone-number = Phone number
+i-agree-to-the-terms = I agree to the terms
+could-not-save = Your details could not be saved. Check your connection and try again.
+</fluent>
+
+<fluent locale="ru">
+sign-up = Регистрация
+need-some-information = Немного данных, прежде чем начать.
+name = Имя
+name-placeholder = Как к вам обращаться?
+phone-number = Телефон
+i-agree-to-the-terms = Я принимаю условия
+could-not-save = Данные не сохранились. Проверьте соединение и попробуйте ещё раз.
 </fluent>

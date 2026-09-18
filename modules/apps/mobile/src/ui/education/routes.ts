@@ -1,4 +1,5 @@
-import { RouteRecordRaw } from 'vue-router'
+import type * as domain from '@vidya/domain'
+import type { RouteRecordRaw } from 'vue-router'
 
 import EducationIndexPage from './EducationIndexPage.vue'
 
@@ -21,7 +22,7 @@ export const routes: Array<RouteRecordRaw> = [
         path: 'courses/:id',
         component: () => import('./pages/CourseDetailsPage.vue'),
         props: route => ({
-          id: route.params.id as string,
+          id: route.params.id as domain.CourseId,
         }),
       },
       {
@@ -29,7 +30,7 @@ export const routes: Array<RouteRecordRaw> = [
         path: 'courses/:id/enroll',
         component: () => import('./pages/EnrollPage.vue'),
         props: route => ({
-          courseId: route.params.id as string,
+          courseId: route.params.id as domain.CourseId,
         }),
       },
       {
@@ -50,15 +51,18 @@ export const routes: Array<RouteRecordRaw> = [
         path: 'my-enrollments/:id',
         component: () => import('./pages/MyEnrollmentPage.vue'),
         props: route => ({
-          enrollmentId: route.params.id as string,
+          enrollmentId: route.params.id as domain.EnrollmentId,
         }),
       },
       {
+        // A lesson is always read from inside an enrolment: progress and
+        // homework are recorded against it, so the id travels in the path.
         name: 'lesson',
-        path: 'lesson/:lessonId',
+        path: 'my-enrollments/:enrollmentId/lessons/:lessonId',
         component: () => import('./pages/LessonPage.vue'),
         props: (route) => ({
-          lessonId: route.params.lessonId as string,
+          enrollmentId: route.params.enrollmentId as domain.EnrollmentId,
+          lessonId: route.params.lessonId as domain.LessonId,
         }),
       },
     ]

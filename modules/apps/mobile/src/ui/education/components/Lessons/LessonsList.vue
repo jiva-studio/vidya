@@ -13,18 +13,20 @@
 
 
 <script setup lang="ts">
-import { Lesson, LessonsListItem } from '@/ui/education'
+import type { LessonSummary } from '@vidya/protocol'
+
+import LessonsListItem from './LessonsListItem.vue'
 import { WithListHeader } from '@/design'
 /* -------------------------------------------------------------------------- */
 /*                                  Interface                                 */
 /* -------------------------------------------------------------------------- */
 
 defineProps<{
-  items: readonly Lesson[]
+  items: readonly LessonSummary[]
 }>()
 
 const emit = defineEmits<{
-  click: [lessonId: string]
+  click: [lessonId: LessonSummary['id']]
 }>()
 
 
@@ -33,7 +35,7 @@ const emit = defineEmits<{
 /* -------------------------------------------------------------------------- */
 
 function onLessonClicked(
-  lessonId: string
+  lessonId: LessonSummary['id']
 ) {
   emit('click', lessonId)
 }

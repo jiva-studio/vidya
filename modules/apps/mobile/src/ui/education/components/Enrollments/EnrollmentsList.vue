@@ -1,54 +1,32 @@
 <template>
   <EnrollmentsListItem
-    v-for="i in items"
-    :id="i.enrollment.id"
-    :key="i.enrollment.id"
-    :course-name="i.course.title"
-    :group-name="i.group?.name"
-    :image-url="getAvatarUrl(i.group?.couratorAvatarUrl, i.group?.id)"
-    :status="i.enrollment.status"
-    @click="() => onEnrollmentClicked(i.enrollment.id)"
-    @delete="() => onDelete(i.enrollment.id)"
+    v-for="item in items"
+    :id="item.enrollment.id"
+    :key="item.enrollment.id"
+    :course-name="item.course.name"
+    :group-name="item.group?.name"
+    :status="item.enrollment.status"
+    @click="() => onEnrollmentClicked(item.enrollment.id)"
   />
 </template>
 
-
 <script setup lang="ts">
-import { EnrollmentsListItem } from '@/ui/education'
-import { EnrollmentViewModel } from './EnrollmentViewModel'
+import type { EnrollmentId } from '@vidya/domain'
 
-// --- Interface --------------------------------------------------------------
-defineProps<{
-  items: EnrollmentViewModel[]
-}>()
+import EnrollmentsListItem from './EnrollmentsListItem.vue'
+import type { EnrollmentViewModel } from './EnrollmentViewModel'
 
-const emit = defineEmits<{
-  click: [enrollmentId: string]
-  delete: [enrollmentId: string]
-}>()
+/* --------------------------------- Props ---------------------------------- */
 
-// --- State -----------------------------------------------------------------
-const NO_CLASS_AVATAR = 'class-is-recruiting-avatar.png'
-const NO_LEADER_AVATAR = 'user/no-avatar.jpg'
+defineProps<{ items: EnrollmentViewModel[] }>()
 
-// --- Handlers --------------------------------------------------------------
-function onEnrollmentClicked(
-  enrollmentId: string
-) {
+/* --------------------------------- Events --------------------------------- */
+
+const emit = defineEmits<{ click: [enrollmentId: EnrollmentId] }>()
+
+/* -------------------------------- Handlers -------------------------------- */
+
+function onEnrollmentClicked(enrollmentId: EnrollmentId) {
   emit('click', enrollmentId)
-}
-
-function onDelete(
-  enrollmentId: string
-) {
-  emit('delete', enrollmentId)
-}
-
-// --- Helpers ---------------------------------------------------------------
-function getAvatarUrl(
-  leaderAvatarUrl?: string,
-  groupId?: string,
-) {
-  return !groupId ? NO_CLASS_AVATAR : leaderAvatarUrl || NO_LEADER_AVATAR
 }
 </script>

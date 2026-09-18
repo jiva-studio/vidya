@@ -1,7 +1,7 @@
-import { Course, Enrollment, Group } from '@/ui/education'
+import type { CourseSummary, EnrollmentSummary, GroupSummary } from '@vidya/protocol'
 
 export interface EnrollmentViewModel {
-  enrollment: Enrollment,
-  group?: Group,
-  course: Course
+  enrollment: EnrollmentSummary
+  group?: GroupSummary
+  course: CourseSummary
 }

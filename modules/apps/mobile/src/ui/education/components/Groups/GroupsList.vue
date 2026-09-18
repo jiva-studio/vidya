@@ -1,46 +1,25 @@
 <template>
-  <IonRadioGroup
-    v-model="model"
-  >
+  <IonRadioGroup v-model="model">
     <GroupsListItem
       v-for="group in groups"
       :id="group.id"
       :key="group.id"
       :name="group.name"
-      :leader="group.leader"
-      :info="group.info"
-      :image-url="group.imageUrl"
-      :starts-at="group.startsAt"
     />
   </IonRadioGroup>
 </template>
 
-
 <script setup lang="ts">
+import type { GroupSummary } from '@vidya/protocol'
 import { IonRadioGroup } from '@ionic/vue'
-import { GroupsListItem } from '@/ui/education'
 
-/* -------------------------------------------------------------------------- */
-/*                                  Interface                                 */
-/* -------------------------------------------------------------------------- */
+import GroupsListItem from './GroupsListItem.vue'
 
-export interface GroupViewModel {
-  id: string,
-  name: string,
-  leader?: string,
-  info?: string,
-  imageUrl: string,
-  startsAt?: number
-}
+/* --------------------------------- Props ---------------------------------- */
 
-defineProps<{
-  groups: GroupViewModel[]
-}>()
+defineProps<{ groups: GroupSummary[] }>()
 
-
-/* -------------------------------------------------------------------------- */
-/*                                    State                                   */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------- State ---------------------------------- */
 
 const model = defineModel<string>()
 </script>

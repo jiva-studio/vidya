@@ -1,10 +1,11 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
-
 import { IonicVue } from '@ionic/vue'
-import { fluent } from './i18n'
+import { createApp } from 'vue'
 
+import { useSession } from '@/app'
+
+import App from './App.vue'
+import { fluent } from './i18n'
+import router from './router'
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/vue/css/core.css'
@@ -26,20 +27,15 @@ import '@ionic/vue/css/display.css'
 import './theme.css'
 import './lottie.css'
 
-import { runConfigPersistence } from './shared'
-
-
 async function createAndRunApp() {
-  await runConfigPersistence()
+  // The router sends an unauthenticated visitor to sign-in, so the stored
+  // session has to be in hand before the first route is resolved.
+  await useSession().restore()
 
-  const app = createApp(App)
-    .use(IonicVue)
-    .use(router)
-    .use(fluent)
+  const app = createApp(App).use(IonicVue).use(router).use(fluent)
 
-  router.isReady().then(async () => {
-    app.mount('#app')
-  })
+  await router.isReady()
+  app.mount('#app')
 }
 
 createAndRunApp()

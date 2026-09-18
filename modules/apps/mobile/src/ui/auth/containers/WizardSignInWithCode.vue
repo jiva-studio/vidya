@@ -8,9 +8,15 @@
     @back-button-click="onBackButtonClicked"
   />
 
+  <IonNote
+    v-if="error"
+    color="danger"
+  >
+    {{ error }}
+  </IonNote>
+
   <AsyncButton
     :busy="busy"
-    :error-code="undefined"
     :disabled="code.length === 0"
     expand="block"
     @click="onValidateCodeClicked()"
@@ -19,48 +25,52 @@
   </AsyncButton>
 </template>
 
-
 <script lang="ts" setup>
-import { CodeInput, HelpMessage, useAuthService, useProfileService } from '@/ui/auth'
-import { useConfig } from '@/shared'
-import { AsyncButton } from '@/design'
+import { IonNote } from '@ionic/vue'
+import { useFluent } from 'fluent-vue'
 import { ref } from 'vue'
 
-// --- Interface -------------------------------------------------------------
+import { useApi, useSession } from '@/app'
+import { AsyncButton } from '@/design'
+import { useConfig } from '@/shared'
+import { CodeInput, HelpMessage } from '@/ui/auth'
+import { auth } from '@/usecases'
+
+/* --------------------------------- Events --------------------------------- */
+
 const emit = defineEmits<{
   complete: [isRegistrationRequired: boolean]
   goBack: []
 }>()
 
-// --- Dependencies ----------------------------------------------------------
-const authService = useAuthService()
-const profileService = useProfileService()
-const config = useConfig()
+/* --------------------------------- State ---------------------------------- */
 
-// --- State -----------------------------------------------------------------
+const api = useApi()
+const session = useSession()
+const config = useConfig()
+const fluent = useFluent()
 const code = ref('')
 const busy = ref(false)
+const error = ref<string | undefined>(undefined)
 
-// --- Handlers --------------------------------------------------------------
+/* -------------------------------- Handlers -------------------------------- */
+
 async function onValidateCodeClicked() {
-  // TODO: handler errors and exceptions
   busy.value = true
-
-  // Authenticate
-  const email = config.email.value
-  const authResult = await authService.signIn({ email: email, code: code.value })
-  config.accessToken.value = authResult.accessToken
-  config.refreshToken.value = authResult.refreshToken
-  profileService.setToken(authResult.accessToken)
-
-  // Check if profile exists
+  error.value = undefined
   try {
-    await profileService.get()
-    emit('complete', false) // No registration required
-  } catch (error) {
-    emit('complete', true) // Registration required
+    const started = await auth.signInWithCode(api, { email: config.email.value, code: code.value })
+    await session.start(started)
+
+    // A profile exists from the first sign-in, but it has no name until the
+    // student gives one, and that is what the sign-up screen asks for.
+    const profile = await auth.getProfile(api)
+    emit('complete', !profile.name)
+  } catch {
+    error.value = fluent.$t('wrong-code')
+  } finally {
+    busy.value = false
   }
-  busy.value = false
 }
 
 function onBackButtonClicked() {
@@ -68,8 +78,14 @@ function onBackButtonClicked() {
 }
 </script>
 
-
 <fluent locale="en">
-enter-code = Enter the code that we have sent to your email
+enter-code = Enter the code we sent you.
 sign-in = Sign In
+wrong-code = That code did not work. Check it and try again.
+</fluent>
+
+<fluent locale="ru">
+enter-code = Введите код, который мы прислали.
+sign-in = Войти
+wrong-code = Код не подошёл. Проверьте и попробуйте ещё раз.
 </fluent>

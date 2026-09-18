@@ -1,131 +1,72 @@
 <template>
   <video
+    v-if="isPlayable"
     ref="video"
     controls
-    class="video"
-    @timeupdate="onVideoTimeUpdate"
-  >
-    <source
-      v-if="localVideoUrl"
-      :src="localVideoUrl"
-      type="video/mp4"
-    >
-  </video>
+    class="media"
+    :src="block.url"
+    :poster="block.posterUrl"
+    @timeupdate="onTimeUpdate"
+    @loadedmetadata="onLoadedMetadata"
+  />
 
-  <div class="ion-padding">
-    <IonChip
-      v-for="timestamp, idx in timestamps"
-      :key="timestamp.time"
-      :color="getColor(idx)"
-      @click="() => onTimestampClicked(timestamp.time)"
-    >
-      {{ formatSeconds(timestamp.time) }} {{ timestamp.title }}
-    </IonChip>
-  </div>
+  <iframe
+    v-else
+    class="media"
+    :src="block.url"
+    allowfullscreen
+    :title="$t('embedded-video')"
+  />
 </template>
 
-
 <script lang="ts" setup>
-import { onMounted, ref, toRefs, watch } from 'vue'
-import { useDownloader } from '@/shared'
-import { LessonSectionVideoBlockState, Timestamp } from '@/ui/education'
-import { onIonViewWillEnter, IonChip } from '@ionic/vue'
+import type { VideoBlock, VideoBlockState } from '@vidya/protocol'
+import { computed, ref } from 'vue'
 
-/* -------------------------------------------------------------------------- */
-/*                                Dependencies                                */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------- Props ---------------------------------- */
 
-const downloader = useDownloader()
+const props = withDefaults(defineProps<{ block: VideoBlock; state?: VideoBlockState }>(), {
+  state: undefined,
+})
 
+/* --------------------------------- Events --------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/*                                  Interface                                 */
-/* -------------------------------------------------------------------------- */
+const emit = defineEmits<{ change: [state: VideoBlockState] }>()
 
-const props = defineProps<{
-  videoUrl: string
-  posterUrl: string
-  timestamps: Timestamp[]
-  state?: LessonSectionVideoBlockState
-}>()
+/* --------------------------------- State ---------------------------------- */
 
-const emit = defineEmits<{
-  change: [state: LessonSectionVideoBlockState]
-}>()
+const video = ref<HTMLVideoElement>()
 
+// Only a file we serve plays in a <video>; a YouTube or Vimeo link is an embed,
+// and an embed reports no progress. v1 ships embeds only, so most blocks land
+// on the iframe and simply do not track how much was watched.
+const isPlayable = computed(() => props.block.source === 'upload' || props.block.source === 'url')
 
-/* -------------------------------------------------------------------------- */
-/*                                    State                                   */
-/* -------------------------------------------------------------------------- */
+/* -------------------------------- Handlers -------------------------------- */
 
-const localVideoUrl = ref<string>()
-const localPosterUrl = ref<string>()
-const video = ref()
-const currentTime = ref(props.state?.watched || 0)
-const { state } = toRefs(props)
-
-
-/* -------------------------------------------------------------------------- */
-/*                                    Hooks                                   */
-/* -------------------------------------------------------------------------- */
-
-watch([
-  localVideoUrl, video, state
-], () => video.value.currentTime = props.state?.watched || 0)
-onMounted(fetchData)
-onIonViewWillEnter(fetchData)
-
-
-/* -------------------------------------------------------------------------- */
-/*                                  Handlers                                  */
-/* -------------------------------------------------------------------------- */
-
-function onTimestampClicked(time: number) {
-  video.value.currentTime = time
+function onLoadedMetadata() {
+  if (video.value) video.value.currentTime = props.state?.watched ?? 0
 }
 
-function onVideoTimeUpdate(event: any) {
-  if (!video.value) { return }
-  currentTime.value = event.target.currentTime
-  emit('change', {
-    type: 'video',
-    watched: currentTime.value,
-    duration: video.value.duration
-  })
-}
-
-
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-async function fetchData() {
-  try {
-    localVideoUrl.value = await downloader.download(props.videoUrl)
-    localPosterUrl.value = await downloader.download(props.posterUrl)
-  } catch (ex) {
-    alert(ex)
-  }
-}
-
-function getColor(idx: number) {
-  return (currentTime.value >= (props.timestamps[idx+0].time)
-       && currentTime.value <  (props.timestamps[idx+1]?.time || 99999))
-       ? 'primary' : undefined
-}
-
-function formatSeconds(seconds: number) {
-  if (seconds < 3600) {
-    return new Date(seconds * 1000).toISOString().substring(14, 19)
-  } else {
-    return new Date(seconds * 1000).toISOString().substring(11, 19)
-  }
+function onTimeUpdate() {
+  const element = video.value
+  if (!element) return
+  emit('change', { type: 'video', watched: element.currentTime, duration: element.duration })
 }
 </script>
 
-
 <style scoped>
-.video {
+.media {
   width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
 }
 </style>
+
+<fluent locale="en">
+embedded-video = Embedded video
+</fluent>
+
+<fluent locale="ru">
+embedded-video = Встроенное видео
+</fluent>

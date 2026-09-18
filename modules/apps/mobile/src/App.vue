@@ -6,21 +6,7 @@
 
 <script setup lang="ts">
 import { IonApp, IonRouterOutlet } from '@ionic/vue'
-import { onMounted, watch } from 'vue'
-import { useConfig, useDownloaderQueue, useSync } from '@/shared'
 
-const sync = useSync()
-const downloaderQueue = useDownloaderQueue()
-const config = useConfig()
-
-// TODO; Move to runSyncOnAuth
-// watch(config.accessToken, async (token) => {
-//   await sync.start()
-//   await downloaderQueue.downloadAll()
-// })
-
-onMounted(async () => {
-  await sync.start()
-  await downloaderQueue.downloadAll()
-})
+// The session is restored before the first route resolves, in main.ts, so there
+// is nothing left for the shell itself to do on mount.
 </script>

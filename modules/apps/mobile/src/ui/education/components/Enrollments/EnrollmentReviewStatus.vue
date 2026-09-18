@@ -1,9 +1,7 @@
 <template>
   <ImageAndButtonLayout
     :image="image"
-    :action="normalActionText"
-    :danger-action="dangerActionText"
-    :danger-action-alert="dangerActionAlert"
+    :action="actionText"
     @click="onButtonClicked"
   >
     <h1>{{ header }}</h1>
@@ -11,25 +9,27 @@
   </ImageAndButtonLayout>
 </template>
 
-
 <script setup lang="ts">
 import { ImageAndButtonLayout } from '@/design'
 
-// --- Interface -------------------------------------------------------------
+/* --------------------------------- Props ---------------------------------- */
+
+// Cancelling a request is not offered: the API has no route a student may call
+// to withdraw one. Recorded as a deficit rather than faked here.
 defineProps<{
-  image: string,
-  header: string,
-  text: string,
-  normalActionText: string,
-  dangerActionText: string,
-  dangerActionAlert?: string,
-}>()
-const emit = defineEmits<{
-  click: [action: 'normal' | 'danger']
+  image: string
+  header: string
+  text: string
+  actionText: string
 }>()
 
-// --- Handlers --------------------------------------------------------------
-function onButtonClicked(action: 'normal' | 'danger') {
-  emit('click', action)
+/* --------------------------------- Events --------------------------------- */
+
+const emit = defineEmits<{ click: [] }>()
+
+/* -------------------------------- Handlers -------------------------------- */
+
+function onButtonClicked() {
+  emit('click')
 }
 </script>

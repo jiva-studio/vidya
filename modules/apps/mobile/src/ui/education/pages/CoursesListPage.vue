@@ -1,8 +1,11 @@
 <template>
   <PageWithHeaderLayout
     :title="$t('courses')"
-    :has-data="isReady"
-    @sync-completed="onSyncCompleted"
+    :busy="busy"
+    :has-data="loaded"
+    :is-empty="visibleCourses.length === 0"
+    :empty-text="$t('nothing-found')"
+    :error="failure && $t(failure)"
   >
     <template #toolbar>
       <IonToolbar>
@@ -12,55 +15,65 @@
         />
       </IonToolbar>
     </template>
+
     <CoursesList
-      :items="courses"
+      :items="visibleCourses"
       @click="onCourseCardClicked"
     />
   </PageWithHeaderLayout>
 </template>
 
-
 <script setup lang="ts">
-import { useAsyncState, watchDebounced } from '@vueuse/core'
-import { useIonRouter, IonSearchbar, IonToolbar } from '@ionic/vue'
-import { FetchCourses, CoursesList, CourseListItem } from '@/ui/education'
+import type { CourseId } from '@vidya/domain'
+import { IonSearchbar, IonToolbar, useIonRouter } from '@ionic/vue'
+import { computed, ref } from 'vue'
+
+import { useApi } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
-import { ref } from 'vue'
+import { useRemoteData } from '@/shared'
+import { CoursesList } from '@/ui/education'
+import { education } from '@/usecases'
 
-// --- Dependencies ----------------------------------------------------------
+/* --------------------------------- State ---------------------------------- */
+
+const api = useApi()
 const router = useIonRouter()
+const searchQuery = ref('')
 
-// --- State -----------------------------------------------------------------
-const searchQuery = ref<string>('')
-const { state: courses, execute: fetchCourses, isReady } =
-  useAsyncState((value: string) => fetch(value), [],
-  { resetOnExecute: false })
+const { data: courses, busy, loaded, failure } = useRemoteData(() => education.listCourses(api), [])
 
-// --- Hooks -----------------------------------------------------------------
-watchDebounced(searchQuery, (query) => fetchCourses(0, query), { debounce: 500 })
+// The API takes no search term, so the catalogue is filtered where it is held.
+// Fine while a school runs a handful of courses; a server-side search is a
+// recorded deficit.
+const visibleCourses = computed(() => courses.value.filter(matchesQuery))
 
-// --- Handlers --------------------------------------------------------------
-function onCourseCardClicked(id: string) {
-  router.push({ name: 'course', params: { 'id': id } })
+/* -------------------------------- Handlers -------------------------------- */
+
+function onCourseCardClicked(id: CourseId) {
+  router.push({ name: 'course', params: { id } })
 }
 
-async function onSyncCompleted() {
-  await fetchCourses(0, searchQuery.value)
-}
+/* -------------------------------- Helpers --------------------------------- */
 
-// --- Helpers ---------------------------------------------------------------
-async function fetch(query: string): Promise<CourseListItem[]> {
-  return await FetchCourses(query)
+function matchesQuery(course: { name: string }): boolean {
+  return course.name.toLowerCase().includes(searchQuery.value.trim().toLowerCase())
 }
 </script>
-
 
 <fluent locale="en">
 courses = Courses
 search = Search
+nothing-found = No courses here yet
+offline = No connection. The catalogue could not be loaded.
+unauthorized = Your session has expired. Sign in again.
+failed = The catalogue could not be loaded.
 </fluent>
 
 <fluent locale="ru">
 courses = Курсы
 search = Поиск
+nothing-found = Курсов пока нет
+offline = Нет соединения. Каталог не загрузился.
+unauthorized = Сессия истекла. Войдите заново.
+failed = Каталог не загрузился.
 </fluent>

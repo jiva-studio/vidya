@@ -2,128 +2,76 @@
   <PageWithHeaderLayout
     :title="$t('enroll')"
     :has-padding="true"
-    :has-data="isReady"
-    @sync-completed="onSyncCompleted"
+    :has-data="true"
+    :error="error"
   >
-    <!-- Select group -->
     <IonList>
       <IonItem lines="none">
-        <IonLabel>
-          <h2>{{ $t('group') }}</h2>
-          <p>{{ $t('select-group') }}</p>
+        <IonLabel class="ion-text-wrap">
+          <h2>{{ $t('enroll') }}</h2>
+          <p>{{ $t('moderated') }}</p>
         </IonLabel>
-      </IonItem>
-      <GroupSelector
-        v-model="groupId"
-        :groups="groups"
-      />
-    </IonList>
-
-    <!-- Select time -->
-    <IonList>
-      <IonItem lines="none">
-        <IonLabel>
-          <h2>{{ $t('time') }}</h2>
-          <p>{{ $t('select-time') }}</p>
-        </IonLabel>
-      </IonItem>
-      <TimeRangeSelector
-        v-model="timeRanges"
-        :presets="timeRangePresets"
-        custom-preset-text="Свой вариант"
-        add-range-text="Добавить"
-      />
-    </IonList>
-
-    <!-- Comments -->
-    <IonList>
-      <IonItem lines="none">
-        <IonLabel>
-          <h2>{{ $t('comments') }}</h2>
-          <p>{{ $t('comments-to-join') }}</p>
-        </IonLabel>
-      </IonItem>
-      <IonItem lines="none">
-        <IonTextarea
-          v-model="comments"
-          aria-label="Comments"
-        />
       </IonItem>
     </IonList>
 
-    <!-- Enroll -->
     <AsyncButton
-      :busy="false"
+      :busy="busy"
       expand="block"
       @click="onEnrollButtonClicked"
     >
-      {{ $t("enroll") }}
+      {{ $t('enroll') }}
     </AsyncButton>
   </PageWithHeaderLayout>
 </template>
 
-
 <script setup lang="ts">
-import { v4 } from 'uuid'
+import type { CourseId } from '@vidya/domain'
+import { IonItem, IonLabel, IonList, useIonRouter } from '@ionic/vue'
+import { useFluent } from 'fluent-vue'
 import { ref } from 'vue'
-import { useAsyncState } from '@vueuse/core'
-import { IonTextarea, IonItem, IonLabel, IonList,  useIonRouter } from '@ionic/vue'
-import { useSync } from '@/shared'
-import { PageWithHeaderLayout, AsyncButton } from '@/design'
-import {
-  GroupSelector, TimeRangeSelector, TimeRange, TimeRangePreset,
-  FetchActiveGroupsOfCourse, Database, Enrollment
-} from '@/ui/education'
 
+import { useApi } from '@/app'
+import { AsyncButton, PageWithHeaderLayout } from '@/design'
+import { education } from '@/usecases'
 
-// --- Interface -------------------------------------------------------------
-const props = defineProps<{
-  courseId: string
-}>()
+/* --------------------------------- Props ---------------------------------- */
 
-// --- Interface -------------------------------------------------------------
+const props = defineProps<{ courseId: CourseId }>()
+
+/* --------------------------------- State ---------------------------------- */
+
+const api = useApi()
 const router = useIonRouter()
-const sync = useSync()
+const fluent = useFluent()
+const busy = ref(false)
+const error = ref<string | undefined>(undefined)
 
-// --- State -----------------------------------------------------------------
-const timeRangePresets: TimeRangePreset[] = [
-  { name: 'Выходные до 11 утра',    range: { start: [6, 0],  end: [11, 0], days: [6,7] } },
-  { name: 'Будние дни до 9:00',     range: { start: [6, 0],  end: [9, 0],  days: [1,2,3,4,5] } },
-  { name: 'Будние дни после 18:00', range: { start: [18, 0], end: [21, 0], days: [1,2,3,4,5] } },
-  { name: 'Любое время ',           range: { start: [0, 0],  end: [24, 0], days: [1,2,3,4,5,6,7] } },
-]
+/* -------------------------------- Handlers -------------------------------- */
 
-const { state: groups, isReady, execute: reloadGroups } =
-  useAsyncState(() => FetchActiveGroupsOfCourse(props.courseId),
-  [], { resetOnExecute: false })
-const groupId = ref('')
-const timeRanges = ref<TimeRange[]>([])
-const comments = ref('')
-
-// --- Handlers --------------------------------------------------------------
-async function onSyncCompleted() {
-  await reloadGroups()
-}
-
+// Enrolment is a request, not a booking: the school decides, and it assigns the
+// group afterwards. There is nothing for the student to choose here.
 async function onEnrollButtonClicked() {
-  await Database.Enrollments.save(new Enrollment(v4(), {
-    groupId: groupId.value,
-    courseId: props.courseId,
-    status: 'not-submitted',
-  }))
-  await sync.start()
-  router.navigate({ name: 'enroll-completed' }, 'none', 'pop')
+  busy.value = true
+  error.value = undefined
+  try {
+    await education.requestEnrollment(api, props.courseId)
+    router.navigate({ name: 'enroll-completed' }, 'none', 'pop')
+  } catch {
+    error.value = fluent.$t('enroll-failed')
+  } finally {
+    busy.value = false
+  }
 }
 </script>
 
-
 <fluent locale="en">
 enroll = Enroll
-group = Group
-select-group = Select group to join
-comments = Comments
-comments-to-join = Leave a comment if necessary
-time = Time
-select-time = Select time
-enrollment-request-submited = The enrolment request has been submitted
+moderated = Your request goes to the school. You will be placed in a group once one is running.
+enroll-failed = The request could not be sent. Check your connection and try again.
+</fluent>
+
+<fluent locale="ru">
+enroll = Записаться
+moderated = Заявка уйдёт в школу. Группу назначат, когда подходящая наберётся.
+enroll-failed = Заявку не удалось отправить. Проверьте соединение и попробуйте ещё раз.
 </fluent>

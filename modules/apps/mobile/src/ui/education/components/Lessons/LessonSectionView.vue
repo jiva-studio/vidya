@@ -1,79 +1,85 @@
 <template>
   <div
-    v-for="block, idx in blocks"
-    :key="getBlockId(idx)"
+    v-for="block in blocks"
+    :key="block.id"
   >
-    <component
-      v-bind="test(block)"
-      :is="getComponent(block.type)"
-      :state="(states[idx] as LessonSectionVideoBlockState)"
-      @change="(data: any) => onBlockStateChanged(idx, data)"
+    <TextSectionBlock
+      v-if="block.type === 'text'"
+      :block="block"
+    />
+    <VideoSectionBlock
+      v-else-if="block.type === 'video'"
+      :block="block"
+      :state="videoState(block.id)"
+      @change="(state) => onBlockStateChanged(block.id, state)"
+    />
+    <AudioSectionBlock
+      v-else-if="block.type === 'audio'"
+      :block="block"
+      :state="audioState(block.id)"
+      @change="(state) => onBlockStateChanged(block.id, state)"
+    />
+    <QuizSectionBlock
+      v-else
+      :block="block"
+      :state="quizState(block.id)"
+      @change="(state) => onBlockStateChanged(block.id, state)"
     />
   </div>
 </template>
 
-
 <script setup lang="ts">
-import {
-  QuizSectionBlock, VideoSectionBlock, TextSectionBlock,
-  LessonSectionBlockState, LessonSectionVideoBlockState,
-  LessonSectionBlock
-} from '@/ui/education'
-import { toRef } from 'vue'
+import type { BlockId } from '@vidya/domain'
+import type {
+  AudioBlockState,
+  LessonBlock,
+  LessonBlockState,
+  QuizBlockState,
+  VideoBlockState,
+} from '@vidya/protocol'
 
-/* -------------------------------------------------------------------------- */
-/*                                  Interface                                 */
-/* -------------------------------------------------------------------------- */
+import {
+  AudioSectionBlock,
+  QuizSectionBlock,
+  TextSectionBlock,
+  VideoSectionBlock,
+} from './SectionBlocks'
+
+/* --------------------------------- Props ---------------------------------- */
 
 const props = defineProps<{
-  /** Section of a lesson to display */
-  blocks: LessonSectionBlock[]
+  blocks: LessonBlock[]
 
-  /** Homework attached to this section */
-  states: LessonSectionBlockState[]
+  /** What this student has already done, keyed by block. */
+  states: Readonly<Record<BlockId, LessonBlockState>>
 }>()
 
+/* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{
-  change: [states: LessonSectionBlockState[]],
-}>()
+const emit = defineEmits<{ change: [blockId: BlockId, state: LessonBlockState] }>()
 
+/* -------------------------------- Handlers -------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/*                                    State                                   */
-/* -------------------------------------------------------------------------- */
-
-const states = toRef(props, 'states')
-
-
-/* -------------------------------------------------------------------------- */
-/*                                  Handlers                                  */
-/* -------------------------------------------------------------------------- */
-
-function onBlockStateChanged(idx: number, data: any) {
-  states.value[idx] = data
-  emit('change', states.value)
+function onBlockStateChanged(blockId: BlockId, state: LessonBlockState) {
+  emit('change', blockId, state)
 }
 
+/* -------------------------------- Helpers --------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-function getBlockId(blockIndex: number) {
-  return `${blockIndex}`
+// A narrowing read per kind: the child wants its own state type, and the record
+// holds the union.
+function videoState(blockId: BlockId): VideoBlockState | undefined {
+  const state = props.states[blockId]
+  return state?.type === 'video' ? state : undefined
 }
 
-
-function getComponent(type: string) {
-  if (type === 'video') { return VideoSectionBlock }
-  if (type === 'quiz') { return QuizSectionBlock }
-  if (type === 'text') { return TextSectionBlock }
+function audioState(blockId: BlockId): AudioBlockState | undefined {
+  const state = props.states[blockId]
+  return state?.type === 'audio' ? state : undefined
 }
 
-
-function test(obj: any) {
-  const {type, ...rest} = obj
-  return rest
+function quizState(blockId: BlockId): QuizBlockState | undefined {
+  const state = props.states[blockId]
+  return state?.type === 'quiz' ? state : undefined
 }
 </script>

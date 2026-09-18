@@ -6,77 +6,85 @@
         <IonButtons slot="start">
           <IonBackButton />
         </IonButtons>
-        <IonButtons slot="secondary">
-          <IonButton
-            v-if="busy"
-            @click="onDownloadingIndicatorCkicked"
-          >
-            <IonIcon
-              slot="icon-only"
-              color="primary"
-              :icon="cloudDownloadOutline"
-            />
-          </IonButton>
-        </IonButtons>
       </IonToolbar>
       <slot name="toolbar" />
     </IonHeader>
 
     <IonContent
       :fullscreen="true"
-      :class="{
-        'ion-padding': hasPadding,
-      }"
+      :class="{ 'ion-padding': hasPadding }"
     >
       <IonHeader collapse="condense">
         <IonToolbar>
-          <IonTitle size="large">
-            {{ title }}
-          </IonTitle>
+          <IonTitle size="large">{{ title }}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <LoadingSpinner v-if="busy && !hasData" />
+      <LoadingSpinner v-if="showSpinner" />
+      <slot
+        v-else-if="error"
+        name="error"
+      >
+        <IonNote class="page-state">{{ error }}</IonNote>
+      </slot>
+      <slot
+        v-else-if="isEmpty"
+        name="empty"
+      >
+        <IonNote class="page-state">{{ emptyText }}</IonNote>
+      </slot>
       <slot v-else />
     </IonContent>
   </IonPage>
 </template>
 
-
 <script setup lang="ts">
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons,
-  IonBackButton, IonIcon, IonButton, useIonRouter,
+  IonBackButton,
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonNote,
+  IonPage,
+  IonTitle,
+  IonToolbar,
 } from '@ionic/vue'
-import { computed, watch } from 'vue'
-import { useDownloaderQueue, useSync } from '@/shared'
+import { computed } from 'vue'
+
 import { LoadingSpinner } from '@/design'
-import { cloudDownloadOutline, } from 'ionicons/icons'
 
-// --- Interface -------------------------------------------------------------
-defineProps<{
-  title: string,
-  hasPadding?: boolean
-  hasData?: boolean
-}>()
+/* --------------------------------- Props ---------------------------------- */
 
-const emit = defineEmits<{
-  syncCompleted: []
-}>()
+const props = withDefaults(
+  defineProps<{
+    title: string
+    hasPadding?: boolean
+    busy?: boolean
+    hasData?: boolean
+    isEmpty?: boolean
+    error?: string
+    emptyText?: string
+  }>(),
+  {
+    hasPadding: false,
+    busy: false,
+    hasData: false,
+    isEmpty: false,
+    error: undefined,
+    emptyText: '',
+  },
+)
 
-// --- Dependencies ----------------------------------------------------------
-const downloaderQueue = useDownloaderQueue()
-const sync = useSync()
-const router = useIonRouter()
+/* --------------------------------- State ---------------------------------- */
 
-// --- State -----------------------------------------------------------------
-const busy = computed(() => downloaderQueue.isDownloading.value || sync.busy.value)
-
-// --- Hooks -----------------------------------------------------------------
-watch(sync.completedAt, () => emit('syncCompleted'))
-
-// --- Handlers --------------------------------------------------------------
-function onDownloadingIndicatorCkicked() {
-  router.push({ name: 'downloads' })
-}
+// A refresh over content already on screen must not blank the page out.
+const showSpinner = computed(() => props.busy && !props.hasData)
 </script>
+
+<style scoped>
+.page-state {
+  display: block;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+</style>

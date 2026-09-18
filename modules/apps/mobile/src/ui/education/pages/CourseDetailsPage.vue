@@ -1,54 +1,64 @@
 <template>
   <PageWithHeaderLayout
-    :title="course.title"
-    :has-data="isReady"
-    @sync-completed="fetchCourse"
+    :title="course?.name ?? ''"
+    :busy="busy"
+    :has-data="loaded"
+    :error="failure && $t(failure)"
+    :has-padding="true"
   >
-    <CachedImage
-      :url="course.coverImageUrl"
-      loading-height="200px"
-    />
+    <p v-if="course?.description">{{ course.description }}</p>
 
-    <p class="ion-padding">
-      {{ course.summary }}
-
-      <IonButton
-        expand="block"
-        @click="onEnrollButtonClicked"
-      >
-        {{ $t('enroll') }}
-      </IonButton>
-    </p>
+    <IonButton
+      expand="block"
+      @click="onEnrollButtonClicked"
+    >
+      {{ $t('enroll') }}
+    </IonButton>
   </PageWithHeaderLayout>
 </template>
 
-
 <script setup lang="ts">
-import { useAsyncState } from '@vueuse/core'
+import type { CourseId } from '@vidya/domain'
 import { IonButton, useIonRouter } from '@ionic/vue'
-import { Database, EmptyCourse } from '@/ui/education'
-import { CachedImage, PageWithHeaderLayout } from '@/design'
 
-// --- Interface -------------------------------------------------------------
-const props = defineProps<{
-  id: string
-}>()
+import { useApi } from '@/app'
+import { PageWithHeaderLayout } from '@/design'
+import { useRemoteData } from '@/shared'
+import { education } from '@/usecases'
 
-// --- Dependencies ----------------------------------------------------------
+/* --------------------------------- Props ---------------------------------- */
+
+const props = defineProps<{ id: CourseId }>()
+
+/* --------------------------------- State ---------------------------------- */
+
+const api = useApi()
 const router = useIonRouter()
 
-// --- State -----------------------------------------------------------------
-const { state: course, isReady, execute: fetchCourse } =
-  useAsyncState(() => Database.Courses.get(props.id), EmptyCourse(),
-  { resetOnExecute: false })
+const {
+  data: course,
+  busy,
+  loaded,
+  failure,
+} = useRemoteData(() => education.getCourse(api, props.id), undefined)
 
-// --- Handlers --------------------------------------------------------------
+/* -------------------------------- Handlers -------------------------------- */
+
 function onEnrollButtonClicked() {
-  router.push({ name: 'enroll', params: { 'id': props.id } })
+  router.push({ name: 'enroll', params: { id: props.id } })
 }
 </script>
 
-
 <fluent locale="en">
 enroll = Enroll
+offline = No connection. The course could not be loaded.
+unauthorized = Your session has expired. Sign in again.
+failed = The course could not be loaded.
+</fluent>
+
+<fluent locale="ru">
+enroll = Записаться
+offline = Нет соединения. Курс не загрузился.
+unauthorized = Сессия истекла. Войдите заново.
+failed = Курс не загрузился.
 </fluent>

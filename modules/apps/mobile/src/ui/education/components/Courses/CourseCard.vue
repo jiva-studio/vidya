@@ -1,33 +1,19 @@
 <template>
-  <IonCard
-    v-bind="$attrs"
-  >
-    <CachedImage
-      :url="props.coverImageUrl"
-      loading-height="200px"
-    />
-
+  <IonCard v-bind="$attrs">
     <IonCardHeader>
-      <IonCardTitle>{{ props.title }}</IonCardTitle>
-      <IonCardSubtitle>{{ props.subtitle }}</IonCardSubtitle>
+      <IonCardTitle>{{ name }}</IonCardTitle>
     </IonCardHeader>
 
-    <IonCardContent>
-      {{ props.summary }}
+    <IonCardContent v-if="description">
+      {{ description }}
     </IonCardContent>
   </IonCard>
 </template>
 
-
 <script setup lang="ts">
-import { CachedImage } from '@/design'
-import { IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle } from '@ionic/vue'
+import { IonCard, IonCardContent, IonCardHeader, IonCardTitle } from '@ionic/vue'
 
-// --- Interface -------------------------------------------------------------
-const props = defineProps<{
-  title: string,
-  subtitle: string,
-  summary: string,
-  coverImageUrl: string
-}>()
+/* --------------------------------- Props ---------------------------------- */
+
+withDefaults(defineProps<{ name: string; description?: string }>(), { description: undefined })
 </script>

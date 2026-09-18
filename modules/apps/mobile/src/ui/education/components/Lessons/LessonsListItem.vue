@@ -9,7 +9,7 @@
         {{ item.title }}
       </h2>
       <p class="ion-text-wrap">
-        {{ item.summary }}
+        {{ item.lessonNumber }}
       </p>
     </IonLabel>
   </IonItem>
@@ -18,14 +18,14 @@
 
 <script setup lang="ts">
 import { IonItem, IonLabel } from '@ionic/vue'
-import { Lesson } from '@/ui/education'
+import type { LessonSummary } from '@vidya/protocol'
 
 /* -------------------------------------------------------------------------- */
 /*                                  Interface                                 */
 /* -------------------------------------------------------------------------- */
 
 defineProps<{
-  item: Lesson
+  item: LessonSummary
 }>()
 
 const emit = defineEmits<{

@@ -1,98 +1,76 @@
 <template>
   <PageWithHeaderLayout
-    :title="$t('lessons')"
-    :has-data="enrollments.length > 0 || homeworks.length > 0"
-    @sync-completed="refresh"
+    :title="$t('my-enrollments')"
+    :busy="busy"
+    :has-data="loaded"
+    :is-empty="items.length === 0"
+    :empty-text="$t('nothing-yet')"
+    :error="failure && $t(failure)"
   >
-    <WithListHeader :title="$t('my-enrollments')">
-      <EnrollmentsList
-        :items="enrollments"
-        @click="onEnrollmentClicked"
-        @delete="onDeleteEnrollment"
-      />
-    </WithListHeader>
-
-    <WithListHeader :title="$t('homework')">
-      <StudentHomeworkList
-        :items="homeworks"
-        @click="onStudentHomeworkClicked"
-      />
-    </WithListHeader>
+    <EnrollmentsList
+      :items="items"
+      @click="onEnrollmentClicked"
+    />
   </PageWithHeaderLayout>
 </template>
 
-
 <script setup lang="ts">
-import { onIonViewWillEnter, useIonRouter } from '@ionic/vue'
-import { useAsyncState } from '@vueuse/core'
-import { useSync } from '@/shared'
-import { PageWithHeaderLayout, WithListHeader } from '@/design'
-import {
-  FetchHomeworkOfUser, StudentHomeworkList, EnrollmentsList, Database,
-  FetchEnrollmentsOfUser
-} from '@/ui/education'
+import type { CourseId, EnrollmentId } from '@vidya/domain'
+import type { CourseSummary, EnrollmentSummary } from '@vidya/protocol'
+import { useIonRouter } from '@ionic/vue'
+import { computed } from 'vue'
 
-// --- Dependencies ----------------------------------------------------------
+import { useApi } from '@/app'
+import { PageWithHeaderLayout } from '@/design'
+import { useRemoteData } from '@/shared'
+import { EnrollmentsList } from '@/ui/education'
+import { education } from '@/usecases'
+
+/* --------------------------------- State ---------------------------------- */
+
+const api = useApi()
 const router = useIonRouter()
-const sync = useSync()
 
-// --- State -----------------------------------------------------------------
-const { state: enrollments, execute: refreshEnrollments } =
-  useAsyncState(() => FetchEnrollmentsOfUser(), [], { resetOnExecute: false })
-const { state: homeworks, execute: refreshHomeworks } =
-  useAsyncState(() => FetchHomeworkOfUser(), [], { resetOnExecute: false })
+// An enrolment carries a course id, not a course name, so the catalogue is
+// fetched alongside it and the two are joined here.
+const { data, busy, loaded, failure } = useRemoteData(async () => {
+  const [enrollments, courses] = await Promise.all([
+    education.listMyEnrollments(api),
+    education.listCourses(api),
+  ])
+  return { enrollments, courses }
+}, undefined)
 
-// --- Hooks -----------------------------------------------------------------
-onIonViewWillEnter(async () => await refresh())
+const items = computed(() => (data.value?.enrollments ?? []).map(withCourse))
 
-// --- Handlers --------------------------------------------------------------
-function onEnrollmentClicked(
-  enrollmentId: string
-) {
-  router.push({
-    name:   'my-enrollment',
-    params: { id: enrollmentId }
-  })
+/* -------------------------------- Handlers -------------------------------- */
+
+function onEnrollmentClicked(enrollmentId: EnrollmentId) {
+  router.push({ name: 'my-enrollment', params: { id: enrollmentId } })
 }
 
-async function onDeleteEnrollment(
-  enrollmentId: string
-) {
-  const enrollment = await Database.Enrollments.get(enrollmentId)
-  enrollment.archive()
-  Database.Enrollments.save(enrollment)
-  await refresh()
-  await sync.start()
-}
+/* -------------------------------- Helpers --------------------------------- */
 
-function onStudentHomeworkClicked(
-  homeworkId: string,
-  lessonId: string,
-  lessonSectionId: string,
-) {
-  router.push({
-    name:   'lesson',
-    params: { lessonId:  lessonId },
-    query:  { sectionId: lessonSectionId },
-  })
-}
+const UNKNOWN_COURSE = (id: CourseId): CourseSummary => ({ id, name: '' })
 
-// --- Helpers ---------------------------------------------------------------
-async function refresh() {
-  await refreshHomeworks()
-  await refreshEnrollments()
+function withCourse(enrollment: EnrollmentSummary) {
+  const course = data.value?.courses.find((c) => c.id === enrollment.courseId)
+  return { enrollment, course: course ?? UNKNOWN_COURSE(enrollment.courseId) }
 }
 </script>
 
-
 <fluent locale="en">
-lessons = Lessons
-my-enrollments = My Groups
-homework = Homework
+my-enrollments = My courses
+nothing-yet = You have not enrolled on anything yet
+offline = No connection. Your courses could not be loaded.
+unauthorized = Your session has expired. Sign in again.
+failed = Your courses could not be loaded.
 </fluent>
 
 <fluent locale="ru">
-lessons = Уроки
-my-enrollments = Мои группы
-homework = Домашняя работа
+my-enrollments = Мои курсы
+nothing-yet = Вы ещё никуда не записались
+offline = Нет соединения. Курсы не загрузились.
+unauthorized = Сессия истекла. Войдите заново.
+failed = Курсы не загрузились.
 </fluent>
