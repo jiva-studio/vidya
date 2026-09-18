@@ -114,7 +114,6 @@ export function createSqlHomeworkRepository(deps: SqlHomeworkRepositoryDeps): IH
       return store({
         ...(existing === null ? blankAnswer(input, at) : toPayload(existing)),
         text: input.text,
-        updatedAt: at,
       })
     },
 
@@ -132,7 +131,6 @@ export function createSqlHomeworkRepository(deps: SqlHomeworkRepositoryDeps): IH
         ...toPayload(existing),
         status: 'pending',
         submittedAt: at,
-        updatedAt: at,
       })
     },
   }
@@ -154,7 +152,6 @@ function blankAnswer(input: SaveHomeworkAnswer, at: IsoDateTime): SyncPayload {
     submittedAt: null,
     reviewedAt: null,
     createdAt: at,
-    updatedAt: at,
   }
 }
 
@@ -177,6 +174,5 @@ function toHomework(payload: SyncPayload): LocalHomework {
     submittedAt: (payload.submittedAt as IsoDateTime | null) ?? null,
     reviewedAt: (payload.reviewedAt as IsoDateTime | null) ?? null,
     createdAt: (payload.createdAt as IsoDateTime) ?? ('' as IsoDateTime),
-    updatedAt: (payload.updatedAt as IsoDateTime) ?? ('' as IsoDateTime),
   }
 }

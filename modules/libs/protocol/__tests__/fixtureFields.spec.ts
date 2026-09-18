@@ -59,6 +59,7 @@ const ALLOWED: Partial<Record<string, readonly string[]>> = {
     'reviewedById',
     'submittedAt',
     'reviewedAt',
+    'createdAt',
   ] satisfies readonly (keyof HomeworkDetails)[],
   block_states: [
     'id',

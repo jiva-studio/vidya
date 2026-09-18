@@ -35,7 +35,10 @@ import type { Migration } from './types'
  *
  * All instants are ISO 8601 UTC strings (D-17). They sort lexicographically in
  * the same order they sort chronologically, which is why a device never has to
- * parse a date to order rows by one.
+ * parse a date to order rows by one. A table carries a time column only when
+ * the wire carries that time: a column the server never fills would hold an
+ * empty string, which sorts before every real instant, and an `ORDER BY` over
+ * it would be wrong without ever failing (T-C-7).
  */
 export const migration_001_local_schema: Migration = {
   name: '001_local_schema',
@@ -88,7 +91,6 @@ async function createContentTables(db: IDatabase): Promise<void> {
       content      TEXT    NOT NULL,
       status       TEXT    NOT NULL,
       published_at TEXT,
-      created_at   TEXT    NOT NULL,
       deleted_at   TEXT,
       PRIMARY KEY (owner_id, id)
     )
@@ -136,7 +138,6 @@ async function createStudentTables(db: IDatabase): Promise<void> {
       submitted_at                TEXT,
       reviewed_at                 TEXT,
       created_at                  TEXT    NOT NULL,
-      updated_at                  TEXT    NOT NULL,
       PRIMARY KEY (owner_id, id)
     )
   `)

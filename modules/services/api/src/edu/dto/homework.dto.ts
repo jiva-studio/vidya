@@ -52,6 +52,9 @@ export class HomeworkDetails implements protocol.HomeworkDetails {
   @IsOptional()
   @IsBoolean()
   answeredSupersededVersion?: boolean
+
+  @ApiProperty({ example: '2026-09-18T10:00:00.000Z' })
+  createdAt: domain.IsoDateTime
 }
 
 export class HomeworkSummary implements protocol.HomeworkSummary {

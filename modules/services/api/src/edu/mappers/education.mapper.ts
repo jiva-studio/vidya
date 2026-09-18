@@ -47,6 +47,7 @@ const HOMEWORK = [
   'submittedAt',
   'reviewedAt',
   'answeredSupersededVersion',
+  'createdAt',
 ] as const
 const HOMEWORK_SUMMARY = [
   'id',

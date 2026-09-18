@@ -13,6 +13,7 @@ import {
   toColumnValue,
   toFieldValue,
 } from '../collectionProjections'
+import { readSyncRow, writeSyncRow } from '../rowWriter'
 
 /**
  * The projection table — AC-13.
@@ -108,7 +109,6 @@ describe('the collection projection table', () => {
       content: { schemaVersion: 1, sections: [] },
       status: 'published',
       publishedAt: null,
-      createdAt: '2026-09-18T00:00:00.000Z',
       deletedAt: null,
     }
 
@@ -165,5 +165,78 @@ describe('the collection projection table', () => {
 
   it('refuses a collection it has no projection for', () => {
     expect(() => projectionOf('grimoires' as never)).toThrow(/No projection/)
+  })
+})
+
+/**
+ * The times a pulled row lands with.
+ *
+ * `homework` used to name `created_at` and `updated_at` while the server sent
+ * neither, so every pulled answer was stored with an empty string in both — and
+ * `listByEnrollment`, which orders by `created_at`, put them all first, in
+ * whatever order SQLite happened to return. Nothing failed; the list was simply
+ * wrong. `lesson_versions.created_at` was the same thing one table over.
+ */
+describe('the times a pulled row lands with', () => {
+  const OWNER = 'owner-a'
+  const CREATED_AT = '2026-09-18T00:00:02.500Z'
+
+  /** A homework row exactly as the server's journal projection sends it. */
+  const wireHomework = {
+    id: 'd7e93f41-5a0c-4b62-8e17-9c3d5f2a1b48',
+    enrollmentId: '3a5c7e92-4b18-4d06-9f2e-1c8b6d4a3f57',
+    lessonVersionId: 'a41c7d02-33b5-4e8f-9c6a-71e204f5d8b3',
+    sectionId: 'b18f4c60-27d9-4e51-a3c8-5f0b9e2d7614',
+    schoolId: '5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915',
+    status: 'in_review',
+    text: 'My answer to the first section.',
+    grade: null,
+    reviewedById: null,
+    answeredSupersededVersion: false,
+    submittedAt: '2026-09-17T00:00:00.000Z',
+    reviewedAt: null,
+    createdAt: CREATED_AT,
+  }
+
+  it('stores the instant the server sent it, not a fallback', async () => {
+    const { db } = await openTestDatabase()
+
+    await writeSyncRow(
+      db,
+      { owner: OWNER, collection: 'homework', docId: wireHomework.id },
+      wireHomework,
+    )
+
+    const row = await readSyncRow(db, {
+      owner: OWNER,
+      collection: 'homework',
+      docId: wireHomework.id,
+    })
+
+    expect(row?.created_at).toBe(CREATED_AT)
+  })
+
+  it('leaves no time column holding an empty string', async () => {
+    const { db } = await openTestDatabase()
+
+    await writeSyncRow(
+      db,
+      { owner: OWNER, collection: 'homework', docId: wireHomework.id },
+      wireHomework,
+    )
+
+    const row = await readSyncRow(db, {
+      owner: OWNER,
+      collection: 'homework',
+      docId: wireHomework.id,
+    })
+
+    // An empty string sorts before every real instant, so a column filled with
+    // one is not a cosmetic gap: it silently reorders the student's answers.
+    const empty = Object.entries(row ?? {})
+      .filter(([column, value]) => column.endsWith('_at') && value === '')
+      .map(([column]) => column)
+
+    expect(empty).toEqual([])
   })
 })

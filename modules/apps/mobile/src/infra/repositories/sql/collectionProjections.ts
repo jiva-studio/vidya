@@ -17,6 +17,16 @@ import type { QueryValue, Row } from '@/ports'
  * the snake_case ones of migration `001_local_schema`. Nothing else translates
  * between the two, anywhere.
  *
+ * **A column exists here only when the wire carries its field.** The two
+ * exceptions are structural, not per-collection: `school_id` is folded in from
+ * the envelope by `validateChange` for every collection, and a tombstone column
+ * is written by the `delete` op rather than by any payload. Anything else that
+ * is named here and never sent arrives as its fallback — and a fallback for a
+ * time is an empty string, which sorts before every real instant and makes
+ * `ORDER BY` quietly wrong. That is what `homework.updated_at` and
+ * `lesson_versions.created_at` were; T-C-7 now fails the moment a third one
+ * appears.
+ *
  * Two properties are deliberate:
  *
  * - **An unknown field is ignored, not an error** (T-X-2). A newer server may
@@ -120,7 +130,6 @@ export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionP
         { column: 'content', field: 'content', kind: 'json', fallback: '{}' },
         text('status', 'status', { fallback: 'published' }),
         text('published_at', 'publishedAt'),
-        text('created_at', 'createdAt', EMPTY),
         text('deleted_at', 'deletedAt'),
       ],
     },
@@ -166,7 +175,6 @@ export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionP
         text('submitted_at', 'submittedAt'),
         text('reviewed_at', 'reviewedAt'),
         text('created_at', 'createdAt', EMPTY),
-        text('updated_at', 'updatedAt', EMPTY),
       ],
     },
 

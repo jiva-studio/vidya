@@ -84,9 +84,9 @@ describe('the local schema', () => {
       await db.execute(
         `INSERT INTO homework (
            id, owner_id, school_id, enrollment_id, lesson_version_id, section_id,
-           status, text, created_at, updated_at
+           status, text, created_at
          ) VALUES ('h-1', 'o-1', 's-1', 'e-missing', 'lv-missing', 'sec-1',
-                   'open', '', '2026-09-18T00:00:00.000Z', '2026-09-18T00:00:00.000Z')`,
+                   'open', '', '2026-09-18T00:00:00.000Z')`,
       )
 
       const rows = await db.query<{ id: string }>('SELECT id FROM homework')
@@ -266,9 +266,9 @@ describe('the local schema', () => {
       await db.execute(
         `INSERT INTO homework (
            id, owner_id, school_id, enrollment_id, lesson_version_id, section_id,
-           status, text, created_at, updated_at, submitted_at
-         ) VALUES ('h-1', 'o-1', 's-1', 'e-1', 'lv-1', 'sec-1', 'pending', 'answer', ?, ?, ?)`,
-        [instant, instant, instant],
+           status, text, created_at, submitted_at
+         ) VALUES ('h-1', 'o-1', 's-1', 'e-1', 'lv-1', 'sec-1', 'pending', 'answer', ?, ?)`,
+        [instant, instant],
       )
 
       const rows = await db.query<{ submitted_at: string }>('SELECT submitted_at FROM homework')
@@ -282,9 +282,9 @@ describe('the local schema', () => {
         db.execute(
           `INSERT INTO homework (
              id, owner_id, school_id, enrollment_id, lesson_version_id, section_id,
-             status, text, created_at, updated_at
-           ) VALUES (?, 'o-1', 's-1', 'e-1', ?, 'sec-1', 'open', '', ?, ?)`,
-          [id, id, at, at],
+             status, text, created_at
+           ) VALUES (?, 'o-1', 's-1', 'e-1', ?, 'sec-1', 'open', '', ?)`,
+          [id, id, at],
         )
 
       await insert('later', '2026-09-18T23:00:00.000Z')

@@ -76,7 +76,6 @@ export interface LocalLessonVersion {
   readonly content: LessonContent
   readonly status: LessonVersionStatus
   readonly publishedAt: IsoDateTime | null
-  readonly createdAt: IsoDateTime
 }
 
 export interface LocalEnrollment {
@@ -107,8 +106,9 @@ export interface LocalHomework {
   readonly reviewedById: UserId | null
   readonly submittedAt: IsoDateTime | null
   readonly reviewedAt: IsoDateTime | null
+
+  /** When the server recorded the answer. The list of answers is ordered by it. */
   readonly createdAt: IsoDateTime
-  readonly updatedAt: IsoDateTime
 }
 
 export interface LocalBlockState {

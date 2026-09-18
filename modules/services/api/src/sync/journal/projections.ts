@@ -156,6 +156,7 @@ const homework: CollectionProjection<Homework> = {
     answeredSupersededVersion: item.answeredSupersededVersion,
     submittedAt: item.submittedAt ?? null,
     reviewedAt: item.reviewedAt ?? null,
+    createdAt: item.createdAt,
   }),
 }
 

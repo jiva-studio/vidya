@@ -83,6 +83,5 @@ function toVersion(payload: SyncPayload): LocalLessonVersion {
     content: (payload.content ?? {}) as LessonContent,
     status: payload.status as LessonVersionStatus,
     publishedAt: (payload.publishedAt as IsoDateTime | null) ?? null,
-    createdAt: (payload.createdAt as IsoDateTime) ?? ('' as IsoDateTime),
   }
 }
