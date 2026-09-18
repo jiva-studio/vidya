@@ -435,8 +435,6 @@ describe('POST /sync/push', () => {
     })
   })
 
-  /* ------------------------------- T-S-46 ------------------------------- */
-
   /**
    * A row is answered under the id the server actually wrote it to.
    *
@@ -447,7 +445,7 @@ describe('POST /sync/push', () => {
    * the server never stored, carried by no pull and removed by no tombstone,
    * while the winning row arrived beside it as a second answer to one section.
    */
-  describe('T-S-46: one section handed in from two devices under two local ids', () => {
+  describe('one section handed in from two devices under two local ids', () => {
     it('answers the second with the id of the row it landed in', async () => {
       const first = answer({ outboxId: 1, data: bodyOf(ctx, 'From the phone') })
       const second = answer({

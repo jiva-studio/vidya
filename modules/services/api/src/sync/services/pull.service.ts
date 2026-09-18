@@ -122,10 +122,10 @@ export class SyncPullService {
    * sequence, plus one row to answer `hasMore` without a second query.
    *
    * The calling device's own rows are read too, and dropped afterwards rather
-   * than in SQL. They are not handed back (D-5) — the device already has the
-   * change, and echoing it would have it apply its own write on top of
-   * whatever it has done since — but the page has to know they went by, or
-   * the cursor cannot be told where the page ended.
+   * than in SQL. They are not handed back — the device already has the change,
+   * and echoing it would have it apply its own write on top of whatever it has
+   * done since — but the page has to know they went by, or the cursor cannot be
+   * told where the page ended.
    */
   private async read(positions: readonly ReadPosition[], limit: number): Promise<JournalRow[]> {
     if (positions.length === 0) return []
@@ -170,9 +170,10 @@ export class SyncPullService {
  *
  * The two filters are not alike and are not treated alike. A scope the caller
  * has no claim to is never read at all — `pull` intersects the asked positions
- * with the grants before the first row (AC-10l) — so no rights-filtered row can
+ * with the caller's grants before the first row — so no rights-filtered row can
  * appear here and no cursor is returned for such a scope. Echo is a filter on
- * delivery; rights is a filter on existence.
+ * delivery; rights is a filter on existence, and a position handed back for a
+ * scope the caller never saw would tell it to skip history it is entitled to.
  */
 const advanced = (scanned: readonly JournalRow[]): SyncCursors => {
   const reached: Record<string, number> = {}

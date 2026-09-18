@@ -83,8 +83,6 @@ describe('POST /sync/pull', () => {
     expect(seeded(theirs.body as protocol.PullResponse)).toHaveLength(4)
   })
 
-  /* ------------------------------- T-S-44 ------------------------------- */
-
   /**
    * The echo filter used to stop the cursor as well as the delivery: the
    * page advanced by the highest `serverSeq` it *returned*, and a scope whose
@@ -93,7 +91,7 @@ describe('POST /sync/pull', () => {
    * the stamp, not the sequence — so the gap to `headSeq` never closed, no
    * matter how many times it pulled.
    */
-  it('T-S-44: reaches headSeq even when the tail of the scope is its own work', async () => {
+  it('reaches headSeq even when the tail of the scope is its own work', async () => {
     await seedJournal(ds, own(), { schoolId: ctx.schoolId, count: 4 })
     await seedJournal(ds, own(), { schoolId: ctx.schoolId, count: 4, deviceId: DEVICE, from: 10 })
 
@@ -111,15 +109,13 @@ describe('POST /sync/pull', () => {
     expect(body.cursors[key]).toBe(grant.headSeq)
   })
 
-  /* ------------------------------- T-S-45 ------------------------------- */
-
   /**
    * The other half of it: echo and rights are different filters. A row the
    * caller never had a claim to was never delivered and must never be counted
    * as applied, so no position comes back for that scope at all — otherwise a
    * later enrolment would start above the history it is entitled to.
    */
-  it('T-S-45: a scope refused for rights advances no cursor', async () => {
+  it('does not advance a cursor for a scope the caller may not read', async () => {
     const stranger: domain.SyncScopeRef = { kind: 'user', id: ctx.stranger.id }
 
     await seedJournal(ds, stranger, { schoolId: ctx.schoolId, count: 3 })
