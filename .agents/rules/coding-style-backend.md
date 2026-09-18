@@ -114,7 +114,28 @@ holding both. Spec files are exempt from the line limit.
 
 ---
 
-## 6. Testing
+## 6. Comments
+
+A comment earns its place by saying something the code cannot. Restating the
+next line in English is noise that goes stale; explaining *why* a rule exists,
+or what a reader would otherwise get wrong, is worth the space.
+
+- **One line.** If the thought does not fit on one line, it is usually an
+  explanation that belongs in the rule document or the commit message. Reach for
+  a second line only when the reader genuinely needs it there.
+- **A blank line above.** A comment introduces what follows; it must not look
+  glued to the line before it.
+- **Consistent within a group.** Do not document one field, enum member or
+  branch and leave its siblings bare — an uneven run reads as though the
+  undocumented ones were forgotten. Either annotate the whole group, or let the
+  single comment say something that applies to that member alone.
+- **No commented-out code.** Git remembers it.
+- Prose above a symbol uses `//`. Reserve `/** */` for documentation a consumer
+  of the package reads: exported protocol types and public service methods.
+
+---
+
+## 7. Testing
 
 - Unit specs sit next to the code as `*.spec.ts`; controller suites live in
   `specs/` beside the controller with a shared `context.ts` fixture.
@@ -124,7 +145,7 @@ holding both. Spec files are exempt from the line limit.
 
 ---
 
-## 7. Formatting & Verification
+## 8. Formatting & Verification
 
 - Prettier owns formatting: `semi: false`, `singleQuote: true`, `printWidth: 100`,
   `trailingComma: 'all'`. Never hand-format around it.
