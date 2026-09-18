@@ -1,6 +1,5 @@
 // Public API of the user entity. Owned by T2.
-//
-// Requests live in `api/`, the view model in `model/`, small pieces of the
-// entity's own interface in `ui/`. Nothing outside this slice reaches past
-// this file.
-export {}
+export type { GetUserSchoolsResponse, UserApi } from './api'
+export { userApi, useUserApi } from './api'
+export type { UserFormValues, UserRow } from './model'
+export { reason, useUsers } from './model'

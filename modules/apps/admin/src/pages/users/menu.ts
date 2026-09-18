@@ -1,9 +1,10 @@
 import type { MenuGroup } from '@/shared/navigation'
 
 /**
- * Sidebar entries for users. Owned by T2.
+ * People sit in the organisation group, which `pages/schools` declares.
  *
- * Each entry names the permission it needs; the sidebar hides what the current
- * school does not grant.
+ * The sidebar draws one heading per group, so the group is declared once and
+ * names this section's route; the label it uses is defined here, in this
+ * section's own resources.
  */
 export const menu: MenuGroup[] = []

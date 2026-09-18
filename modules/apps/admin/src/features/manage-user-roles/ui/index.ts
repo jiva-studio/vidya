@@ -1,2 +1,1 @@
-// The controls that trigger manage-user-roles. Owned by T2.
-export {}
+export { default as UserRolesSelector } from './UserRolesSelector.vue'
