@@ -1,6 +1,6 @@
 .PHONY: install check typecheck lint lint-fix format format-check test test-postgres \
         api-build api-run api-test db-run db-drop db-migrate db-migrate-generate seed clean \
-        dev dev-up dev-down dev-logs mail bootstrap
+        dev dev-up dev-down dev-logs mail bootstrap storybook
 
 NPM := npm --prefix modules
 
@@ -76,7 +76,7 @@ seed:
 # ---------------------------------------------------------------------------
 #
 #   780x  infrastructure   7800 postgres · 7801 redis · 7802 smtp · 7803 mail ui
-#   781x  applications     7810 api      · 7811 admin
+#   781x  applications     7810 api · 7811 admin · 7812 storybook
 
 COMPOSE := docker compose -f docker-compose.dev.yml
 MAIL_UI := http://localhost:7803
@@ -86,6 +86,7 @@ export VIDYA_REDIS_PORT   := 7801
 export VIDYA_MAILER_PORT  := 7802
 export VIDYA_API_PORT     := 7810
 export VIDYA_ADMIN_PORT   := 7811
+export VIDYA_SB_PORT      := 7812
 export VIDYA_API_URL      := http://localhost:7810
 
 dev-up:
@@ -109,6 +110,10 @@ mail:
 
 dev: dev-up
 	$(NPM) run dev
+
+# The admin, component by component and screen by screen, without API or database.
+storybook:
+	$(NPM) run storybook -w @vidya/admin
 
 # One school, an owner role holding '*', and a user with that email. Idempotent,
 # unlike `seed`, which truncates first and exists to fill an empty database.
