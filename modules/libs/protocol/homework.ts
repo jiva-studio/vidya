@@ -95,5 +95,6 @@ export type SaveBlockStateRequest = {
 }
 
 export type SaveBlockStateResponse = crud.UpdateItemResponse<BlockStateDetails>
-export type GetBlockStatesQuery = { enrollmentId: string; lessonVersionId?: string }
+/** Without an enrolment the caller asks for their own, across every enrolment they hold. */
+export type GetBlockStatesQuery = { enrollmentId?: string; lessonVersionId?: string }
 export type GetBlockStatesResponse = crud.GetItemsListResponse<BlockStateDetails>

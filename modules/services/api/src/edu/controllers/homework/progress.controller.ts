@@ -13,6 +13,8 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { BlockStatesService, EnrollmentsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
+import * as domain from '@vidya/domain'
+import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
 
 import { toBlockStateDetails, toBlockStateDetailsList } from '../../mappers/education.mapper'
@@ -78,15 +80,38 @@ export class ProgressController {
   /*                              GET /edu/progress                             */
   /* -------------------------------------------------------------------------- */
 
+  /**
+   * Progress for one enrolment, or for every enrolment the caller holds.
+   *
+   * The id is optional because a student has several places and, on a first
+   * run, knows none of their ids — without this the client has nothing to ask
+   * with at all.
+   */
   @Crud.GetMany(Routes().edu.progress.find())
   async getMany(
     @Query() query: dto.GetBlockStatesQuery,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetBlockStatesResponse> {
-    const enrollment = await this.enrollments.findOneBy({ id: query.enrollmentId })
+    const states = query.enrollmentId
+      ? await this.statesOf(query.enrollmentId, query.lessonVersionId, auth)
+      : await this.myStates(query.lessonVersionId, auth)
+
+    return { items: toBlockStateDetailsList(states) }
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                  Helpers                                   */
+  /* -------------------------------------------------------------------------- */
+
+  private async statesOf(
+    enrollmentId: domain.EnrollmentId,
+    lessonVersionId: domain.LessonVersionId | undefined,
+    auth: UserAuthentication,
+  ): Promise<entities.BlockState[]> {
+    const enrollment = await this.enrollments.findOneBy({ id: enrollmentId })
 
     if (!enrollment) {
-      throw new NotFoundException(`Enrollment with id ${query.enrollmentId} not found`)
+      throw new NotFoundException(`Enrollment with id ${enrollmentId} not found`)
     }
 
     const isOwner = this.enrollments.isOwnedBy(enrollment, auth.userId)
@@ -96,13 +121,20 @@ export class ProgressController {
       throw new ForbiddenException('User does not have permission')
     }
 
-    const states = await this.blockStates.findAll({
-      where: {
-        enrollmentId: query.enrollmentId,
-        lessonVersionId: query.lessonVersionId,
-      },
-    })
+    return this.blockStates.findAll({ where: { enrollmentId, lessonVersionId } })
+  }
 
-    return { items: toBlockStateDetailsList(states) }
+  /** Own progress only — staff permissions widen nothing here, by design. */
+  private async myStates(
+    lessonVersionId: domain.LessonVersionId | undefined,
+    auth: UserAuthentication,
+  ): Promise<entities.BlockState[]> {
+    const mine = await this.enrollments.findAll({ where: { studentId: auth.userId } })
+
+    if (mine.length === 0) return []
+
+    return this.blockStates.findAll({
+      where: mine.map((e) => ({ enrollmentId: e.id, lessonVersionId })),
+    })
   }
 }
