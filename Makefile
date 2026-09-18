@@ -3,7 +3,7 @@
         test test-package test-postgres-required test-postgres \
         mutate-diff mutate-full \
         api-build api-run api-test \
-        db-start db-schema-drop db-migrate db-migrate-generate db-testdb-drop \
+        db-start db-schema-drop db-migrate db-testdb-drop \
         seed clean
 
 NPM := npm --prefix modules
