@@ -64,6 +64,7 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
     status: 'published',
     publishedAt: new Date(),
     content: {
+      schemaVersion: 1,
       sections: [
         {
           id: SECTION_ID,

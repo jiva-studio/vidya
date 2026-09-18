@@ -9,6 +9,7 @@ import {
 } from '@vidya/api/edu/services'
 import { newId } from '@vidya/api/edu/shared'
 import * as domain from '@vidya/domain'
+import { emptyLessonContent } from '@vidya/domain'
 
 export type Context = {
   schoolId: domain.SchoolId
@@ -73,7 +74,7 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
     lessonId: lesson.id,
     version: 1,
     status: 'draft',
-    content: { sections: [] },
+    content: emptyLessonContent(),
   })
 
   const token = async (schoolId: domain.SchoolId, p: domain.PermissionKey[]) =>

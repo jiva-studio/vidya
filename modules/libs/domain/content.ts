@@ -64,9 +64,23 @@ export type LessonSection = {
   assessment: 'none' | 'auto' | 'teacher'
 }
 
+/**
+ * The shape number of the document below. A published version is frozen and
+ * stays readable for as long as the answers against it are worth keeping, so a
+ * reader has to be told which rules produced the document rather than guess
+ * them from the fields that happen to be present.
+ */
+export const LessonContentSchemaVersion = 1
+
 export type LessonContent = {
+  schemaVersion: number
   sections: LessonSection[]
 }
+
+export const emptyLessonContent = (): LessonContent => ({
+  schemaVersion: LessonContentSchemaVersion,
+  sections: [],
+})
 
 /* -------------------------------------------------------------------------- */
 /*                                Block state                                 */

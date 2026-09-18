@@ -22,6 +22,7 @@ describe('/edu/lessons/:lessonId/versions', () => {
   const routes = protocol.Routes().edu.lessons.versions
 
   const content = (title: string): protocol.LessonContent => ({
+    schemaVersion: 1,
     sections: [
       {
         id: domain.asId<domain.SectionId>('11111111-1111-4111-8111-111111111111'),

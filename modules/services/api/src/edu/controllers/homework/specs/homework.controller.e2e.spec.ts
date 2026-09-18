@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common'
 import { createTestingApp } from '@vidya/api/edu/shared'
+import { emptyLessonContent } from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
 
@@ -73,7 +74,7 @@ describe('/edu/homework', () => {
       version: answered.version + 1,
       status: 'published',
       publishedAt: new Date(),
-      content: { sections: [] },
+      content: emptyLessonContent(),
     })
 
     const response = await submit(ctx.tokens.student).expect(201)

@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import * as domain from '@vidya/domain'
+import { emptyLessonContent } from '@vidya/domain'
 import { LessonVersion } from '@vidya/entities'
 import { LessonContent } from '@vidya/protocol'
 import { Repository } from 'typeorm'
@@ -60,7 +61,7 @@ export class LessonVersionsService extends EntitiesService<LessonVersion> {
 
   /** Every lesson starts with somewhere to write, so the editor never has to create one. */
   async createInitialDraft(lessonId: domain.LessonId): Promise<LessonVersion> {
-    return this.create({ lessonId, version: 1, status: 'draft', content: { sections: [] } })
+    return this.create({ lessonId, version: 1, status: 'draft', content: emptyLessonContent() })
   }
 
   /**
@@ -86,7 +87,7 @@ export class LessonVersionsService extends EntitiesService<LessonVersion> {
       lessonId,
       version: Math.max(0, ...existing.map((v) => v.version)) + 1,
       status: 'draft',
-      content: (latestPublished?.content as LessonContent) ?? { sections: [] },
+      content: (latestPublished?.content as LessonContent) ?? emptyLessonContent(),
     })
   }
 
