@@ -15,6 +15,29 @@ const keptOnDevice: Record<Locale, string> = {
 }
 
 /**
+ * The subject each reason has to be about, in each language.
+ *
+ * Not the message itself — repeating the `.ftl` here would only prove that two
+ * files were edited together. What is pinned is the *substance*: the word a
+ * student needs to see to understand which of the seven things went wrong.
+ * Swap two messages in the `.ftl` and the pairing breaks, which is the whole
+ * point: an answer refused for its length must not be explained as somebody
+ * else's enrolment.
+ */
+const about: Record<(typeof SyncRejectionReasons)[number], Record<Locale, RegExp>> = {
+  readOnlyCollection: {
+    en: /cannot be sent from the app/i,
+    ru: /нельзя отправлять из приложения/i,
+  },
+  notYourEnrollment: { en: /not yours/i, ru: /чужой записи/i },
+  enrollmentRevoked: { en: /no longer enrolled/i, ru: /больше не записаны/i },
+  unknownLessonVersion: { en: /lesson version/i, ru: /версию урока/i },
+  alreadyAccepted: { en: /already been accepted/i, ru: /уже принят/i },
+  payloadTooLarge: { en: /too long/i, ru: /слишком длинный/i },
+  malformed: { en: /could not read/i, ru: /не смогла прочитать/i },
+}
+
+/**
  * T-U-2, AC-23. A refused answer carries its reason and the promise that the
  * work is still here.
  *
@@ -28,6 +51,14 @@ describe('T-U-2: a refused answer explains itself', () => {
 
     expect(text).not.toContain(reason)
     expect(text.length).toBeGreaterThan(0)
+  })
+
+  it.each(
+    SyncRejectionReasons.flatMap((reason) =>
+      (['en', 'ru'] as const).map((locale) => [reason, locale] as const),
+    ),
+  )('explains %s in %s by what actually happened', (reason, locale) => {
+    expect(render(reason, locale).text()).toMatch(about[reason][locale])
   })
 
   it.each(['en', 'ru'] as const)('translates every reason into %s', (locale) => {
