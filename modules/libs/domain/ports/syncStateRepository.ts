@@ -3,7 +3,7 @@
  * watermarks the push path keeps.
  *
  * Shape taken from Lectorium's `libs/domain/ports/syncStateRepository.ts`, with
- * its single `pullCursor` replaced by a position per scope (И-3). A new course
+ * its single `pullCursor` replaced by a position per scope (I-3). A new course
  * is then just a scope standing at `0`, whose history arrives through an
  * ordinary pull — which is why there is no backfill port and no backfill
  * endpoint anywhere in this contract.
@@ -27,7 +27,7 @@ export interface SyncScopeState {
 
   /**
    * When the scope left the caller's rights — a course they were withdrawn
-   * from. Set, and nothing else: what was downloaded stays readable (Д-7).
+   * from. Set, and nothing else: what was downloaded stays readable (D-7).
    */
   readonly removedAt: IsoDateTime | null
 }
@@ -42,7 +42,7 @@ export interface ISyncStateRepository {
   /**
    * Move one scope's position, and record the checksum that came with it.
    * Positions are independent — advancing one must never move another.
-   * Called inside the transaction that wrote the page (Д-18).
+   * Called inside the transaction that wrote the page (D-18).
    */
   setScopeCursor(scope: SyncScopeRef, cursor: number, checksum: string | null): Promise<void>
 
@@ -58,7 +58,7 @@ export interface ISyncStateRepository {
 
   /**
    * Put a scope back to `0` so its content is fetched again — the answer to a
-   * checksum that does not match (И-5). One scope, never the whole database.
+   * checksum that does not match (I-5). One scope, never the whole database.
    */
   resetScope(scope: SyncScopeRef): Promise<void>
 

@@ -12,7 +12,7 @@
  *
  * Domain port; the SQL implementation is the device's. Every method joins the
  * caller's unit of work — the rows of a page and the scope position that
- * describes them are written together (Д-18).
+ * describes them are written together (D-18).
  */
 
 import { SyncCollection, SyncDoc, SyncPayload } from '../sync/types'
@@ -31,7 +31,7 @@ export interface ISyncApplyRepository {
    * Persist a merged document without journaling it, and record `serverHlc` as
    * the document's new server pointer.
    *
-   * **Conditional (Д-4.)** The write happens only when `serverHlc` is strictly
+   * **Conditional (D-4.)** The write happens only when `serverHlc` is strictly
    * greater than the pointer already on record; otherwise the call is a no-op
    * and returns `false`. Without that test a page redelivered after a dropped
    * connection, or two scopes moving at their own pace, would put an older

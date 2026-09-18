@@ -11,7 +11,7 @@
  * Three things a reader should not have to discover by experiment:
  *
  * - **The read position is a map, not a number.** A client keeps one position
- *   per scope (И-3). A course they have just been enrolled on is simply a scope
+ *   per scope (I-3). A course they have just been enrolled on is simply a scope
  *   standing at `0`, and its history arrives through an ordinary pull. **There
  *   is no backfill endpoint** and no plan for one.
  * - **A push is answered row by row.** `results` has the length of `changes`
@@ -19,7 +19,7 @@
  *   server stored, or refused with a reason. A refusal never rolls back its
  *   neighbours: one rejected answer must not hold up the video progress
  *   travelling beside it.
- * - **Every instant is UTC** (Д-17), as `IsoDateTime` — ISO 8601, milliseconds,
+ * - **Every instant is UTC** (D-17), as `IsoDateTime` — ISO 8601, milliseconds,
  *   always `Z`. HLCs carry unix milliseconds, which are UTC by construction. A
  *   local time anywhere here would reorder rows for a traveller.
  *
@@ -76,7 +76,7 @@ export const SYNC_MAX_PULL_LIMIT = 500
 export const SYNC_MAX_PUSH_CHANGES = 500
 
 /**
- * Ceiling on one serialized row's `data` (Д-11). A lesson version with a
+ * Ceiling on one serialized row's `data` (D-11). A lesson version with a
  * hundred blocks travels as one row, and without a ceiling the first heavy
  * lesson takes the whole page down.
  */
@@ -86,7 +86,7 @@ export const SYNC_MAX_CHANGE_BYTES = 1_048_576
 export const SYNC_MAX_BATCH_BYTES = 4_194_304
 
 /**
- * Ceiling on the scopes one request may carry (Д-20). The positions travel in
+ * Ceiling on the scopes one request may carry (D-20). The positions travel in
  * the body and grow with the number of courses a student takes, so the limit is
  * named here rather than discovered when a request stops fitting. Exceeding it
  * is an error with a reason, never a silently truncated list.
@@ -95,7 +95,7 @@ export const SYNC_MAX_SCOPES = 200
 
 /**
  * How far ahead of the server's own clock an incoming HLC may sit before the
- * server restamps it (И-2). One device whose clock is a year fast would
+ * server restamps it (I-2). One device whose clock is a year fast would
  * otherwise anchor the ordering of the whole system in the future, because
  * every other device seeds its clock from the highest HLC it has seen and an
  * HLC's physical part never goes back down.
@@ -113,7 +113,7 @@ export const SYNC_CLOCK_SKEW_TOLERANCE_MS = 5 * 60 * 1000
  */
 export type SyncCursors = { readonly [scope: domain.SyncScopeKey]: number }
 
-/** Per-scope checksums, keyed the same way (И-5). */
+/** Per-scope checksums, keyed the same way (I-5). */
 export type SyncChecksums = { readonly [scope: domain.SyncScopeKey]: string }
 
 /**
@@ -157,7 +157,7 @@ export type SyncScopeGrant = {
 /* -------------------------------------------------------------------------- */
 
 export type PullRequest = {
-  /** Identifies the writer, so its own rows are not echoed back to it (Д-5). */
+  /** Identifies the writer, so its own rows are not echoed back to it (D-5). */
   deviceId: string
 
   /** Where this device stands per scope. An unknown scope starts at `0`. */
@@ -173,13 +173,13 @@ export type PullRequest = {
  * `cursors` carries back the position for every scope this page advanced, so a
  * client never has to compute it from the rows. `scopes` is the caller's rights
  * as they stand now: a scope that appears is started at `0`, a scope that
- * disappears is marked gone and **its data is left alone** (Д-7). `checksums`
+ * disappears is marked gone and **its data is left alone** (D-7). `checksums`
  * let a device notice a scope has diverged and fetch that one scope again
- * rather than the whole database (И-5).
+ * rather than the whole database (I-5).
  *
  * `hasMore` says only that the server has more rows ready. A client must also
  * stop when a page advanced no position at all, or a server bug turns into a
- * loop that drains the battery (Д-19).
+ * loop that drains the battery (D-19).
  */
 export type PullResponse = {
   changes: SyncChange[]
@@ -198,7 +198,7 @@ export type PullResponse = {
  *
  * `outboxId` is the row's local journal id. It travels so the server can report
  * how far this device's own writes have reached the journal, and because the
- * server applies a batch strictly in array order (Д-12) — two offline edits of
+ * server applies a batch strictly in array order (D-12) — two offline edits of
  * one document must land in the order they were made.
  */
 export type PushChange = {
@@ -225,8 +225,8 @@ export type PushRequest = {
  * sent, and the client records it as the document's server pointer. It can
  * differ for two reasons, and the client does not need to tell them apart: the
  * incoming stamp sat further ahead than {@link SYNC_CLOCK_SKEW_TOLERANCE_MS}
- * allows (И-2), or the same HLC already named a row with a *different* body,
- * which is what two devices restored from one backup produce (Д-16). In both
+ * allows (I-2), or the same HLC already named a row with a *different* body,
+ * which is what two devices restored from one backup produce (D-16). In both
  * cases the server restamps and keeps both records — a write is never swallowed
  * by the idempotency index as an imagined repeat.
  *
@@ -266,7 +266,7 @@ export type PushResult = PushAccepted | PushRejected
 /**
  * Answers in the order the rows were sent, one per row.
  *
- * `journaledOutboxId` is the write checkpoint (И-6): every row of this device
+ * `journaledOutboxId` is the write checkpoint (I-6): every row of this device
  * up to and including that id is now in the journal, so the interface can
  * refuse to paint a state that does not yet contain the answer just written.
  * It is `0` when the batch was empty.
@@ -299,7 +299,7 @@ export type AckCursorRequest = {
  * these describe a request that could not be read at all.
  */
 export const SyncRequestErrorCodes = [
-  /** More scopes than {@link SYNC_MAX_SCOPES} (Д-20, AC-10o). */
+  /** More scopes than {@link SYNC_MAX_SCOPES} (D-20, AC-10o). */
   'tooManyScopes',
 
   /** A position that is not a non-negative integer, or a key that is not a scope. */
