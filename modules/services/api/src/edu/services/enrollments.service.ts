@@ -29,6 +29,10 @@ export type ModerationDecision = {
  * before any suitable group exists and waits in the queue until one does, which
  * is why `groupId` stays empty rather than the request being held back.
  */
+/** Postgres reports a broken UNIQUE constraint as SQLSTATE 23505. */
+const isUniqueViolation = (error: unknown): boolean =>
+  (error as { code?: string })?.code === '23505'
+
 @Injectable()
 export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope> {
   constructor(
@@ -94,7 +98,14 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
     return enrollment?.studentId === userId
   }
 
-  /** A student asks to join. The school decides later. */
+  /**
+   * A student asks to join. The school decides later.
+   *
+   * The check and the insert are two statements, so two requests arriving
+   * together can both pass the check. The unique index is what actually decides
+   * it; the check is only here to give the ordinary case a readable error rather
+   * than a constraint name. Both paths end in the same 409.
+   */
   async request(course: Course, studentId: domain.UserId): Promise<Enrollment> {
     const existing = await this.findOneBy({ courseId: course.id, studentId })
 
@@ -102,12 +113,18 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
       throw new ConflictException('Already enrolled on this course')
     }
 
-    return this.create({
-      courseId: course.id,
-      studentId,
-      schoolId: course.schoolId,
-      status: 'pending',
-    })
+    try {
+      return await this.create({
+        courseId: course.id,
+        studentId,
+        schoolId: course.schoolId,
+        status: 'pending',
+      })
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error
+
+      throw new ConflictException('Already enrolled on this course')
+    }
   }
 
   /** Accept or decline. A request is decided once. */

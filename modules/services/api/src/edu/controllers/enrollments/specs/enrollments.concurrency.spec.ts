@@ -42,7 +42,7 @@ describeOnPostgres('/edu/enrollments under concurrency', () => {
     const statuses = responses.map((r) => r.status).sort()
     expect(statuses[0]).toBe(201)
     expect(statuses[1]).not.toBe(201)
-    expect(statuses[1]).toBeLessThan(500)
+    expect(statuses[1]).toBe(409)
 
     const list = await request(app.getHttpServer())
       .get(protocol.Routes().edu.enrollments.find())
