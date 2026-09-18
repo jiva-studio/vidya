@@ -1,4 +1,4 @@
-export const sectionClasses = ['grid', 'gap-[var(--space-5)]']
+export const pageClasses = ['flex', 'flex-col', 'gap-[var(--space-5)]']
 
 export const formClasses = [
   'grid',

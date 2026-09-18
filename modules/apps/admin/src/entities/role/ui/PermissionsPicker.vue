@@ -1,16 +1,32 @@
 <script setup lang="ts">
 import type { PermissionKey } from '@vidya/domain'
-import { Checkbox } from '@vidya/ui'
-import { computed } from 'vue'
+import { Switch } from '@vidya/ui'
+import { computed, ref } from 'vue'
 
-import { actionOf, groupPermissions } from '../model'
-import { groupClasses, legendClasses, optionsClasses, pickerClasses } from './styles'
 import type { PermissionGroup } from '../model'
+import {
+  WILDCARD_GROUP,
+  groupPermissions,
+  splitGroups,
+  toggleGroup,
+  togglePermission,
+} from '../model'
+import PermissionGroupFields from './PermissionGroupFields.vue'
+import {
+  columnClasses,
+  columnsClasses,
+  noticeClasses,
+  pickerClasses,
+  wildcardClasses,
+} from './styles'
 import type { PermissionsPickerEmits, PermissionsPickerProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<PermissionsPickerProps>(), { disabled: false })
+const props = withDefaults(defineProps<PermissionsPickerProps>(), {
+  disabled: false,
+  readonly: false,
+})
 
 /* --------------------------------- Events --------------------------------- */
 
@@ -18,51 +34,56 @@ const emit = defineEmits<PermissionsPickerEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
-// Straight from @vidya/domain. A list of the admin's own would drift from the
-// one the server checks against, and nobody would notice until a refusal.
-const groups = computed<PermissionGroup[]>(() => groupPermissions())
+const groups = computed(() => groupPermissions().filter((group) => group.prefix !== WILDCARD_GROUP))
 
-const selected = computed(() => new Set<PermissionKey>(props.modelValue))
+const columns = computed(() => splitGroups(groups.value))
+
+const grantedAll = computed(() => props.modelValue.includes('*'))
+
+const locked = computed(() => props.disabled || props.readonly)
+
+const setAside = ref<PermissionKey[]>([])
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onToggle(key: PermissionKey, checked: boolean) {
-  emit('update:modelValue', checked ? withKey(key) : withoutKey(key))
+function onGrantAll(on: boolean) {
+  if (on) setAside.value = props.modelValue
+
+  emit('update:modelValue', on ? (['*'] as PermissionKey[]) : setAside.value)
 }
 
-/* -------------------------------- Helpers --------------------------------- */
-
-function withKey(key: PermissionKey): PermissionKey[] {
-  return selected.value.has(key) ? props.modelValue : [...props.modelValue, key]
+function onToggle(key: PermissionKey, on: boolean) {
+  emit('update:modelValue', togglePermission(props.modelValue, key, on))
 }
 
-function withoutKey(key: PermissionKey): PermissionKey[] {
-  return props.modelValue.filter((held) => held !== key)
-}
-
-function groupLabel(group: PermissionGroup): string {
-  return `permission-group-${group.prefix}`
-}
-
-function actionLabel(key: PermissionKey): string {
-  return `permission-action-${actionOf(key)}`
+function onToggleGroup(group: PermissionGroup, on: boolean) {
+  emit('update:modelValue', toggleGroup(props.modelValue, group, on))
 }
 </script>
 
 <template>
   <div :class="pickerClasses">
-    <fieldset v-for="group in groups" :key="group.prefix" :class="groupClasses">
-      <legend :class="legendClasses">{{ $t(groupLabel(group)) }}</legend>
-      <div :class="optionsClasses">
-        <Checkbox
-          v-for="key in group.keys"
-          :key="key"
-          :model-value="selected.has(key)"
-          :label="$t(actionLabel(key))"
-          :disabled="props.disabled"
-          @update:model-value="onToggle(key, $event)"
+    <Switch
+      :model-value="grantedAll"
+      :label="$t('permission-action-all')"
+      :description="$t('permission-all-hint')"
+      :disabled="locked"
+      :class="wildcardClasses"
+      @update:model-value="onGrantAll"
+    />
+    <p v-if="grantedAll" :class="noticeClasses">{{ $t('permission-all-notice') }}</p>
+    <div v-else :class="columnsClasses">
+      <div v-for="(column, index) in columns" :key="index" :class="columnClasses">
+        <PermissionGroupFields
+          v-for="group in column"
+          :key="group.prefix"
+          :group="group"
+          :held="props.modelValue"
+          :disabled="locked"
+          @toggle="onToggle"
+          @toggle-group="onToggleGroup"
         />
       </div>
-    </fieldset>
+    </div>
   </div>
 </template>

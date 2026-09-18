@@ -58,6 +58,11 @@ const tick = async (page: Awaited<ReturnType<typeof mountForm>>['page'], key: st
   await flushPromises()
 }
 
+const flip = async (page: Awaited<ReturnType<typeof mountForm>>['page']) => {
+  await page.find('[role="switch"]').trigger('click')
+  await flushPromises()
+}
+
 const whole = async (page: Awaited<ReturnType<typeof mountForm>>['page'], prefix: string) => {
   await page.find(`[data-permission-group="${prefix}"] [role="checkbox"]`).trigger('click')
   await flushPromises()
@@ -132,21 +137,30 @@ describe('RoleFormPage', () => {
     })
   })
 
-  it('lets one switch stand for everything and overrides the rest with it', async () => {
+  it('puts one switch in place of the whole list rather than ticking all of it', async () => {
     const { transport, page } = await mountForm({ 'POST /edu/roles': { id: 'role-1' } })
 
     await page.find('input[name="name"]').setValue('Teacher')
 
     await tick(page, 'courses:read')
-    await page.find('[role="switch"]').trigger('click')
-    await flushPromises()
+    await flip(page)
 
-    expect(boxOf(page, 'courses:delete').attributes('data-state')).toBe('checked')
-    expect(boxOf(page, 'courses:delete').attributes('data-disabled')).toBeDefined()
+    expect(page.findAll('[data-permission]')).toHaveLength(0)
+    expect(page.text()).toContain('Выключите переключатель')
 
     await save(page)
 
     expect(transport.calls[0]).toMatchObject({ body: { permissions: ['*'] } })
+  })
+
+  it('gives back what was chosen when the switch goes off again', async () => {
+    const { page } = await mountForm({ 'POST /edu/roles': { id: 'role-1' } })
+
+    await tick(page, 'courses:read')
+    await flip(page)
+    await flip(page)
+
+    expect(boxOf(page, 'courses:read').attributes('data-state')).toBe('checked')
   })
 
   it('shows an odd set exactly as it is, ticking nothing of its own', async () => {
@@ -176,6 +190,9 @@ describe('RoleFormPage', () => {
 
     expect(boxOf(page, 'courses:read').attributes('data-disabled')).toBeDefined()
     expect(page.find('[role="switch"]').attributes('data-disabled')).toBeDefined()
+    expect(
+      page.find('[data-permission-group="courses"] [role="checkbox"]').attributes('data-disabled'),
+    ).toBeDefined()
   })
 
   it('sends nothing until the role has a name', async () => {

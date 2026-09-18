@@ -16,3 +16,6 @@ export interface PermissionGroup {
   readonly prefix: string
   readonly keys: readonly PermissionKey[]
 }
+
+/** How much of one group a role holds. */
+export type PermissionGroupState = 'none' | 'some' | 'all'

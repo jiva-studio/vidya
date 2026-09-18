@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import type { PermissionKey } from '@vidya/domain'
-import { FormActions, FormField, FormSection, Input, PageHeader, Textarea } from '@vidya/ui'
+import { FormActions, PageHeader } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { reasonOf } from '@/shared/lib'
-import { PermissionsPicker, useRoleApi } from '@/entities/role'
+import { useRoleApi } from '@/entities/role'
 import { useCan, useCurrentSchool } from '@/shared/access'
 
-import { formClasses } from './styles'
+import RoleFormFields from './RoleFormFields.vue'
+import { formClasses, pageClasses } from './styles'
 import type { RoleFormPageProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -113,42 +114,26 @@ async function send(): Promise<void> {
 </script>
 
 <template>
-  <PageHeader :title="title" />
-  <form :class="formClasses" @submit.prevent="onSubmit">
-    <FormField :label="$t('roles-form-name')" :error="nameError" required>
-      <template #default="field">
-        <Input
-          :id="field.id"
-          v-model="name"
-          name="name"
-          :described-by="field.describedBy"
-          :invalid="field.invalid"
-          :disabled="busy"
-        />
-      </template>
-    </FormField>
-    <FormField :label="$t('roles-form-description')">
-      <template #default="field">
-        <Textarea
-          :id="field.id"
-          v-model="description"
-          name="description"
-          :described-by="field.describedBy"
-          :disabled="busy"
-        />
-      </template>
-    </FormField>
-    <FormSection :title="$t('roles-form-permissions')">
-      <PermissionsPicker v-model="permissions" :disabled="busy" :readonly="!canEdit" />
-    </FormSection>
-    <FormActions
-      :submit-label="$t('action-save')"
-      :cancel-label="$t('action-cancel')"
-      :busy="busy"
-      :disabled="!canSubmit"
-      :error="errorText"
-      @submit="onSubmit"
-      @cancel="onCancel"
-    />
-  </form>
+  <section :class="pageClasses">
+    <PageHeader :title="title" />
+    <form :class="formClasses" @submit.prevent="onSubmit">
+      <RoleFormFields
+        v-model:name="name"
+        v-model:description="description"
+        v-model:permissions="permissions"
+        :name-error="nameError"
+        :busy="busy"
+        :readonly="!canEdit"
+      />
+      <FormActions
+        :submit-label="$t('action-save')"
+        :cancel-label="$t('action-cancel')"
+        :busy="busy"
+        :disabled="!canSubmit"
+        :error="errorText"
+        @submit="onSubmit"
+        @cancel="onCancel"
+      />
+    </form>
+  </section>
 </template>

@@ -11,7 +11,7 @@ import { useRoles } from '@/entities/role'
 import { useCan } from '@/shared/access'
 
 import RolesTableRow from './RolesTableRow.vue'
-import { sectionClasses } from './styles'
+import { pageClasses } from './styles'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -59,7 +59,7 @@ function asRole(row: TableRowData): RoleRow {
 </script>
 
 <template>
-  <section :class="sectionClasses">
+  <section :class="pageClasses">
     <PageHeader :title="$t('roles-title')">
       <template #actions>
         <Button v-if="canCreate" @click="onCreate">{{ $t('roles-create') }}</Button>
