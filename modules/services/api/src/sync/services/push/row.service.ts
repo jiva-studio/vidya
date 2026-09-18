@@ -115,7 +115,7 @@ const stamp = (change: PushChange): Rejection | null => {
 /**
  * One pushed row, in a transaction of its own.
  *
- * A transaction per row is what makes AC-6 true rather than hopeful: a refusal,
+ * A transaction per row is what makes true rather than hopeful: a refusal,
  * or a constraint nobody foresaw, rolls back that row and leaves the video
  * progress travelling beside it applied.
  */
@@ -161,14 +161,14 @@ export class SyncPushRowService {
     const stamped = await this.stamping.stampFor(manager, change, prepared.body)
 
     // A genuine repeat is answered from the journal: the work is already there,
-    // and a resend after a dropped connection must cost nothing (D-3).
+    // and a resend after a dropped connection must cost nothing.
     if (stamped.repeat) return accepted(change, stamped.hlc, false)
 
     const frozen = await applier.editable(manager, change)
 
     if (frozen) return rejected(change, frozen)
 
-    // The subscriber is the only writer of the journal (D-2), so the device's
+    // The subscriber is the only writer of the journal, so the device's
     // stamp reaches the row through the context rather than through a second
     // insert of our own.
     const written = await withSyncWriteContext(

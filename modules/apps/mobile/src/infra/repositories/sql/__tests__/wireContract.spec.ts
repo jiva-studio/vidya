@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { COLLECTION_PROJECTIONS, projectionOf } from '../collectionProjections'
 
 /**
- * T-C-7, device half: what this table expects to be sent is what the contract
+ *, device half: what this table expects to be sent is what the contract
  * says is sent.
  *
  * The server half lives in `@vidya/api` and holds its journal projections to
@@ -18,9 +18,9 @@ import { COLLECTION_PROJECTIONS, projectionOf } from '../collectionProjections'
  * sends arrives as a fallback — an empty string where an instant belongs, or a
  * skipped row whose scope cursor advances anyway, which is a row that a second
  * pull will not bring back either. A field the server sends and this table does
- * not name is dropped here in silence (T-X-2).
+ * not name is dropped here in silence.
  */
-describe('T-C-7: the local tables expect the fields the wire contract declares', () => {
+describe('the local tables expect the fields the wire contract declares', () => {
   it('covers every collection the contract names, and no others', () => {
     expect(Object.keys(COLLECTION_PROJECTIONS).sort()).toEqual([...SyncCollections].sort())
     expect(Object.keys(SYNC_WIRE_FIELDS).sort()).toEqual([...SyncCollections].sort())

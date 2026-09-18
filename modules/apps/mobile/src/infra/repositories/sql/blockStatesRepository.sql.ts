@@ -30,7 +30,7 @@ import { readSyncRows, writeSyncRow } from './rowWriter'
  *
  * `state` is stored whole as JSON and never inspected. A block type this build
  * has never seen still round-trips, which is the same rule `lesson_versions`
- * follows for an unknown `schemaVersion` (D-9).
+ * follows for an unknown `schemaVersion`.
  *
  * Wrapped by the journal decorator.
  */

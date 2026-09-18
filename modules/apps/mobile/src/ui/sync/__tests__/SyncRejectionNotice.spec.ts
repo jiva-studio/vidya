@@ -38,14 +38,14 @@ const about: Record<(typeof SyncRejectionReasons)[number], Record<Locale, RegExp
 }
 
 /**
- * T-U-2, AC-23. A refused answer carries its reason and the promise that the
+ * A refused answer carries its reason and the promise that the
  * work is still here.
  *
  * The one thing a student has to take away from this screen is that nothing was
  * lost, so the reassurance is part of the notice rather than something a caller
  * may forget to pass.
  */
-describe('T-U-2: a refused answer explains itself', () => {
+describe('a refused answer explains itself', () => {
   it.each(SyncRejectionReasons)('says in plain words why %s happened', (reason) => {
     const text = render(reason).text()
 

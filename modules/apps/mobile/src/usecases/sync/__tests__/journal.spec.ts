@@ -31,7 +31,7 @@ import {
 import { failingDatabase, type Harness, openHarness, OTHER_OWNER, OWNER } from './harness'
 
 /**
- * The journal decorator: T-M-3, T-M-4, T-M-5, T-M-10, T-M-16, T-I-3.
+ * The journal decorator:.
  *
  * Everything runs against real SQLite. The atomicity case in particular cannot
  * be shown any other way — a fake repository has no transaction to roll back,
@@ -56,7 +56,7 @@ describe('the journal decorator', () => {
     harness = await openHarness()
   })
 
-  it('T-M-3: writing homework offline creates an outbox row', async () => {
+  it('writing homework offline creates an outbox row', async () => {
     const saved = await harness.engine.homework.saveAnswer(answer('written on the train'))
 
     const rows = await harness.outboxOf(OWNER)
@@ -75,7 +75,7 @@ describe('the journal decorator', () => {
     expect(harness.server.pushRequests).toHaveLength(0)
   })
 
-  it('T-M-4: writing with an expired token still creates an outbox row', async () => {
+  it('writing with an expired token still creates an outbox row', async () => {
     harness.server.pushFailures.push(() => {
       throw new SyncTransportError('unauthorized')
     })
@@ -91,7 +91,7 @@ describe('the journal decorator', () => {
     expect((await harness.outboxOf(OWNER))[0]!.status).toBe('pending')
   })
 
-  it('T-M-5: the domain row and the outbox row are one transaction', async () => {
+  it('the domain row and the outbox row are one transaction', async () => {
     const database = await openTestDatabase()
     const broken = await openHarness({
       db: failingDatabase(database.db, (sql) => sql.includes('INSERT INTO outbox')),
@@ -105,7 +105,7 @@ describe('the journal decorator', () => {
     expect(await broken.count('outbox')).toBe(0)
   })
 
-  it('T-M-16: an answer already handed in is refused locally', async () => {
+  it('an answer already handed in is refused locally', async () => {
     await harness.engine.homework.saveAnswer(answer('first draft'))
     await harness.engine.homework.submit(asId<HomeworkId>(HOMEWORK_ID), SUBMITTED_AT)
 
@@ -119,7 +119,7 @@ describe('the journal decorator', () => {
     expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('first draft')
   })
 
-  it('T-M-16: an answer returned for revision is editable again', async () => {
+  it('an answer returned for revision is editable again', async () => {
     await harness.engine.homework.saveAnswer(answer('first draft'))
     await harness.db.execute("UPDATE homework SET status = 'returned' WHERE id = ?", [HOMEWORK_ID])
 
@@ -170,7 +170,7 @@ describe('the journal decorator', () => {
     expect(compareHlcString(rows[0]!.hlc, ahead)).toBeGreaterThan(0)
   })
 
-  it('T-I-3: a second identity does not journal under the first, and cannot push its rows', async () => {
+  it('a second identity does not journal under the first, and cannot push its rows', async () => {
     await harness.engine.homework.saveAnswer(answer('written by the first student'))
 
     const second = await openHarness({
@@ -194,7 +194,7 @@ describe('the journal decorator', () => {
     expect(sent.map((change) => change.collection)).toEqual(['enrollments'])
   })
 
-  it('T-M-10: no path removes an outbox row', async () => {
+  it('no path removes an outbox row', async () => {
     await harness.engine.homework.saveAnswer(answer('kept forever'))
     const before = (await harness.allOutboxRows()).length
 

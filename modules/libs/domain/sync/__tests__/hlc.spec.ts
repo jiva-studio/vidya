@@ -1,10 +1,10 @@
 /**
- * HLC tests — T-D-1 … T-D-7.
+ * HLC tests — ….
  *
  * Copied from Lectorium (`libs/domain/sync/__tests__/hlc.test.ts`) and extended
  * with the cases the stage plan numbers: the property check that the padded
- * string order is the structured order (T-D-4), and the seeding rule that a
- * stamp observed from a faster device carries this device forward (T-D-7).
+ * string order is the structured order, and the seeding rule that a
+ * stamp observed from a faster device carries this device forward.
  */
 
 import {
@@ -24,14 +24,14 @@ describe('hlcNow', () => {
     expect(hlcNow(DEV, null, 1000)).toEqual({ physical: 1000, counter: 0, deviceId: DEV })
   })
 
-  // T-D-1
+  //
   it('bumps the counter when the clock does not advance', () => {
     const first = hlcNow(DEV, null, 1000)
     const second = hlcNow(DEV, first, 1000)
     expect(second).toEqual({ physical: 1000, counter: 1, deviceId: DEV })
   })
 
-  // T-D-1
+  //
   it('produces a strictly increasing sequence under a frozen clock', () => {
     let prev = hlcNow(DEV, null, 42)
     for (let i = 0; i < 100; i++) {
@@ -41,7 +41,7 @@ describe('hlcNow', () => {
     }
   })
 
-  // T-D-2
+  //
   it('bumps the counter when the clock runs backwards', () => {
     const first = hlcNow(DEV, null, 5000)
     const second = hlcNow(DEV, first, 4000)
@@ -55,14 +55,14 @@ describe('hlcNow', () => {
     expect(advanced).toEqual({ physical: 2000, counter: 0, deviceId: DEV })
   })
 
-  // T-D-3
+  //
   it('rolls a counter overflow into the next millisecond', () => {
     const saturated: Hlc = { physical: 1000, counter: 99999, deviceId: DEV }
     const next = hlcNow(DEV, saturated, 1000)
     expect(next).toEqual({ physical: 1001, counter: 0, deviceId: DEV })
   })
 
-  // T-D-7: the observed half of the seed. A stamp from a device with a faster
+  //: the observed half of the seed. A stamp from a device with a faster
   // clock has to move this one forward, or the next local edit is stamped below
   // the change it descends from and loses on every device that pulls both.
   it('carries a stamp observed from a faster device forward', () => {
@@ -93,7 +93,7 @@ describe('hlcToString / parseHlc', () => {
     expect(parseHlc(hlcToString(hlc))).toEqual(hlc)
   })
 
-  // T-D-5
+  //
   it('throws on a structurally invalid string instead of returning rubbish', () => {
     expect(() => parseHlc('not-an-hlc')).toThrow()
     expect(() => parseHlc('1000:2:')).toThrow()
@@ -111,7 +111,7 @@ describe('compareHlc', () => {
     expect(compareHlc(base, { physical: 1000, counter: 5, deviceId: 'b' })).toBe(0)
   })
 
-  // T-D-4: the padded serialization is what the server compares as a text
+  //: the padded serialization is what the server compares as a text
   // column, so it has to reproduce the structured ordering exactly. A thousand
   // pairs, drawn from a seeded generator rather than `Math.random`, so a
   // failure is reproducible.
@@ -138,7 +138,7 @@ describe('maxHlcString', () => {
   const lower = hlcToString({ physical: 1000, counter: 0, deviceId: 'a' })
   const higher = hlcToString({ physical: 1000, counter: 1, deviceId: 'a' })
 
-  // T-D-6
+  //
   it('treats null as nothing on record, on either side', () => {
     expect(maxHlcString(null, higher)).toBe(higher)
     expect(maxHlcString(higher, null)).toBe(higher)

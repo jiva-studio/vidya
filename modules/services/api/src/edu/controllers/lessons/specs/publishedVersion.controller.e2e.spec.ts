@@ -97,7 +97,7 @@ describe('/edu/lessons/:lessonId/versions/published', () => {
   })
 
   /* -------------------------------------------------------------------------- */
-  /*                   AC-10a: quiz answer keys stay on the server              */
+  /*: quiz answer keys stay on the server */
   /* -------------------------------------------------------------------------- */
 
   it('withholds rightAnswer from every quiz block in a response to a student', async () => {

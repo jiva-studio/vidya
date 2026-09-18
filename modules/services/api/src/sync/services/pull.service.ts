@@ -54,7 +54,7 @@ const toChange = (row: JournalRow): SyncChange => ({
 /**
  * A page of the journal, for one caller.
  *
- * The read position is a map, not a number (I-3): every scope is followed
+ * The read position is a map, not a number: every scope is followed
  * separately, so a course a student was enrolled on yesterday is simply a scope
  * standing at `0` and its history arrives through this same endpoint. That is
  * why there is no backfill endpoint, and why there is no race between one.
@@ -72,7 +72,7 @@ export class SyncPullService {
     const grants = await this.scopes.grantsFor(userId)
 
     // Rights first, rows second: a scope the caller has no claim to is dropped
-    // here even though it was asked for by name (AC-10l).
+    // here even though it was asked for by name.
     const positions = grants.map((grant) => ({
       scope: grant.scope,
       cursor: asked.get(domain.syncScopeKey(grant.scope)) ?? 0,
@@ -100,7 +100,7 @@ export class SyncPullService {
    * The positions the client sent, checked before anything is read.
    *
    * A ceiling on the number of scopes is a refusal with a reason rather than a
-   * silently truncated list (D-20): the positions travel in the body and grow
+   * silently truncated list: the positions travel in the body and grow
    * with the number of courses a student takes, and a page quietly missing a
    * course is a bug nobody can see.
    */

@@ -22,18 +22,18 @@ import { useSession } from './session'
  * **The engine gets a bare HTTP client.** `useApi()` is wrapped in
  * `endSessionOn401`, and a sync run meeting an expired token through it would
  * sign the student out — taking away a course already sitting on their phone.
- * The run renews the token itself and defers if it cannot (D-10, AC-22f).
+ * The run renews the token itself and defers if it cannot.
  *
  * **`pause` releases the SQLite lock.** iOS kills an app that is still holding
  * one when it is suspended, and that death happens on a student's handset and
- * never in our logs (D-14, AC-22i). The in-flight page is allowed to settle,
+ * never in our logs. The in-flight page is allowed to settle,
  * the lock is released, and the run resumes from the scope positions it already
  * committed — resumption costs nothing precisely because those positions are
  * durable.
  *
  * The four triggers are the plan's: launch, the network coming back, a local
  * write (debounced), and pull-to-refresh. They can all fire at once, which is
- * why the runner holds a lock and why the retry policy jitters (D-15).
+ * why the runner holds a lock and why the retry policy jitters.
  */
 
 /** How long a local write waits for its neighbours before a run is asked for. */
@@ -93,7 +93,7 @@ export async function startSync(options: SyncSetupOptions): Promise<StartedSync>
  *
  * Answers `false` on any failure, and — the whole point — **does not end the
  * session**. The student keeps reading what is on the device; only the network
- * half of the app is paused until the next attempt (D-10, AC-22f).
+ * half of the app is paused until the next attempt.
  */
 async function renewSession(
   http: HttpClient,

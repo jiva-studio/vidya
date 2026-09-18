@@ -24,10 +24,10 @@ import type {
  * `@vidya/domain/ports` are the other half — they describe the engine's needs
  * and both sides of the wire see them.
  *
- * Reading is unconditional and offline by construction (AC-22): every method
+ * Reading is unconditional and offline by construction: every method
  * here answers from SQLite and never from the network. Writing is local too —
  * an answer is saved the moment the student taps save, and whether the server
- * accepts it is a later, separate question (AC-15).
+ * accepts it is a later, separate question.
  *
  * The three writable repositories are wrapped by the journal decorator, which
  * appends the matching outbox row inside the same transaction. That is why the
@@ -35,7 +35,7 @@ import type {
  * journals what was actually stored, not what the caller asked for.
  *
  * **Referential integrity is a property of the data here, not a constraint**
- * (D-13, AC-22h). A lookup may legitimately find homework whose lesson version
+ * A lookup may legitimately find homework whose lesson version
  * has not arrived yet, because the two ride scopes that advance independently.
  * Every reader returns `null` for the missing parent and the screens show a
  * placeholder; nothing throws and nothing is repaired.
@@ -69,7 +69,7 @@ export interface LocalLessonVersion {
 
   /**
    * The published lesson, whole. Stored exactly as it arrived, including a
-   * `schemaVersion` this build has never heard of (D-9, AC-22e) — the screen
+   * `schemaVersion` this build has never heard of — the screen
    * offers an update rather than rendering half a lesson, and nothing is
    * thrown away in the meantime.
    */
@@ -89,7 +89,7 @@ export interface LocalEnrollment {
   readonly decidedAt: IsoDateTime | null
   readonly createdAt: IsoDateTime
 
-  /** Set when the enrolment was withdrawn. The downloaded course stays (D-7). */
+  /** Set when the enrolment was withdrawn. The downloaded course stays. */
   readonly deletedAt: IsoDateTime | null
 }
 
@@ -196,7 +196,7 @@ export interface IHomeworkRepository {
    * Save the answer's text.
    *
    * Refuses with {@link HomeworkFrozenError} unless the answer is `open` or
-   * `returned` (D-8, AC-22d). The rule lives here, on the device, and not only
+   * `returned`. The rule lives here, on the device, and not only
    * on the server: without it an offline edit after submission would journal a
    * row the server is bound to refuse, and the student would be told off for
    * something the app should never have offered.
@@ -227,7 +227,7 @@ export interface IBlockStateRepository {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Thrown when an answer is edited after it left the device (D-8, AC-22d).
+ * Thrown when an answer is edited after it left the device.
  *
  * Carries the status that froze it, because the screen says different things
  * for `pending`, `in_review` and `accepted` — and because a caller that cannot
@@ -243,7 +243,7 @@ export class HomeworkFrozenError extends Error {
   }
 }
 
-/** The two states in which an answer may still be edited (D-8). */
+/** The two states in which an answer may still be edited. */
 export const EDITABLE_HOMEWORK_STATUSES: readonly HomeworkStatus[] = ['open', 'returned']
 
 export const isHomeworkEditable = (status: HomeworkStatus): boolean =>

@@ -3,7 +3,7 @@ import { SyncCollections } from '@vidya/domain'
 import { diffAgainstWire, SYNC_WIRE_FIELDS } from '@vidya/protocol'
 
 /**
- * T-C-7, server half: what this service puts on the wire is what the contract
+ *, server half: what this service puts on the wire is what the contract
  * says the wire carries.
  *
  * The device half lives in `@vidya/mobile` and holds its projection table to
@@ -18,7 +18,7 @@ import { diffAgainstWire, SYNC_WIRE_FIELDS } from '@vidya/protocol'
  * it is given: an empty one is enough to read the shape off, and it keeps this
  * test free of a database.
  */
-describe('T-C-7: the journal projects the fields the wire contract declares', () => {
+describe('the journal projects the fields the wire contract declares', () => {
   const projections = Object.values(COLLECTION_PROJECTIONS)
 
   it('covers every collection the contract names, and no others', () => {
@@ -35,7 +35,7 @@ describe('T-C-7: the journal projects the fields the wire contract declares', ()
       const difference = diffAgainstWire(collection, sent)
 
       // `unexpected` is a field the device has never been told about: it will
-      // be dropped there in silence (T-X-2). `missing` is a field the device is
+      // be dropped there in silence. `missing` is a field the device is
       // waiting for: it lands as a fallback, or the row is skipped outright
       // while its scope cursor moves past it.
       expect({ collection, ...difference }).toEqual({

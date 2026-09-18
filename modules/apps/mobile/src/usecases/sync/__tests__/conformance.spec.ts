@@ -101,7 +101,7 @@ const outboxReasons = (db: IDatabase): Promise<{ reason: string | null }[]> =>
   db.query<{ reason: string | null }>('SELECT reason FROM outbox ORDER BY id ASC')
 
 describe('reading a pull page as the contract prints it', () => {
-  it('T-C-1: pull-page — every row lands and every position moves to what the answer says', async () => {
+  it('pull-page — every row lands and every position moves to what the answer says', async () => {
     const page = pullPage.response as unknown as PullResponse
     const client = new FixtureClient(page)
     const { engine } = await engineOver(client)
@@ -131,11 +131,11 @@ describe('reading a pull page as the contract prints it', () => {
     expect(stored).toEqual(promised)
 
     // `hasMore` is true, and the second page repeats itself, so the guard that
-    // stops a loop with no progress is what ends the run (D-19).
+    // stops a loop with no progress is what ends the run.
     expect(client.pullRequests.length).toBe(2)
   })
 
-  it('T-C-1: pull-new-scope — a course with no local position is started at zero and fetched', async () => {
+  it('pull-new-scope — a course with no local position is started at zero and fetched', async () => {
     const page = pullNewScope.response as unknown as PullResponse
     const { engine } = await engineOver(new FixtureClient(page))
 
@@ -150,7 +150,7 @@ describe('reading a pull page as the contract prints it', () => {
     expect(result.applied).toBe(1)
   })
 
-  it('T-C-4: optional-fields — a tombstone, an all-null row and an empty grant list all read', async () => {
+  it('optional-fields — a tombstone, an all-null row and an empty grant list all read', async () => {
     const page = optionalFields.response as unknown as PullResponse
     const { engine } = await engineOver(new FixtureClient(page))
 
@@ -192,7 +192,7 @@ describe('reading a push answer as the contract prints it', () => {
     }
   }
 
-  it('T-C-2: push-mixed — accepted and rejected sit side by side and each lands on its own row', async () => {
+  it('push-mixed — accepted and rejected sit side by side and each lands on its own row', async () => {
     const results = pushMixed.response.results as unknown as PushResult[]
     const client = new FixtureClient(EMPTY_PAGE, relabel(results))
     const { engine } = await engineOver(client)
@@ -207,7 +207,7 @@ describe('reading a push answer as the contract prints it', () => {
     expect(rows).toHaveLength(0)
   })
 
-  it('T-C-3: push-rejections — every reason in the contract is stored on the row it belongs to', async () => {
+  it('push-rejections — every reason in the contract is stored on the row it belongs to', async () => {
     const results = pushRejections.response.results as unknown as PushResult[]
     const reasons = results.map((row) => (row as { reason: SyncRejectionReason }).reason)
     const client = new FixtureClient(EMPTY_PAGE, relabel(results))
@@ -228,7 +228,7 @@ describe('reading a push answer as the contract prints it', () => {
     ).not.toBeNull()
   })
 
-  it('T-C-5: push-restamped — the HLC the server assigned becomes the document pointer', async () => {
+  it('push-restamped — the HLC the server assigned becomes the document pointer', async () => {
     const results = pushRestamped.response.results as unknown as PushResult[]
     const client = new FixtureClient(EMPTY_PAGE, relabel(results))
     const { engine } = await engineOver(client)
@@ -243,7 +243,7 @@ describe('reading a push answer as the contract prints it', () => {
     }
   })
 
-  it('T-C-2: an answer that does not match the batch is refused rather than guessed at', async () => {
+  it('an answer that does not match the batch is refused rather than guessed at', async () => {
     const client = new FixtureClient(EMPTY_PAGE, () => ({
       results: [],
       journaledOutboxId: 0,

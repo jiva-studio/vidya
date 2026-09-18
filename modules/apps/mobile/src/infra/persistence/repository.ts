@@ -66,7 +66,7 @@ export async function mutate(db: IDatabase, sql: string, params?: QueryParams): 
  * This is the unit of work the sync engine writes through: a page of incoming
  * rows and the scope position that page advances go in the same call, so a
  * crash between them cannot leave the position ahead of the data it claims to
- * have (D-18). The block commits on resolve and rolls back on throw.
+ * have. The block commits on resolve and rolls back on throw.
  */
 export async function runInTransaction<TValue>(
   db: IDatabase,

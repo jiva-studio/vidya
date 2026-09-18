@@ -22,15 +22,15 @@ import {
  *
  * Three rules are enforced here rather than described anywhere else:
  *
- * - **The page and the positions it advances commit together** (D-18, AC-22l).
+ * - **The page and the positions it advances commit together**.
  *   Split them and a crash in between leaves the position ahead of the data it
  *   claims to describe, and the rows in that gap are never asked for again.
- * - **The transaction is exactly one page wide** (D-14, AC-22i). It opens after
+ * - **The transaction is exactly one page wide**. It opens after
  *   the response has arrived and closes before the next request goes out, so
  *   the SQLite lock is never held across a network round trip. iOS kills an app
  *   that is holding one when it is suspended, on a student's phone, silently.
- * - **The whole page applies; nothing is rolled back for one bad row** (D-13,
- *   AC-22h). Scope positions move independently, so homework legitimately
+ * - **The whole page applies; nothing is rolled back for one bad row** (,
+ * ). Scope positions move independently, so homework legitimately
  *   arrives before the lesson version it answers. That order is legal, not an
  *   error, and the schema has no foreign keys precisely so that it stays legal.
  */
@@ -39,21 +39,21 @@ import {
 export interface PageOutcome {
   readonly applied: number
 
-  /** Rows `applyRemote` refused as not newer than what is on record (D-4). */
+  /** Rows `applyRemote` refused as not newer than what is on record. */
   readonly stale: number
 
   readonly skipped: readonly SkippedChange[]
 
-  /** Scopes whose position moved. Empty means no progress (D-19, AC-22m). */
+  /** Scopes whose position moved. Empty means no progress. */
   readonly advanced: readonly SyncScopeRef[]
 
-  /** Scopes the device had never heard of, now started at `0` (AC-21). */
+  /** Scopes the device had never heard of, now started at `0`. */
   readonly added: readonly SyncScopeRef[]
 
-  /** Scopes that left the caller's rights. Their data is untouched (D-7). */
+  /** Scopes that left the caller's rights. Their data is untouched. */
   readonly removed: readonly SyncScopeRef[]
 
-  /** Scopes whose checksum disagrees with ours — one to refetch (I-5). */
+  /** Scopes whose checksum disagrees with ours — one to refetch. */
   readonly diverged: readonly SyncScopeRef[]
 
   /** Highest `serverSeq` seen anywhere in the page, for the acknowledgement. */
@@ -242,7 +242,7 @@ interface ScopePosition {
  * Three sources, and the highest wins: what the device already had, what the
  * server says the page reached, and the highest sequence actually seen in the
  * rows. The last one is why a page delivered out of order still leaves the
- * position at the maximum rather than at the last row (T-X-10), and the middle
+ * position at the maximum rather than at the last row, and the middle
  * one is what carries a position past rows this build skipped.
  */
 function nextPositions(
@@ -275,7 +275,7 @@ function nextPositions(
  *
  * Compared only where the position did **not** move: a scope standing at the
  * head with unchanged content must report the same summary it reported before,
- * so a different one means this device is missing something (I-5, AC-10m). A
+ * so a different one means this device is missing something. A
  * scope that did advance is expected to have a new checksum and says nothing.
  * The first checksum ever seen for a scope is recorded, never judged.
  */
@@ -320,7 +320,7 @@ function removedScopes(
 /**
  * The scope a cursor key names, or `null` when this build cannot store it.
  *
- * Checked rather than cast (D-1). The key comes from the server's answer, and
+ * Checked rather than cast. The key comes from the server's answer, and
  * whatever is stored here is handed back as a cursor on every later pull: a
  * kind this build does not know, or an id that is not a UUID, is a request the
  * server cannot answer, and the `400` it replies with stops the pull for good
@@ -353,8 +353,8 @@ function storableGrants(response: PullResponse): SyncScopeRef[] {
  * that this device now holds them all. A page that stepped over a row of this
  * scope has not, so the sentinel goes down instead: the position still moves —
  * a skipped row is handled, not lost — but the next pull finds a summary that
- * cannot match, reports the scope diverged and refetches it from `0` (I-5,
- * AC-10m). Recording the server's summary over incomplete data is what blinds
+ * cannot match, reports the scope diverged and refetches it from `0` (,
+ * ). Recording the server's summary over incomplete data is what blinds
  * that detector permanently, which is exactly how a single skipped lesson
  * version becomes content the student never sees.
  *

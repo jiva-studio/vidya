@@ -1,5 +1,5 @@
 /**
- * Conformance over the wire fixtures — T-C-1 … T-C-6.
+ * Conformance over the wire fixtures — ….
  *
  * The fixtures in `__fixtures__/sync/` are the contract in worked examples.
  * This suite proves they match the types in `sync.ts`; the server lane replays
@@ -146,10 +146,10 @@ const collectInstants = (value: unknown, found: string[] = []): string[] => {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                  T-C-1                                     */
+/* */
 /* -------------------------------------------------------------------------- */
 
-describe('T-C-1: the shape of a pull response', () => {
+describe('the shape of a pull response', () => {
   it('reads pull-page as a PullResponse', () => {
     const fixture = read<{ response: PullResponse }>('pull-page.json')
 
@@ -176,10 +176,10 @@ describe('T-C-1: the shape of a pull response', () => {
 })
 
 /* -------------------------------------------------------------------------- */
-/*                               T-C-2, T-C-3                                 */
+/* */
 /* -------------------------------------------------------------------------- */
 
-describe('T-C-2: the shape of a push response', () => {
+describe('the shape of a push response', () => {
   const pushFixtures = [
     'push-mixed.json',
     'push-rejections.json',
@@ -240,7 +240,7 @@ describe('T-C-2: the shape of a push response', () => {
   })
 })
 
-describe('T-C-3: every rejection reason is worked through somewhere', () => {
+describe('every rejection reason is worked through somewhere', () => {
   it('covers the whole set, and invents nothing beside it', () => {
     const seen = new Set<SyncRejectionReason>()
     for (const { body } of fixtures) {
@@ -267,10 +267,10 @@ describe('T-C-3: every rejection reason is worked through somewhere', () => {
 })
 
 /* -------------------------------------------------------------------------- */
-/*                                  T-C-4                                     */
+/* */
 /* -------------------------------------------------------------------------- */
 
-describe('T-C-4: optional and nullable fields read the same on both sides', () => {
+describe('optional and nullable fields read the same on both sides', () => {
   const fixture = read<{
     request: { limit?: number; cursors: Record<string, number> }
     response: PullResponse
@@ -314,10 +314,10 @@ describe('T-C-4: optional and nullable fields read the same on both sides', () =
 })
 
 /* -------------------------------------------------------------------------- */
-/*                                  T-C-5                                     */
+/* */
 /* -------------------------------------------------------------------------- */
 
-describe('T-C-5: the HLC on the wire is the HLC in the domain', () => {
+describe('the HLC on the wire is the HLC in the domain', () => {
   it('parses every stamp in every fixture and round-trips it unchanged', () => {
     const stamps = fixtures.flatMap(({ body }) => collectHlcs(body))
 
@@ -357,10 +357,10 @@ describe('T-C-5: the HLC on the wire is the HLC in the domain', () => {
 })
 
 /* -------------------------------------------------------------------------- */
-/*                                  T-C-6                                     */
+/* */
 /* -------------------------------------------------------------------------- */
 
-describe('T-C-6: the cursor acknowledgement, and the endpoint that does not exist', () => {
+describe('the cursor acknowledgement, and the endpoint that does not exist', () => {
   const fixture = read<{
     request: { deviceId: string; ackedSeq: number }
     status: number

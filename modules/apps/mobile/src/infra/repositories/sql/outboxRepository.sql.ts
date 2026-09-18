@@ -24,7 +24,7 @@ import type { UtcClock } from '../../persistence/migrations'
  * with three departures that follow from our plan rather than from taste:
  *
  * - **`prune` and `clearAll` are gone.** An outbox row is never deleted here,
- *   on any path (AC-18). A refusal is a state the row keeps, so the reason
+ *   on any path. A refusal is a state the row keeps, so the reason
  *   stays next to the student's work and the work stays on the phone. The
  *   journal therefore grows without bound; it grows by the student's own
  *   edits, which is tens of rows a week, and that price was accepted openly.
@@ -55,7 +55,7 @@ interface OutboxRow {
 export interface SqlOutboxRepositoryDeps {
   readonly db: IDatabase
 
-  /** Stamps `created_at`. UTC, always (D-17). */
+  /** Stamps `created_at`. UTC, always. */
   readonly now: UtcClock
 }
 
@@ -79,9 +79,9 @@ export function createSqlOutboxRepository(deps: SqlOutboxRepositoryDeps): IOutbo
  * Both guards are load-bearing and neither is redundant. `status = 'pending'`
  * keeps an answered row out; `id > afterId` keeps a *refused* row out even
  * though a future build might reopen it, because the watermark is what stops
- * the device pushing a rejected answer forever (AC-18). Insertion order is the
+ * the device pushing a rejected answer forever. Insertion order is the
  * contract: two offline edits of one document have to reach the server in the
- * order they were made, or the earlier text wins (D-12).
+ * order they were made, or the earlier text wins.
  */
 async function listPending(
   db: IDatabase,
@@ -125,7 +125,7 @@ async function listUnsettled(db: IDatabase, scope: OutboxScope): Promise<readonl
  * Append one journaled change.
  *
  * Called by the journal decorator inside the transaction that also writes the
- * domain row, so the change and the record of the change are atomic (AC-15).
+ * domain row, so the change and the record of the change are atomic.
  * The HLC is stamped by the caller: only it knows the clock and the last stamp
  * this device has issued or observed.
  */
@@ -150,7 +150,7 @@ async function append(db: IDatabase, now: UtcClock, entry: NewOutboxEntry): Prom
  * Record the server's per-row answer.
  *
  * Idempotent, because a push replayed after a dropped connection replays its
- * answers too (T-N-2). It never deletes: an accepted row becomes `pushed`, a
+ * answers too. It never deletes: an accepted row becomes `pushed`, a
  * refused one becomes `rejected` and keeps the reason for as long as it lives.
  */
 async function acknowledge(
@@ -184,7 +184,7 @@ async function latestHlc(db: IDatabase, ownerId: string): Promise<string | null>
 }
 
 /**
- * The highest HLC on this installation, whoever journaled it (D-7).
+ * The highest HLC on this installation, whoever journaled it.
  *
  * No `owner_id` in the statement, and that absence is the point: the stamp's
  * counter belongs to the device id every row here shares, so the seat it is

@@ -27,7 +27,7 @@ export interface RowAccess {
  * A row that passed every check, ready to be written.
  *
  * `body` is only the fields the client owns; whatever else arrived has already
- * been dropped, silently (AC-8). It doubles as what a repeated push is compared
+ * been dropped, silently. It doubles as what a repeated push is compared
  * against, which is why it is kept rather than applied straight away.
  *
  * What the row was checked *against* differs by collection, so both references

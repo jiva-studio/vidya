@@ -84,7 +84,7 @@ describe('the seven defects', () => {
 
   const lastCursors = () => harness.server.pullRequests.at(-1)!.cursors as Record<string, number>
 
-  it('D-1: a scope this build cannot name is ignored, not written down', async () => {
+  it('a scope this build cannot name is ignored, not written down', async () => {
     harness.server.journal({
       collection: 'courses',
       docId: COURSE_ID,
@@ -112,7 +112,7 @@ describe('the seven defects', () => {
     expect(Object.keys(lastCursors())).toEqual([syncScopeKey(COURSE_SCOPE)])
   })
 
-  it('D-1: a scope an earlier build already wrote down is never asked about again', async () => {
+  it('a scope an earlier build already wrote down is never asked about again', async () => {
     await harness.db.execute(
       `INSERT INTO sync_scopes (owner_id, kind, id, cursor, checksum, removed_at)
        VALUES (?, 'group', '7f', 12, NULL, NULL)`,
@@ -136,7 +136,7 @@ describe('the seven defects', () => {
     expect(await harness.count('courses')).toBe(1)
   })
 
-  it('D-2: a row on the size boundary is stored, because the server measured it too', async () => {
+  it('a row on the size boundary is stored, because the server measured it too', async () => {
     const shell = JSON.stringify({
       id: LESSON_VERSION_ID,
       lessonId: LESSON_ID,
@@ -168,7 +168,7 @@ describe('the seven defects', () => {
     expect(await harness.row('lesson_versions', LESSON_VERSION_ID)).not.toBeNull()
   })
 
-  it('D-3: a page that stepped over a row does not claim the scope is complete', async () => {
+  it('a page that stepped over a row does not claim the scope is complete', async () => {
     harness.server.journal({
       collection: 'courses',
       docId: COURSE_ID,
@@ -189,12 +189,12 @@ describe('the seven defects', () => {
     expect(scope!.checksum).toBe(INCOMPLETE_CHECKSUM)
 
     // And the detector it exists for does fire: the next run finds a summary
-    // that cannot match and refetches that one scope (I-5, AC-10m).
+    // that cannot match and refetches that one scope.
     const second = await harness.engine.runner.run()
     expect(second.resynced.map(syncScopeKey)).toEqual([syncScopeKey(COURSE_SCOPE)])
   })
 
-  it('D-3: a page applied whole records the summary the server sent', async () => {
+  it('a page applied whole records the summary the server sent', async () => {
     harness.server.journal({
       collection: 'courses',
       docId: COURSE_ID,
@@ -211,7 +211,7 @@ describe('the seven defects', () => {
     expect(result.resynced).toEqual([])
   })
 
-  it('D-4: enrolling a student again brings the scope back, at the position it reached', async () => {
+  it('enrolling a student again brings the scope back, at the position it reached', async () => {
     harness.server.journal({
       collection: 'courses',
       docId: COURSE_ID,
@@ -241,7 +241,7 @@ describe('the seven defects', () => {
     expect(lastCursors()[syncScopeKey(COURSE_SCOPE)]).toBe(reached)
   })
 
-  it('D-5: a refused row goes on protecting the answer it carries', async () => {
+  it('a refused row goes on protecting the answer it carries', async () => {
     harness.server.rejectIf = (change) => (change.collection === 'homework' ? 'malformed' : null)
 
     await harness.engine.homework.saveAnswer(answer('the answer I wrote'))
@@ -262,11 +262,11 @@ describe('the seven defects', () => {
     await harness.engine.runner.run()
 
     // The work is still on the screen. It exists nowhere else: no code reads a
-    // text back out of the outbox (AC-18, AC-19).
+    // text back out of the outbox.
     expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('the answer I wrote')
   })
 
-  it('D-5: work refused as already accepted yields to the copy the teacher graded', async () => {
+  it('work refused as already accepted yields to the copy the teacher graded', async () => {
     harness.server.rejectIf = (change) =>
       change.collection === 'homework' ? 'alreadyAccepted' : null
 
@@ -287,7 +287,7 @@ describe('the seven defects', () => {
     expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('the text that was accepted')
   })
 
-  it('D-6: a run with nothing to send does not report the journal short of local writes', async () => {
+  it('a run with nothing to send does not report the journal short of local writes', async () => {
     await harness.engine.homework.saveAnswer(answer('typed once'))
     await harness.engine.runner.run()
 
@@ -300,7 +300,7 @@ describe('the seven defects', () => {
     expect(journalHasLocalWrites(result.push!.journaledOutboxId, latest)).toBe(true)
   })
 
-  it('D-7: the clock seat is the device one, so a handover cannot reissue a stamp', async () => {
+  it('the clock seat is the device one, so a handover cannot reissue a stamp', async () => {
     // Four writes inside one millisecond, the handset changing hands halfway.
     await harness.engine.homework.saveAnswer(answer('one'))
     await harness.engine.homework.saveAnswer(answer('two'))

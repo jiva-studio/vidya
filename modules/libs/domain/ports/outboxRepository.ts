@@ -111,7 +111,7 @@ export interface IOutboxRepository {
    * The merge asks *this* list whether it may take a document whole, because
    * "no longer pending" is not "the server has it", and answering the first
    * question with the second lets the next pull overwrite work nobody else
-   * holds a copy of (AC-18, AC-19).
+   * holds a copy of.
    *
    * Not narrowed by the watermark: a refused row is below it by construction.
    */
@@ -143,7 +143,7 @@ export interface IOutboxRepository {
    * counter from one identity's rows restarts it when the handset changes
    * hands, and the next student's first write is then stamped with an HLC the
    * previous one already used — two different writes under one idempotency key
-   * (D-7). Hence: every row, every owner, one seat.
+   * Hence: every row, every owner, one seat.
    */
   latestHlcOnDevice(): Promise<string | null>
 

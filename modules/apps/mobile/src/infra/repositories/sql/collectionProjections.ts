@@ -24,15 +24,15 @@ import type { QueryValue, Row } from '@/ports'
  * is named here and never sent arrives as its fallback — and a fallback for a
  * time is an empty string, which sorts before every real instant and makes
  * `ORDER BY` quietly wrong. That is what `homework.updated_at` and
- * `lesson_versions.created_at` were; T-C-7 now fails the moment a third one
+ * `lesson_versions.created_at` were; now fails the moment a third one
  * appears.
  *
  * Two properties are deliberate:
  *
- * - **An unknown field is ignored, not an error** (T-X-2). A newer server may
+ * - **An unknown field is ignored, not an error**. A newer server may
  *   send a column this build has never heard of, and dropping the row would be
  *   strictly worse than dropping the field.
- * - **A missing field is only fatal when it addresses the row** (T-X-3). The
+ * - **A missing field is only fatal when it addresses the row**. The
  *   identity and parent keys are `required`; everything else falls back to its
  *   column default, because a partial row that can still be found is more
  *   useful than no row at all.
@@ -72,7 +72,7 @@ export interface CollectionProjection {
    * The column a `delete` sets instead of removing the row, or `null` when the
    * collection has no tombstone and a delete really removes it.
    *
-   * Only `enrollments` and `lesson_versions` carry one (D-6): a withdrawn
+   * Only `enrollments` and `lesson_versions` carry one: a withdrawn
    * enrolment and an unpublished version are decisions that must stay visible.
    * A tombstone never cascades here — an unpublished version does not take the
    * homework written against it with it, or a student's work would vanish
@@ -125,7 +125,7 @@ export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionP
         text('school_id', 'schoolId', KEY),
         text('lesson_id', 'lessonId', KEY),
         { column: 'version', field: 'version', kind: 'integer', required: true },
-        // Stored whole, unknown `schemaVersion` included (D-9): the screen
+        // Stored whole, unknown `schemaVersion` included: the screen
         // offers an update, the engine never truncates what it was sent.
         { column: 'content', field: 'content', kind: 'json', fallback: '{}' },
         text('status', 'status', { fallback: 'published' }),
@@ -200,7 +200,7 @@ export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionP
  * Throws on a collection that does not replicate: reaching here with one is a
  * programming error, because every path that handles untrusted input checks
  * `isSyncCollection` from the domain and skips the row long before this point
- * (T-X-1) — the one guard, in the one place untrusted input arrives.
+ * — the one guard, in the one place untrusted input arrives.
  */
 export function projectionOf(collection: SyncCollection): CollectionProjection {
   const projection = COLLECTION_PROJECTIONS[collection]
@@ -215,7 +215,7 @@ export function requiredFields(collection: SyncCollection): readonly string[] {
     .map((column) => column.field)
 }
 
-/** The fields of `payload` that are missing and cannot be defaulted (T-X-3). */
+/** The fields of `payload` that are missing and cannot be defaulted. */
 export function missingRequiredFields(
   collection: SyncCollection,
   payload: SyncPayload,
@@ -275,7 +275,7 @@ function parseJson(value: unknown): unknown {
 /**
  * Project a wire payload onto `(columns, values)` for the collection's table.
  *
- * Fields the projection does not name are dropped (T-X-2), and fields it names
+ * Fields the projection does not name are dropped, and fields it names
  * but the payload omits fall back to the column default. `owner_id` is added by
  * the caller, which is the only thing that knows whose row this is.
  */

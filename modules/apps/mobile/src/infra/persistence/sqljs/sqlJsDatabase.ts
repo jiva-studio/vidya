@@ -13,7 +13,7 @@ export type PersistSink = (data: Uint8Array) => Promise<void>
  *
  * Logic copied from `apps/mobile/infra/persistence/sqljs/sqlJsDatabase.ts` in
  * lectorium, minus the `PRAGMA foreign_keys` line: the device schema has no
- * foreign keys at all (D-13), so there is nothing to switch on.
+ * foreign keys at all, so there is nothing to switch on.
  *
  * Split out from the factory so the durability rules below can be exercised
  * without a browser — which is the whole point of this adapter. It exists to

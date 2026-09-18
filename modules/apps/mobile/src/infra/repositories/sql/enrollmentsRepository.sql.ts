@@ -32,7 +32,7 @@ import { deleteSyncRow, readSyncRow, readSyncRows, writeSyncRow } from './rowWri
  * `@vidya/domain/sync` is what enforces that; this repository only stores.
  *
  * Withdrawal is a tombstone and stops there. The scope leaves, no new rows
- * arrive for it, and **every row already downloaded stays** (D-7, AC-22c) —
+ * arrive for it, and **every row already downloaded stays** —
  * `deleteSyncRow` sets `deleted_at` on this one row and reaches no other table.
  *
  * Wrapped by the journal decorator: both mutating methods are journaled in the
@@ -87,7 +87,7 @@ export function createSqlEnrollmentRepository(
      *
      * Unconditional and offline: the row is written and journaled here and now,
      * and whether the school accepts it is a separate question answered later
-     * (AC-15). The id is the caller's, so a retry after a crash writes the same
+     * The id is the caller's, so a retry after a crash writes the same
      * document rather than a second request.
      */
     async request(input: NewEnrollmentRequest): Promise<LocalEnrollment> {

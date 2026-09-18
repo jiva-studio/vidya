@@ -8,7 +8,7 @@ import { SyncScopeKinds, type SyncScopeRef } from '@vidya/domain'
  * table where an unchecked value from the wire becomes a *permanent* request
  * the server has to answer — and a request the server cannot answer is a `400`,
  * which the run reports as `refused`: our own doing, nothing to wait for
- * (D-20). Pull then stops for good, while push carries on as if all were well.
+ * Pull then stops for good, while push carries on as if all were well.
  *
  * So a scope is checked before it is stored, never after:
  *

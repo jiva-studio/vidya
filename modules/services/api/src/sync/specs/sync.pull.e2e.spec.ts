@@ -36,9 +36,9 @@ describe('POST /sync/pull', () => {
   const mine = (): domain.SyncScopeRef => ({ kind: 'course', id: ctx.mine.course.id })
   const own = (): domain.SyncScopeRef => ({ kind: 'user', id: ctx.student.id })
 
-  /* ------------------------------- T-S-9 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  it('T-S-9: does not hand over another student user scope', async () => {
+  it('does not hand over another student user scope', async () => {
     await seedJournal(
       ds,
       { kind: 'user', id: ctx.stranger.id },
@@ -55,9 +55,9 @@ describe('POST /sync/pull', () => {
     expect(body.scopes.map((g) => g.scope.id)).not.toContain(ctx.stranger.id)
   })
 
-  /* ------------------------------- T-S-10 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-10: does not hand over a course the caller has no place on', async () => {
+  it('does not hand over a course the caller has no place on', async () => {
     const response = await pull(ctx.tokens.student, {
       cursors: { [`course:${ctx.theirs.course.id}`]: 0 },
     }).expect(200)
@@ -67,9 +67,9 @@ describe('POST /sync/pull', () => {
     expect(body.changes.filter((c) => c.scope.id === ctx.theirs.course.id)).toHaveLength(0)
   })
 
-  /* ------------------------------- T-S-11 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-11: does not echo rows the calling device wrote', async () => {
+  it('does not echo rows the calling device wrote', async () => {
     await seedJournal(ds, own(), { schoolId: ctx.schoolId, count: 2, deviceId: DEVICE })
     await seedJournal(ds, own(), { schoolId: ctx.schoolId, count: 2, from: 10 })
 
@@ -130,9 +130,9 @@ describe('POST /sync/pull', () => {
     expect(Object.keys(body.cursors)).not.toContain(domain.syncScopeKey(stranger))
   })
 
-  /* ------------------------------- T-S-12 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-12: a position of zero hands over the scope from the beginning', async () => {
+  it('a position of zero hands over the scope from the beginning', async () => {
     const response = await pull(ctx.tokens.student, {
       cursors: { [domain.syncScopeKey(mine())]: 0 },
     }).expect(200)
@@ -144,9 +144,9 @@ describe('POST /sync/pull', () => {
     expect(course.map((c) => c.collection)).toEqual(['courses', 'lessons', 'lesson_versions'])
   })
 
-  /* ------------------------------- T-S-4 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  it('T-S-4: a draft version is not in the journal, so a pull cannot leak it', async () => {
+  it('a draft version is not in the journal, so a pull cannot leak it', async () => {
     const response = await pull(ctx.tokens.student, {}).expect(200)
     const body = response.body as protocol.PullResponse
 
@@ -156,9 +156,9 @@ describe('POST /sync/pull', () => {
     expect(versions[0].docId).toBe(ctx.mine.published.id)
   })
 
-  /* ------------------------------- T-S-13 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-13: a short page says there is more and carries the position it reached', async () => {
+  it('a short page says there is more and carries the position it reached', async () => {
     await seedJournal(ds, own(), { schoolId: ctx.schoolId, count: 5 })
 
     const response = await pull(ctx.tokens.student, { limit: 2 }).expect(200)
@@ -171,9 +171,9 @@ describe('POST /sync/pull', () => {
     expect(body.cursors[domain.syncScopeKey(last.scope)]).toBe(last.serverSeq)
   })
 
-  /* ------------------------------- T-S-14 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-14: a limit above the ceiling is clamped, not honoured', async () => {
+  it('a limit above the ceiling is clamped, not honoured', async () => {
     await seedJournal(ds, own(), {
       schoolId: ctx.schoolId,
       count: protocol.SYNC_MAX_PULL_LIMIT + 5,
@@ -186,9 +186,9 @@ describe('POST /sync/pull', () => {
     expect(body.hasMore).toBe(true)
   })
 
-  /* ------------------------------- T-S-15 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-15: the scopes returned are the places the student holds now', async () => {
+  it('the scopes returned are the places the student holds now', async () => {
     const before = await pull(ctx.tokens.student, {}).expect(200)
 
     expect((before.body as protocol.PullResponse).scopes.map((g) => g.scope.id).sort()).toEqual(
@@ -209,9 +209,9 @@ describe('POST /sync/pull', () => {
     )
   })
 
-  /* ------------------------------- T-S-16 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-16: a position past the end is an empty page, not an error', async () => {
+  it('a position past the end is an empty page, not an error', async () => {
     const response = await pull(ctx.tokens.student, {
       cursors: { [domain.syncScopeKey(mine())]: 999_999, [domain.syncScopeKey(own())]: 999_999 },
     }).expect(200)
@@ -223,9 +223,9 @@ describe('POST /sync/pull', () => {
     expect(body.cursors).toEqual({})
   })
 
-  /* ------------------------------- T-S-17 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  describe('T-S-17: a position that is not a position is refused with a code', () => {
+  describe('a position that is not a position is refused with a code', () => {
     it('refuses a negative one', async () => {
       const response = await pull(ctx.tokens.student, {
         cursors: { [domain.syncScopeKey(mine())]: -1 },
@@ -251,17 +251,17 @@ describe('POST /sync/pull', () => {
     })
   })
 
-  /* ------------------------------- T-S-18 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-18: refuses a caller with no token', () =>
+  it('refuses a caller with no token', () =>
     request(app.getHttpServer())
       .post(routes.pull())
       .send({ deviceId: DEVICE, cursors: {} })
       .expect(401))
 
-  /* ------------------------------- T-S-32 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-32: a scope standing at zero hands over its whole history, in pages', async () => {
+  it('a scope standing at zero hands over its whole history, in pages', async () => {
     await seedJournal(ds, mine(), { schoolId: ctx.schoolId, count: 7 })
 
     const collected: protocol.SyncChange[] = []
@@ -282,9 +282,9 @@ describe('POST /sync/pull', () => {
     expect(new Set(collected.map((c) => c.serverSeq)).size).toBe(11)
   })
 
-  /* ------------------------------- T-S-33 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-33: a scope outside the caller rights is ignored even when asked for', async () => {
+  it('a scope outside the caller rights is ignored even when asked for', async () => {
     await seedJournal(
       ds,
       { kind: 'course', id: ctx.theirs.course.id },
@@ -304,9 +304,9 @@ describe('POST /sync/pull', () => {
     expect(body.cursors[`course:${ctx.theirs.course.id}`]).toBeUndefined()
   })
 
-  /* ------------------------------ T-S-34a ------------------------------- */
+  /* ------------------------------ ------------------------------- */
 
-  it('T-S-34a: scope positions are independent', async () => {
+  it('scope positions are independent', async () => {
     await seedJournal(ds, own(), { schoolId: ctx.schoolId, count: 3 })
 
     const first = await pull(ctx.tokens.student, { limit: 100 }).expect(200)
@@ -323,9 +323,9 @@ describe('POST /sync/pull', () => {
     expect(body.changes.length).toBeGreaterThan(0)
   })
 
-  /* ------------------------------- T-S-37 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-37: a new enrolment mid-run adds a scope without disturbing the pages', async () => {
+  it('a new enrolment mid-run adds a scope without disturbing the pages', async () => {
     await seedJournal(ds, own(), { schoolId: ctx.schoolId, count: 4 })
 
     const first = await pull(ctx.tokens.student, { limit: 3 }).expect(200)
@@ -352,9 +352,9 @@ describe('POST /sync/pull', () => {
     expect(secondBody.changes.some((c) => c.scope.id === ctx.theirs.course.id)).toBe(true)
   })
 
-  /* ------------------------------- T-S-43 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-43: more scopes than the ceiling is refused with a reason', async () => {
+  it('more scopes than the ceiling is refused with a reason', async () => {
     const cursors: Record<string, number> = {}
 
     for (let index = 0; index <= protocol.SYNC_MAX_SCOPES; index += 1) {

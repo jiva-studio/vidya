@@ -45,11 +45,11 @@ const isInstant = (value: unknown): boolean =>
  * for either of them — refusing here would mean losing work a student has
  * already done, which the plan does not allow under any circumstances.
  *
- * - **A device whose clock is fast (I-2).** Its stamps would otherwise be
+ * - **A device whose clock is fast.** Its stamps would otherwise be
  *   adopted by every other device, because each seeds its clock from the highest
  *   stamp it has seen and an HLC's physical part never comes back down. One
  *   broken phone would anchor the ordering of the whole system in the future.
- * - **Two devices sharing a `deviceId` (D-16).** A phone restored from another's
+ * - **Two devices sharing a `deviceId`.** A phone restored from another's
  *   backup issues the same stamps, so two *different* changes can collide on
  *   `(collection, doc_id, hlc)` and the idempotency index would swallow the
  *   second as an imagined repeat — a lost write dressed as a successful one.

@@ -25,7 +25,7 @@ import {
  * Logic copied from Lectorium's `infra/repositories/sql/syncApplyRepository.sql.ts`,
  * with two changes that matter:
  *
- * - **`applyRemote` is conditional** (D-4, AC-22a). Lectorium writes
+ * - **`applyRemote` is conditional**. Lectorium writes
  *   unconditionally. Here the write happens only when the incoming server HLC
  *   is strictly above the pointer already on record, and the method answers
  *   `false` when it skipped. That single test makes the whole pull idempotent
@@ -39,12 +39,12 @@ import {
  *
  * This adapter exists precisely so that a pulled change does **not** go through
  * the journal decorator: writing it there would put it straight back into the
- * outbox and echo it to the server (AC-16). It never opens a transaction — the
+ * outbox and echo it to the server. It never opens a transaction — the
  * page's rows and the scope position that describes them commit together.
  *
  * A tombstone never cascades. Nothing here touches a table other than the one
  * the collection projects onto, so an unpublished lesson version cannot take
- * the homework written against it with it (D-6, AC-22b).
+ * the homework written against it with it.
  */
 
 /** Lower than any real stamp — the HLC of a document we have no pointer for. */
@@ -56,7 +56,7 @@ export interface SqlSyncApplyRepositoryDeps {
   /** Whose rows these are. Every statement is filtered by it. */
   readonly ownerId: () => string
 
-  /** Stamps a tombstone's `deleted_at`. UTC, always (D-17, AC-22k). */
+  /** Stamps a tombstone's `deleted_at`. UTC, always. */
   readonly now: UtcClock
 }
 
@@ -172,7 +172,7 @@ export function createSqlSyncApplyRepository(
 
     /**
      * The same over every identity on this installation — the observed half of
-     * the device's clock seat (D-7).
+     * the device's clock seat.
      *
      * Deliberately unfiltered. The stamps in this table were all seen by one
      * handset, whose device id is the one every local stamp carries, so the
@@ -189,7 +189,7 @@ export function createSqlSyncApplyRepository(
     /**
      * Whether writing `data` would change anything. A cheap guard for the
      * screens: an identical page redelivered after a reconnect must not repaint
-     * a lesson the student is reading (T-R-3).
+     * a lesson the student is reading.
      */
     async hasSamePayload(collection, docId, data): Promise<boolean> {
       const row = await readRow(collection, docId)

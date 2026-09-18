@@ -6,7 +6,7 @@ import { pullAndMerge, type PullAndMergeOptions, type PullAndMergeResult } from 
 /**
  * Fetching one scope again, from the beginning.
  *
- * This is the whole answer to a checksum that does not match (I-5, AC-10m). The
+ * This is the whole answer to a checksum that does not match. The
  * scope's position goes back to `0` and an ordinary pull brings its history
  * down again; every other scope keeps its position and is not re-fetched.
  *
@@ -19,7 +19,7 @@ import { pullAndMerge, type PullAndMergeOptions, type PullAndMergeResult } from 
  *
  * Applying is idempotent, so re-fetching costs bandwidth and nothing else:
  * `applyRemote` refuses anything not newer than the pointer already on record,
- * and the rows that do come back land exactly where they already were (D-4).
+ * and the rows that do come back land exactly where they already were.
  * Local unsent work is untouched — the reset moves a read position, and the
  * outbox is not a read position.
  */

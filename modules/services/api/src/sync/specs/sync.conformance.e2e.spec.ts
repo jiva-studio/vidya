@@ -51,9 +51,9 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
   const send = (route: string, body: Record<string, unknown>, token = ctx.tokens.student) =>
     request(app.getHttpServer()).post(route).auth(token, { type: 'bearer' }).send(body)
 
-  /* ------------------------------- T-C-1 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  describe('T-C-1: the shape of a pull page', () => {
+  describe('the shape of a pull page', () => {
     it('answers with the fields the fixture declares, and no others', async () => {
       const expected = fixture<{ response: protocol.PullResponse }>('pull-page').response
 
@@ -113,9 +113,9 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
     })
   })
 
-  /* --------------------------- T-C-2 and T-C-3 --------------------------- */
+  /* --------------------------- and --------------------------- */
 
-  describe('T-C-2: the shape of a push answer', () => {
+  describe('the shape of a push answer', () => {
     const pushBody = (changes: Record<string, unknown>[]) => ({ deviceId: DEVICE, changes })
 
     const mixed = fixture<{ response: protocol.PushResponse }>('push-mixed').response
@@ -194,7 +194,7 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
       expect((second.results[0] as protocol.PushAccepted).serverDocId).toBe(first)
     })
 
-    it('T-C-3: every rejection reason the fixtures name is one the domain knows', () => {
+    it('every rejection reason the fixtures name is one the domain knows', () => {
       const rejections = fixture<{ response: { results: { reason?: string }[] } }>(
         'push-rejections',
       ).response
@@ -206,9 +206,9 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
     })
   })
 
-  /* ------------------------------- T-C-4 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  describe('T-C-4: optional and nullable fields at their edges', () => {
+  describe('optional and nullable fields at their edges', () => {
     it('reads a pull request with no limit', async () => {
       const asked = fixture<{ request: { cursors: protocol.SyncCursors } }>(
         'optional-fields',
@@ -287,9 +287,9 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
     })
   })
 
-  /* ------------------------------- T-C-5 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  describe('T-C-5: the HLC on the wire is the domain HLC', () => {
+  describe('the HLC on the wire is the domain HLC', () => {
     const hlcs = fixture<{
       samples: { hlc: string; physical: number; counter: number; deviceId: string }[]
       ascending: string[]
@@ -341,9 +341,9 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
     })
   })
 
-  /* ------------------------------- T-C-6 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  describe('T-C-6: the cursor, and the endpoint that does not exist', () => {
+  describe('the cursor, and the endpoint that does not exist', () => {
     it('answers an acknowledgement with 204 and no body', async () => {
       const ack = fixture<{ request: protocol.AckCursorRequest; status: number }>('cursor-ack')
 

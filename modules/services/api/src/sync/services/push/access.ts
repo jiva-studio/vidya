@@ -38,7 +38,7 @@ export const refsFrom = (data: domain.SyncPayload | null): RowRefs | Rejection =
  * Whether this caller may write this row, in the order the contract fixes.
  *
  * **The version check asks whether the version exists and was published, not
- * whether it is the one published now (AC-10p).** A student can answer offline
+ * whether it is the one published now.** A student can answer offline
  * against version 3 while version 4 is being published, and refusing that would
  * break the single case offline mode exists for. Publishing does not unpublish
  * what came before, so version 3 stays a legitimate target; the answer is

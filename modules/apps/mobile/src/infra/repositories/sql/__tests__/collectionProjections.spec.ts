@@ -16,7 +16,7 @@ import {
 import { readSyncRow, writeSyncRow } from '../rowWriter'
 
 /**
- * The projection table — AC-13.
+ * The projection table —.
  *
  * The table is what three callers agree through: the journal decorator, the
  * apply repository and the six reading repositories. Its completeness cannot be
@@ -34,11 +34,11 @@ interface ColumnRow {
 }
 
 describe('the collection projection table', () => {
-  it('AC-13: covers exactly the collections that replicate', () => {
+  it('covers exactly the collections that replicate', () => {
     expect(Object.keys(COLLECTION_PROJECTIONS).sort()).toEqual([...SyncCollections].sort())
   })
 
-  it('AC-13: every projected column exists in the device schema', async () => {
+  it('every projected column exists in the device schema', async () => {
     const { db } = await openTestDatabase()
 
     for (const collection of SyncCollections) {
@@ -75,7 +75,7 @@ describe('the collection projection table', () => {
       (collection) => projectionOf(collection).tombstone !== null,
     )
 
-    // D-6: a withdrawn enrolment and an unpublished version are decisions that
+    //: a withdrawn enrolment and an unpublished version are decisions that
     // stay visible. Nothing else is ever deleted rather than archived.
     expect([...withTombstones].sort()).toEqual(['enrollments', 'lesson_versions'])
   })

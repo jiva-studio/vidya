@@ -4,7 +4,7 @@ import { SYNC_MAX_CHANGE_BYTES, type SyncChange } from '@vidya/protocol'
 import { NO_REQUIRED_FIELDS, utf8Length, validateChange } from '../validateChange'
 
 /**
- * The guard on one incoming row — the unit half of T-X-1 … T-X-14.
+ * The guard on one incoming row — the unit half of ….
  *
  * The device-level half of the same numbers lives in the mobile lane, where a
  * skipped row also has to advance a position and land in a report. Here the
@@ -44,11 +44,11 @@ describe('validating one incoming row', () => {
     }
   })
 
-  it('T-X-1: refuses a collection this build does not know', () => {
+  it('refuses a collection this build does not know', () => {
     expect(reasonFor({ collection: 'grimoires' as never })).toBe('unknownCollection')
   })
 
-  it('T-X-2: keeps a row carrying a field it has never heard of', () => {
+  it('keeps a row carrying a field it has never heard of', () => {
     const verdict = validateChange(
       change({ data: { id: UUID, text: 'fine', astrologicalSign: 'libra' } }),
       NO_REQUIRED_FIELDS,
@@ -61,7 +61,7 @@ describe('validating one incoming row', () => {
     })
   })
 
-  it('T-X-3: refuses a row missing a field that addresses it', () => {
+  it('refuses a row missing a field that addresses it', () => {
     const required = () => ['enrollmentId', 'sectionId']
     expect(reasonFor({ data: { id: UUID } }, required)).toBe('missingField')
     expect(reasonFor({ data: { id: UUID, enrollmentId: UUID, sectionId: UUID } }, required)).toBe(
@@ -69,13 +69,13 @@ describe('validating one incoming row', () => {
     )
   })
 
-  it('T-X-3: a null in a required field counts as missing', () => {
+  it('a null in a required field counts as missing', () => {
     expect(reasonFor({ data: { id: UUID, enrollmentId: null } }, () => ['enrollmentId'])).toBe(
       'missingField',
     )
   })
 
-  it('T-X-4: refuses an upsert whose data is null', () => {
+  it('refuses an upsert whose data is null', () => {
     expect(reasonFor({ op: 'upsert', data: null })).toBe('missingData')
   })
 
@@ -83,13 +83,13 @@ describe('validating one incoming row', () => {
     expect(reasonFor({ op: 'delete', data: null }, () => ['enrollmentId'])).toBe('storable')
   })
 
-  it('T-X-5: refuses an HLC that does not parse', () => {
+  it('refuses an HLC that does not parse', () => {
     expect(reasonFor({ hlc: 'yesterday' })).toBe('invalidHlc')
     expect(reasonFor({ hlc: '' })).toBe('invalidHlc')
     expect(reasonFor({ hlc: 12 as never })).toBe('invalidHlc')
   })
 
-  it('T-X-6: refuses a docId that is not a uuid', () => {
+  it('refuses a docId that is not a uuid', () => {
     expect(reasonFor({ docId: 'the-one-i-wrote' })).toBe('invalidDocId')
     expect(reasonFor({ docId: '' })).toBe('invalidDocId')
   })
@@ -110,12 +110,12 @@ describe('validating one incoming row', () => {
     expect(reasonFor({ scope: { kind: 'user', id: '' } as never })).toBe('invalidScope')
   })
 
-  it('T-X-11: refuses a payload over the ceiling', () => {
+  it('refuses a payload over the ceiling', () => {
     const huge = { id: UUID, text: 'x'.repeat(SYNC_MAX_CHANGE_BYTES + 1) }
     expect(reasonFor({ data: huge })).toBe('payloadTooLarge')
   })
 
-  it('D-2: a body of exactly the ceiling is stored, school or no school', () => {
+  it('a body of exactly the ceiling is stored, school or no school', () => {
     // The size the server measured is the size of the body it sent. The school
     // it files the row under travels in the envelope, and a lesson version
     // carries none of its own — measure the row with ours folded in and the
@@ -137,14 +137,14 @@ describe('validating one incoming row', () => {
     })
   })
 
-  it('T-X-13: the ceiling is counted in bytes, not characters', () => {
+  it('the ceiling is counted in bytes, not characters', () => {
     // Every one of these is four bytes, so a quarter as many fit as a naive
     // length check would allow — and the server counts bytes too.
     const emoji = '🙏'.repeat(SYNC_MAX_CHANGE_BYTES / 4)
     expect(reasonFor({ data: { id: UUID, text: emoji } })).toBe('payloadTooLarge')
   })
 
-  it('T-X-12: text of any script passes through untouched', () => {
+  it('text of any script passes through untouched', () => {
     const text = 'श्री · 🙏🏽 · مرحبا · שלום'
     const verdict = validateChange(change({ data: { id: UUID, text } }), NO_REQUIRED_FIELDS)
 
@@ -158,7 +158,7 @@ describe('validating one incoming row', () => {
     })
   })
 
-  it('T-X-14: an empty string and an empty array are values, not absences', () => {
+  it('an empty string and an empty array are values, not absences', () => {
     const verdict = validateChange(change({ data: { id: UUID, text: '', tags: [] } }), () => [
       'text',
     ])

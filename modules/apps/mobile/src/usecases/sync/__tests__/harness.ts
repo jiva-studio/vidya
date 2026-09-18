@@ -52,7 +52,7 @@ export interface Harness {
   readonly server: FakeSyncServer
   readonly engine: SyncEngine
 
-  /** Whose run it is. Reassign to model the device changing hands (T-I-1). */
+  /** Whose run it is. Reassign to model the device changing hands. */
   ownerId: string
 
   /** Unix milliseconds handed to the HLC. Advance it to order writes. */
@@ -133,7 +133,7 @@ interface RawOutboxRow {
 /**
  * Reads the outbox directly rather than through the repository, on purpose.
  *
- * The watchdog test (T-M-10) has to be able to see rows the repository would
+ * The watchdog test has to be able to see rows the repository would
  * filter out — a row this identity does not own, a row already answered for —
  * because "no row was ever deleted" is a claim about the table, not about the
  * view of it the engine happens to take.
@@ -179,7 +179,7 @@ async function readRow(
  * A database that refuses one statement, to stage a crash mid-transaction.
  *
  * The only honest way to test that a domain row and its outbox row are written
- * together (T-M-5): make the second write fail and check that the first one is
+ * together: make the second write fail and check that the first one is
  * gone too. A repository fake cannot show this, because a fake has no
  * transaction to roll back.
  */

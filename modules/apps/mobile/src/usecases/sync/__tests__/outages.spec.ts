@@ -25,7 +25,7 @@ import {
 import { failingDatabase, type Harness, openHarness, OWNER } from './harness'
 
 /**
- * Dropped connections: T-N-1 … T-N-11.
+ * Dropped connections: ….
  *
  * One break at exactly one point, then the run again. The claim is always the
  * same and it is the one the whole lane is judged on: **a repeat is safe**.
@@ -63,7 +63,7 @@ describe('a connection that drops', () => {
     harness = await openHarness()
   })
 
-  it('T-N-1: dropped before the push leaves everything as it was', async () => {
+  it('dropped before the push leaves everything as it was', async () => {
     await harness.engine.homework.saveAnswer(answer('written offline'))
     harness.server.pushFailures.push(drop)
 
@@ -75,7 +75,7 @@ describe('a connection that drops', () => {
     expect(harness.server.rows).toHaveLength(0)
   })
 
-  it('T-N-2: dropped after the push landed — the repeat is free, no duplicate', async () => {
+  it('dropped after the push landed — the repeat is free, no duplicate', async () => {
     await harness.engine.homework.saveAnswer(answer('sent, answer lost'))
 
     // The server applied the batch; the answer never came back.
@@ -91,13 +91,13 @@ describe('a connection that drops', () => {
     const second = await harness.engine.runner.run()
     expect(second.outcome).toBe('completed')
 
-    // Two requests, one journal row: the idempotency key did its job (D-3).
+    // Two requests, one journal row: the idempotency key did its job.
     expect(harness.server.pushRequests).toHaveLength(2)
     expect(harness.server.rows.filter((row) => row.docId === HOMEWORK_ID)).toHaveLength(1)
     expect((await harness.outboxOf(OWNER))[0]!.status).toBe('pushed')
   })
 
-  it('T-N-3: dropped mid-page leaves the position where it was', async () => {
+  it('dropped mid-page leaves the position where it was', async () => {
     harness.server.journal({
       collection: 'lessons',
       docId: LESSON_ID,
@@ -113,7 +113,7 @@ describe('a connection that drops', () => {
     expect(await harness.engine.state.listScopes()).toEqual([])
   })
 
-  it('T-N-4: a crash between the rows and the position rolls both back, and the repeat is clean', async () => {
+  it('a crash between the rows and the position rolls both back, and the repeat is clean', async () => {
     const database = await openTestDatabase()
     let broken = true
     const flaky = failingDatabase(database.db, (sql) => broken && sql.includes('INTO sync_scopes'))
@@ -136,7 +136,7 @@ describe('a connection that drops', () => {
     expect(await device.count('sync_scopes')).toBeGreaterThan(0)
   })
 
-  it('T-N-5: a break in a new scope leaves only that scope behind', async () => {
+  it('a break in a new scope leaves only that scope behind', async () => {
     harness.server.pageSize = 1
     harness.server.journal({
       collection: 'lessons',
@@ -172,7 +172,7 @@ describe('a connection that drops', () => {
     expect(await cursorOf(harness, syncScopeKey(COURSE_SCOPE))).toBe(settled)
   })
 
-  it('T-N-6: a failed acknowledgement keeps the merge and repeats the ack', async () => {
+  it('a failed acknowledgement keeps the merge and repeats the ack', async () => {
     harness.server.journal({
       collection: 'lessons',
       docId: LESSON_ID,
@@ -195,7 +195,7 @@ describe('a connection that drops', () => {
     expect(harness.server.ackRequests).toHaveLength(2)
   })
 
-  it('T-N-7: three triggers in a row give one run, not three', async () => {
+  it('three triggers in a row give one run, not three', async () => {
     await harness.engine.homework.saveAnswer(answer('flapping network'))
 
     const outcomes = await Promise.all([
@@ -212,7 +212,7 @@ describe('a connection that drops', () => {
     expect(harness.server.pushRequests).toHaveLength(1)
   })
 
-  it('T-N-8: a timeout behaves exactly like a dropped connection', async () => {
+  it('a timeout behaves exactly like a dropped connection', async () => {
     await harness.engine.homework.saveAnswer(answer('timed out'))
     harness.server.pushFailures.push(() => {
       throw new SyncTransportError('unreachable', 'timed out after 30s')
@@ -225,7 +225,7 @@ describe('a connection that drops', () => {
     expect((await harness.outboxOf(OWNER))[0]!.status).toBe('pending')
   })
 
-  it('T-N-9: a 500 stops the run without touching anything', async () => {
+  it('a 500 stops the run without touching anything', async () => {
     await harness.engine.homework.saveAnswer(answer('server is unwell'))
     const before = await harness.outboxOf(OWNER)
     harness.server.pushFailures.push(() => {
@@ -239,7 +239,7 @@ describe('a connection that drops', () => {
     expect(await harness.engine.state.getPushedOutboxId()).toBe(0)
   })
 
-  it('T-N-10: a 429 leads to a wait, not a retry loop', async () => {
+  it('a 429 leads to a wait, not a retry loop', async () => {
     await harness.engine.homework.saveAnswer(answer('too fast'))
     harness.server.pushFailures.push(() => {
       throw new SyncTransportError('rateLimited', 'slow down', 30_000)
@@ -255,7 +255,7 @@ describe('a connection that drops', () => {
 })
 
 describe('an expired token', () => {
-  it('T-N-11: refreshing fails, the run is deferred, and nothing else is disturbed', async () => {
+  it('refreshing fails, the run is deferred, and nothing else is disturbed', async () => {
     const refreshToken = vi.fn(async () => false)
     const harness = await openHarness({ refreshToken })
 
@@ -278,7 +278,7 @@ describe('an expired token', () => {
     expect(refreshToken).toHaveBeenCalledTimes(1)
 
     // The outbox is untouched and offline reading still works — the session was
-    // never ended, which is the whole of D-10.
+    // never ended, which is the whole of.
     expect((await harness.outboxOf(OWNER))[0]!.status).toBe('pending')
     expect(await harness.engine.lessons.listByCourse(asId<never>(COURSE_ID))).toHaveLength(1)
   })

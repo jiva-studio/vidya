@@ -180,7 +180,7 @@ describe('invariants a mutation walked through', () => {
 
     // An empty `scopes` says "nothing to report about rights". Reading it as
     // "you have been withdrawn from everything" marks every course the student
-    // has gone, on a page that was only quiet (D-7, AC-22c).
+    // has gone, on a page that was only quiet.
     expect(result.pull?.removed).toEqual([])
     const scopes = await harness.engine.state.listScopes()
     expect(scopes.every((scope) => scope.removedAt === null)).toBe(true)
@@ -204,7 +204,7 @@ describe('invariants a mutation walked through', () => {
 
     await harness.engine.runner.run()
 
-    // The rows between are this device's own, suppressed on the way out (D-5).
+    // The rows between are this device's own, suppressed on the way out.
     // Only the answer's cursor map can carry the position over them; ignoring
     // it hands the same rows back on every pull for as long as they exist.
     expect(await cursorOf(key)).toBe(500)
@@ -238,7 +238,7 @@ describe('invariants a mutation walked through', () => {
 
     // Taking the last row's sequence instead of the highest one leaves the
     // position below rows already applied, and every later pull delivers them
-    // again (T-X-10).
+    // again.
     const highest = server.rows.reduce((max, row) => Math.max(max, row.serverSeq), 0)
     expect(await cursorOf(syncScopeKey(COURSE_SCOPE))).toBe(highest)
   })

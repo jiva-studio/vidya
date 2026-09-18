@@ -49,19 +49,19 @@ export interface ISyncClient {
  * knowledge where the transport is not.
  */
 export const SyncTransportFailures = [
-  /** `401`. Try to refresh the token; do not end the session (D-10, AC-22f). */
+  /** `401`. Try to refresh the token; do not end the session. */
   'unauthorized',
 
-  /** `429`, or an explicit slow-down. Back off (T-N-10). */
+  /** `429`, or an explicit slow-down. Back off. */
   'rateLimited',
 
-  /** `5xx`. Stop this run without touching any state (T-N-9). */
+  /** `5xx`. Stop this run without touching any state. */
   'server',
 
-  /** No answer at all: a dropped connection or a timeout (T-N-1, T-N-8). */
+  /** No answer at all: a dropped connection or a timeout. */
   'unreachable',
 
-  /** `4xx` other than `401`: the request itself was refused (D-20, AC-10o). */
+  /** `4xx` other than `401`: the request itself was refused. */
   'refused',
 ] as const
 
@@ -88,7 +88,7 @@ export const isSyncTransportError = (error: unknown): error is SyncTransportErro
  * Thrown by the unit of work when the database has been suspended.
  *
  * The device raises it on the way into the background, because iOS kills an app
- * that still holds a SQLite lock when it is suspended (D-14, AC-22i). It is not
+ * that still holds a SQLite lock when it is suspended. It is not
  * a data failure: nothing was written and nothing was lost, and the run simply
  * stops where it is. Resuming costs nothing because the scope positions of
  * every committed page are already durable.
@@ -113,7 +113,7 @@ export const isSyncPausedError = (error: unknown): error is SyncPausedError =>
 /**
  * Runs one unit of work in one transaction.
  *
- * "One unit" is **one page** and never more (D-14). A transaction spanning a
+ * "One unit" is **one page** and never more. A transaction spanning a
  * network round trip holds the SQLite lock across an await of unbounded length,
  * and on iOS that is a crash the student sees and we never do.
  */
@@ -122,12 +122,12 @@ export type UnitOfWork = <T>(fn: () => Promise<T>) => Promise<T>
 /** Wall clock in unix milliseconds — the physical half of an HLC stamp. */
 export type MillisClock = () => number
 
-/** The current instant as stored and sent: ISO 8601, UTC, always (D-17). */
+/** The current instant as stored and sent: ISO 8601, UTC, always. */
 export type UtcClock = () => IsoDateTime
 
 /**
  * A number in `[0, 1)`. Injected because the retry jitter must be reproducible
- * in a test and different between two devices in the field (D-15, AC-22j).
+ * in a test and different between two devices in the field.
  */
 export type Random = () => number
 
@@ -137,7 +137,7 @@ export type Random = () => number
  * Answers `true` when the next request may be attempted. It must **not** end
  * the session on failure: the app's `endSessionOn401` would take the student's
  * access to a course already sitting on the device, which is the opposite of
- * what offline is for (D-10, AC-22f).
+ * what offline is for.
  */
 export type TokenRefresher = () => Promise<boolean>
 
@@ -158,7 +158,7 @@ export interface SyncEngineDeps {
   /**
    * Whose run this is. Passed rather than read from a session, because a row
    * belongs to the identity that wrote it even if the device changes hands
-   * before the row is sent (T-I-3).
+   * before the row is sent.
    */
   readonly ownerId: string
 

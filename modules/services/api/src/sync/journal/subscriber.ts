@@ -34,7 +34,7 @@ interface JournalEvent {
  *
  * It writes through `event.manager`, the manager of the transaction that is
  * already open, so the domain row and its journal row commit or roll back
- * together (T-S-2). It never opens a transaction of its own.
+ * together. It never opens a transaction of its own.
  *
  * Note that this listens to entity operations, not to SQL: a write made with
  * the query builder or `repository.update()` bypasses subscribers and would go
@@ -102,7 +102,7 @@ export class SyncJournalSubscriber implements EntitySubscriberInterface {
    * the row carries the device's own clock. A REST write from the admin console
    * has no context, so the server stamps its own HLC and the row carries
    * `deviceId = null` — which is also how a pull tells "not from any device"
-   * apart from "from yours" when it filters the echo (T-S-8).
+   * apart from "from yours" when it filters the echo.
    */
   private async append(
     projection: CollectionProjection<Record<string, unknown>>,

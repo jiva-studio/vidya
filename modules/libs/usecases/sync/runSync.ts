@@ -27,7 +27,7 @@ import { createRetryPolicy, type RetryPolicy, type RetryPolicyOptions } from './
  * The lock is a single in-flight promise, and a second caller gets that same
  * promise rather than a second run. Four triggers can fire at once — launch,
  * network return, a local write, pull-to-refresh — and network flapping fires
- * the second of them repeatedly (T-N-7, T-M-17, T-R-6). Two runs draining one
+ * the second of them repeatedly. Two runs draining one
  * outbox would push the same rows twice.
  */
 
@@ -38,10 +38,10 @@ export const SyncOutcomes = [
   /** A run was already in flight; this call rode along with it. */
   'alreadyRunning',
 
-  /** The token could not be renewed. Nothing was touched (D-10, AC-22f). */
+  /** The token could not be renewed. Nothing was touched. */
   'deferred',
 
-  /** The circuit is open on sustained unavailability (T-N-13). */
+  /** The circuit is open on sustained unavailability. */
   'circuitOpen',
 
   /** The run stopped and will be retried after {@link SyncRunResult.retryAfterMs}. */
@@ -58,7 +58,7 @@ export interface SyncRunResult {
   readonly push: PushLocalResult | null
   readonly pull: PullAndMergeResult | null
 
-  /** Scopes refetched because their checksum disagreed (I-5). */
+  /** Scopes refetched because their checksum disagreed. */
   readonly resynced: readonly SyncScopeRef[]
 
   /** Milliseconds to wait before the next attempt, when there is one. */
@@ -72,13 +72,13 @@ export interface SyncRunnerDeps extends SyncEngineDeps {
   /** Wall clock in unix milliseconds, for the retry policy. */
   readonly nowMs: MillisClock
 
-  /** Jitter source. Two devices must not draw the same delay (D-15). */
+  /** Jitter source. Two devices must not draw the same delay. */
   readonly random: Random
 
   /**
    * Renews the access token on a `401`. Absent means "cannot renew", which
    * defers the run rather than ending the session — a student must not lose a
-   * course already on the device because a token expired (D-10, AC-22f).
+   * course already on the device because a token expired.
    */
   readonly refreshToken?: TokenRefresher
 
@@ -199,7 +199,7 @@ async function repairDiverged(
  *
  * Every branch leaves the local state exactly as the last committed page left
  * it. Nothing here touches the outbox: a run that could not reach the server
- * has learnt nothing about the student's work (T-N-1, T-N-9).
+ * has learnt nothing about the student's work.
  */
 async function handle(
   deps: SyncRunnerDeps,
@@ -227,7 +227,7 @@ async function handle(
 }
 
 /**
- * A `401` in the middle of a run (D-10, AC-22f).
+ * A `401` in the middle of a run.
  *
  * Try to renew the token and run once more — once, never twice: a second
  * refusal after a successful refresh is not a stale token, and repeating would

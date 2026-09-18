@@ -53,7 +53,7 @@ export interface JournalRow {
   readonly schoolId: string
   readonly createdAt: IsoDateTime
 
-  /** Who wrote it, so a pull can leave the writer's own rows out (D-5). */
+  /** Who wrote it, so a pull can leave the writer's own rows out. */
   readonly deviceId: string | null
 }
 
@@ -81,10 +81,10 @@ export class FakeSyncServer implements ISyncClient {
   /** Rows per page, small on purpose so paging is exercised by default. */
   pageSize = 50
 
-  /** Overrides the computed checksum of a scope, to stage a divergence (I-5). */
+  /** Overrides the computed checksum of a scope, to stage a divergence. */
   readonly forcedChecksums = new Map<SyncScopeKey, string>()
 
-  /** Claims there is more even when there is not, to test the loop guard (D-19). */
+  /** Claims there is more even when there is not, to test the loop guard. */
   alwaysHasMore = false
 
   /** Runs after each page is handed out — a seam for suspending the database. */
@@ -92,21 +92,21 @@ export class FakeSyncServer implements ISyncClient {
 
   /**
    * Runs after a push has been applied but before the answer is returned — the
-   * seam for "the server did the work and the answer never arrived" (T-N-2).
+   * seam for "the server did the work and the answer never arrived".
    */
   onPushApplied: ((index: number) => void | Promise<void>) | null = null
 
   /** Every call in order — 'pull' | 'push' | 'ack' — so a test can see the sequence. */
   readonly calls: string[] = []
 
-  /** Refuses a pushed row, to stage a per-row rejection (AC-6, T-M-9). */
+  /** Refuses a pushed row, to stage a per-row rejection. */
   rejectIf: (change: PushChange) => SyncRejectionReason | null = () => null
 
   /**
    * The server's own wall clock, in unix milliseconds.
    *
    * A stamp sitting further ahead than {@link SYNC_CLOCK_SKEW_TOLERANCE_MS}
-   * allows is restamped rather than refused (I-2, AC-10h): one phone whose
+   * allows is restamped rather than refused: one phone whose
    * clock is a year fast would otherwise anchor the ordering of the whole
    * system in the future, because every device seeds its clock from the highest
    * HLC it has seen and an HLC's physical part never comes back down. Refusing
@@ -152,7 +152,7 @@ export class FakeSyncServer implements ISyncClient {
    * Append a row exactly as given, defaults and all bypassed.
    *
    * The only way to stage what section 11.6 is about: rows a correct server
-   * would never send, which the device still has to survive (T-X-1 … T-X-14).
+   * would never send, which the device still has to survive ( … ).
    */
   malformed(row: Record<string, unknown> & { scope: SyncScopeRef }): void {
     this.seq += 1
@@ -180,7 +180,7 @@ export class FakeSyncServer implements ISyncClient {
     }
   }
 
-  /** Stop granting a scope — the student was withdrawn from a course (D-7). */
+  /** Stop granting a scope — the student was withdrawn from a course. */
   revoke(scope: SyncScopeRef): void {
     this.grants = this.grants.filter((granted) => syncScopeKey(granted) !== syncScopeKey(scope))
   }
@@ -233,10 +233,10 @@ export class FakeSyncServer implements ISyncClient {
    * Apply one pushed row.
    *
    * Idempotent on `(collection, docId, hlc)`, which is what makes a push
-   * replayed after a dropped connection free (D-3, T-N-2): a repeat finds its
+   * replayed after a dropped connection free: a repeat finds its
    * row already journaled and is accepted without a second one being written.
    * A downward-only collection is refused, and the refusal leaves its
-   * neighbours applied (AC-6).
+   * neighbours applied.
    */
   private apply(change: PushChange, deviceId: string): PushResult {
     const answer = {
@@ -300,10 +300,10 @@ export class FakeSyncServer implements ISyncClient {
   }
 
   /**
-   * A summary of each scope's content (I-5).
+   * A summary of each scope's content.
    *
    * Over the live payloads rather than the row count, so it changes when the
-   * content changes and only then — which is the property AC-10m names and the
+   * content changes and only then — which is the property names and the
    * one a device relies on to notice it is missing something.
    */
   private checksums(): SyncChecksums {
@@ -351,7 +351,7 @@ export const STUDENT_ID = '7b3d5e90-1c44-4a2b-8f61-2d9e0c4a5b73'
 export const serverHlc = (tick: number): string =>
   `${String(1_789_689_600_000 + tick).padStart(15, '0')}:00000:server`
 
-/** The matching instant, UTC and millisecond-precise (D-17, AC-22k). */
+/** The matching instant, UTC and millisecond-precise. */
 export const instant = (tick: number): IsoDateTime =>
   new Date(1_789_689_600_000 + tick).toISOString() as IsoDateTime
 

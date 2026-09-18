@@ -1,5 +1,5 @@
 /**
- * Merge tests — T-D-8 … T-D-11.
+ * Merge tests — ….
  *
  * Nothing here is copied: Lectorium merges last-write-wins by HLC, while our
  * rule is field ownership. What these cases protect is the one sentence the
@@ -29,21 +29,21 @@ describe('mergeIncoming, homework', () => {
     'server',
   )
 
-  // T-D-8
+  //
   it('takes a server-owned field from the incoming version, always', () => {
     const merged = mergeIncoming('homework', local, remote, true)
 
     expect(merged.data).toMatchObject({ status: 'in_review', grade: 4 })
   })
 
-  // T-D-9
+  //
   it('keeps a client-owned field while an unsent outbox row exists', () => {
     const merged = mergeIncoming('homework', local, remote, true)
 
     expect(merged.data).toMatchObject({ text: 'my unsent answer' })
   })
 
-  // T-D-10
+  //
   it('takes a client-owned field from the server once nothing is pending', () => {
     const merged = mergeIncoming('homework', local, remote, false)
 
@@ -75,7 +75,7 @@ describe('mergeIncoming, enrollments', () => {
   const local = doc({ status: 'pending', groupId: null }, 3)
   const remote = doc({ status: 'accepted', groupId: 'group-1', decidedById: 'user-2' }, 7, 'server')
 
-  // T-D-8: `status` is claimed by both sides, and the school's answer
+  //: `status` is claimed by both sides, and the school's answer
   // supersedes the request that asked for it.
   it('gives a field claimed by both sides to the server', () => {
     const merged = mergeIncoming('enrollments', local, remote, true)
@@ -109,7 +109,7 @@ describe('mergeIncoming, one-way collections', () => {
 })
 
 describe('mergeIncoming, unknown collection', () => {
-  // T-D-11: dropping the row in silence is how one lane ships a table the
+  //: dropping the row in silence is how one lane ships a table the
   // other never hears about.
   it('throws rather than quietly passing the row through', () => {
     const remote = doc({ any: 'thing' }, 1)

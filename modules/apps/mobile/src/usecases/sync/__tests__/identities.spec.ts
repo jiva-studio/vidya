@@ -26,7 +26,7 @@ import {
 import { type Harness, openHarness, OTHER_OWNER, OWNER } from './harness'
 
 /**
- * Two students on one handset: T-I-1, T-I-2, T-I-3, T-I-4.
+ * Two students on one handset:.
  *
  * There is one database per installation, not one per account. That is a
  * deliberate choice and it buys something worth having — signing out erases
@@ -80,7 +80,7 @@ describe('two identities on one installation', () => {
     })
   })
 
-  it('T-I-1: the second identity sees none of the first', async () => {
+  it('the second identity sees none of the first', async () => {
     expect(await second.engine.courses.list()).toEqual([])
     expect(await second.engine.lessons.listByCourse(asId<CourseId>(COURSE_ID))).toEqual([])
     expect(await second.engine.homework.getById(asId<HomeworkId>(HOMEWORK_ID))).toBeNull()
@@ -91,7 +91,7 @@ describe('two identities on one installation', () => {
     expect(await first.count('courses')).toBe(1)
   })
 
-  it('T-I-2: coming back to the first identity offline shows everything, unsent rows included', async () => {
+  it('coming back to the first identity offline shows everything, unsent rows included', async () => {
     // The second identity does a run of its own, which must not disturb the first.
     await second.engine.enrollments.request({
       id: asId<EnrollmentId>(ENROLLMENT_ID),

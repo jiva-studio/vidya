@@ -9,12 +9,12 @@ const render = (online: boolean, syncing = false) =>
   mount(OfflineBanner, { props: { online, syncing }, global: { plugins: [fluentFor('en')] } })
 
 /**
- * T-U-6. Offline is visible and does not read as breakage.
+ * Offline is visible and does not read as breakage.
  *
  * The token governs the network, not the local data, so the banner says what
  * still works instead of announcing a failure.
  */
-describe('T-U-6: offline is a mode, not a fault', () => {
+describe('offline is a mode, not a fault', () => {
   it('tells the student the app is working offline', () => {
     expect(render(false).attributes('data-mode')).toBe('offline')
   })

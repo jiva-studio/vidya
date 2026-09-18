@@ -28,9 +28,9 @@ const counting = (name: string, counters: Record<string, number>): Migration => 
 })
 
 describe('runMigrations', () => {
-  /* ------------------------------- T-M-1 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  describe('T-M-1: migrations are idempotent, forward only, and recorded', () => {
+  describe('migrations are idempotent, forward only, and recorded', () => {
     it('records every applied migration by name', async () => {
       const { db } = await openTestDatabase()
 
@@ -119,9 +119,9 @@ describe('runMigrations', () => {
     })
   })
 
-  /* ------------------------------- T-M-2 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  describe('T-M-2: a failure inside a migration leaves no half schema', () => {
+  describe('a failure inside a migration leaves no half schema', () => {
     const boom = new Error('migration blew up halfway')
 
     const halfway: Migration = {

@@ -24,7 +24,7 @@ import {
 import { type Harness, openHarness, OTHER_OWNER, OWNER } from './harness'
 
 /**
- * Draining the journal: T-M-8, T-M-9, T-M-10, T-M-17, T-M-18, T-M-21, T-I-4.
+ * Draining the journal:.
  *
  * The invariant under every one of them is the same, and it is the reason this
  * lane exists: **the student's work never leaves the device because of a
@@ -48,7 +48,7 @@ describe('pushing the journal', () => {
     harness = await openHarness()
   })
 
-  it('T-M-8: an accepted row moves the watermark and is never sent twice', async () => {
+  it('an accepted row moves the watermark and is never sent twice', async () => {
     await harness.engine.homework.saveAnswer(answer('please mark this'))
 
     const first = await harness.engine.runner.run()
@@ -64,7 +64,7 @@ describe('pushing the journal', () => {
     expect(harness.server.pushRequests.length).toBe(before)
   })
 
-  it('T-M-9: a refused row keeps its reason, and the watermark steps past it', async () => {
+  it('a refused row keeps its reason, and the watermark steps past it', async () => {
     harness.server.rejectIf = (change) =>
       change.collection === 'homework' ? 'alreadyAccepted' : null
 
@@ -105,7 +105,7 @@ describe('pushing the journal', () => {
     expect(rows.map((row) => row.status)).toEqual(['rejected', 'pushed'])
   })
 
-  it('T-M-10: a full cycle never shrinks the outbox', async () => {
+  it('a full cycle never shrinks the outbox', async () => {
     harness.server.rejectIf = (change) => (change.outboxId === 2 ? 'malformed' : null)
 
     await harness.engine.homework.saveAnswer(answer('one'))
@@ -126,7 +126,7 @@ describe('pushing the journal', () => {
     expect(counts[0]).toBe(2)
   })
 
-  it('T-M-18: a run gives ours up before it takes theirs', async () => {
+  it('a run gives ours up before it takes theirs', async () => {
     harness.server.journal({
       collection: 'courses',
       docId: COURSE_ID,
@@ -140,7 +140,7 @@ describe('pushing the journal', () => {
     expect(harness.server.calls.indexOf('push')).toBeLessThan(harness.server.calls.indexOf('pull'))
   })
 
-  it('T-M-21: the journal checkpoint refuses a state without the answer just written', async () => {
+  it('the journal checkpoint refuses a state without the answer just written', async () => {
     await harness.engine.homework.saveAnswer(answer('just typed'))
     const result = await harness.engine.runner.run()
 
@@ -148,14 +148,14 @@ describe('pushing the journal', () => {
     expect(journalHasLocalWrites(result.push!.journaledOutboxId, latest)).toBe(true)
 
     // A second answer typed after the run is not in the journal yet, so the
-    // checkpoint says the interface may not paint the server's state (I-6).
+    // checkpoint says the interface may not paint the server's state.
     await harness.engine.homework.saveAnswer(answer('typed after the run'))
     const afterwards = await harness.engine.outbox.latestId(OWNER)
 
     expect(journalHasLocalWrites(result.push!.journaledOutboxId, afterwards)).toBe(false)
   })
 
-  it('T-M-17: a second run rides the first instead of draining twice', async () => {
+  it('a second run rides the first instead of draining twice', async () => {
     await harness.engine.homework.saveAnswer(answer('sent once'))
 
     const [first, second] = await Promise.all([
@@ -169,7 +169,7 @@ describe('pushing the journal', () => {
     expect(harness.server.pushRequests[0]!.changes).toHaveLength(1)
   })
 
-  it('T-I-4: the watermark is kept per identity', async () => {
+  it('the watermark is kept per identity', async () => {
     await harness.engine.homework.saveAnswer(answer('first student'))
     await harness.engine.runner.run()
     const firstWatermark = await harness.engine.state.getPushedOutboxId()

@@ -16,13 +16,13 @@ const render = (contentSchemaVersion: number) =>
   })
 
 /**
- * T-U-5, AC-22e, D-9. Lesson content of a shape this build does not know.
+ * Lesson content of a shape this build does not know.
  *
  * The content is kept whole on the device — nothing is discarded — and the
  * screen declines to draw what it cannot read, asking for a newer app instead
  * of guessing at unknown fields.
  */
-describe('T-U-5: content newer than the app', () => {
+describe('content newer than the app', () => {
   it('draws a lesson of a known shape', () => {
     const wrapper = render(1)
 

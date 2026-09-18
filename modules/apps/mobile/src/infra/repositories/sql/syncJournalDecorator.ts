@@ -25,7 +25,7 @@ import { runInTransaction } from '../../persistence/repository'
  * This is the mechanism the whole stage turns on. A domain repository is
  * wrapped, and every mutating call is run inside one transaction that performs
  * the domain write **and** appends the matching `outbox` row, stamped with an
- * HLC. Either both land or neither does (AC-15, T-M-5). The student's answer
+ * HLC. Either both land or neither does. The student's answer
  * and the record that it needs sending cannot come apart, which is what makes
  * "write offline, sort it out later" a guarantee rather than a hope.
  *
@@ -39,7 +39,7 @@ import { runInTransaction } from '../../persistence/repository'
  *   complete unit: the screens call one at a time, and a sync page never calls
  *   one at all — the pull writes through {@link ISyncApplyRepository}, past
  *   this decorator, or everything the server sent would be journaled straight
- *   back to it (AC-16, T-M-6).
+ *   back to it.
  *
  * Each decorated repository is written out **member by member**, never as a
  * spread of the base. A spread satisfies the interface structurally, so a
@@ -64,7 +64,7 @@ export interface SyncJournalDeps {
   /** This installation's stable id — the HLC's final tiebreak. */
   readonly deviceId: () => Promise<string>
 
-  /** Whose change this is. Read per write, never captured (AC-20, T-I-3). */
+  /** Whose change this is. Read per write, never captured. */
   readonly ownerId: () => string
 
   /** Wall clock in unix milliseconds, injected so a test can pin it. */
@@ -116,7 +116,7 @@ export function withSyncJournaling(
     getByAnswerKey: (key) => base.homework.getByAnswerKey(key),
     listByEnrollment: (enrollmentId) => base.homework.listByEnrollment(enrollmentId),
 
-    // A refusal from the freeze rule (D-8) throws out of the transaction, so
+    // A refusal from the freeze rule throws out of the transaction, so
     // nothing is written and nothing is journaled — the edit never happened.
     saveAnswer: (input) =>
       runInTransaction(deps.db, async () => {
@@ -173,7 +173,7 @@ function createJournal(deps: SyncJournalDeps): Journal {
       // two revisions old.
       baseHlc: await deps.apply.lastServerHlc(collection, docId),
       // Stamped explicitly, so the row stays with the identity that wrote it
-      // even if the device changes hands before it is sent (T-I-3).
+      // even if the device changes hands before it is sent.
       ownerId: deps.ownerId(),
     })
   }
@@ -189,7 +189,7 @@ function createJournal(deps: SyncJournalDeps): Journal {
  * from — the server accepts the push, and every device that later pulls both
  * resolves the conflict in favour of the older text.
  *
- * Neither half is read per identity, and that is the whole of D-7. An HLC is
+ * Neither half is read per identity, and that is the whole of. An HLC is
  * the clock of a *device*: the `device_id` it ends with is this installation's,
  * and the counter before it is what keeps two writes of the same millisecond
  * apart. Seat that counter on the signed-in account and it starts again the

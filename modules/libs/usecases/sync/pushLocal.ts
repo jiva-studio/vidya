@@ -14,7 +14,7 @@ import { isSyncPausedError, type SyncEngineDeps } from './ports'
  *
  * Two invariants this file exists to hold:
  *
- * - **No outbox row is ever deleted, on any path** (AC-18, T-M-10). An accepted
+ * - **No outbox row is ever deleted, on any path**. An accepted
  *   row is marked `pushed`; a refused one keeps its reason and stays on the
  *   device, where the student's work is. The watermark is what stops a refused
  *   row being sent forever — not a delete.
@@ -38,13 +38,13 @@ export interface PushLocalResult {
   readonly rejected: number
 
   /**
-   * How far this device's own rows have reached the journal (I-6, AC-22n).
+   * How far this device's own rows have reached the journal.
    * The interface must not paint a state below this id, or it would show a
    * lesson without the answer the student just wrote.
    */
   readonly journaledOutboxId: number
 
-  /** `true` when the device suspended the database mid-run (D-14). */
+  /** `true` when the device suspended the database mid-run. */
   readonly paused: boolean
 }
 
@@ -64,13 +64,13 @@ export async function pushLocal(deps: SyncEngineDeps): Promise<PushLocalResult> 
     accepted: 0,
     rejected: 0,
 
-    // The watermark, not zero (D-6). A run with nothing to send is the ordinary
+    // The watermark, not zero. A run with nothing to send is the ordinary
     // case — the student has typed nothing since the last one — and it has to
     // answer "how far have my rows reached the journal" with what the device
     // already knows, which is the id every answered row sits at or below. Zero
     // is the answer for a device that has never pushed anything, and reporting
     // it after an empty round tells the interface the journal is missing work
-    // it took long ago, so the screen stops painting for good (I-6, AC-22n).
+    // it took long ago, so the screen stops painting for good.
     journaledOutboxId: await deps.state.getPushedOutboxId(),
     paused: false,
   }
@@ -199,7 +199,7 @@ async function advanceWatermark(deps: SyncEngineDeps, watermark: number): Promis
 }
 
 /**
- * The contract says one answer per row, in the order sent (AC-5).
+ * The contract says one answer per row, in the order sent.
  *
  * Checked rather than assumed: a mismatch means the device and the server
  * disagree about what was just written, and guessing would mark the wrong rows
@@ -223,11 +223,11 @@ function assertAnswersMatch(pending: readonly OutboxEntry[], results: readonly P
 }
 
 /**
- * Whether the journal already holds every row this device has written (I-6).
+ * Whether the journal already holds every row this device has written.
  *
  * The interface asks this before painting: `false` means the state on the
  * server does not yet contain the answer the student just typed, and showing it
- * would show their work missing (AC-22n, T-M-21).
+ * would show their work missing.
  */
 export const journalHasLocalWrites = (journaledOutboxId: number, latestOutboxId: number): boolean =>
   latestOutboxId === 0 || journaledOutboxId >= latestOutboxId

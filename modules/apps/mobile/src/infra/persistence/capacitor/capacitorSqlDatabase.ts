@@ -123,7 +123,7 @@ export function createCapacitorSqlDatabase(
       // iOS kills an app that still holds a SQLite lock when it is suspended
       // (0xdead10cc), and that death lands on a student's phone rather than in
       // our logs. Refuse new blocks, wait for the one in flight to commit or
-      // roll back, and the lock is gone (D-14). Nothing is lost: the work
+      // roll back, and the lock is gone. Nothing is lost: the work
       // above resumes from positions that are already durable.
       suspended = true
       await txQueue.catch(() => undefined)

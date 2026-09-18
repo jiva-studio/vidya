@@ -29,10 +29,10 @@ import {
 import { type Harness, openHarness, OWNER } from './harness'
 
 /**
- * Two things happening at once: T-R-1 … T-R-7.
+ * Two things happening at once: ….
  *
  * Two devices of one student are the only place in this design where last write
- * wins at all (I-8) — everywhere else the writing sides are split and there is
+ * wins at all — everywhere else the writing sides are split and there is
  * nothing to race over. So these tests are mostly about that pair, plus the
  * couple of races inside one device: a write during a push, and two runs.
  */
@@ -68,7 +68,7 @@ const textOf = async (harness: Harness): Promise<unknown> =>
   (await harness.row('homework', HOMEWORK_ID))!.text
 
 describe('two devices of one student', () => {
-  it('T-R-1: both phones pick the same winner', async () => {
+  it('both phones pick the same winner', async () => {
     const { one, two } = await twoDevices()
 
     one.nowMs = 1_789_689_600_000
@@ -87,7 +87,7 @@ describe('two devices of one student', () => {
     expect(await textOf(two)).toBe('from the tablet')
   })
 
-  it('T-R-7: a phone whose clock is a year fast is restamped, and does not drag the others into the future', async () => {
+  it('a phone whose clock is a year fast is restamped, and does not drag the others into the future', async () => {
     const { one, two, server } = await twoDevices()
 
     one.nowMs = server.serverNowMs
@@ -101,7 +101,7 @@ describe('two devices of one student', () => {
     await two.engine.runner.run()
 
     // Both agree, and neither is anchored a year out: the server pulled the
-    // stamp back to its own clock rather than refusing the work (I-2, AC-10h).
+    // stamp back to its own clock rather than refusing the work.
     expect(await textOf(one)).toBe(await textOf(two))
 
     const pointer = await one.engine.apply.latestServerHlc()
@@ -115,7 +115,7 @@ describe('two devices of one student', () => {
     expect(restamped).not.toHaveLength(0)
   })
 
-  it('T-I-5: the two phones keep independent read positions', async () => {
+  it('the two phones keep independent read positions', async () => {
     const { one, two, server } = await twoDevices()
     server.pageSize = 1
 
@@ -150,7 +150,7 @@ describe('two devices of one student', () => {
 })
 
 describe('races inside one device', () => {
-  it('T-R-2: an edit made during a push is not lost', async () => {
+  it('an edit made during a push is not lost', async () => {
     const harness = await openHarness()
     await harness.engine.homework.saveAnswer(answer('first'))
 
@@ -175,7 +175,7 @@ describe('races inside one device', () => {
     expect((await harness.outboxOf(OWNER)).map((row) => row.status)).toEqual(['pushed', 'pushed'])
   })
 
-  it('T-R-3: an identical page does not rewrite the row under an open screen', async () => {
+  it('an identical page does not rewrite the row under an open screen', async () => {
     const harness = await openHarness()
     const payload = {
       id: LESSON_VERSION_ID,
@@ -206,7 +206,7 @@ describe('races inside one device', () => {
     ).toBe(false)
   })
 
-  it('T-R-4: the server applied and the answer was lost — the repeat converges', async () => {
+  it('the server applied and the answer was lost — the repeat converges', async () => {
     const harness = await openHarness()
     await harness.engine.homework.saveAnswer(answer('applied once'))
 
@@ -223,7 +223,7 @@ describe('races inside one device', () => {
     expect((await harness.outboxOf(OWNER))[0]!.status).toBe('pushed')
   })
 
-  it('T-R-5: enrolling on one course while another is being fetched disturbs neither', async () => {
+  it('enrolling on one course while another is being fetched disturbs neither', async () => {
     const harness = await openHarness()
     harness.server.pageSize = 1
     for (let index = 0; index < 3; index += 1) {
@@ -256,7 +256,7 @@ describe('races inside one device', () => {
     expect((await harness.outboxOf(OWNER))[0]!.status).toBe('pushed')
   })
 
-  it('T-R-6: two runs at once are one run', async () => {
+  it('two runs at once are one run', async () => {
     const harness = await openHarness()
     harness.server.journal({
       collection: 'lessons',

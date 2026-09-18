@@ -17,7 +17,7 @@ const DEVICE = 'device-8f2a6c14'
  *
  * Written out here rather than imported, because the point of the test is that
  * a second implementation, working from what the device stored rather than from
- * the journal, arrives at the same number (I-5).
+ * the journal, arrives at the same number.
  */
 const deviceChecksum = (documents: Map<string, string>): string => {
   let hash = 0n
@@ -66,9 +66,9 @@ describe('sync scopes, checksums and the acknowledged position', () => {
   const own = (): domain.SyncScopeRef => ({ kind: 'user', id: ctx.student.id })
   const mine = (): domain.SyncScopeRef => ({ kind: 'course', id: ctx.mine.course.id })
 
-  /* ------------------------------- T-S-34 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  describe('T-S-34: the acknowledged position is kept', () => {
+  describe('the acknowledged position is kept', () => {
     it('stores what the device says it has applied, and answers 204', async () => {
       await cursor({ ackedSeq: 1302 }).expect(204).expect('')
 
@@ -104,9 +104,9 @@ describe('sync scopes, checksums and the acknowledged position', () => {
         .expect(401))
   })
 
-  /* ------------------------------ T-S-34b ------------------------------- */
+  /* ------------------------------ ------------------------------- */
 
-  describe('T-S-34b: a checksum per scope, moving only with its own contents', () => {
+  describe('a checksum per scope, moving only with its own contents', () => {
     it('gives every granted scope a checksum', async () => {
       const body = (await pull().expect(200)).body as protocol.PullResponse
 
@@ -152,9 +152,9 @@ describe('sync scopes, checksums and the acknowledged position', () => {
     })
   })
 
-  /* ------------------------------- T-S-40 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  describe('T-S-40: the two sides agree, and disagree when they should', () => {
+  describe('the two sides agree, and disagree when they should', () => {
     const applied = (changes: readonly protocol.SyncChange[], scope: domain.SyncScopeRef) => {
       const documents = new Map<string, string>()
 

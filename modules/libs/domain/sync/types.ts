@@ -176,9 +176,9 @@ export const isSyncRejectionReason = (value: string): value is SyncRejectionReas
 /**
  * Whether a refusal leaves the text on the device the student's own.
  *
- * A refused row keeps the work (AC-18), and keeping it means more than leaving
+ * A refused row keeps the work, and keeping it means more than leaving
  * a row in the outbox: until something takes the student's text, the next pull
- * must not paint the server's copy over it (AC-19). So every reason answers
+ * must not paint the server's copy over it. So every reason answers
  * `true` — the row was never accepted, the text was never delivered, and the
  * only copy of it is the one on the phone.
  *

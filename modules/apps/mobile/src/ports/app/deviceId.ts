@@ -9,7 +9,7 @@ import type { Id } from '@vidya/domain'
  * `(collection, docId, hlc)`. Two installations sharing one id can mint the
  * same stamp for two different changes, and the server's unique index would
  * then swallow the second as an already-applied repeat — a lost write wearing
- * the costume of a successful retry (D-16).
+ * the costume of a successful retry.
  */
 export type DeviceId = Id<'Device'>
 

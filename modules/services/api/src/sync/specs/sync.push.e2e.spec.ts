@@ -86,9 +86,9 @@ describe('POST /sync/push', () => {
   const journalFor = (docId: string) =>
     ds.query('SELECT hlc, data FROM sync_journal WHERE doc_id = $1 ORDER BY global_seq', [docId])
 
-  /* ------------------------------- T-S-19 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-19: answers a mixed batch row by row and applies the accepted ones', async () => {
+  it('answers a mixed batch row by row and applies the accepted ones', async () => {
     const good = answer()
     const rejected = { ...answer({ outboxId: 3 }), collection: 'courses' as const }
 
@@ -99,13 +99,13 @@ describe('POST /sync/push', () => {
     expect(await storedAnswer(good.docId)).not.toBeNull()
 
     // The write checkpoint is the highest accepted row, so the interface can
-    // refuse to paint a state that does not yet contain the answer (I-6).
+    // refuse to paint a state that does not yet contain the answer.
     expect(body.journaledOutboxId).toBe(2)
   })
 
-  /* ------------------------------- T-S-20 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-20: results match the changes in length and in order', async () => {
+  it('results match the changes in length and in order', async () => {
     const changes = [
       answer({ outboxId: 10 }),
       { ...answer({ outboxId: 11 }), collection: 'lessons' as const },
@@ -119,9 +119,9 @@ describe('POST /sync/push', () => {
     expect(body.results.map((r) => r.docId)).toEqual(changes.map((c) => c.docId))
   })
 
-  /* ------------------------------- T-S-21 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-21: the same row pushed twice is accepted without being applied twice', async () => {
+  it('the same row pushed twice is accepted without being applied twice', async () => {
     const change = answer()
 
     const first = (await push(ctx.tokens.student, [change]).expect(200))
@@ -142,19 +142,19 @@ describe('POST /sync/push', () => {
     expect(await journalFor(change.docId)).toHaveLength(1)
 
     // Nothing was touched at all: the repeat was answered from the journal
-    // before the applier was reached (D-3).
+    // before the applier was reached.
     const after = await storedAnswer(change.docId)
     expect(after.updatedAt.getTime()).toBe(written.updatedAt.getTime())
   })
 
-  it('T-S-21: a repeat that does reach the table is absorbed by the index', async () => {
+  it('a repeat that does reach the table is absorbed by the index', async () => {
     const first = answer({ data: { ...answer().data, text: 'Written on the train.' } })
 
     // The same answer to the same section under a second document id — a device
     // that rebuilt its outbox reissues the row with a fresh id and the stamp it
     // had. The natural key `(enrolment, version, section)` sends it to the row
     // the first push already journalled under that stamp, so the insert this
-    // time really does collide and must not raise (D-3).
+    // time really does collide and must not raise.
     const again = answer({
       outboxId: 2,
       docId: uuid(),
@@ -176,9 +176,9 @@ describe('POST /sync/push', () => {
     expect(await journalFor(first.docId)).toHaveLength(1)
   })
 
-  /* ------------------------------- T-S-22 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-22: the server fields of homework are dropped without a word', async () => {
+  it('the server fields of homework are dropped without a word', async () => {
     const change = answer({
       data: {
         enrollmentId: ctx.enrollment.id,
@@ -205,9 +205,9 @@ describe('POST /sync/push', () => {
     expect(stored.text).toBe('Marked by myself, thank you')
   })
 
-  /* ------------------------------- T-S-23 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-23: content collections take nothing from a device', async () => {
+  it('content collections take nothing from a device', async () => {
     const changes = [
       { ...answer({ outboxId: 1 }), collection: 'courses' as const },
       { ...answer({ outboxId: 2 }), collection: 'lessons' as const },
@@ -223,9 +223,9 @@ describe('POST /sync/push', () => {
     ])
   })
 
-  /* ------------------------------- T-S-24 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-24: a row addressed to another student enrolment is refused', async () => {
+  it('a row addressed to another student enrolment is refused', async () => {
     const change = answer({
       data: {
         enrollmentId: ctx.strangerEnrollment.id,
@@ -241,9 +241,9 @@ describe('POST /sync/push', () => {
     expect((body.results[0] as protocol.PushRejected).reason).toBe('notYourEnrollment')
   })
 
-  /* ------------------------------- T-S-25 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-25: a place that was never granted refuses the row, not the batch', async () => {
+  it('a place that was never granted refuses the row, not the batch', async () => {
     const change = answer({
       data: {
         enrollmentId: ctx.pendingEnrollment.id,
@@ -260,9 +260,9 @@ describe('POST /sync/push', () => {
     expect(body.results).toHaveLength(2)
   })
 
-  /* ------------------------------- T-S-26 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-26: an unpublished version is not something to answer', async () => {
+  it('an unpublished version is not something to answer', async () => {
     const change = answer({
       data: {
         enrollmentId: ctx.enrollment.id,
@@ -278,9 +278,9 @@ describe('POST /sync/push', () => {
     expect((body.results[0] as protocol.PushRejected).reason).toBe('unknownLessonVersion')
   })
 
-  /* ------------------------------- T-S-27 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-27: accepted work is frozen', async () => {
+  it('accepted work is frozen', async () => {
     const homework = app.get(HomeworkService)
     const submitted = await homework.submit({
       enrollment: ctx.enrollment,
@@ -303,9 +303,9 @@ describe('POST /sync/push', () => {
     expect((await storedAnswer(submitted.id)).text).toBe('The answer as handed in')
   })
 
-  /* --------------------------- T-S-28, AC-10p --------------------------- */
+  /* --------------------------- --------------------------- */
 
-  it('T-S-28: an answer written offline against a superseded version is flagged, not refused', async () => {
+  it('an answer written offline against a superseded version is flagged, not refused', async () => {
     // Published while the device was away; publishing does not unpublish v1.
     await app.get(LessonVersionsService).publish(ctx.mine.lesson.id, ctx.mine.draft.id)
 
@@ -321,9 +321,9 @@ describe('POST /sync/push', () => {
     expect(stored.answeredSupersededVersion).toBe(true)
   })
 
-  /* ------------------------------- T-S-29 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-29: two edits of one document land in the order they were sent', async () => {
+  it('two edits of one document land in the order they were sent', async () => {
     const docId = uuid()
     const changes = [
       answer({ outboxId: 1, docId, hlc: hlc(NOW - 60_000), data: bodyOf(ctx, 'First') }),
@@ -336,9 +336,9 @@ describe('POST /sync/push', () => {
     expect((await storedAnswer(docId)).text).toBe('Second')
   })
 
-  /* ------------------------------- T-S-30 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-30: a row over the ceiling is refused, and its neighbour is applied', async () => {
+  it('a row over the ceiling is refused, and its neighbour is applied', async () => {
     const huge = answer({
       outboxId: 1,
       data: { ...bodyOf(ctx, 'x'.repeat(protocol.SYNC_MAX_CHANGE_BYTES + 1)) },
@@ -351,19 +351,19 @@ describe('POST /sync/push', () => {
     expect(body.results[1].status).toBe('accepted')
   })
 
-  /* ------------------------------- T-S-31 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  it('T-S-31: an empty batch is an empty answer, not an error', async () => {
+  it('an empty batch is an empty answer, not an error', async () => {
     const body = (await push(ctx.tokens.student, []).expect(200)).body as protocol.PushResponse
 
     expect(body.results).toEqual([])
     expect(body.journaledOutboxId).toBe(0)
   })
 
-  /* --------------------------- T-S-38, T-S-39 --------------------------- */
+  /* --------------------------- --------------------------- */
 
   describe('the clock skew ceiling', () => {
-    it('T-S-38: restamps a row from a device whose clock is a year fast', async () => {
+    it('restamps a row from a device whose clock is a year fast', async () => {
       const ahead = answer({ hlc: hlc(NOW + 365 * 24 * 3600 * 1000) })
 
       const body = (await push(ctx.tokens.student, [ahead]).expect(200))
@@ -383,7 +383,7 @@ describe('POST /sync/push', () => {
       expect(domain.parseHlc(highest.hlc).physical).toBeLessThanOrEqual(NOW)
     })
 
-    it('T-S-39: keeps a stamp sitting exactly on the boundary', async () => {
+    it('keeps a stamp sitting exactly on the boundary', async () => {
       const edge = answer({ hlc: hlc(NOW + protocol.SYNC_CLOCK_SKEW_TOLERANCE_MS) })
 
       const body = (await push(ctx.tokens.student, [edge]).expect(200))
@@ -395,9 +395,9 @@ describe('POST /sync/push', () => {
     })
   })
 
-  /* ------------------------------- T-S-42 ------------------------------- */
+  /* ------------------------------- ------------------------------- */
 
-  describe('T-S-42: two devices sharing one id cannot swallow a write', () => {
+  describe('two devices sharing one id cannot swallow a write', () => {
     it('answers a genuine repeat from the journal', async () => {
       const change = answer()
 

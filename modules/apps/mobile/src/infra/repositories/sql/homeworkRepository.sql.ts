@@ -26,7 +26,7 @@ import { readSyncRow, readSyncRows, writeSyncRow } from './rowWriter'
 /**
  * Local reads and writes over `homework`.
  *
- * **The freeze rule lives here** (D-8, AC-22d). The plan says an answer stops
+ * **The freeze rule lives here**. The plan says an answer stops
  * being editable once it has been handed in, and until this repository the rule
  * existed only on the server. That gap is not cosmetic: an offline edit after
  * submission would be written, journaled, pushed and then refused as

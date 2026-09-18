@@ -20,7 +20,7 @@ import type { Migration } from './types'
  * at once, so the school belongs in the row rather than in the name of a
  * database.
  *
- * **No foreign keys anywhere (D-13).** Scope positions advance independently —
+ * **No foreign keys anywhere.** Scope positions advance independently —
  * homework rides the `user` scope, a lesson version rides its `course` scope —
  * so homework legitimately arrives before the version it answers. A foreign
  * key would turn that legal order into a failed insert and take the whole page
@@ -33,12 +33,12 @@ import type { Migration } from './types'
  * value this build has never heard of, and storing it is strictly better than
  * rejecting the row.
  *
- * All instants are ISO 8601 UTC strings (D-17). They sort lexicographically in
+ * All instants are ISO 8601 UTC strings. They sort lexicographically in
  * the same order they sort chronologically, which is why a device never has to
  * parse a date to order rows by one. A table carries a time column only when
  * the wire carries that time: a column the server never fills would hold an
  * empty string, which sorts before every real instant, and an `ORDER BY` over
- * it would be wrong without ever failing (T-C-7).
+ * it would be wrong without ever failing.
  */
 export const migration_001_local_schema: Migration = {
   name: '001_local_schema',
@@ -80,7 +80,7 @@ async function createContentTables(db: IDatabase): Promise<void> {
   // points at a version precisely because a published version cannot change
   // underneath the answer. `deleted_at` is the tombstone — it marks a version
   // withdrawn upstream and must not cascade to the homework written against
-  // it, which stays readable (D-6).
+  // it, which stays readable.
   await db.execute(`
     CREATE TABLE IF NOT EXISTS lesson_versions (
       id           TEXT    NOT NULL,
@@ -101,7 +101,7 @@ async function createContentTables(db: IDatabase): Promise<void> {
 async function createStudentTables(db: IDatabase): Promise<void> {
   // `deleted_at` records that the enrolment was withdrawn. It does not erase
   // anything: what was downloaded stays on the device and stays readable, and
-  // only the server decides whether a later push is accepted (D-7).
+  // only the server decides whether a later push is accepted.
   await db.execute(`
     CREATE TABLE IF NOT EXISTS enrollments (
       id             TEXT NOT NULL,
@@ -182,7 +182,7 @@ async function createSyncTables(db: IDatabase): Promise<void> {
   `)
 
   // The highest server HLC seen per document, so applying an incoming row can
-  // be conditional and a late arrival cannot roll newer data back (D-4).
+  // be conditional and a late arrival cannot roll newer data back.
   await db.execute(`
     CREATE TABLE IF NOT EXISTS sync_doc_hlc (
       owner_id   TEXT NOT NULL,

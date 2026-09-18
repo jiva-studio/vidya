@@ -12,7 +12,7 @@ import { createHttpSyncClient } from '../syncClient'
  * Small on purpose: the interesting behaviour is the mapping from a transport
  * failure to a decision the run can act on, and above all the one mapping that
  * is a data-loss bug if it is wrong — a `401` must become "renew the token",
- * never "end the session" (D-10, AC-22f).
+ * never "end the session".
  */
 
 const routes = Routes().sync
@@ -67,7 +67,7 @@ describe('the sync wire adapter', () => {
     ])
   })
 
-  it('D-10: a 401 asks for the token to be renewed, and never ends the session', async () => {
+  it('a 401 asks for the token to be renewed, and never ends the session', async () => {
     expect(await failureOf(new HttpError(401, routes.push()))).toBe('unauthorized')
   })
 

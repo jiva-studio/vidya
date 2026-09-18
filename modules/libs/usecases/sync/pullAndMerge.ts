@@ -13,7 +13,7 @@ import { NO_REQUIRED_FIELDS, type RequiredFields, type SkippedChange } from './v
  * Copied in shape from Lectorium's `usecases/sync/pullAndMerge.ts` — the paging
  * loop, the one-transaction-per-page rule and the best-effort acknowledgement
  * are all its. What is ours is the read position: Lectorium keeps one number
- * for the whole journal, and we keep one per scope (I-3).
+ * for the whole journal, and we keep one per scope.
  *
  * That single change is what removes a whole feature. A course the student has
  * just been enrolled on is a scope standing at `0`, and its history arrives
@@ -23,7 +23,7 @@ import { NO_REQUIRED_FIELDS, type RequiredFields, type SkippedChange } from './v
  * Two loop guards, and neither is optional:
  *
  * - A page that advanced no position and started no scope ends the run, even
- *   when the server says `hasMore` (D-19, AC-22m). Without it a server bug
+ *   when the server says `hasMore`. Without it a server bug
  *   spins the device until the battery is flat.
  * - `maxPages` bounds a run that is making progress but has no end in sight,
  *   so one run cannot hold the app hostage.
@@ -46,7 +46,7 @@ export interface PullAndMergeResult {
   readonly pages: number
   readonly applied: number
 
-  /** Rows already superseded locally — handled, not lost (D-4). */
+  /** Rows already superseded locally — handled, not lost. */
   readonly stale: number
 
   readonly skipped: readonly SkippedChange[]
@@ -54,22 +54,22 @@ export interface PullAndMergeResult {
   /** Scopes started at `0` this run: the whole of "a new course arrived". */
   readonly added: readonly SyncScopeRef[]
 
-  /** Scopes withdrawn. Their downloaded rows are untouched (D-7, AC-22c). */
+  /** Scopes withdrawn. Their downloaded rows are untouched. */
   readonly removed: readonly SyncScopeRef[]
 
-  /** Scopes to refetch because their checksum disagrees (I-5, AC-10m). */
+  /** Scopes to refetch because their checksum disagrees. */
   readonly diverged: readonly SyncScopeRef[]
 
   /** `true` when the server said there was nothing further to send. */
   readonly reachedEnd: boolean
 
-  /** `true` when the device suspended the database mid-run (D-14, AC-22i). */
+  /** `true` when the device suspended the database mid-run. */
   readonly paused: boolean
 
   /**
    * `true` when the positions were applied locally but the acknowledgement did
    * not reach the server. Nothing is lost: the ack is a compaction hint, and
-   * the next run repeats it (T-N-6).
+   * the next run repeats it.
    */
   readonly ackFailed: boolean
 }
@@ -105,7 +105,7 @@ export async function pullAndMerge(
 
   // Not while the device is taking the database back: the acknowledgement is a
   // hint, and taking a lock on the way into the background is the one thing
-  // D-14 forbids. The next run repeats it.
+  // forbids. The next run repeats it.
   totals.ackFailed = totals.paused ? false : await acknowledge(deps, deviceId)
 
   return toResult(totals)
@@ -117,7 +117,7 @@ export async function pullAndMerge(
  *
  * A suspend is not a failure: every page committed so far stands, the scope
  * positions describing them are durable, and the run resumes from exactly here
- * when the app comes back (D-14, AC-22i). Anything else is a real error and
+ * when the app comes back. Anything else is a real error and
  * travels up untouched.
  */
 async function applyOnePage(
@@ -144,15 +144,15 @@ async function applyOnePage(
  * The merge needs it to know whether it may take the server's version whole or
  * has to keep this device's fields on top of it — which is what stops an
  * arriving review status from wiping out an answer that has not been sent yet
- * (AC-19, T-M-11).
+ *
  *
  * Asked of `listUnsettled`, not of `listPending`, and the difference is a
- * student's answer (D-5). A refused row stops being pending the moment the
+ * student's answer. A refused row stops being pending the moment the
  * answer is recorded, but a refusal delivered nothing: the text still exists
  * nowhere but here. Reading the pending list alone drops the document out of
  * this set, the next pull takes the server's empty copy whole, and the answer
  * disappears from the screen while its only remaining copy sits in an outbox
- * row no code ever reads back (AC-18).
+ * row no code ever reads back.
  */
 async function pendingDocs(deps: SyncEngineDeps): Promise<ReadonlySet<string>> {
   const rows = await deps.outbox.listUnsettled({ ownerId: deps.ownerId })
@@ -165,7 +165,7 @@ async function pendingDocs(deps: SyncEngineDeps): Promise<ReadonlySet<string>> {
  * Deliberately outside every transaction and deliberately forgiving. The
  * acknowledgement is an input to a future journal compaction and nothing else;
  * a failure here must not discard a merge that has already committed, so it is
- * reported and retried next run rather than thrown (T-N-6).
+ * reported and retried next run rather than thrown.
  *
  * The local counter is written only after the server confirmed, so a lost
  * answer repeats the ack instead of skipping it.
@@ -191,7 +191,7 @@ async function acknowledge(deps: SyncEngineDeps, deviceId: string): Promise<bool
  * Positions of the scopes still granted. A withdrawn one is not asked about.
  *
  * A stored scope this build cannot name is not asked about either. Nothing
- * writes one any more (D-1), but a device that ran an earlier build may already
+ * writes one any more, but a device that ran an earlier build may already
  * hold it, and one such row in the request is a `400` on every pull from then
  * on — reported as `refused`, which is "ours to fix, waiting will not help", so
  * the device would never receive another row. Leaving it out of the request is

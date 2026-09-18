@@ -13,7 +13,7 @@ import { readSyncRow, readSyncRows } from './rowWriter'
  * `listByCourse` answers from `lessons.course_id` alone and never joins
  * `courses`: the two ride the same scope but nothing guarantees the course row
  * arrived first, and a join would hide the lessons of a course whose own row is
- * still in flight (D-13, AC-22h).
+ * still in flight.
  */
 export interface SqlLessonRepositoryDeps {
   readonly db: IDatabase

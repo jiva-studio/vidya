@@ -19,8 +19,8 @@ import {
 import { failingDatabase, type Harness, openHarness, OWNER } from './harness'
 
 /**
- * Pulling and merging: T-M-6, T-M-7, T-M-11, T-M-15, T-M-22, T-M-24, T-M-26,
- * T-M-27, and the crooked-data family T-X-1 … T-X-14.
+ * Pulling and merging:,
+ *, and the crooked-data family ….
  *
  * All of it against real SQLite, because the claims are about transactions,
  * cursors and what survives a rollback — none of which a fake repository has.
@@ -68,7 +68,7 @@ describe('pulling a page', () => {
     harness = await openHarness()
   })
 
-  it('T-M-6: applying a pull journals nothing — there is no echo', async () => {
+  it('applying a pull journals nothing — there is no echo', async () => {
     harness.server.journal({
       collection: 'courses',
       docId: COURSE_ID,
@@ -89,7 +89,7 @@ describe('pulling a page', () => {
     expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('from the other phone')
   })
 
-  it('T-M-7: an incoming row below the recorded HLC does not roll the document back', async () => {
+  it('an incoming row below the recorded HLC does not roll the document back', async () => {
     harness.server.journal({
       collection: 'homework',
       docId: HOMEWORK_ID,
@@ -101,7 +101,7 @@ describe('pulling a page', () => {
     expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('tuesday')
 
     // The backfill hands over current state while the journal hands over
-    // history; monday must not land on top of tuesday (D-4).
+    // history; monday must not land on top of tuesday.
     harness.server.journal({
       collection: 'homework',
       docId: HOMEWORK_ID,
@@ -116,7 +116,7 @@ describe('pulling a page', () => {
     expect(result.pull?.applied).toBe(0)
   })
 
-  it('T-M-11: an arriving review status does not wipe out unsent text', async () => {
+  it('an arriving review status does not wipe out unsent text', async () => {
     await harness.engine.homework.saveAnswer({
       id: asId<HomeworkId>(HOMEWORK_ID),
       schoolId: asId<never>(SCHOOL_ID),
@@ -142,7 +142,7 @@ describe('pulling a page', () => {
     expect(row!.status).toBe('in_review')
   })
 
-  it('T-M-15: a lesson version tombstone does not take the homework with it', async () => {
+  it('a lesson version tombstone does not take the homework with it', async () => {
     harness.server.journal({
       collection: 'lesson_versions',
       docId: LESSON_VERSION_ID,
@@ -173,9 +173,9 @@ describe('pulling a page', () => {
     expect(answer!.text).toBe('answered against version 3')
   })
 
-  it('T-M-22: a child arriving before its parent applies, and the whole page stands', async () => {
+  it('a child arriving before its parent applies, and the whole page stands', async () => {
     // Homework rides the `user` scope, the version rides `course`. The
-    // positions move independently, so this order is legal (D-13).
+    // positions move independently, so this order is legal.
     harness.server.journal({
       collection: 'homework',
       docId: HOMEWORK_ID,
@@ -191,7 +191,7 @@ describe('pulling a page', () => {
     expect(await harness.engine.lessonVersions.getById(asId<never>(LESSON_VERSION_ID))).toBeNull()
   })
 
-  it('T-M-24: the transaction does not outlive one page', async () => {
+  it('the transaction does not outlive one page', async () => {
     harness.server.pageSize = 1
     for (let index = 0; index < 3; index += 1) {
       harness.server.journal({
@@ -222,7 +222,7 @@ describe('pulling a page', () => {
     expect(harness.server.pullRequests[1]!.cursors[syncScopeKey(COURSE_SCOPE)]).toBe(1)
   })
 
-  it('T-M-26: the scope position and the page commit together', async () => {
+  it('the scope position and the page commit together', async () => {
     const database = await openTestDatabase()
     const executed: string[] = []
 
@@ -230,7 +230,7 @@ describe('pulling a page', () => {
     // the same table but runs before the page has written anything, so staging
     // the crash on the table name would fire on the first statement of the
     // transaction — with no domain row written yet, an empty database afterwards
-    // says nothing about whether the two halves are tied together (D-18).
+    // says nothing about whether the two halves are tied together.
     const broken = await openHarness({
       db: failingDatabase(database.db, (sql) => {
         executed.push(sql)
@@ -259,7 +259,7 @@ describe('pulling a page', () => {
     expect(await broken.count('sync_scopes')).toBe(0)
   })
 
-  it('T-M-27: hasMore with an empty page stops the loop instead of spinning', async () => {
+  it('hasMore with an empty page stops the loop instead of spinning', async () => {
     harness.server.journal({
       collection: 'courses',
       docId: COURSE_ID,
@@ -300,7 +300,7 @@ describe('crooked data from the server', () => {
     return (result.pull?.skipped ?? []).map((row) => row.reason)
   }
 
-  it('T-X-1: an unknown collection is skipped, the position still advances', async () => {
+  it('an unknown collection is skipped, the position still advances', async () => {
     harness.server.malformed({ collection: 'grimoires', scope: USER_SCOPE })
 
     expect(await skipped()).toEqual(['unknownCollection'])
@@ -308,7 +308,7 @@ describe('crooked data from the server', () => {
     expect(scopes.find((scope) => scope.scope.kind === 'user')!.cursor).toBeGreaterThan(0)
   })
 
-  it('T-X-2: an unknown field is ignored and the row still lands', async () => {
+  it('an unknown field is ignored and the row still lands', async () => {
     harness.server.journal({
       collection: 'homework',
       docId: HOMEWORK_ID,
@@ -321,7 +321,7 @@ describe('crooked data from the server', () => {
     expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('fine')
   })
 
-  it('T-X-3: a row missing a field that addresses it is skipped', async () => {
+  it('a row missing a field that addresses it is skipped', async () => {
     harness.server.malformed({
       collection: 'homework',
       scope: USER_SCOPE,
@@ -332,7 +332,7 @@ describe('crooked data from the server', () => {
     expect(await harness.count('homework')).toBe(0)
   })
 
-  it('T-X-4: an upsert with null data is skipped', async () => {
+  it('an upsert with null data is skipped', async () => {
     harness.server.malformed({
       collection: 'homework',
       scope: USER_SCOPE,
@@ -342,17 +342,17 @@ describe('crooked data from the server', () => {
     expect(await skipped()).toEqual(['missingData'])
   })
 
-  it('T-X-5: an unparseable HLC is skipped', async () => {
+  it('an unparseable HLC is skipped', async () => {
     harness.server.malformed({ scope: USER_SCOPE, hlc: 'yesterday', data: homework() })
     expect(await skipped()).toEqual(['invalidHlc'])
   })
 
-  it('T-X-6: a docId that is not a uuid is skipped', async () => {
+  it('a docId that is not a uuid is skipped', async () => {
     harness.server.malformed({ scope: USER_SCOPE, docId: 'the-one-i-wrote', data: homework() })
     expect(await skipped()).toEqual(['invalidDocId'])
   })
 
-  it('T-X-7: an unknown content schemaVersion is stored whole, not truncated', async () => {
+  it('an unknown content schemaVersion is stored whole, not truncated', async () => {
     harness.server.journal({
       collection: 'lesson_versions',
       docId: LESSON_VERSION_ID,
@@ -366,7 +366,7 @@ describe('crooked data from the server', () => {
     expect(stored!.content).toMatchObject({ schemaVersion: 99, newShape: ['?'] })
   })
 
-  it('T-X-8: an unfamiliar status value is stored as it came', async () => {
+  it('an unfamiliar status value is stored as it came', async () => {
     harness.server.journal({
       collection: 'homework',
       docId: HOMEWORK_ID,
@@ -378,7 +378,7 @@ describe('crooked data from the server', () => {
     expect((await harness.row('homework', HOMEWORK_ID))!.status).toBe('awaiting_oracle')
   })
 
-  it('T-X-9: a duplicated serverSeq on one page applies once', async () => {
+  it('a duplicated serverSeq on one page applies once', async () => {
     const payload = homework({ text: 'said twice' })
     harness.server.journal({
       collection: 'homework',
@@ -402,7 +402,7 @@ describe('crooked data from the server', () => {
     expect(await harness.count('homework')).toBe(1)
   })
 
-  it('T-X-10: rows out of sequence still leave the position at the maximum', async () => {
+  it('rows out of sequence still leave the position at the maximum', async () => {
     harness.server.malformed({
       collection: 'lessons',
       docId: lessonId(1),
@@ -424,7 +424,7 @@ describe('crooked data from the server', () => {
     expect(scopes.find((scope) => scope.scope.kind === 'course')!.cursor).toBe(900)
   })
 
-  it('T-X-11: an oversized payload is refused with a reason, not a crash', async () => {
+  it('an oversized payload is refused with a reason, not a crash', async () => {
     harness.server.malformed({
       collection: 'lesson_versions',
       docId: LESSON_VERSION_ID,
@@ -436,7 +436,7 @@ describe('crooked data from the server', () => {
     expect(await harness.count('lesson_versions')).toBe(0)
   })
 
-  it('T-X-12: unicode, emoji and RTL survive the round trip unchanged', async () => {
+  it('unicode, emoji and RTL survive the round trip unchanged', async () => {
     const text = 'श्री · 🙏🏽 · مرحبا · שלום'
     harness.server.journal({
       collection: 'homework',
@@ -449,7 +449,7 @@ describe('crooked data from the server', () => {
     expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe(text)
   })
 
-  it('T-X-13: a very long answer hits the ceiling with a reason', async () => {
+  it('a very long answer hits the ceiling with a reason', async () => {
     harness.server.malformed({
       collection: 'homework',
       docId: HOMEWORK_ID,
@@ -460,7 +460,7 @@ describe('crooked data from the server', () => {
     expect(await skipped()).toEqual(['payloadTooLarge'])
   })
 
-  it('T-X-14: empty strings and empty arrays are stored, not defaulted away', async () => {
+  it('empty strings and empty arrays are stored, not defaulted away', async () => {
     harness.server.journal({
       collection: 'homework',
       docId: HOMEWORK_ID,
@@ -485,7 +485,7 @@ describe('crooked data from the server', () => {
     expect(stored!.publishedAt).toBeNull()
   })
 
-  it('T-X-15: instants are stored in UTC and the device time zone changes nothing', async () => {
+  it('instants are stored in UTC and the device time zone changes nothing', async () => {
     harness.server.journal({
       collection: 'homework',
       docId: HOMEWORK_ID,

@@ -12,14 +12,12 @@ import { SYNC_WIRE_FIELDS } from '../syncFields'
  * neither of them would ever send. That is exactly what happened: `title` sat
  * in three fixtures while the protocol and the table both said `name`.
  *
- * The allowed names are `SYNC_WIRE_FIELDS` — the same list T-C-7 holds the two
+ * The allowed names are `SYNC_WIRE_FIELDS` — the same list holds the two
  * projection tables to. A fixture, a server projection and a device projection
  * that each agreed with the protocol separately could still disagree with each
  * other; one list they are all measured against cannot let that happen.
  */
 const ALLOWED: Partial<Record<string, readonly string[]>> = SYNC_WIRE_FIELDS
-
-
 
 type Change = { collection?: string; data?: unknown }
 

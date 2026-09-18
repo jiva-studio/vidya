@@ -12,7 +12,7 @@ const KEY = 'device-id'
  * handset. The id is the last tiebreak in a Hybrid Logical Clock and part of
  * the idempotency key `(collection, docId, hlc)`, so two installations sharing
  * one id can mint the same stamp for two different changes and have the second
- * swallowed by the server's unique index as an imagined repeat (D-16). A
+ * swallowed by the server's unique index as an imagined repeat. A
  * hardware identifier would survive a backup restored onto a second handset and
  * produce exactly that; a random one does not.
  *

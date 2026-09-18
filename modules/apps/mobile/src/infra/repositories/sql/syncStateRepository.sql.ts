@@ -14,11 +14,11 @@ import type { IDatabase } from '@/ports'
  *
  * Logic copied from Lectorium's `infra/repositories/sql/syncStateRepository.sql.ts`.
  * The one structural departure is the one the whole stage turns on: Lectorium
- * keeps a single `pull_cursor` column, and we keep a row per scope (I-3).
+ * keeps a single `pull_cursor` column, and we keep a row per scope.
  * Positions then move independently, which is what makes a newly enrolled
  * course simply "a scope standing at 0" and removes the need for a backfill
  * path — and, in the same stroke, makes it legal for a child row to arrive
- * before its parent (D-13).
+ * before its parent.
  *
  * Both tables are keyed by identity as well as by device, so signing out erases
  * nothing and signing back in works offline. The device id is resolved once and
@@ -26,7 +26,7 @@ import type { IDatabase } from '@/ports'
  * uses have to agree on one value.
  *
  * Writes go through `db.execute` and join the caller's transaction — the page
- * and the position it advances commit together (D-18, AC-22l).
+ * and the position it advances commit together.
  */
 
 interface ScopeRow {
@@ -95,7 +95,7 @@ export function createSqlSyncStateRepository(
 
     /**
      * Every scope this identity knows, removed ones included — a withdrawn
-     * course still has to be listed so its data stays explicable (D-7).
+     * course still has to be listed so its data stays explicable.
      */
     listScopes: async (): Promise<readonly SyncScopeState[]> => {
       const rows = await db.query<ScopeRow>(
@@ -140,7 +140,7 @@ export function createSqlSyncStateRepository(
     },
 
     /**
-     * Mark a scope gone, keeping every row it brought (D-7, AC-22c).
+     * Mark a scope gone, keeping every row it brought.
      *
      * This is the whole of "the student was withdrawn from a course" on the
      * device. Nothing is deleted: reading what was downloaded is unconditional,
@@ -154,7 +154,7 @@ export function createSqlSyncStateRepository(
     },
 
     /**
-     * Take the removal mark off a scope granted again (D-4, AC-22c).
+     * Take the removal mark off a scope granted again.
      *
      * The position and the checksum are left exactly where they stand: the rows
      * this scope brought were never deleted, so the device does not need them
@@ -170,7 +170,7 @@ export function createSqlSyncStateRepository(
 
     /**
      * Put one scope back to `0` so its history is fetched again — the answer to
-     * a checksum that does not match (I-5, AC-10m).
+     * a checksum that does not match.
      *
      * The checksum is cleared with it, because the stored one describes content
      * we have just declared untrustworthy. One scope, never the database: a

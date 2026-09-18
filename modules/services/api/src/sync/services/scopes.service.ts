@@ -17,7 +17,7 @@ interface ScopeHead {
  *
  * Rights are answered here and nowhere else: a pull compares the positions it
  * was sent against this list and drops everything not in it, so a scope the
- * caller has no claim to cannot be reached by asking for it (AC-10l). The
+ * caller has no claim to cannot be reached by asking for it. The
  * journal itself carries no permissions — the addressee was stamped when the
  * row was written — which is exactly why the caller's rights have to be decided
  * before the first row is read.

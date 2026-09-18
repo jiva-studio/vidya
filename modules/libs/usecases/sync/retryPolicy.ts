@@ -4,14 +4,14 @@ import type { MillisClock, Random } from './ports'
  * How long to wait before trying again, and when to stop trying at all.
  *
  * Nothing like this exists in Lectorium: there the retry cadence is a plain
- * doubling with no jitter (`libraryPendingSchedule.ts`), which is the shape D-15
+ * doubling with no jitter (`libraryPendingSchedule.ts`), which is the shape
  * names as the problem. We have four sync triggers — launch, network return,
  * local write, pull-to-refresh — and every device fires them on the same events.
  * A server hiccup therefore lines every device up on the same retry schedule,
  * and the synchronised herd finishes off the server that was only stumbling.
  *
  * So: exponential growth, **jitter**, a ceiling, and a circuit breaker on
- * sustained unavailability (AC-22j, T-N-12, T-N-13).
+ * sustained unavailability.
  *
  * The jitter is *equal* jitter — half the window fixed, half random — rather
  * than full jitter. Full jitter can return a delay of nearly zero, which loses
@@ -20,7 +20,7 @@ import type { MillisClock, Random } from './ports'
  * devices apart.
  *
  * Pure but for the two injected ports. `Math.random()` is forbidden in `libs/`
- * and would make T-N-12 unable to state what it is testing: two devices differ
+ * and would make unable to state what it is testing: two devices differ
  * because their random sources differ, which a test has to be able to arrange.
  */
 
@@ -106,7 +106,7 @@ export function createRetryPolicy(
  * `window = min(max, base * 2^attempt)`, then half of it fixed and half of it
  * scaled by `roll`. Exported because the growth and the spread are separately
  * worth asserting, and a test should not have to drive a whole policy to see
- * either (T-N-12).
+ * either.
  */
 export function jitteredDelay(
   attempt: number,

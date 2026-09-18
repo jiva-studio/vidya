@@ -22,11 +22,11 @@ import { readSyncRow, readSyncRows } from './rowWriter'
  * `deleted_at IS NULL`, so a version withdrawn upstream stops being offered.
  * The homework written against it is in another table and is not touched — a
  * student's work does not disappear because an editor unpublished a draft
- * (D-6, AC-22b). `getById` deliberately still returns a tombstoned row, because
+ * `getById` deliberately still returns a tombstoned row, because
  * an answer that points at it has to be able to say what it was answering.
  *
  * **Content is returned exactly as stored**, `schemaVersion` included, even
- * when this build does not know that version (D-9, AC-22e). Deciding what to do
+ * when this build does not know that version. Deciding what to do
  * about it belongs to the screen, which offers an update; a repository that
  * filtered here would throw away a lesson the next release can read.
  */
@@ -56,7 +56,7 @@ export function createSqlLessonVersionRepository(
      *
      * "Highest", not "the one the server currently calls latest": publishing a
      * new version does not unpublish the old one, and an offline answer written
-     * against version 3 has to keep finding version 3 (see AC-10p).
+     * against version 3 has to keep finding version 3.
      */
     async getPublished(lessonId: LessonId): Promise<LocalLessonVersion | null> {
       const payloads = await readSyncRows(

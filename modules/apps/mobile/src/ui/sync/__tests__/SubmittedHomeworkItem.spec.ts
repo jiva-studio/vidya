@@ -17,14 +17,14 @@ const render = (props: Partial<SubmittedHomeworkItemProps> = {}) =>
   })
 
 /**
- * D-13. An answer whose lesson version has not arrived yet.
+ * An answer whose lesson version has not arrived yet.
  *
  * Scope positions move independently and the device schema has no foreign keys,
  * so homework can legitimately reach the device before the lesson version it
  * answers. The row has to survive the missing parent: a stand-in, never a crash
  * and never a blank screen.
  */
-describe('D-13: an answer without its lesson version', () => {
+describe('an answer without its lesson version', () => {
   it('stands in for the lesson instead of rendering nothing', () => {
     const wrapper = render({ lessonTitle: undefined })
 

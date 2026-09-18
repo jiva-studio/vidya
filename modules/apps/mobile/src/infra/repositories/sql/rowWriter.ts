@@ -21,7 +21,7 @@ import {
  *
  * Nothing here opens a transaction, and nothing here touches a table other than
  * the one the collection projects onto — which is what keeps a tombstone from
- * cascading (D-6, AC-22b).
+ * cascading.
  */
 
 /** One synced row, addressed the way every synced table is keyed. */
@@ -78,7 +78,7 @@ export async function writeSyncRow(
  *
  * A collection with a tombstone column keeps its row and is marked — a
  * withdrawn enrolment and an unpublished version are decisions the student has
- * to be able to see explained (D-6, D-7). A collection without one loses the
+ * to be able to see explained. A collection without one loses the
  * row. Neither branch reaches another table.
  */
 export async function deleteSyncRow(db: IDatabase, ref: SyncRowRef, now: UtcClock): Promise<void> {

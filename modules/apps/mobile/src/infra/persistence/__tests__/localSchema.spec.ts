@@ -43,9 +43,9 @@ const columnNames = async (db: IDatabase, table: string): Promise<string[]> =>
   (await columnsOf(db, table)).map((column) => column.name).sort()
 
 describe('the local schema', () => {
-  /* ------------------------------ T-M-23 -------------------------------- */
+  /* ------------------------------ -------------------------------- */
 
-  describe('T-M-23: the schema has no foreign keys at all', () => {
+  describe('the schema has no foreign keys at all', () => {
     it('declares no foreign key on any table', async () => {
       const { db } = await openTestDatabase()
 

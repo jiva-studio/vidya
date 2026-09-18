@@ -14,12 +14,12 @@ const render = (done: number, total: number, slot?: string) =>
   })
 
 /**
- * T-U-3. The first run, when the device has the least to show.
+ * The first run, when the device has the least to show.
  *
  * Backfill is the one moment a student can open the app and find nothing there,
  * so the screen says what is happening and how far it has got.
  */
-describe('T-U-3: the first run fills the device in the open', () => {
+describe('the first run fills the device in the open', () => {
   it('is never an empty screen', () => {
     expect(render(0, 0).text().length).toBeGreaterThan(0)
   })

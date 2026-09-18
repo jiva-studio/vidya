@@ -63,7 +63,7 @@ const content = (): domain.LessonContent => ({
       blocks: [
         { id: BLOCK_ID, type: 'text', content: 'Read this' },
 
-        // A quiz, because the whole point of AC-10a is the key inside one. The
+        // A quiz, because the whole point of is the key inside one. The
         // sync fixtures carried only `text` blocks, which is exactly why the
         // journal shipped raw content for as long as it did without failing a
         // single test.

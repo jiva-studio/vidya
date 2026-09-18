@@ -19,7 +19,7 @@ const BUSY_TIMEOUT_MS = 3000
  * in lectorium, minus its two complications. There is no non-conformed path
  * handling, because this app has exactly one database and no bundled catalogs
  * to open from the filesystem; and `PRAGMA foreign_keys` is not set, because
- * the schema has no foreign keys to enforce (D-13).
+ * the schema has no foreign keys to enforce.
  */
 export function useCapacitorSqlPersistence(): IPersistence {
   const sqlite = new SQLiteConnection(CapacitorSQLite)

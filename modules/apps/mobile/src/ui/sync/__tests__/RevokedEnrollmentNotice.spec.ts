@@ -12,13 +12,13 @@ const render = (hasDownloadedContent = true) =>
   })
 
 /**
- * T-U-4. A course the student was withdrawn from.
+ * A course the student was withdrawn from.
  *
  * Withdrawal ends what the network will accept, not what the device holds:
  * reading downloaded content is unconditional, so the course is explained and
  * stays open rather than quietly disappearing.
  */
-describe('T-U-4: a withdrawn enrolment is explained', () => {
+describe('a withdrawn enrolment is explained', () => {
   it('names the course it is talking about', () => {
     expect(render().text()).toContain('Bhagavad-gita')
   })

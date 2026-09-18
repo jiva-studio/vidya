@@ -1,5 +1,5 @@
 /**
- * Direction and ownership tables — T-D-12, T-D-13.
+ * Direction and ownership tables —.
  *
  * These two cases are the reason the tables are data rather than prose: a
  * collection added without a direction, or a two-way field owned by nobody,
@@ -18,7 +18,7 @@ import {
 import { EnrollmentSyncFields, HomeworkSyncFields, SyncCollection, SyncCollections } from '../types'
 
 describe('SYNC_DIRECTION', () => {
-  // T-D-12
+  //
   it('covers exactly the replicating collections', () => {
     expect(Object.keys(SYNC_DIRECTION).sort()).toEqual([...SyncCollections].sort())
   })
@@ -40,7 +40,7 @@ describe('SYNC_DIRECTION', () => {
 })
 
 describe('FIELD_OWNER', () => {
-  // T-D-13
+  //
   it('covers every mutable field of every two-way collection', () => {
     const owned = (collection: 'homework' | 'enrollments'): string[] =>
       [...FIELD_OWNER[collection].client, ...FIELD_OWNER[collection].server].sort()

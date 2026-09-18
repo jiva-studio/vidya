@@ -12,7 +12,7 @@ import { SyncRequestException } from '../errors'
 import { SyncPushRowService } from './push/row.service'
 
 /**
- * How far this device's own writes have reached the journal (I-6).
+ * How far this device's own writes have reached the journal.
  *
  * Without it the interface can paint a state that does not yet contain the
  * answer the student has just written: a push and the pull after it are two
@@ -26,7 +26,7 @@ const checkpoint = (results: readonly PushResult[]): number =>
 /**
  * A batch of local changes, answered row by row.
  *
- * Strictly in array order (D-12): two offline edits of one document must land
+ * Strictly in array order: two offline edits of one document must land
  * in the order they were made, and nothing else in the protocol says which came
  * first. That is why the rows are not applied in parallel, however tempting it
  * looks — concurrency here would silently reorder a student's own corrections.

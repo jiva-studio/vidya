@@ -22,6 +22,6 @@ export interface Migration {
  * Injected rather than taken from the ambient clock so a test can pin it, and
  * typed as {@link IsoDateTime} so it cannot be a local time: everything stored
  * on the device is an instant in UTC, or time zones show up later in row
- * ordering and in displayed deadlines (D-17).
+ * ordering and in displayed deadlines.
  */
 export type UtcClock = () => IsoDateTime

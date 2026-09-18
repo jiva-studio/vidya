@@ -11,7 +11,7 @@ import { readSyncRow, readSyncRows } from './rowWriter'
  * `courses` replicates downward only (`SYNC_DIRECTION.courses === 'down'`), so
  * this repository has no writes at all and is not wrapped by the journal
  * decorator. A course the device holds is readable unconditionally, including
- * after the student was withdrawn from it (D-7): nothing here filters on
+ * after the student was withdrawn from it: nothing here filters on
  * enrolment, because reading what was downloaded is not a permission question.
  */
 export interface SqlCourseRepositoryDeps {

@@ -30,7 +30,7 @@ const fold = (value: string): bigint => {
 const render = (hash: bigint): string => hash.toString(16).padStart(16, '0')
 
 /**
- * A checksum per scope, so a device can find out *which* scope diverged (I-5).
+ * A checksum per scope, so a device can find out *which* scope diverged.
  *
  * A sync engine cannot be debugged on a user's phone: the only way a drift is
  * ever noticed is if the two sides can compare a number. The number is folded

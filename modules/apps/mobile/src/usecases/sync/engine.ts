@@ -68,13 +68,13 @@ export interface SyncEngineOptions {
   /** The signed-in identity. Read per call; it changes under a live engine. */
   readonly ownerId: () => string
 
-  /** Instants as stored and sent: ISO 8601, UTC (D-17, AC-22k). */
+  /** Instants as stored and sent: ISO 8601, UTC. */
   readonly now: UtcClock
 
   /** Wall clock in unix milliseconds — the physical half of an HLC stamp. */
   readonly nowMs: () => number
 
-  /** Jitter source for the retry policy (D-15, AC-22j). */
+  /** Jitter source for the retry policy. */
   readonly random: () => number
 
   readonly refreshToken?: TokenRefresher
@@ -149,7 +149,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     // A getter, not a snapshot: the signed-in identity changes under a live
     // engine, and the adapters below already read it per call. A captured
     // value here would let a run drain one identity's journal under another's
-    // name (T-I-3).
+    // name.
     get ownerId() {
       return ownerId()
     },
@@ -184,7 +184,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
  * it was running on. Here it becomes `SyncPausedError`, which the pull and push
  * loops treat as "stop where you are" — every page committed so far stands, and
  * the run resumes from the same scope positions when the app comes back
- * (D-14, AC-22i).
+ *
  */
 export function unitOfWorkOver(db: IDatabase) {
   return async <T>(fn: () => Promise<T>): Promise<T> => {

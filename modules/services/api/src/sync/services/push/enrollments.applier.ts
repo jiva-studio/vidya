@@ -28,7 +28,7 @@ const find = async (manager: EntityManager, change: PushChange): Promise<Enrollm
  * `enrollments` replicates both ways — up goes the request, down comes the
  * decision (`SYNC_DIRECTION`, and the "what goes where" table of `docs/PLAN.md`)
  * — so a request written on a train is a row the server has to be able to take.
- * Refusing it would strand an outbox row that is never deleted (D-7) and never
+ * Refusing it would strand an outbox row that is never deleted and never
  * accepted, which is a permanent, and false, refusal sitting in the app.
  *
  * The rules are `EnrollmentsService.request`'s, applied here rather than
@@ -187,7 +187,7 @@ const locate = async (
  * What the device actually asked for.
  *
  * `FIELD_OWNER.enrollments.client` is `['status']`, so the decision, the group
- * and the times are dropped from whatever arrived without a word (AC-8) — the
+ * and the times are dropped from whatever arrived without a word — the
  * device must not have to know the server's model to send a row it wrote
  * itself. And the only status a client may bring about is `pending`, so a row
  * claiming another is not refused either: it is read as the request it is.

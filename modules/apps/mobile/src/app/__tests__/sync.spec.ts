@@ -3,11 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DatabaseSuspendedError } from '@/ports'
 
 /**
- * The lifecycle wiring — the second half of T-M-25.
+ * The lifecycle wiring — the second half of.
  *
  * The claim is narrow and worth stating on its own: **going into the background
  * releases the SQLite lock.** iOS kills an app that is still holding one when it
- * is suspended (`0xdead10cc`, D-14), and that death happens on a student's
+ * is suspended (`0xdead10cc`), and that death happens on a student's
  * handset and never in our logs, so there is no way to notice this by using the
  * app. The only way to know the listener is subscribed is to assert it.
  *
@@ -75,7 +75,7 @@ describe('the sync lifecycle wiring', () => {
     ])
   })
 
-  it('T-M-25: going into the background releases the lock', async () => {
+  it('going into the background releases the lock', async () => {
     const { db } = await started()
 
     // Before: the database takes transactions.
@@ -87,7 +87,7 @@ describe('the sync lifecycle wiring', () => {
     await expect(db.transaction(async () => undefined)).rejects.toThrow(DatabaseSuspendedError)
   })
 
-  it('T-M-25: coming back to the foreground takes transactions again', async () => {
+  it('coming back to the foreground takes transactions again', async () => {
     const { db } = await started()
 
     await listeners.get('appStateChange')!({ isActive: false })

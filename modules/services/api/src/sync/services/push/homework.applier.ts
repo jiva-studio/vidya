@@ -19,7 +19,7 @@ import {
  *
  * Not the whole freeze that `HomeworkService` applies: an answer still on its
  * way through review may be corrected from a device, because a batch is allowed
- * to carry two edits of one document (D-12) and the second must land. Accepted
+ * to carry two edits of one document and the second must land. Accepted
  * is final, and the only status whose refusal the contract has a word for.
  */
 const FINAL = 'accepted'
@@ -44,7 +44,7 @@ const find = async (manager: EntityManager, change: PushChange): Promise<Homewor
  * `pending`, and an answer is frozen once it is handed in.
  *
  * The server fields — `status`, `grade`, `reviewedById`, `reviewedAt` — are
- * dropped from whatever the client sent without a word (AC-8). Refusing a row
+ * dropped from whatever the client sent without a word. Refusing a row
  * for carrying them would mean demanding that the device know the server's
  * model before it may send a row it wrote itself.
  */

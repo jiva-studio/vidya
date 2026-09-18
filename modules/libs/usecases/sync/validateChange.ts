@@ -14,7 +14,7 @@ import { SYNC_MAX_CHANGE_BYTES, type SyncChange } from '@vidya/protocol'
  * Deciding whether one incoming row can be stored, before anything is written.
  *
  * Everything checked here arrives from the server and none of it may take the
- * device down (section 11.6, T-X-1 … T-X-14). The rule throughout is the same:
+ * device down (section 11.6, … ). The rule throughout is the same:
  * **skip the row, advance the position, record the fact**. A skipped row has
  * been handled, not lost — stalling the scope position on it would replay the
  * same page forever, and refusing the whole page would let one malformed row
@@ -22,7 +22,7 @@ import { SYNC_MAX_CHANGE_BYTES, type SyncChange } from '@vidya/protocol'
  *
  * What is deliberately *not* checked: unknown fields inside `data`. A newer
  * server may send a column this build has never heard of, and the projection
- * drops it on the way into the table (T-X-2). Dropping a field is a smaller
+ * drops it on the way into the table. Dropping a field is a smaller
  * loss than dropping a lesson.
  *
  * Pure: no IO, no clock. The one piece of knowledge it cannot hold itself —
@@ -32,13 +32,13 @@ import { SYNC_MAX_CHANGE_BYTES, type SyncChange } from '@vidya/protocol'
  */
 
 export const SyncSkipReasons = [
-  /** A collection this build does not replicate (T-X-1). */
+  /** A collection this build does not replicate. */
   'unknownCollection',
 
-  /** `docId` is not an identifier (T-X-6). */
+  /** `docId` is not an identifier. */
   'invalidDocId',
 
-  /** `hlc` does not parse (T-X-5). */
+  /** `hlc` does not parse. */
   'invalidHlc',
 
   /** `serverSeq` is not a positive integer. */
@@ -50,13 +50,13 @@ export const SyncSkipReasons = [
   /** `op` is neither `upsert` nor `delete`. */
   'invalidOp',
 
-  /** An `upsert` whose `data` is `null` (T-X-4). */
+  /** An `upsert` whose `data` is `null`. */
   'missingData',
 
-  /** `data` lacks a field that addresses the row (T-X-3). */
+  /** `data` lacks a field that addresses the row. */
   'missingField',
 
-  /** `data` is over {@link SYNC_MAX_CHANGE_BYTES} (D-11, T-X-11, T-X-13). */
+  /** `data` is over {@link SYNC_MAX_CHANGE_BYTES}. */
   'payloadTooLarge',
 ] as const
 
@@ -149,7 +149,7 @@ export function validateChange(change: SyncChange, required: RequiredFields): Ch
   // carries no school in its payload at all, so folding the envelope's school
   // in first would measure a row fifty bytes longer than the one that was
   // checked. A row on the boundary would then be skipped while its position
-  // moved on past it, and the lesson would be missing for good (D-2).
+  // moved on past it, and the lesson would be missing for good.
   const oversized = checkSize(body)
   if (oversized !== null) return oversized
 
@@ -186,12 +186,12 @@ function checkStructure(change: SyncChange): ChangeVerdict | null {
 }
 
 /**
- * The ceiling on one row (D-11).
+ * The ceiling on one row.
  *
  * Measured in UTF-8 bytes, which is what the wire carries and what the server
  * counts — a text of emoji and RTL marks is several times its length in
  * characters, and counting characters would let a row through here that the
- * server already refused (T-X-12, T-X-13).
+ * server already refused.
  *
  * Measured on the payload the server sent and on nothing else. The two sides
  * have to count the same bytes, or the boundary is in two places at once and

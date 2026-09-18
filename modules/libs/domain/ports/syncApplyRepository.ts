@@ -12,7 +12,7 @@
  *
  * Domain port; the SQL implementation is the device's. Every method joins the
  * caller's unit of work — the rows of a page and the scope position that
- * describes them are written together (D-18).
+ * describes them are written together.
  */
 
 import { SyncCollection, SyncDoc, SyncPayload } from '../sync/types'
@@ -31,7 +31,7 @@ export interface ISyncApplyRepository {
    * Persist a merged document without journaling it, and record `serverHlc` as
    * the document's new server pointer.
    *
-   * **Conditional (D-4.)** The write happens only when `serverHlc` is strictly
+   * **Conditional (.)** The write happens only when `serverHlc` is strictly
    * greater than the pointer already on record; otherwise the call is a no-op
    * and returns `false`. Without that test a page redelivered after a dropped
    * connection, or two scopes moving at their own pace, would put an older
@@ -64,7 +64,7 @@ export interface ISyncApplyRepository {
    * The observed half of the device's clock seat. A stamp this handset has seen
    * is part of its clock whichever account was signed in when it arrived, and
    * the counter that keeps two writes of one millisecond apart belongs to the
-   * device id they share (D-7). Reading it per identity lets the seat fall back
+   * device id they share. Reading it per identity lets the seat fall back
    * when the student changes, and a stamp already issued gets issued again.
    */
   latestServerHlcOnDevice(): Promise<string | null>

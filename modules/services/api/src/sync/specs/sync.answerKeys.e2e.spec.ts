@@ -7,9 +7,9 @@ import { DataSource } from 'typeorm'
 import { createSyncContext, journalRows, QUIZ_BLOCK_ID, RIGHT_ANSWER, SyncContext } from './context'
 
 /**
- * AC-10a-sync: the quiz key does not travel down the sync path.
+ * -sync: the quiz key does not travel down the sync path.
  *
- * AC-10a has guarded the REST reply since the student projection was written.
+ * has guarded the REST reply since the student projection was written.
  * The journal path had no such guard and sent `version.content` verbatim, so a
  * published quiz put its answer key into `sync_journal` and from there into the
  * SQLite file on the student's phone — where no later server change can recall
@@ -22,7 +22,7 @@ import { createSyncContext, journalRows, QUIZ_BLOCK_ID, RIGHT_ANSWER, SyncContex
  *
  * The walk is recursive and structural, exactly like the REST guard: content
  * with a `schemaVersion` this build has never seen is stored and replicated
- * verbatim (D-9), so a shape nobody anticipated has to be searched too.
+ * verbatim, so a shape nobody anticipated has to be searched too.
  */
 const KEY = 'rightAnswer'
 
@@ -37,7 +37,7 @@ const holdsAnswerKey = (node: unknown): boolean => {
 const routes = protocol.Routes().sync
 const DEVICE = 'device-8f2a6c14'
 
-describe('AC-10a-sync: the answer key never reaches a device', () => {
+describe('-sync: the answer key never reaches a device', () => {
   let app: INestApplication
   let ds: DataSource
   let ctx: SyncContext

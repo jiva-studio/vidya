@@ -81,7 +81,7 @@ const lessons: CollectionProjection<Lesson> = {
   // No `schoolId`: a lesson's school is a fact about where the row sits, which
   // is what the envelope states and what the device files it under. Repeating
   // it in the body would put it on the wire without `LessonDetails` having it
-  // (T-C-7), the same way a lesson version used to repeat one it never had.
+  //, the same way a lesson version used to repeat one it never had.
   project: (lesson) => ({
     id: lesson.id,
     courseId: lesson.courseId,
@@ -91,7 +91,7 @@ const lessons: CollectionProjection<Lesson> = {
 }
 
 /**
- * A version reaches devices only once it is published (T-S-4, T-S-5).
+ * A version reaches devices only once it is published.
  *
  * A draft is an editor's scratch space: journalling it would put unfinished
  * content on students' devices and would make publishing the *second* journal
@@ -100,7 +100,7 @@ const lessons: CollectionProjection<Lesson> = {
  * The scope comes from the lesson, which is what carries the course — a version
  * knows only its lesson.
  *
- * **The content is the student projection, never the raw document** (AC-10a).
+ * **The content is the student projection, never the raw document**.
  * The journal has exactly one reader — a student's device — and what reaches
  * that device reaches a SQLite file no later server change can recall, so a
  * quiz key journalled once is a quiz key given away for good. The REST path
@@ -204,7 +204,7 @@ const blockStates: CollectionProjection<BlockState> = {
 
 /**
  * Entity name to projection. An entity absent from this table does not sync —
- * silently, which is why `T-S-7` reconciles the keys against `SYNCED_ENTITIES`.
+ * silently, which is why `` reconciles the keys against `SYNCED_ENTITIES`.
  */
 export const COLLECTION_PROJECTIONS: Record<string, CollectionProjection<any>> = {
   Course: courses,

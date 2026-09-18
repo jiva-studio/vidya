@@ -107,7 +107,7 @@ export function describeDatabaseConformance(subject: ConformanceSubject): void {
       )
 
       // A suspended database still reads: reads hold no lock across an await,
-      // and the lock is what the system punishes (D-14).
+      // and the lock is what the system punishes.
       expect(await ids(db)).toEqual([])
 
       db.resume()

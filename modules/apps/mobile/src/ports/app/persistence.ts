@@ -41,7 +41,7 @@ export interface IDatabase {
 
   /**
    * Refuse new transactions, let the in-flight one settle, and release the
-   * SQLite lock (D-14).
+   * SQLite lock.
    *
    * iOS kills an app that is still holding a SQLite lock when it is suspended
    * — `0xdead10cc` — and that death happens on a student's phone, never in our

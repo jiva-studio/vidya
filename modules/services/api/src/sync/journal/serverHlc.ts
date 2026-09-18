@@ -60,7 +60,7 @@ export const isServerDeviceId = (deviceId: string): boolean =>
  * with a fresh id is harmless: monotonicity is carried by the physical half and
  * by seeding from `max(hlc)`, not by the id.
  *
- * @remarks Extension point (I-2, D-16). A *client's* HLC arriving above
+ * @remarks Extension point. A *client's* HLC arriving above
  * `now() + SYNC_CLOCK_SKEW_TOLERANCE_MS` must be restamped by the server
  * rather than rejected, and a collision on `(collection, doc_id, hlc)` with a
  * different body must be restamped too. Both belong to the push path;

@@ -38,7 +38,7 @@ export interface SqlJsPersistenceOptions {
  *
  * Logic follows `apps/mobile/infra/persistence/sqljs/useSqlJsPersistence.ts`
  * in lectorium, with the IndexedDB sink replaced by the image store and the
- * `PRAGMA foreign_keys` line dropped (D-13: the schema has no foreign keys).
+ * `PRAGMA foreign_keys` line dropped (the schema has no foreign keys).
  */
 export function useSqlJsPersistence(options: SqlJsPersistenceOptions = {}): IPersistence {
   const images: ImageStore = options.images ?? new Map()

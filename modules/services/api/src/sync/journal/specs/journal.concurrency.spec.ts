@@ -10,7 +10,7 @@ import { v4 as uuid } from 'uuid'
 /**
  * What only a real Postgres can prove about the journal.
  *
- * The whole of D-1 is a disagreement between two orders — the order `BIGSERIAL`
+ * The whole of is a disagreement between two orders — the order `BIGSERIAL`
  * hands out numbers and the order transactions become visible. pg-mem has one
  * session and no MVCC, so there is no disagreement to observe there and these
  * cases would pass while proving nothing. They run under
@@ -27,7 +27,7 @@ const JOURNAL_SQL = join(__dirname, '..', '..', '..', '..', 'migrations', '019_s
  * these cases need a session per transaction, which a shared TypeORM data
  * source will not give. Going through the real function rather than a copy of
  * it is the whole point: a test that took the lock itself would prove what
- * Postgres does, not what Vidya does (D-1).
+ * Postgres does, not what Vidya does.
  */
 const managerFor = (client: Client): EntityManager =>
   ({
@@ -98,14 +98,14 @@ describeOnPostgres('sync journal under concurrency', () => {
     await Promise.all(clients.splice(0).map((c) => c.end()))
   })
 
-  /* ------------------------------ T-S-35 -------------------------------- */
+  /* ------------------------------ -------------------------------- */
 
-  it('T-S-35: a row committed late is never stranded below an advanced cursor', async () => {
+  it('a row committed late is never stranded below an advanced cursor', async () => {
     const scope = uuid()
     const [slow, fast, reader] = await Promise.all([connect(), connect(), connect()])
 
     // The slow writer takes its number and stays open. This is the transaction
-    // D-1 loses: a lower number that only becomes visible later.
+    // loses: a lower number that only becomes visible later.
     await slow.query('BEGIN')
     const slowSeq = Number(await append(slow, scope, '000001700000000001-000000-slow'))
 
@@ -143,7 +143,7 @@ describeOnPostgres('sync journal under concurrency', () => {
     expect(slowSeq).toBeLessThan(fastSeq)
   })
 
-  it('T-S-35: the row a reader already saw is never re-ordered behind a later one', async () => {
+  it('the row a reader already saw is never re-ordered behind a later one', async () => {
     const scope = uuid()
     const [first, second, reader] = await Promise.all([connect(), connect(), connect()])
 
@@ -162,9 +162,9 @@ describeOnPostgres('sync journal under concurrency', () => {
     expect(next.map((r) => r.seq)).toEqual([String(secondSeq)])
   })
 
-  /* ------------------------------ T-S-36 -------------------------------- */
+  /* ------------------------------ -------------------------------- */
 
-  it('T-S-36: a device pulling throughout a hundred concurrent pushes misses none', async () => {
+  it('a device pulling throughout a hundred concurrent pushes misses none', async () => {
     const scope = uuid()
 
     // Twenty-five sessions, four transactions each: a hundred pushes racing,
@@ -210,7 +210,7 @@ describeOnPostgres('sync journal under concurrency', () => {
     expect([...seen].sort((a, b) => a - b)).toEqual(seen)
   })
 
-  it('T-S-36: a cursor walked forward one page at a time sees every row exactly once', async () => {
+  it('a cursor walked forward one page at a time sees every row exactly once', async () => {
     const scope = uuid()
     const writers = await Promise.all(Array.from({ length: 20 }, () => connect()))
 
@@ -240,15 +240,15 @@ describeOnPostgres('sync journal under concurrency', () => {
     expect(new Set(seen).size).toBe(20)
   })
 
-  /* ------------------------------ T-S-41 -------------------------------- */
+  /* ------------------------------ -------------------------------- */
 
-  it('T-S-41: a long transaction elsewhere does not delay reading the journal', async () => {
+  it('a long transaction elsewhere does not delay reading the journal', async () => {
     const scope = uuid()
     const [writer, hog, reader] = await Promise.all([connect(), connect(), connect()])
 
     await hog.query('CREATE TABLE reports (id int)')
 
-    // The rejected cure (I-1) reads the journal only below
+    // The rejected cure reads the journal only below
     // `pg_snapshot_xmin(pg_current_snapshot())`. That horizon is held down by
     // ANY open transaction in ANY table, so this two-statement stand-in for an
     // admin report would hide the journal from every device for as long as it
@@ -267,7 +267,7 @@ describeOnPostgres('sync journal under concurrency', () => {
     await hog.query('ROLLBACK')
   })
 
-  it('T-S-41: the horizon the rejected cure reads below would hide a delivered row', async () => {
+  it('the horizon the rejected cure reads below would hide a delivered row', async () => {
     const scope = uuid()
     const [writer, hog, reader] = await Promise.all([connect(), connect(), connect()])
 
@@ -283,7 +283,7 @@ describeOnPostgres('sync journal under concurrency', () => {
     const seq = await append(writer, scope, '000001700000003000-000000-w')
     await writer.query('COMMIT')
 
-    // What I-1 would have delivered: committed rows whose writing transaction
+    // What would have delivered: committed rows whose writing transaction
     // is already below the horizon of every session still running.
     const { rows: gated } = await reader.query(
       `SELECT global_seq FROM sync_journal

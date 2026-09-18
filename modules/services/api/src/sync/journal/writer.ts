@@ -51,7 +51,7 @@ const INSERT = `
  * `pg_snapshot_xmin(pg_current_snapshot())`. It does not serialise writes, and
  * it is a trap: the horizon is held down by *any* long transaction anywhere in
  * the database, so one two-minute report in the admin console stops sync for
- * every device. `T-S-41` fails if anyone reintroduces it.
+ * every device. `` fails if anyone reintroduces it.
  *
  * The insert is idempotent by `(collection, doc_id, hlc)`: a retried push finds
  * its row already there and does nothing rather than raising (Д-3).

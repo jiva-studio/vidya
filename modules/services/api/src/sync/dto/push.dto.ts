@@ -107,7 +107,7 @@ export class PushResponseDto implements protocol.PushResponse {
 
   @ApiProperty({
     example: 42,
-    description: 'Every row of this device up to this outbox id is now in the journal (I-6).',
+    description: 'Every row of this device up to this outbox id is now in the journal.',
   })
   journaledOutboxId: number
 }

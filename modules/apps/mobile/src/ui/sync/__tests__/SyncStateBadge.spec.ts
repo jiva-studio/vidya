@@ -11,13 +11,13 @@ const render = (state: (typeof SubmissionStates)[number], locale: 'en' | 'ru' = 
   mount(SyncStateBadge, { props: { state }, global: { plugins: [fluentFor(locale)] } })
 
 /**
- * T-U-1, AC-23. The four states of a sent answer are told apart on screen.
+ * The four states of a sent answer are told apart on screen.
  *
  * The component is told which state to show and nothing else: where the state
  * came from — the journal, a run in progress, the server's answer — is the sync
  * engine's business.
  */
-describe('T-U-1: submission state of an answer', () => {
+describe('submission state of an answer', () => {
   it.each(SubmissionStates)('names the %s state', (state) => {
     expect(render(state).text().length).toBeGreaterThan(0)
   })

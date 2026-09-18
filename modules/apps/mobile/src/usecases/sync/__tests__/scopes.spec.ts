@@ -15,10 +15,10 @@ import {
 import { type Harness, openHarness } from './harness'
 
 /**
- * Scope positions: T-M-12, T-M-13, T-M-14, T-M-20.
+ * Scope positions:.
  *
  * These four are the payoff for keeping a position per scope instead of one
- * number for the journal (I-3). A new course needs no backfill path because it
+ * number for the journal. A new course needs no backfill path because it
  * is a scope at `0`; a suspected gap costs one course's history rather than the
  * whole database; and a withdrawal moves a flag without deleting a row.
  */
@@ -64,7 +64,7 @@ describe('scope positions', () => {
     return scopes.find((scope) => syncScopeKey(scope.scope) === key)?.cursor ?? -1
   }
 
-  it('T-M-12: a new course is a scope at zero and arrives through an ordinary pull', async () => {
+  it('a new course is a scope at zero and arrives through an ordinary pull', async () => {
     const before = await cursorOf(syncScopeKey(COURSE_SCOPE))
 
     harness.server.journal({
@@ -88,7 +88,7 @@ describe('scope positions', () => {
     // The established course was not disturbed on the way.
     expect(await cursorOf(syncScopeKey(COURSE_SCOPE))).toBe(before)
 
-    // And this is what "no backfill endpoint" means in practice (I-3): the run
+    // And this is what "no backfill endpoint" means in practice: the run
     // pulled and acknowledged, and the new course was asked for from zero on the
     // very next request — a second scope in the same conversation rather than a
     // separate errand down a path of its own.
@@ -139,7 +139,7 @@ describe('scope positions', () => {
     return { userSettled, pullsBefore: harness.server.pullRequests.length }
   }
 
-  it('T-M-13: a checksum that disagrees resets that scope and fetches it again', async () => {
+  it('a checksum that disagrees resets that scope and fetches it again', async () => {
     const { pullsBefore } = await diverge()
 
     const result = await harness.engine.runner.run()
@@ -155,7 +155,7 @@ describe('scope positions', () => {
     expect(await harness.engine.lessons.listByCourse(asId<CourseId>(COURSE_ID))).toHaveLength(1)
   })
 
-  it('T-M-20: the reset costs one scope, never the database', async () => {
+  it('the reset costs one scope, never the database', async () => {
     const { userSettled, pullsBefore } = await diverge()
 
     await harness.engine.runner.run()
@@ -176,7 +176,7 @@ describe('scope positions', () => {
     expect(result.pull?.diverged).toEqual([])
   })
 
-  it('T-M-14: withdrawal marks the scope gone and keeps every downloaded row', async () => {
+  it('withdrawal marks the scope gone and keeps every downloaded row', async () => {
     harness.server.journal({
       collection: 'enrollments',
       docId: ENROLLMENT_ID,
@@ -235,7 +235,7 @@ describe('scope positions', () => {
     expect(latest.cursors[syncScopeKey(COURSE_SCOPE)]).toBeUndefined()
   })
 
-  it('T-M-19: everything the device holds reads back with no network at all', async () => {
+  it('everything the device holds reads back with no network at all', async () => {
     harness.server.journal({
       collection: 'lesson_versions',
       docId: 'a41c7d02-33b5-4e8f-9c6a-71e204f5d8b3',

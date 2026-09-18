@@ -37,9 +37,9 @@ describe('sync journal', () => {
     await app.close()
   })
 
-  /* ------------------------------- T-S-1 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  describe('T-S-1: migration 019', () => {
+  describe('migration 019', () => {
     it('is recorded in schema_migrations', async () => {
       const rows = await ds.query('SELECT name FROM schema_migrations')
 
@@ -75,9 +75,9 @@ describe('sync journal', () => {
     })
   })
 
-  /* ------------------------------- T-S-2 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  describe('T-S-2: one transaction for the domain row and its journal row', () => {
+  describe('one transaction for the domain row and its journal row', () => {
     itOnPostgres('rolls both back when the transaction fails', async () => {
       const before = await journalRows(ds)
 
@@ -114,9 +114,9 @@ describe('sync journal', () => {
     })
   })
 
-  /* ------------------------------- T-S-3 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  describe('T-S-3: the subscriber is the only writer', () => {
+  describe('the subscriber is the only writer', () => {
     it('writes exactly one row for a write made under a push context', async () => {
       const blockStates = app.get(BlockStatesService)
       const hlc = '000001700000000000-000000-device-a'
@@ -144,9 +144,9 @@ describe('sync journal', () => {
     })
   })
 
-  /* ---------------------------- T-S-4, T-S-5 ---------------------------- */
+  /* ---------------------------- ---------------------------- */
 
-  describe('T-S-4: drafts never reach the journal', () => {
+  describe('drafts never reach the journal', () => {
     it('journals nothing when a draft is created', async () => {
       // The fixture already created one, and creating another changes nothing.
       const versions = app.get(LessonVersionsService)
@@ -156,7 +156,7 @@ describe('sync journal', () => {
     })
   })
 
-  describe('T-S-5: publishing journals the version once', () => {
+  describe('publishing journals the version once', () => {
     it('writes exactly one row, addressed to the course', async () => {
       const versions = app.get(LessonVersionsService)
 
@@ -172,9 +172,9 @@ describe('sync journal', () => {
     })
   })
 
-  /* ------------------------------- T-S-6 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  describe('T-S-6: the scope comes from the projection table', () => {
+  describe('the scope comes from the projection table', () => {
     it('addresses course-side collections to their course', async () => {
       const courses = await journalFor(ds, 'courses')
       const lessons = await journalFor(ds, 'lessons')
@@ -224,9 +224,9 @@ describe('sync journal', () => {
     })
   })
 
-  /* ------------------------------- T-S-7 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  describe('T-S-7: the projection table covers everything that syncs', () => {
+  describe('the projection table covers everything that syncs', () => {
     it('has a projection for every synchronised entity', () => {
       const missing = SYNCED_ENTITY_NAMES.filter((name) => !COLLECTION_PROJECTIONS[name])
 
@@ -254,9 +254,9 @@ describe('sync journal', () => {
     })
   })
 
-  /* ------------------------------- T-S-8 -------------------------------- */
+  /* ------------------------------- -------------------------------- */
 
-  describe('T-S-8: a REST write is journalled with no device', () => {
+  describe('a REST write is journalled with no device', () => {
     it('stamps a server HLC and leaves device_id null', async () => {
       const rows = await journalFor(ds, 'courses')
 

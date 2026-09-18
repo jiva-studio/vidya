@@ -11,8 +11,8 @@ import type { LessonDetails, LessonVersionDetails } from './lessons'
  * There are two projection tables, and they cannot be merged because they do
  * different things: the server's turns a TypeORM entity into the JSON that goes
  * on the wire, the device's turns that JSON into SQLite columns. What they
- * share is this list, and until it was written down nothing checked it. T-S-7
- * reconciled the server with itself, AC-13 reconciled the device with itself,
+ * share is this list, and until it was written down nothing checked it.
+ * reconciled the server with itself, reconciled the device with itself,
  * and between them was the contract — unchecked by a type and unchecked by a
  * test. The two drifted three times, and not one drift produced an error:
  *
@@ -25,7 +25,7 @@ import type { LessonDetails, LessonVersionDetails } from './lessons'
  * - `enrollments`, `lesson_versions`: `deletedAt` is never projected, which is
  *   correct — but correct by agreement, with nothing saying so.
  *
- * This file is that agreement. Both sides are checked against it by T-C-7, one
+ * This file is that agreement. Both sides are checked against it by, one
  * in `@vidya/api`, one in `@vidya/mobile` — two halves rather than one test
  * because a lib may not import an app and a service may not either, and a third
  * copy of the field list is exactly the thing being prevented. Comparing both
