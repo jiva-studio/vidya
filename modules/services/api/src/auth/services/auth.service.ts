@@ -3,7 +3,7 @@ import { ConfigType } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
 import { JwtConfig } from '@vidya/api/configs'
 import * as domain from '@vidya/domain'
-import { RefreshToken, UserPermission } from '@vidya/protocol'
+import { RefreshToken, TokenKind, UserPermission } from '@vidya/protocol'
 import { v4 as uuidv4 } from 'uuid'
 
 export type Tokens = {
@@ -30,6 +30,7 @@ export class AuthService {
       {
         jti: uuidv4(),
         sub: userId,
+        typ: 'access' satisfies TokenKind,
         permissions,
       },
       {
@@ -41,6 +42,7 @@ export class AuthService {
       {
         jti: uuidv4(),
         sub: userId,
+        typ: 'refresh' satisfies TokenKind,
       },
       {
         expiresIn: this.jwtConfig.refreshTokenExpiresIn,
@@ -55,16 +57,18 @@ export class AuthService {
   }
 
   /**
-   * Verifies token and returns its payload.
-   * @param token Token to verify
-   * @returns Token payload if the token is valid, otherwise undefined
+   * Verifies a token of the given kind and returns its payload.
+   *
+   * The kind is checked here rather than by the caller, so that forgetting to
+   * check is not something a caller can do.
    */
-  async verifyToken(token: string): Promise<RefreshToken | undefined> {
+  async verifyToken(token: string, kind: TokenKind): Promise<RefreshToken | undefined> {
     try {
       const payload = await this.jwtService.verifyAsync<RefreshToken>(token, {
         secret: this.jwtConfig.secret,
       })
-      return payload
+
+      return payload.typ === kind ? payload : undefined
     } catch {
       return undefined
     }

@@ -122,7 +122,7 @@ export class UserAuthenticationController {
     await this.revokedTokensService.revoke(auth.accessToken)
 
     // revoke refresh token if still valid
-    const token = await this.authService.verifyToken(request.refreshToken)
+    const token = await this.authService.verifyToken(request.refreshToken, 'refresh')
     if (token) {
       await this.revokedTokensService.revoke(token)
     }

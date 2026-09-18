@@ -35,6 +35,11 @@ export class AuthenticatedUserGuard implements CanActivate {
         secret: this.jwtConfig.secret,
       })
 
+      // A refresh token is signed by the same key and would otherwise pass here.
+      if (accessToken.typ !== 'access') {
+        throw new UnauthorizedException()
+      }
+
       // Check if the token has been revoked
       const isTokenRevoked = await this.revokedTokensService.isRevoked(accessToken)
       if (isTokenRevoked) {

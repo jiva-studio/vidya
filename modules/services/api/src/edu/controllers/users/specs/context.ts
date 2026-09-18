@@ -161,6 +161,7 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
     async authenticate(user) {
       return new UserAuthentication({
         sub: user.id,
+        typ: 'access' as const,
         jti: faker.string.uuid(),
         exp: faker.date.future({ years: 1 }).getTime(),
         iat: Date.now(),

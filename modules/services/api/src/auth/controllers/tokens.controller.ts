@@ -48,7 +48,7 @@ export class TokensController {
     @Body() request: dto.RefreshTokensRequest,
   ): Promise<dto.RefreshTokensResponse> {
     // verify refresh token, if invalid send 401 Unauthorized response
-    const refreshToken = await this.authService.verifyToken(request.refreshToken)
+    const refreshToken = await this.authService.verifyToken(request.refreshToken, 'refresh')
     if (!refreshToken) {
       throw new UnauthorizedException(['Refresh token is invalid or expired'])
     }

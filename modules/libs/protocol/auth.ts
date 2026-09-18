@@ -34,11 +34,24 @@ export interface GetOtpResponse {
 /*                                   Tokens                                   */
 /* -------------------------------------------------------------------------- */
 
+export const TokenKinds = ['access', 'refresh'] as const
+export type TokenKind = (typeof TokenKinds)[number]
+
 export interface JwtToken {
   sub: domain.UserId
   exp: number
   iat: number
   jti: string
+
+  /**
+   * Which of the two this is.
+   *
+   * Both are signed with the same secret and carry the same claims otherwise,
+   * so without this an access token is a valid refresh token: whoever holds one
+   * can trade it at /auth/refresh for a fresh 90-day session, which is exactly
+   * what the access token's one-hour lifetime is meant to prevent.
+   */
+  typ: TokenKind
 }
 
 export interface AccessToken extends JwtToken {
