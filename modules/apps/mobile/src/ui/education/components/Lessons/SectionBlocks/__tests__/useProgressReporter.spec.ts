@@ -12,43 +12,53 @@ describe('useProgressReporter', () => {
     expect(report).toHaveBeenCalledOnce()
   })
 
-  it('stays quiet while play has barely moved', () => {
+  it('stays quiet for the whole of an ordinary lesson video', () => {
     const report = vi.fn()
     const { tick } = useProgressReporter(report)
 
     tick(at(0))
-    for (const t of [0.25, 0.5, 1, 2, 3, 4, 4.9]) tick(at(t))
+    for (let second = 1; second < 300; second++) tick(at(second))
 
     expect(report).toHaveBeenCalledOnce()
   })
 
-  it('reports again once enough play has passed', () => {
+  it('reports again once five minutes of play have passed', () => {
     const report = vi.fn()
     const { tick } = useProgressReporter(report)
 
-    for (const t of [0, 2, 5, 7, 10]) tick(at(t))
+    for (const t of [0, 120, 300, 420, 600]) tick(at(t))
 
     expect(report).toHaveBeenCalledTimes(3)
   })
 
-  it('keeps a ten-minute watch down to a couple of dozen reports', () => {
+  it('sends three reports for a ten-minute watch, not two thousand', () => {
     const report = vi.fn()
     const { tick } = useProgressReporter(report)
 
     // timeupdate fires about four times a second
     for (let quarter = 0; quarter <= 600 * 4; quarter++) tick(at(quarter / 4))
 
-    expect(report.mock.calls.length).toBeLessThan(130)
+    expect(report).toHaveBeenCalledTimes(3)
   })
 
-  it('reports a seek backwards, which moves as far as a seek forwards', () => {
+  it('measures the jump in either direction, so a long seek back counts', () => {
     const report = vi.fn()
     const { tick } = useProgressReporter(report)
 
-    tick(at(300))
+    tick(at(900))
     tick(at(10))
 
     expect(report).toHaveBeenCalledTimes(2)
+  })
+
+  it('leaves a short seek to be caught on pause rather than reporting it', () => {
+    const report = vi.fn()
+    const { tick } = useProgressReporter(report)
+
+    tick(at(100))
+    tick(at(130))
+
+    expect(report).toHaveBeenCalledOnce()
   })
 
   it('always reports where playback settled, however small the step', () => {
