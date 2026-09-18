@@ -1,10 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import type { CourseDetails } from '../courses'
-import type { EnrollmentDetails } from '../enrollments'
-import type { BlockStateDetails, HomeworkDetails } from '../homework'
-import type { LessonDetails, LessonVersionDetails } from '../lessons'
+import { SYNC_WIRE_FIELDS } from '../syncFields'
 
 /**
  * The fixtures are the contract both sides of the wire are tested against, and
@@ -15,62 +12,12 @@ import type { LessonDetails, LessonVersionDetails } from '../lessons'
  * neither of them would ever send. That is exactly what happened: `title` sat
  * in three fixtures while the protocol and the table both said `name`.
  *
- * The lists below are typed as `keyof`, so renaming a field in the protocol
- * breaks compilation here rather than quietly widening what a fixture may say.
+ * The allowed names are `SYNC_WIRE_FIELDS` — the same list T-C-7 holds the two
+ * projection tables to. A fixture, a server projection and a device projection
+ * that each agreed with the protocol separately could still disagree with each
+ * other; one list they are all measured against cannot let that happen.
  */
-const ALLOWED: Partial<Record<string, readonly string[]>> = {
-  courses: [
-    'id',
-    'schoolId',
-    'name',
-    'description',
-    'learningType',
-  ] satisfies readonly (keyof CourseDetails)[],
-  lessons: ['id', 'courseId', 'lessonNumber', 'title'] satisfies readonly (keyof LessonDetails)[],
-  lesson_versions: [
-    'id',
-    'lessonId',
-    'version',
-    'status',
-    'content',
-    'publishedAt',
-  ] satisfies readonly (keyof LessonVersionDetails)[],
-  enrollments: [
-    'id',
-    'courseId',
-    'groupId',
-    'studentId',
-    'schoolId',
-    'status',
-    'decidedById',
-    'decidedAt',
-    'createdAt',
-  ] satisfies readonly (keyof EnrollmentDetails)[],
-  homework: [
-    'id',
-    'enrollmentId',
-    'lessonVersionId',
-    'sectionId',
-    'schoolId',
-    'status',
-    'text',
-    'grade',
-    'answeredSupersededVersion',
-    'reviewedById',
-    'submittedAt',
-    'reviewedAt',
-    'createdAt',
-  ] satisfies readonly (keyof HomeworkDetails)[],
-  block_states: [
-    'id',
-    'enrollmentId',
-    'lessonVersionId',
-    'blockId',
-    'schoolId',
-    'state',
-    'updatedAt',
-  ] satisfies readonly (keyof BlockStateDetails)[],
-}
+const ALLOWED: Partial<Record<string, readonly string[]>> = SYNC_WIRE_FIELDS
 
 type Change = { collection?: string; data?: unknown }
 

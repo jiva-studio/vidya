@@ -78,10 +78,13 @@ const lessons: CollectionProjection<Lesson> = {
   collection: 'lessons',
   scopeKind: 'course',
   target: async (lesson) => ({ scopeId: lesson.courseId, schoolId: lesson.schoolId }),
+  // No `schoolId`: a lesson's school is a fact about where the row sits, which
+  // is what the envelope states and what the device files it under. Repeating
+  // it in the body would put it on the wire without `LessonDetails` having it
+  // (T-C-7), the same way a lesson version used to repeat one it never had.
   project: (lesson) => ({
     id: lesson.id,
     courseId: lesson.courseId,
-    schoolId: lesson.schoolId,
     lessonNumber: lesson.lessonNumber,
     title: lesson.title,
   }),
