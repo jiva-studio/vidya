@@ -24,6 +24,8 @@
     "@ionic/vue": "^7.6.4",
     "@ionic/vue-router": "^7.0.0",
     "@ts-stack/markdown": "^1.5.0",
+    "@vidya/domain": "^0.0.0",
+    "@vidya/protocol": "^0.0.0",
     "@vueuse/core": "^10.9.0",
     "canvas-confetti": "^1.9.2",
     "events": "^3.3.0",
