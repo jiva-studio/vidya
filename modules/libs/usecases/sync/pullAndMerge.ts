@@ -4,6 +4,7 @@ import { SYNC_DEFAULT_PULL_LIMIT, SYNC_MAX_PULL_LIMIT, type SyncCursors } from '
 
 import { applyPage, docKey, type PageOutcome } from './applyPage'
 import { isSyncPausedError, type SyncEngineDeps } from './ports'
+import { asStorableScope } from './scopeKeys'
 import { NO_REQUIRED_FIELDS, type RequiredFields, type SkippedChange } from './validateChange'
 
 /**
@@ -178,11 +179,21 @@ async function acknowledge(deps: SyncEngineDeps, deviceId: string): Promise<bool
   return false
 }
 
-/** Positions of the scopes still granted. A withdrawn one is not asked about. */
+/**
+ * Positions of the scopes still granted. A withdrawn one is not asked about.
+ *
+ * A stored scope this build cannot name is not asked about either. Nothing
+ * writes one any more (D-1), but a device that ran an earlier build may already
+ * hold it, and one such row in the request is a `400` on every pull from then
+ * on — reported as `refused`, which is "ours to fix, waiting will not help", so
+ * the device would never receive another row. Leaving it out of the request is
+ * the whole repair: the row stays, inert, and the pull works again.
+ */
 function cursorsOf(scopes: readonly SyncScopeState[]): SyncCursors {
   const cursors: Record<string, number> = {}
   for (const scope of scopes) {
-    if (scope.removedAt === null) cursors[syncScopeKey(scope.scope)] = scope.cursor
+    if (scope.removedAt !== null || asStorableScope(scope.scope) === null) continue
+    cursors[syncScopeKey(scope.scope)] = scope.cursor
   }
 
   return cursors as SyncCursors

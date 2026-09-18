@@ -9,6 +9,7 @@ import {
 import type { PullResponse } from '@vidya/protocol'
 
 import type { SyncEngineDeps } from './ports'
+import { asStorableScope, scopeFromKey } from './scopeKeys'
 import {
   type RequiredFields,
   type SkippedChange,
@@ -78,9 +79,9 @@ export async function applyPage(deps: SyncEngineDeps, input: ApplyPageInput): Pr
   const { response, before } = input
   const known = new Map(before.map((scope) => [syncScopeKey(scope.scope), scope]))
 
-  const grants = response.scopes.map((grant) => grant.scope)
+  const grants = storableGrants(response)
   const added = grants.filter((scope) => !known.has(syncScopeKey(scope)))
-  const removed = removedScopes(before, grants, response.scopes.length > 0)
+  const removed = removedScopes(before, grants, grants.length > 0)
 
   return deps.unitOfWork(async () => {
     for (const scope of added) await deps.state.addScope(scope)
@@ -267,9 +268,10 @@ function divergedScopes(
 /**
  * Scopes the device follows that the server no longer grants.
  *
- * Only computed when the answer actually carried a grant list: an empty
- * `scopes` is how a page says "nothing to report about rights", and treating it
- * as "you have been withdrawn from everything" would mark every course gone.
+ * Only computed when the answer actually carried a grant list this build can
+ * read: an empty `scopes` is how a page says "nothing to report about rights",
+ * and treating it as "you have been withdrawn from everything" would mark every
+ * course gone. A list of nothing but scopes we cannot store says as little.
  */
 function removedScopes(
   before: readonly SyncScopeState[],
@@ -284,17 +286,33 @@ function removedScopes(
     .map((scope) => scope.scope)
 }
 
+/**
+ * The scope a cursor key names, or `null` when this build cannot store it.
+ *
+ * Checked rather than cast (D-1). The key comes from the server's answer, and
+ * whatever is stored here is handed back as a cursor on every later pull: a
+ * kind this build does not know, or an id that is not a UUID, is a request the
+ * server cannot answer, and the `400` it replies with stops the pull for good
+ * — there is no path that would ever take the row out again.
+ */
 function scopeOf(
   key: SyncScopeKey,
   known: ReadonlyMap<string, SyncScopeState>,
 ): SyncScopeRef | null {
   const existing = known.get(key)
-  if (existing !== undefined) return existing.scope
 
-  const separator = key.indexOf(':')
-  if (separator < 1 || separator === key.length - 1) return null
+  return existing === undefined ? scopeFromKey(key) : asStorableScope(existing.scope)
+}
 
-  return { kind: key.slice(0, separator) as SyncScopeRef['kind'], id: key.slice(separator + 1) }
+/** The grants of this answer, minus any this build would refuse to store. */
+function storableGrants(response: PullResponse): SyncScopeRef[] {
+  const grants: SyncScopeRef[] = []
+  for (const grant of response.scopes) {
+    const scope = asStorableScope(grant.scope)
+    if (scope !== null) grants.push(scope)
+  }
+
+  return grants
 }
 
 const checksumOf = (response: PullResponse, key: SyncScopeKey): string | null =>
