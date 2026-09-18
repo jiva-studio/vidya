@@ -6,7 +6,6 @@
     "projectType": "custom",
     "configFile": "jest.config.js"
   },
-  "inPlace": true,
   "coverageAnalysis": "perTest",
   "ignoreStatic": true,
   "incremental": true,
@@ -19,7 +18,10 @@
     "!src/**/*.module.ts",
     "!src/**/index.ts"
   ],
-  "reporters": ["clear-text", "progress"],
+  "reporters": [
+    "clear-text",
+    "progress"
+  ],
   "clearTextReporter": {
     "maxTestsToLog": 0
   },
