@@ -23,14 +23,15 @@
 
 <script lang="ts" setup>
 import { IonNote, IonTextarea } from '@ionic/vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { AsyncButton } from '@/design'
+
 import type { HomeworkAnswerEmits, HomeworkAnswerProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<HomeworkAnswerProps>()
+const props = withDefaults(defineProps<HomeworkAnswerProps>(), { answer: undefined })
 
 /* --------------------------------- Events --------------------------------- */
 
@@ -38,12 +39,21 @@ const emit = defineEmits<HomeworkAnswerEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
-const text = ref('')
+const text = ref(props.answer ?? '')
 const busy = ref(false)
 
 // Submitting freezes the answer: it cannot be edited again until a reviewer
 // sends it back. `returned` is the one state that reopens it.
 const isFrozen = computed(() => props.status !== 'open' && props.status !== 'returned')
+
+/* --------------------------------- Hooks ---------------------------------- */
+
+// The answer arrives after the section does, and a section switch brings a
+// different one, so the box follows it rather than being seeded once.
+watch(
+  () => props.answer,
+  (answer) => (text.value = answer ?? ''),
+)
 
 /* -------------------------------- Handlers -------------------------------- */
 

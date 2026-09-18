@@ -21,6 +21,7 @@
     <HomeworkAnswer
       v-if="selectedSection && selectedSection.assessment !== 'none'"
       :status="selectedHomework?.status ?? 'open'"
+      :answer="answer"
       @submit="onHomeworkSubmitted"
     />
   </PageWithHeaderLayout>
@@ -30,7 +31,7 @@
 import type { BlockId, SectionId } from '@vidya/domain'
 import type { LessonBlockState } from '@vidya/protocol'
 import { IonToolbar } from '@ionic/vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useApi } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
@@ -47,17 +48,22 @@ const props = defineProps<LessonPageProps>()
 
 const api = useApi()
 const selected = ref(0)
+const answer = ref<string | undefined>(undefined)
 
-const { data, busy, loaded, failure, reload } = useRemoteData(async () => {
-  const version = await education.getPublishedLessonVersion(api, props.lessonId)
-  if (!version) return undefined
+const { data, busy, loaded, failure, reload } = useRemoteData(
+  async () => {
+    const version = await education.getPublishedLessonVersion(api, props.lessonId)
+    if (!version) return undefined
 
-  const [states, homework] = await Promise.all([
-    education.listBlockStates(api, props.enrollmentId, version.id),
-    education.listHomeworkOfEnrollment(api, props.enrollmentId),
-  ])
-  return { version, states, homework }
-}, undefined)
+    const [states, homework] = await Promise.all([
+      education.listBlockStates(api, props.enrollmentId, version.id),
+      education.listHomeworkOfEnrollment(api, props.enrollmentId),
+    ])
+    return { version, states, homework }
+  },
+  undefined,
+  { watching: [() => props.enrollmentId, () => props.lessonId] },
+)
 
 const errorMessage = useFailureMessage(failure)
 
@@ -84,6 +90,26 @@ const blockStates = computed(
 
 const selectedHomework = computed(() =>
   selectedSection.value ? homeworkFor(selectedSection.value.id) : undefined,
+)
+
+/* --------------------------------- Hooks ---------------------------------- */
+
+// The list answers with summaries, and a summary does not carry the text the
+// student already wrote. Without this, work returned for revision opens on an
+// empty box and the student retypes it.
+watch(
+  () => selectedHomework.value?.id,
+  async (homeworkId) => {
+    answer.value = undefined
+    if (!homeworkId) return
+    try {
+      answer.value = (await education.getHomework(api, homeworkId)).text
+    } catch {
+      // The section still opens; the box is simply empty, as it was before.
+      answer.value = undefined
+    }
+  },
+  { immediate: true },
 )
 
 /* -------------------------------- Handlers -------------------------------- */

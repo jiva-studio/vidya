@@ -41,14 +41,18 @@ const router = useIonRouter()
 
 // Lessons belong to the course, not to the group: an accepted student reads
 // them while still waiting to be placed.
-const { data, busy, loaded, failure } = useRemoteData(async () => {
-  const enrollment = await education.getEnrollment(api, props.enrollmentId)
-  const lessons =
-    enrollment.status === 'accepted'
-      ? await education.listLessonsOfCourse(api, enrollment.courseId)
-      : []
-  return { enrollment, lessons }
-}, undefined)
+const { data, busy, loaded, failure } = useRemoteData(
+  async () => {
+    const enrollment = await education.getEnrollment(api, props.enrollmentId)
+    const lessons =
+      enrollment.status === 'accepted'
+        ? await education.listLessonsOfCourse(api, enrollment.courseId)
+        : []
+    return { enrollment, lessons }
+  },
+  undefined,
+  { watching: [() => props.enrollmentId] },
+)
 
 const errorMessage = useFailureMessage(failure)
 

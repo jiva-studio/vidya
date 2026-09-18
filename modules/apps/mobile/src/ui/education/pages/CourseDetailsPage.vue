@@ -37,7 +37,9 @@ const {
   busy,
   loaded,
   failure,
-} = useRemoteData(() => education.getCourse(api, props.id), undefined)
+} = useRemoteData(() => education.getCourse(api, props.id), undefined, {
+  watching: [() => props.id],
+})
 
 const errorMessage = useFailureMessage(failure)
 

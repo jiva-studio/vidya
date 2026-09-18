@@ -1,8 +1,9 @@
-import type { BlockId, EnrollmentId, LessonVersionId, SectionId } from '@vidya/domain'
+import type { BlockId, EnrollmentId, HomeworkId, LessonVersionId, SectionId } from '@vidya/domain'
 import type {
   BlockStateDetails,
   GetBlockStatesResponse,
   GetHomeworkListResponse,
+  GetHomeworkResponse,
   HomeworkDetails,
   HomeworkSummary,
   LessonBlockState,
@@ -14,6 +15,10 @@ import { Routes } from '@vidya/protocol'
 import type { HttpClient } from '@/ports'
 
 const routes = Routes()
+
+/** The full record, which unlike the summary carries the answer already given. */
+export const getHomework = (http: HttpClient, id: HomeworkId): Promise<HomeworkDetails> =>
+  http.get<GetHomeworkResponse>(routes.edu.homework.get(id))
 
 export const listHomeworkOfEnrollment = async (
   http: HttpClient,

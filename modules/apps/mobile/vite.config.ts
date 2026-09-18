@@ -7,6 +7,6 @@ export default defineConfig({
   plugins: [vue({ script: { defineModel: true } }), legacy()],
   define: { global: 'window' },
   resolve: {
-    alias: { '@': path.resolve(__dirname, './src') },
+    alias: { '@': path.resolve(import.meta.dirname, './src') },
   },
 })

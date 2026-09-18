@@ -1,4 +1,5 @@
-import { onMounted, ref, shallowRef } from 'vue'
+import { onIonViewWillEnter } from '@ionic/vue'
+import { onMounted, ref, shallowRef, watch, type WatchSource } from 'vue'
 
 import { isUnauthorized, OfflineError } from '@/ports'
 
@@ -11,14 +12,28 @@ const classify = (error: unknown): RemoteFailure => {
   return 'failed'
 }
 
+interface RemoteDataOptions {
+  /** Values that change what `load` would answer, so a change re-runs it. */
+  readonly watching?: WatchSource[]
+}
+
 /**
  * One load, with the three states a screen has to tell apart.
  *
  * `loaded` is separate from `busy` so a reload does not blank out content that
  * is already on screen, and `failure` is a kind rather than a message so the
  * wording stays with the screen that shows it.
+ *
+ * It reloads on `onIonViewWillEnter` as well as on mount: Ionic keeps a page
+ * alive when the student navigates away, so a screen returned to would
+ * otherwise show whatever it held when it was left — a submitted homework
+ * still reading "not submitted", an accepted enrolment still pending.
  */
-export function useRemoteData<TData>(load: () => Promise<TData>, initial: TData) {
+export function useRemoteData<TData>(
+  load: () => Promise<TData>,
+  initial: TData,
+  options: RemoteDataOptions = {},
+) {
   const data = shallowRef<TData>(initial)
   const busy = ref(false)
   const loaded = ref(false)
@@ -38,6 +53,16 @@ export function useRemoteData<TData>(load: () => Promise<TData>, initial: TData)
   }
 
   onMounted(reload)
+  onIonViewWillEnter(reload)
+
+  // A cached page can be reused for a different id, and then the data on screen
+  // belongs to the previous one.
+  if (options.watching?.length) {
+    watch(options.watching, () => {
+      loaded.value = false
+      void reload()
+    })
+  }
 
   return { data, busy, loaded, failure, reload }
 }
