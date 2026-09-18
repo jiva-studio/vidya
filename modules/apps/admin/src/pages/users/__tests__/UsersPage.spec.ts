@@ -3,7 +3,7 @@ import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-import { useCurrentSchool } from '@/shared/access'
+import { setAppRouter, useCurrentSchool } from '@/shared/access'
 import { httpClientKey, resetApi } from '@/shared/api'
 import { addMessages } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
@@ -27,15 +27,16 @@ const testRouter = () =>
   createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/users', name: 'users', component: blank },
-      { path: '/users/:id', name: 'user', component: blank },
+      { path: '/s/:schoolId/users', name: 'users', component: blank },
+      { path: '/s/:schoolId/users/:id', name: 'user', component: blank },
     ],
   })
 
 const mountPage = async (answers: FakeAnswers, settle = true) => {
   const transport = fakeHttpClient(answers)
   const router = testRouter()
-  await router.push('/users')
+  setAppRouter(router)
+  await router.push('/s/school-1/users')
   await router.isReady()
 
   const page = mountWithApp(UsersPage, {

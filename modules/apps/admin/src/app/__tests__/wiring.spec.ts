@@ -44,6 +44,7 @@ const menuRoutes = new Set(sectionMenu().flatMap((group) => group.items.map((ite
 // Screens the sidebar deliberately does not list, each with what leads to it.
 const reachedFromAScreen: Record<string, string> = {
   login: 'the guard, when there is no session',
+  root: 'an address with no school in it, which the guard sends to the first granted one',
   'course-create': 'the courses list',
   'course-edit': 'a row of the courses list',
   lessons: 'a row of the courses list',

@@ -9,7 +9,7 @@ import type { RouteRecordRaw } from 'vue-router'
  */
 export const routes: RouteRecordRaw[] = [
   {
-    path: '/courses/:courseId/lessons/:lessonId/editor',
+    path: '/s/:schoolId/courses/:courseId/lessons/:lessonId/editor',
     name: 'lesson-editor',
     component: () => import('./ui/LessonEditorPage.vue'),
     meta: {
@@ -22,7 +22,7 @@ export const routes: RouteRecordRaw[] = [
     // One version, read-only. A reviewer reaches it from a piece of work
     // answered against a version that has since been replaced, and reading a
     // published version is `lessons:read` work rather than editing.
-    path: '/lessons/:lessonId/versions/:versionId',
+    path: '/s/:schoolId/lessons/:lessonId/versions/:versionId',
     name: 'lesson-version',
     component: () => import('./ui/LessonVersionPage.vue'),
     meta: {

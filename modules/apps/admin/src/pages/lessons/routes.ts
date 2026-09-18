@@ -8,7 +8,7 @@ import type { RouteRecordRaw } from 'vue-router'
  */
 export const routes: RouteRecordRaw[] = [
   {
-    path: '/courses/:courseId/lessons',
+    path: '/s/:schoolId/courses/:courseId/lessons',
     name: 'lessons',
     component: () => import('./ui/LessonsPage.vue'),
     meta: {

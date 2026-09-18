@@ -1,9 +1,10 @@
 import type { SchoolId } from '@vidya/domain'
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createMemoryHistory, createRouter, type Router } from 'vue-router'
 
 import { resetSchoolNames } from '@/features/switch-school'
-import { useCurrentSchool } from '@/shared/access'
+import { setAppRouter, useCurrentSchool } from '@/shared/access'
 import { httpClientKey, HttpError, resetApi } from '@/shared/api'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
@@ -29,6 +30,30 @@ const signIn = (ids: SchoolId[]) =>
     refreshToken: 'refresh',
   })
 
+const blank = { template: '<div />' }
+
+// The school is the first segment of the address, so the switcher navigates.
+// Two screens are enough: a section's list and one record of it.
+const addressing = async (schoolId: SchoolId, at = 'courses'): Promise<Router> => {
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/s/:schoolId', name: 'dashboard', component: blank },
+      { path: '/s/:schoolId/courses', name: 'courses', component: blank },
+      {
+        path: '/s/:schoolId/courses/:courseId/edit',
+        name: 'course-edit',
+        component: blank,
+        meta: { section: 'courses' },
+      },
+    ],
+  })
+
+  setAppRouter(router)
+  await router.push({ name: at, params: { schoolId, courseId: 'c1' } })
+  return router
+}
+
 const mountSwitcher = (answers: Record<string, unknown>) => {
   const transport = fakeHttpClient(answers)
   const switcher = mountWithApp(SchoolSwitcher, {
@@ -53,6 +78,7 @@ describe('SchoolSwitcher', () => {
     resetApi()
     resetSchoolNames()
     useSession().end()
+    setAppRouter(undefined)
   })
 
   it('shows no switcher when the token grants one school', async () => {
@@ -85,16 +111,44 @@ describe('SchoolSwitcher', () => {
 
   it('changes the current school, and with it what is allowed', async () => {
     signIn([SCHOOL_A, SCHOOL_B])
+    await addressing(SCHOOL_A)
     const { switcher } = mountSwitcher(namesAnswer)
     await flushPromises()
 
     await switcher.find('select').setValue(SCHOOL_B)
+    await flushPromises()
 
     expect(useCurrentSchool().schoolId.value).toBe(SCHOOL_B)
   })
 
+  it('stays on the screen and changes the school in the address', async () => {
+    signIn([SCHOOL_A, SCHOOL_B])
+    const router = await addressing(SCHOOL_A)
+    const { switcher } = mountSwitcher(namesAnswer)
+    await flushPromises()
+
+    await switcher.find('select').setValue(SCHOOL_B)
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('courses')
+    expect(router.currentRoute.value.fullPath).toBe(`/s/${SCHOOL_B}/courses`)
+  })
+
+  it('leaves a record for its section index, the record being of the school left', async () => {
+    signIn([SCHOOL_A, SCHOOL_B])
+    const router = await addressing(SCHOOL_A, 'course-edit')
+    const { switcher } = mountSwitcher(namesAnswer)
+    await flushPromises()
+
+    await switcher.find('select').setValue(SCHOOL_B)
+    await flushPromises()
+
+    expect(router.currentRoute.value.fullPath).toBe(`/s/${SCHOOL_B}/courses`)
+  })
+
   it('marks the loaded lists stale when the school changes', async () => {
     signIn([SCHOOL_A, SCHOOL_B])
+    await addressing(SCHOOL_A)
     const { switcher } = mountSwitcher(namesAnswer)
     await flushPromises()
     const before = useCurrentSchool().generation.value

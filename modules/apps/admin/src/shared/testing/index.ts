@@ -1,4 +1,5 @@
 export { fakeHttpClient, pending, refusal } from './fakeHttpClient'
 export { mountWithApp } from './mount'
+export { addressSchool } from './schoolAddress'
 export { signInAs, STORY_SCHOOL } from './signInAs'
 export type * from './types'

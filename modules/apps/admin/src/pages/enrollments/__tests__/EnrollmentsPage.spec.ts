@@ -5,7 +5,7 @@ import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-import { useCurrentSchool } from '@/shared/access'
+import { setAppRouter, useCurrentSchool } from '@/shared/access'
 import { httpClientKey, resetApi } from '@/shared/api'
 import { addMessages } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
@@ -61,9 +61,10 @@ const mountPage = async (answers: FakeAnswers, settle = true) => {
   const transport = fakeHttpClient(answers)
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: '/enrollments', name: 'enrollments', component: blank }],
+    routes: [{ path: '/s/:schoolId/enrollments', name: 'enrollments', component: blank }],
   })
-  await router.push('/enrollments')
+  setAppRouter(router)
+  await router.push('/s/school-1/enrollments')
   await router.isReady()
 
   const page = mountWithApp(EnrollmentsPage, {

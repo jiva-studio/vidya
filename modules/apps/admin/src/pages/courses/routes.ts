@@ -8,13 +8,13 @@ import type { RouteRecordRaw } from 'vue-router'
  */
 export const routes: RouteRecordRaw[] = [
   {
-    path: '/courses',
+    path: '/s/:schoolId/courses',
     name: 'courses',
     component: () => import('./ui/CoursesPage.vue'),
     meta: { permission: 'courses:read', breadcrumbs: ['nav-courses'] },
   },
   {
-    path: '/courses/new',
+    path: '/s/:schoolId/courses/new',
     name: 'course-create',
     component: () => import('./ui/CourseFormPage.vue'),
     meta: {
@@ -23,7 +23,7 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/courses/:courseId/edit',
+    path: '/s/:schoolId/courses/:courseId/edit',
     name: 'course-edit',
     component: () => import('./ui/CourseFormPage.vue'),
     meta: {

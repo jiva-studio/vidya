@@ -1,12 +1,13 @@
 import type { RoleId, SchoolId, UserId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
+import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import { useCurrentSchool } from '@/shared/access'
 import { httpClientKey, resetApi } from '@/shared/api'
 import { useSession } from '@/shared/session'
-import { fakeHttpClient, mountWithApp } from '@/shared/testing'
+import { addressSchool, fakeHttpClient, mountWithApp } from '@/shared/testing'
 
 import { userApi, useUserApi } from '../api'
 
@@ -94,12 +95,14 @@ describe('userApi', () => {
 
   it('takes the school at the moment of the call, not the one it was built with', async () => {
     useSession().start({ accessToken: token([first, second]), refreshToken: 'r' })
+    await addressSchool(first)
 
     const transport = fakeHttpClient(answers)
     const api = inContext(transport)
 
     await api.list()
     useCurrentSchool().select(second)
+    await flushPromises()
     await api.list()
 
     expect(transport.calls.map((call) => call.query)).toEqual([

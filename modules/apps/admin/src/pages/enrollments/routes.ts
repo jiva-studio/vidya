@@ -9,7 +9,7 @@ import type { RouteRecordRaw } from 'vue-router'
  */
 export const routes: RouteRecordRaw[] = [
   {
-    path: '/enrollments',
+    path: '/s/:schoolId/enrollments',
     name: 'enrollments',
     component: () => import('./ui/EnrollmentsPage.vue'),
     meta: { permission: 'enrollments:read', breadcrumbs: ['nav-enrollments'] },

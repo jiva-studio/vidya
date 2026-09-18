@@ -8,19 +8,19 @@ import type { RouteRecordRaw } from 'vue-router'
  */
 export const routes: RouteRecordRaw[] = [
   {
-    path: '/groups',
+    path: '/s/:schoolId/groups',
     name: 'groups',
     component: () => import('./ui/GroupsPage.vue'),
     meta: { permission: 'groups:read', breadcrumbs: ['nav-groups'] },
   },
   {
-    path: '/groups/new',
+    path: '/s/:schoolId/groups/new',
     name: 'group-create',
     component: () => import('./ui/GroupFormPage.vue'),
     meta: { permission: 'groups:create', breadcrumbs: ['nav-groups', 'group-form-create-title'] },
   },
   {
-    path: '/groups/:groupId/edit',
+    path: '/s/:schoolId/groups/:groupId/edit',
     name: 'group-edit',
     component: () => import('./ui/GroupFormPage.vue'),
     meta: {
@@ -30,7 +30,7 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/groups/:groupId/members',
+    path: '/s/:schoolId/groups/:groupId/members',
     name: 'group-members',
     component: () => import('./ui/GroupMembersPage.vue'),
     meta: {

@@ -2,11 +2,13 @@ import '../src/app/styles/index.css'
 
 import type { Preview } from '@storybook/vue3-vite'
 import { setup } from '@storybook/vue3-vite'
-import type { RouteLocationRaw } from 'vue-router'
+import type { RouteLocationNamedRaw, RouteLocationRaw } from 'vue-router'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { installSectionMessages, sectionRoutes } from '../src/app/sections'
+import { setAppRouter } from '../src/shared/access'
 import { fluent } from '../src/shared/i18n'
+import { STORY_SCHOOL } from '../src/shared/testing'
 
 /**
  * One router for the whole Storybook, over the application's own routes.
@@ -18,6 +20,20 @@ import { fluent } from '../src/shared/i18n'
  * are left off: a story shows a screen under the session it asked for.
  */
 const router = createRouter({ history: createMemoryHistory(), routes: sectionRoutes() })
+
+// Every address carries the school, and a story says nothing about it: it is
+// the school its session is signed into.
+setAppRouter(router)
+
+const dashboard: RouteLocationRaw = { name: 'dashboard', params: { schoolId: STORY_SCHOOL } }
+
+const inStorySchool = (target: RouteLocationRaw | undefined): RouteLocationRaw => {
+  if (!target) return dashboard
+  if (typeof target === 'string' || !('name' in target)) return target
+
+  const named = target as RouteLocationNamedRaw
+  return { ...named, params: { schoolId: STORY_SCHOOL, ...named.params } }
+}
 
 // Every section's texts, in both languages, exactly as the application installs
 // them. A story that had to add its own would show a screen no one will see.
@@ -38,8 +54,7 @@ const preview: Preview = {
   // `parameters.route`, and the router is there before the screen mounts.
   decorators: [
     (story, context) => {
-      const target = context.parameters.route as RouteLocationRaw | undefined
-      if (target) void router.replace(target)
+      void router.replace(inStorySchool(context.parameters.route as RouteLocationRaw | undefined))
       return story()
     },
   ],

@@ -47,7 +47,7 @@ function hasItems(group: MenuGroup): boolean {
         v-for="item in group.items"
         :key="item.route"
         :class="itemClasses"
-        :to="{ name: item.route }"
+        :to="{ name: item.route, params: { schoolId } }"
       >
         {{ $t(item.label) }}
       </RouterLink>

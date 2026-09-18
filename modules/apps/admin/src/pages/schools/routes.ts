@@ -8,13 +8,13 @@ import type { RouteRecordRaw } from 'vue-router'
  */
 export const routes: RouteRecordRaw[] = [
   {
-    path: '/schools',
+    path: '/s/:schoolId/schools',
     name: 'schools',
     component: () => import('./ui/SchoolsPage.vue'),
     meta: { permission: 'schools:read', breadcrumbs: ['nav-schools'] },
   },
   {
-    path: '/schools/new',
+    path: '/s/:schoolId/schools/new',
     name: 'school-new',
     component: () => import('./ui/SchoolFormPage.vue'),
     meta: {
@@ -23,7 +23,7 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/schools/:id',
+    path: '/s/:schoolId/schools/:id',
     name: 'school-edit',
     props: true,
     component: () => import('./ui/SchoolFormPage.vue'),
@@ -36,7 +36,7 @@ export const routes: RouteRecordRaw[] = [
   {
     // The identifier is a prop rather than something read from the router, so
     // the screen mounts in a test and in a story without one.
-    path: '/schools/:id/settings',
+    path: '/s/:schoolId/schools/:id/settings',
     name: 'school-settings',
     props: true,
     component: () => import('./ui/SchoolSettingsPage.vue'),

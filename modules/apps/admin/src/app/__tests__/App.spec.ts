@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory, createRouter, type RouteRecordRaw } from 'vue-router'
 
 import { resetSchoolNames } from '@/features/switch-school'
-import { useCurrentSchool } from '@/shared/access'
+import { setAppRouter, useCurrentSchool } from '@/shared/access'
 import { httpClientKey } from '@/shared/api'
 import { locale } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
@@ -12,7 +12,7 @@ import { fakeHttpClient, mountWithApp } from '@/shared/testing'
 
 import App from '../App.vue'
 import { createI18n } from '../i18n'
-import { requireSession, skipLoginWhenSignedIn } from '../router/guards'
+import { requireSession, resolveSchool, skipLoginWhenSignedIn } from '../router/guards'
 import { sectionRoutes } from '../sections'
 
 // This file reads the assembled application in Russian, and the language is
@@ -43,8 +43,10 @@ const mountApp = async (at: string) => {
     history: createMemoryHistory(),
     routes: sectionRoutes() as RouteRecordRaw[],
   })
+  setAppRouter(router)
   router.beforeEach(skipLoginWhenSignedIn)
   router.beforeEach(requireSession)
+  router.beforeEach(resolveSchool(router))
 
   const transport = fakeHttpClient({
     [SCHOOLS]: { items: [{ id: SCHOOL_A, name: 'My School' }] },
@@ -79,6 +81,7 @@ describe('the assembled application', () => {
     localStorage.clear()
     resetSchoolNames()
     useSession().end()
+    setAppRouter(undefined)
     createI18n()
   })
 
@@ -122,7 +125,7 @@ describe('the assembled application', () => {
 
   it('leaves a record of the old school when the school changes', async () => {
     signIn([SCHOOL_A, SCHOOL_B])
-    const { router } = await mountApp('/courses/c1/edit')
+    const { router } = await mountApp(`/s/${SCHOOL_A}/courses/c1/edit`)
 
     expect(router.currentRoute.value.name).toBe('course-edit')
 
@@ -142,12 +145,13 @@ describe('the assembled application', () => {
 
   it('stays on a list when the school changes, because a list reloads itself', async () => {
     signIn([SCHOOL_A, SCHOOL_B])
-    const { router } = await mountApp('/groups')
+    const { router } = await mountApp(`/s/${SCHOOL_A}/groups`)
 
     useCurrentSchool().select(SCHOOL_B)
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('groups')
+    expect(router.currentRoute.value.fullPath).toBe(`/s/${SCHOOL_B}/groups`)
   }, 30_000)
 
   it('shows the not-found screen for an address no section owns', async () => {
