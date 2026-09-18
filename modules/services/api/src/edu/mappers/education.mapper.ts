@@ -3,6 +3,7 @@ import * as domain from '@vidya/domain'
 import * as entities from '@vidya/entities'
 
 import { project, projectAll } from './project'
+import { toStudentContent } from './studentContent'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Fields                                   */
@@ -97,6 +98,14 @@ export const toVersionSummaries = (v: entities.LessonVersion[]) =>
   projectAll<dto.LessonVersionSummary>(v, VERSION)
 export const toVersionDetails = (v: entities.LessonVersion) =>
   project<dto.LessonVersionDetails>(v, VERSION_DETAILS)
+
+/** The same version as a student may see it — quiz keys withheld. */
+export const toStudentVersionDetails = (
+  v: entities.LessonVersion,
+): dto.StudentLessonVersionDetails => ({
+  ...project<dto.LessonVersionSummary>(v, VERSION),
+  content: toStudentContent(v.content),
+})
 
 /* -------------------------------------------------------------------------- */
 /*                                 Enrollments                                */
