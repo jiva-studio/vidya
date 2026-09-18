@@ -1,5 +1,3 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import {
   Body,
   Controller,
@@ -17,8 +15,9 @@ import * as dto from '@vidya/api/edu/dto'
 import { SchoolExistsPipe } from '@vidya/api/edu/pipes'
 import { SchoolCreationService, SchoolsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
+
+import { toId, toSchoolDetails, toSchoolSummaries } from '../../mappers/org.mapper'
 
 const Crud = CrudDecorators({
   entityName: 'School',
@@ -37,7 +36,6 @@ export class SchoolsController {
   constructor(
     private readonly schoolsService: SchoolsService,
     private readonly schoolCreationService: SchoolCreationService,
-    @InjectMapper() private readonly mapper: Mapper,
   ) {}
   /* -------------------------------------------------------------------------- */
   /*                             GET /edu/schools/:id                           */
@@ -64,7 +62,7 @@ export class SchoolsController {
     }
 
     // Return school response
-    return this.mapper.map(school, entities.School, dto.GetSchoolResponse)
+    return toSchoolDetails(school)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -85,7 +83,7 @@ export class SchoolsController {
 
     // Return schools response
     return new dto.GetSchoolsResponse({
-      items: this.mapper.mapArray(schools, entities.School, dto.SchoolSummary),
+      items: toSchoolSummaries(schools),
     })
   }
 
@@ -109,7 +107,7 @@ export class SchoolsController {
     })
 
     // Return created school response
-    return this.mapper.map(entity, entities.School, dto.CreateSchoolResponse)
+    return toId(entity)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -138,13 +136,10 @@ export class SchoolsController {
     }
 
     // Update school
-    school = await this.schoolsService.updateOneBy(
-      { id },
-      this.mapper.map(request, dto.UpdateSchoolRequest, entities.School),
-    )
+    school = await this.schoolsService.updateOneBy({ id }, { name: request.name })
 
     // Return updated school response
-    return this.mapper.map(school, entities.School, dto.UpdateSchoolResponse)
+    return toSchoolDetails(school)
   }
 
   /* -------------------------------------------------------------------------- */

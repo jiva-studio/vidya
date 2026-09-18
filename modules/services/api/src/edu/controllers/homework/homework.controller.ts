@@ -1,5 +1,3 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import {
   Body,
   Controller,
@@ -25,6 +23,8 @@ import { CrudDecorators } from '@vidya/api/shared/decorators'
 import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
 
+import { toHomeworkDetails, toHomeworkSummaries } from '../../mappers/education.mapper'
+
 const Crud = CrudDecorators({
   entityName: 'Homework',
   getOneResponseDto: dto.GetHomeworkResponse,
@@ -44,7 +44,6 @@ export class HomeworkController {
     private readonly enrollments: EnrollmentsService,
     private readonly versions: LessonVersionsService,
     private readonly lessons: LessonsService,
-    @InjectMapper() private readonly mapper: Mapper,
   ) {}
 
   /* -------------------------------------------------------------------------- */
@@ -75,7 +74,7 @@ export class HomeworkController {
       text: request.text,
     })
 
-    return this.mapper.map(saved, entities.Homework, dto.SubmitHomeworkResponse)
+    return toHomeworkDetails(saved)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -92,9 +91,7 @@ export class HomeworkController {
         .scopedBy({ permissions: auth.permissions })
         .findAll({ where: { enrollmentId: query.enrollmentId, status: query.status } })
 
-      return {
-        items: found.map((h) => this.mapper.map(h, entities.Homework, dto.HomeworkSummary)),
-      }
+      return { items: toHomeworkSummaries(found) }
     }
 
     // A student without the permission sees only their own work, which is found
@@ -102,9 +99,7 @@ export class HomeworkController {
     const mine = await this.enrollments.findAll({ where: { studentId: auth.userId } })
     const found = await this.homework.forEnrollments(mine, query.status)
 
-    return {
-      items: found.map((h) => this.mapper.map(h, entities.Homework, dto.HomeworkSummary)),
-    }
+    return { items: toHomeworkSummaries(found) }
   }
 
   /* -------------------------------------------------------------------------- */
@@ -124,7 +119,7 @@ export class HomeworkController {
 
     await this.assertMayRead(work, auth)
 
-    return this.mapper.map(work, entities.Homework, dto.GetHomeworkResponse)
+    return toHomeworkDetails(work)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -153,7 +148,7 @@ export class HomeworkController {
       reviewerId: auth.userId,
     })
 
-    return this.mapper.map(updated, entities.Homework, dto.ReviewHomeworkResponse)
+    return toHomeworkDetails(updated)
   }
 
   /* -------------------------------------------------------------------------- */

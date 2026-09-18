@@ -1,5 +1,3 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import {
   Body,
   Controller,
@@ -16,8 +14,9 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { LessonsService, LessonVersionsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
+
+import { toVersionDetails, toVersionSummary } from '../../mappers/education.mapper'
 
 const Crud = CrudDecorators({
   entityName: 'LessonVersion',
@@ -36,7 +35,6 @@ export class LessonVersionsController {
   constructor(
     private readonly lessons: LessonsService,
     private readonly versions: LessonVersionsService,
-    @InjectMapper() private readonly mapper: Mapper,
   ) {}
 
   /**
@@ -72,9 +70,7 @@ export class LessonVersionsController {
     const versions = await this.versions.findAll({ where: { lessonId } })
 
     return {
-      items: versions.map((v) =>
-        this.mapper.map(v, entities.LessonVersion, dto.LessonVersionSummary),
-      ),
+      items: versions.map((v) => toVersionSummary(v)),
     }
   }
 
@@ -95,7 +91,7 @@ export class LessonVersionsController {
     await this.lessonOr404(lessonId, auth)
     const version = await this.versions.getOrFail(lessonId, versionId)
 
-    return this.mapper.map(version, entities.LessonVersion, dto.GetLessonVersionResponse)
+    return toVersionDetails(version)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -114,7 +110,7 @@ export class LessonVersionsController {
     await this.lessonOr404(lessonId, auth)
     const created = await this.versions.openDraft(lessonId)
 
-    return this.mapper.map(created, entities.LessonVersion, dto.LessonVersionSummary)
+    return toVersionSummary(created)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -135,7 +131,7 @@ export class LessonVersionsController {
     await this.lessonOr404(lessonId, auth)
     const updated = await this.versions.saveDraft(lessonId, versionId, request.content)
 
-    return this.mapper.map(updated, entities.LessonVersion, dto.UpdateLessonVersionResponse)
+    return toVersionDetails(updated)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -157,6 +153,6 @@ export class LessonVersionsController {
     await this.lessonOr404(lessonId, auth)
     const published = await this.versions.publish(lessonId, versionId)
 
-    return this.mapper.map(published, entities.LessonVersion, dto.PublishLessonVersionResponse)
+    return toVersionSummary(published)
   }
 }

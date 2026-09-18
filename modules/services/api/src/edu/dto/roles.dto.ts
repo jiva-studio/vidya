@@ -29,7 +29,7 @@ export class RoleDetails implements protocol.RoleDetails {
   description: string
 
   @ApiProperty({ example: ['permissions'] })
-  permissions: string[]
+  permissions: domain.PermissionKey[]
 
   @ApiProperty({ example: 'schoolId' })
   @IsUUID()
@@ -99,7 +99,7 @@ export class CreateRoleRequest implements protocol.CreateRoleRequest {
   @IsString({ each: true })
   @IsEnum(domain.PermissionEnum, { each: true })
   @IsPermissionsProhibited(['*'])
-  permissions: string[]
+  permissions: domain.PermissionKey[]
 
   @ApiProperty({ example: 'schoolId' })
   @IsUUID()
@@ -139,7 +139,7 @@ export class UpdateRoleRequest implements protocol.UpdateRoleRequest {
   @IsEnum(domain.PermissionEnum, { each: true })
   @IsOptional()
   @IsPermissionsProhibited(['*'])
-  permissions?: string[]
+  permissions?: domain.PermissionKey[]
 }
 
 export class UpdateRoleResponse extends RoleDetails implements protocol.UpdateRoleResponse {}

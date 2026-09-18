@@ -1,9 +1,6 @@
-import { Mapper } from '@automapper/core'
-import { DEFAULT_MAPPER_TOKEN } from '@automapper/nestjs'
 import { INestApplication } from '@nestjs/common'
-import * as dto from '@vidya/api/edu/dto'
+import { toRoleSummaries } from '@vidya/api/edu/mappers/org.mapper'
 import { createTestingApp } from '@vidya/api/edu/shared'
-import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
 import { instanceToPlain } from 'class-transformer'
 import * as request from 'supertest'
@@ -13,12 +10,10 @@ import { Context, createContext } from './context'
 describe('/edu/roles', () => {
   let app: INestApplication
   let ctx: Context
-  let mapper: Mapper
 
   beforeEach(async () => {
     app = await createTestingApp()
     ctx = await createContext(app)
-    mapper = app.get(DEFAULT_MAPPER_TOKEN)
   })
 
   afterAll(async () => {
@@ -46,13 +41,7 @@ describe('/edu/roles', () => {
       .set('Authorization', `Bearer ${ctx.one.tokens.owner}`)
       .expect(200)
       .expect({
-        items: instanceToPlain(
-          mapper.mapArray(
-            [ctx.one.roles.owner, ctx.one.roles.readonly],
-            entities.Role,
-            dto.RoleSummary,
-          ),
-        ),
+        items: instanceToPlain(toRoleSummaries([ctx.one.roles.owner, ctx.one.roles.readonly])),
       })
   })
 
@@ -63,11 +52,7 @@ describe('/edu/roles', () => {
       .expect(200)
       .expect({
         items: instanceToPlain(
-          mapper.mapArray(
-            [ctx.one.roles.owner, ctx.one.roles.readonly, ctx.two.roles.admin],
-            entities.Role,
-            dto.RoleSummary,
-          ),
+          toRoleSummaries([ctx.one.roles.owner, ctx.one.roles.readonly, ctx.two.roles.admin]),
         ),
       })
   })

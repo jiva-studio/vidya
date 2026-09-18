@@ -1,5 +1,3 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import {
   Body,
   Controller,
@@ -17,8 +15,9 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { CoursesService, LessonsService, LessonVersionsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
+
+import { toCreatedId, toLessonDetails, toLessonSummaries } from '../../mappers/education.mapper'
 
 const Crud = CrudDecorators({
   entityName: 'Lesson',
@@ -38,7 +37,6 @@ export class LessonsController {
     private readonly lessons: LessonsService,
     private readonly courses: CoursesService,
     private readonly versions: LessonVersionsService,
-    @InjectMapper() private readonly mapper: Mapper,
   ) {}
 
   /* -------------------------------------------------------------------------- */
@@ -62,7 +60,7 @@ export class LessonsController {
       throw new NotFoundException(`Lesson with id ${id} not found`)
     }
 
-    return this.mapper.map(lesson, entities.Lesson, dto.GetLessonResponse)
+    return toLessonDetails(lesson)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -82,9 +80,7 @@ export class LessonsController {
       .scopedBy({ permissions: auth.permissions })
       .findAll({ where: { courseId: query.courseId } })
 
-    return {
-      items: lessons.map((c) => this.mapper.map(c, entities.Lesson, dto.LessonSummary)),
-    }
+    return { items: toLessonSummaries(lessons) }
   }
 
   /* -------------------------------------------------------------------------- */
@@ -125,7 +121,7 @@ export class LessonsController {
       content: { sections: [] },
     })
 
-    return this.mapper.map(created, entities.Lesson, dto.CreateLessonResponse)
+    return toCreatedId(created)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -151,7 +147,7 @@ export class LessonsController {
     }
 
     const updated = await this.lessons.updateOneBy({ id }, request)
-    return this.mapper.map(updated, entities.Lesson, dto.UpdateLessonResponse)
+    return toLessonDetails(updated)
   }
 
   /* -------------------------------------------------------------------------- */

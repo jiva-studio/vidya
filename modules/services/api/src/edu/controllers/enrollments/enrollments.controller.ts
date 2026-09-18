@@ -1,5 +1,3 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import {
   Body,
   Controller,
@@ -17,8 +15,13 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { CoursesService, EnrollmentsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
+
+import {
+  toCreatedId,
+  toEnrollmentDetails,
+  toEnrollmentSummaries,
+} from '../../mappers/education.mapper'
 
 const Crud = CrudDecorators({
   entityName: 'Enrollment',
@@ -37,7 +40,6 @@ export class EnrollmentsController {
   constructor(
     private readonly enrollments: EnrollmentsService,
     private readonly courses: CoursesService,
-    @InjectMapper() private readonly mapper: Mapper,
   ) {}
 
   /* -------------------------------------------------------------------------- */
@@ -64,7 +66,7 @@ export class EnrollmentsController {
 
     const created = await this.enrollments.request(course, auth.userId)
 
-    return this.mapper.map(created, entities.Enrollment, dto.CreateEnrollmentResponse)
+    return toCreatedId(created)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -90,9 +92,7 @@ export class EnrollmentsController {
           .findAll({ where: { ...where, studentId: query.studentId } })
       : await this.enrollments.findAll({ where: { ...where, studentId: auth.userId } })
 
-    return {
-      items: found.map((e) => this.mapper.map(e, entities.Enrollment, dto.EnrollmentSummary)),
-    }
+    return { items: toEnrollmentSummaries(found) }
   }
 
   /* -------------------------------------------------------------------------- */
@@ -115,7 +115,7 @@ export class EnrollmentsController {
       throw new ForbiddenException('User does not have permission')
     }
 
-    return this.mapper.map(enrollment, entities.Enrollment, dto.GetEnrollmentResponse)
+    return toEnrollmentDetails(enrollment)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -140,7 +140,7 @@ export class EnrollmentsController {
       decidedById: auth.userId,
     })
 
-    return this.mapper.map(updated, entities.Enrollment, dto.ModerateEnrollmentResponse)
+    return toEnrollmentDetails(updated)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -161,6 +161,6 @@ export class EnrollmentsController {
 
     const updated = await this.enrollments.assignGroup(enrollment, request.groupId)
 
-    return this.mapper.map(updated, entities.Enrollment, dto.AssignEnrollmentGroupResponse)
+    return toEnrollmentDetails(updated)
   }
 }

@@ -1,3 +1,5 @@
+import * as domain from '@vidya/domain'
+
 import * as crud from './crud'
 
 /* -------------------------------------------------------------------------- */
@@ -9,7 +11,7 @@ export type RoleDetails = {
   name: string
   schoolId: string
   description: string
-  permissions: string[]
+  permissions: domain.PermissionKey[]
 }
 
 export type RoleSummary = Pick<RoleDetails, 'id' | 'name' | 'description'>

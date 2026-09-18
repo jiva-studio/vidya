@@ -1,5 +1,3 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import {
   Body,
   Controller,
@@ -17,8 +15,9 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { CoursesService, GroupsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
+
+import { toCreatedId, toGroupDetails, toGroupSummaries } from '../../mappers/education.mapper'
 
 const Crud = CrudDecorators({
   entityName: 'Group',
@@ -37,7 +36,6 @@ export class GroupsController {
   constructor(
     private readonly groups: GroupsService,
     private readonly courses: CoursesService,
-    @InjectMapper() private readonly mapper: Mapper,
   ) {}
 
   /* -------------------------------------------------------------------------- */
@@ -61,7 +59,7 @@ export class GroupsController {
       throw new NotFoundException(`Group with id ${id} not found`)
     }
 
-    return this.mapper.map(group, entities.Group, dto.GetGroupResponse)
+    return toGroupDetails(group)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -81,9 +79,7 @@ export class GroupsController {
       .scopedBy({ permissions: auth.permissions })
       .findAll({ where: { courseId: query.courseId } })
 
-    return {
-      items: groups.map((c) => this.mapper.map(c, entities.Group, dto.GroupSummary)),
-    }
+    return { items: toGroupSummaries(groups) }
   }
 
   /* -------------------------------------------------------------------------- */
@@ -117,7 +113,7 @@ export class GroupsController {
       schoolId: course.schoolId,
     })
 
-    return this.mapper.map(created, entities.Group, dto.CreateGroupResponse)
+    return toCreatedId(created)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -143,7 +139,7 @@ export class GroupsController {
     }
 
     const updated = await this.groups.updateOneBy({ id }, request)
-    return this.mapper.map(updated, entities.Group, dto.UpdateGroupResponse)
+    return toGroupDetails(updated)
   }
 
   /* -------------------------------------------------------------------------- */

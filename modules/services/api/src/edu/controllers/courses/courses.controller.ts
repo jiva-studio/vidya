@@ -1,5 +1,3 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import {
   Body,
   Controller,
@@ -17,8 +15,9 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { CoursesService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
+
+import { toCourseDetails, toCourseSummaries, toCreatedId } from '../../mappers/education.mapper'
 
 const Crud = CrudDecorators({
   entityName: 'Course',
@@ -34,10 +33,7 @@ const Crud = CrudDecorators({
 @ApiBearerAuth()
 @UseGuards(AuthenticatedUserGuard)
 export class CoursesController {
-  constructor(
-    private readonly courses: CoursesService,
-    @InjectMapper() private readonly mapper: Mapper,
-  ) {}
+  constructor(private readonly courses: CoursesService) {}
 
   /* -------------------------------------------------------------------------- */
   /*                            GET /edu/courses/:id                            */
@@ -60,7 +56,7 @@ export class CoursesController {
       throw new NotFoundException(`Course with id ${id} not found`)
     }
 
-    return this.mapper.map(course, entities.Course, dto.GetCourseResponse)
+    return toCourseDetails(course)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -80,9 +76,7 @@ export class CoursesController {
       .scopedBy({ permissions: auth.permissions })
       .findAll({ where: { schoolId: query.schoolId } })
 
-    return {
-      items: courses.map((c) => this.mapper.map(c, entities.Course, dto.CourseSummary)),
-    }
+    return { items: toCourseSummaries(courses) }
   }
 
   /* -------------------------------------------------------------------------- */
@@ -101,11 +95,14 @@ export class CoursesController {
       throw new ForbiddenException('User does not have permission')
     }
 
-    const created = await this.courses.create(
-      this.mapper.map(request, dto.CreateCourseRequest, entities.Course),
-    )
+    const created = await this.courses.create({
+      schoolId: request.schoolId,
+      name: request.name,
+      description: request.description,
+      learningType: request.learningType,
+    })
 
-    return this.mapper.map(created, entities.Course, dto.CreateCourseResponse)
+    return toCreatedId(created)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -131,7 +128,7 @@ export class CoursesController {
     }
 
     const updated = await this.courses.updateOneBy({ id }, request)
-    return this.mapper.map(updated, entities.Course, dto.UpdateCourseResponse)
+    return toCourseDetails(updated)
   }
 
   /* -------------------------------------------------------------------------- */

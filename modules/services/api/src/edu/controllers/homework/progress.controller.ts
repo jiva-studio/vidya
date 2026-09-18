@@ -1,5 +1,3 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import {
   Body,
   Controller,
@@ -20,8 +18,9 @@ import {
   LessonVersionsService,
 } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
+
+import { toBlockStateDetails, toBlockStateDetailsList } from '../../mappers/education.mapper'
 
 const Crud = CrudDecorators({
   entityName: 'BlockState',
@@ -42,7 +41,6 @@ export class ProgressController {
     private readonly enrollments: EnrollmentsService,
     private readonly lessons: LessonsService,
     private readonly versions: LessonVersionsService,
-    @InjectMapper() private readonly mapper: Mapper,
   ) {}
 
   /* -------------------------------------------------------------------------- */
@@ -80,7 +78,7 @@ export class ProgressController {
       ? await this.blockStates.updateOneBy({ id: existing.id }, fields)
       : await this.blockStates.create(fields)
 
-    return this.mapper.map(saved, entities.BlockState, dto.SaveBlockStateResponse)
+    return toBlockStateDetails(saved)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -112,9 +110,7 @@ export class ProgressController {
       },
     })
 
-    return {
-      items: states.map((s) => this.mapper.map(s, entities.BlockState, dto.BlockStateDetails)),
-    }
+    return { items: toBlockStateDetailsList(states) }
   }
 
   /**

@@ -1,10 +1,7 @@
-import { Mapper } from '@automapper/core'
-import { DEFAULT_MAPPER_TOKEN } from '@automapper/nestjs'
 import { INestApplication } from '@nestjs/common'
 import { SchoolsController } from '@vidya/api/edu/controllers'
-import * as dto from '@vidya/api/edu/dto'
+import { toSchoolDetails } from '@vidya/api/edu/mappers/org.mapper'
 import { createTestingApp } from '@vidya/api/edu/shared'
-import * as entities from '@vidya/entities'
 
 import { Context, createContext } from './context'
 
@@ -12,13 +9,11 @@ describe('SchoolsController', () => {
   let app: INestApplication
   let ctx: Context
   let ctr: SchoolsController
-  let mapper: Mapper
 
   beforeEach(async () => {
     app = await createTestingApp()
     ctx = await createContext(app)
     ctr = app.get(SchoolsController)
-    mapper = app.get(DEFAULT_MAPPER_TOKEN)
   })
 
   /* -------------------------------------------------------------------------- */
@@ -28,7 +23,7 @@ describe('SchoolsController', () => {
   describe('getOne', () => {
     it('returns school by Id', async () => {
       const res = await ctr.getOne(ctx.one.school.id, await ctx.authenticate(ctx.one.users.owner))
-      expect(res).toEqual(mapper.map(ctx.one.school, entities.School, dto.GetSchoolResponse))
+      expect(res).toEqual(toSchoolDetails(ctx.one.school))
     })
 
     it('throws an error if access is not permitted', async () => {

@@ -1,5 +1,3 @@
-import { classes } from '@automapper/classes'
-import { AutomapperModule } from '@automapper/nestjs'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigType } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
@@ -30,9 +28,6 @@ import { EduModule } from './edu/edu.module'
         MailerConfig,
         MigrationsConfig,
       ],
-    }),
-    AutomapperModule.forRoot({
-      strategyInitializer: classes(),
     }),
     TypeOrmModule.forRootAsync({
       useFactory: (dbConfig: ConfigType<typeof DbConfig>) => ({

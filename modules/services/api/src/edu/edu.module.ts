@@ -11,6 +11,7 @@ import {
   LessonsService,
   LessonVersionsService,
   RolesService,
+  SchoolConfigsService,
   SchoolCreationService,
   SchoolsService,
   UserSchoolsService,
@@ -46,10 +47,6 @@ import {
 import { SchoolConfigsController } from './controllers/schools/schoolConfigs.controller'
 import { SchoolsController } from './controllers/schools/schools.controller'
 import { UserSchoolsController } from './controllers/users/userSchools.controller'
-import { EducationMappingProfile } from './mappers/education.mapper'
-import { RolesMappingProfile } from './mappers/roles.mapper'
-import { SchoolsMappingProfile } from './mappers/schools.mapper'
-import { UsersMappingProfile } from './mappers/users.mapper'
 import {
   IsRoleExistConstraint,
   IsSchoolExistConstraint,
@@ -92,6 +89,7 @@ import {
     RedisService,
     AuthUsersService,
     RolesService,
+    SchoolConfigsService,
     UsersService,
     SchoolsService,
     SchoolCreationService,
@@ -108,11 +106,6 @@ import {
     IsRoleExistConstraint,
     IsUserExistConstraint,
     IsSchoolExistConstraint,
-    // Mappers
-    RolesMappingProfile,
-    UsersMappingProfile,
-    SchoolsMappingProfile,
-    EducationMappingProfile,
   ],
 })
 export class EduModule {}

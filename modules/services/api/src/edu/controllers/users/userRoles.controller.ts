@@ -1,13 +1,12 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import { Body, Controller, Query, UseGuards } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import * as dto from '@vidya/api/edu/dto'
 import { RolesService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
+
+import { toUserRoles } from '../../mappers/org.mapper'
 
 // TODO Add documentation configurations, to change doc:
 //      Get many UserRoles    -> Get all roles of a user
@@ -22,10 +21,7 @@ const Crud = CrudDecorators({
 @ApiTags('🧝 Education :: Users')
 @UseGuards(AuthenticatedUserGuard)
 export class UserRolesController {
-  constructor(
-    private readonly rolesService: RolesService,
-    @InjectMapper() private readonly mapper: Mapper,
-  ) {}
+  constructor(private readonly rolesService: RolesService) {}
 
   /* -------------------------------------------------------------------------- */
   /*                        GET /edu/users/:userId/roles                        */
@@ -36,7 +32,7 @@ export class UserRolesController {
     @Query() request: dto.GetUserRolesListRequest,
   ): Promise<dto.GetUserRolesListResponse> {
     const roles = await this.rolesService.getRolesOfUser(request.userId)
-    const userRoles = this.mapper.mapArray(roles, entities.Role, dto.UserRole)
+    const userRoles = toUserRoles(roles)
     return new dto.GetUserRolesListResponse(userRoles)
   }
 

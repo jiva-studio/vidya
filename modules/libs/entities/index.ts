@@ -10,6 +10,8 @@ import { School } from './school'
 import { User } from './user'
 import { UserRole } from './userRole'
 
+export type { SchoolConfig } from './school'
+
 export {
   BlockState,
   Course,

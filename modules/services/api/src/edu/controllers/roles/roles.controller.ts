@@ -1,5 +1,3 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import {
   BadRequestException,
   Body,
@@ -19,8 +17,9 @@ import * as dto from '@vidya/api/edu/dto'
 import { RoleExistsPipe } from '@vidya/api/edu/pipes'
 import { RolesService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
+
+import { toId, toRoleDetails, toRoleSummaries } from '../../mappers/org.mapper'
 
 const Crud = CrudDecorators({
   entityName: 'Role',
@@ -36,10 +35,7 @@ const Crud = CrudDecorators({
 @ApiBearerAuth()
 @UseGuards(AuthenticatedUserGuard)
 export class RolesController {
-  constructor(
-    private readonly rolesService: RolesService,
-    @InjectMapper() private readonly mapper: Mapper,
-  ) {}
+  constructor(private readonly rolesService: RolesService) {}
   /* -------------------------------------------------------------------------- */
   /*                             GET /edu/roles/:id                             */
   /* -------------------------------------------------------------------------- */
@@ -65,7 +61,7 @@ export class RolesController {
     }
 
     // Return role details
-    return this.mapper.map(role, entities.Role, dto.RoleDetails)
+    return toRoleDetails(role)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -91,7 +87,7 @@ export class RolesController {
 
     // Return role summaries
     return new dto.GetRolesResponse({
-      items: this.mapper.mapArray(roles, entities.Role, dto.RoleSummary),
+      items: toRoleSummaries(roles),
     })
   }
 
@@ -114,12 +110,15 @@ export class RolesController {
     }
 
     // Create role
-    const entity = await this.rolesService.create(
-      this.mapper.map(request, dto.CreateRoleRequest, entities.Role),
-    )
+    const entity = await this.rolesService.create({
+      name: request.name,
+      description: request.description,
+      permissions: request.permissions,
+      schoolId: request.schoolId,
+    })
 
     // Return created role details
-    return this.mapper.map(entity, entities.Role, dto.CreateRoleResponse)
+    return toId(entity)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -145,11 +144,15 @@ export class RolesController {
     // Update role
     role = await this.rolesService.updateOneBy(
       { id },
-      this.mapper.map(request, dto.UpdateRoleRequest, entities.Role),
+      {
+        name: request.name,
+        description: request.description,
+        permissions: request.permissions,
+      },
     )
 
     // Return updated role details
-    return this.mapper.map(role, entities.Role, dto.UpdateRoleResponse)
+    return toRoleDetails(role)
   }
 
   /* -------------------------------------------------------------------------- */

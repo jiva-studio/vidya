@@ -1,15 +1,13 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import { Inject, Injectable, Logger } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
-import * as dto from '@vidya/api/auth/dto'
 import { AuthConfig } from '@vidya/api/configs'
 import { RedisService } from '@vidya/api/shared/services'
 import { Role, User } from '@vidya/entities'
-import * as entities from '@vidya/entities'
 import { UserPermission, UserPermissionsStorageKey } from '@vidya/protocol'
 import { Repository } from 'typeorm'
+
+import { toUserPermissions } from '../mappers/permissions.mapper'
 
 export type LoginField = 'email' | 'phone'
 
@@ -21,13 +19,11 @@ export class AuthUsersService {
    * Creates an instance of AuthUsersService.
    * @param users Users repository
    * @param roles Rples repository
-   * @param mapper Mapper instance
    */
   constructor(
     private readonly redis: RedisService,
     @InjectRepository(User) private readonly users: Repository<User>,
     @InjectRepository(Role) private readonly roles: Repository<Role>,
-    @InjectMapper() private readonly mapper: Mapper,
     @Inject(AuthConfig.KEY)
     private readonly authConfig: ConfigType<typeof AuthConfig>,
   ) {}
@@ -93,7 +89,7 @@ export class AuthUsersService {
 
       // Permissions are not cached. Fetch them from the database.
       const userRoles = await this.getRolesOfUser(userId)
-      const permissions = this.mapper.mapArray(userRoles, entities.Role, dto.UserPermission)
+      const permissions = toUserPermissions(userRoles)
 
       // Cache the permissions if cache TTL is set to a positive value
       // otherwise, users permissions will be fetched from the database
