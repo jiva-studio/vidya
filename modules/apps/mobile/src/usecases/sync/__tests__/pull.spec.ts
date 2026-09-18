@@ -224,8 +224,18 @@ describe('pulling a page', () => {
 
   it('T-M-26: the scope position and the page commit together', async () => {
     const database = await openTestDatabase()
+    const executed: string[] = []
+
+    // The position write, and only the position write. `addScope` inserts into
+    // the same table but runs before the page has written anything, so staging
+    // the crash on the table name would fire on the first statement of the
+    // transaction — with no domain row written yet, an empty database afterwards
+    // says nothing about whether the two halves are tied together (D-18).
     const broken = await openHarness({
-      db: failingDatabase(database.db, (sql) => sql.includes('INTO sync_scopes')),
+      db: failingDatabase(database.db, (sql) => {
+        executed.push(sql)
+        return sql.includes('DO UPDATE SET cursor')
+      }),
       server: harness.server,
     })
     harness.server.journal({
@@ -237,7 +247,14 @@ describe('pulling a page', () => {
 
     await broken.engine.runner.run()
 
-    // Neither half landed: no row, and no position claiming there is one.
+    // The page got as far as the guard: the course was written, and the
+    // statement that failed is the one that would have recorded its arrival.
+    expect(executed.some((sql) => sql.includes('INSERT INTO courses'))).toBe(true)
+    expect(executed.some((sql) => sql.includes('DO UPDATE SET cursor'))).toBe(true)
+
+    // Neither half survived. Move the positions out of the transaction and the
+    // course stays on the device with nothing recording that it arrived — the
+    // gap the next pull will never ask for.
     expect(await broken.count('courses')).toBe(0)
     expect(await broken.count('sync_scopes')).toBe(0)
   })
