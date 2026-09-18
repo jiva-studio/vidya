@@ -50,6 +50,10 @@ export class Homework {
   @Column({ nullable: true })
   grade: number
 
+  /** True when the answered version had already been superseded at submit time. */
+  @Column({ nullable: false, default: false })
+  answeredSupersededVersion: boolean
+
   @Column({ nullable: true })
   reviewedById: string
 

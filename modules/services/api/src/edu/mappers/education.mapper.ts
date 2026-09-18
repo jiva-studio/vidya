@@ -143,6 +143,7 @@ export class EducationMappingProfile extends AutomapperProfile {
         'reviewedById',
         'submittedAt',
         'reviewedAt',
+        'answeredSupersededVersion',
       ]
       createMap(mapper, entities.Homework, dto.HomeworkDetails, ...sameFields(...homework))
       createMap(mapper, entities.Homework, dto.GetHomeworkResponse, ...sameFields(...homework))

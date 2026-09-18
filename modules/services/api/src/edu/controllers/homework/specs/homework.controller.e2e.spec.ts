@@ -56,6 +56,33 @@ describe('/edu/homework', () => {
     return submit(ctx.tokens.student, 'Second thoughts').expect(409)
   })
 
+  it('does not flag work answered against the current version', async () => {
+    const response = await submit(ctx.tokens.student).expect(201)
+
+    expect(response.body.answeredSupersededVersion).toBe(false)
+  })
+
+  it('accepts work answered against a superseded version, and flags it', async () => {
+    // The student was offline while the teacher published a revision. Rejecting
+    // the answer would punish them for an edit they could not have seen.
+    const { LessonVersionsService } = await import('@vidya/api/edu/services')
+    const versions = app.get(LessonVersionsService)
+    const answered = await versions.findOneBy({ id: ctx.publishedVersionId })
+
+    await versions.create({
+      lessonId: answered.lessonId,
+      version: answered.version + 1,
+      status: 'published',
+      publishedAt: new Date(),
+      content: { sections: [] },
+    })
+
+    const response = await submit(ctx.tokens.student).expect(201)
+
+    expect(response.body.status).toBe('pending')
+    expect(response.body.answeredSupersededVersion).toBe(true)
+  })
+
   /* -------------------------------------------------------------------------- */
   /*                                  Reviewing                                 */
   /* -------------------------------------------------------------------------- */
@@ -129,6 +156,32 @@ describe('/edu/homework', () => {
       .get(routes.get(created.body.id))
       .auth(ctx.tokens.stranger, { type: 'bearer' })
       .expect(403)
+  })
+
+  it('shows nothing to a student with no enrollments at all', async () => {
+    // Regression: the query was built as an OR over the student's enrollments,
+    // and an empty list becomes `where: []`, which TypeORM reads as "no filter"
+    // and answers with every row in the table — every school's homework.
+    await submit(ctx.tokens.student).expect(201)
+
+    const response = await request(app.getHttpServer())
+      .get(routes.find())
+      .auth(ctx.tokens.stranger, { type: 'bearer' })
+      .expect(200)
+
+    expect(response.body.items).toHaveLength(0)
+  })
+
+  it('shows a student only their own work in the list', async () => {
+    const created = await submit(ctx.tokens.student).expect(201)
+
+    const response = await request(app.getHttpServer())
+      .get(routes.find())
+      .auth(ctx.tokens.student, { type: 'bearer' })
+      .expect(200)
+
+    expect(response.body.items).toHaveLength(1)
+    expect(response.body.items[0].id).toBe(created.body.id)
   })
 
   it('lets a teacher read it', async () => {

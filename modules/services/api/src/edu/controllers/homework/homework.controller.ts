@@ -93,6 +93,7 @@ export class HomeworkController {
       schoolId: enrollment.schoolId,
       status: 'pending' as const,
       text: request.text,
+      answeredSupersededVersion: await this.isSuperseded(version),
       submittedAt: new Date(),
       updatedAt: new Date(),
     }
@@ -126,6 +127,14 @@ export class HomeworkController {
     // A student without the permission sees only their own work, which is found
     // through their enrollments rather than by trusting an id in the query.
     const mine = await this.enrollments.findAll({ where: { studentId: auth.userId } })
+
+    // An OR over an empty list is `where: []`, which TypeORM reads as "no
+    // filter" and answers with every row in the table. A student with no
+    // enrollments must see nothing, not everything.
+    if (mine.length === 0) {
+      return { items: [] }
+    }
+
     const found = await this.homework.findAll({
       where: mine.map((e) => ({ enrollmentId: e.id, status: query.status })),
     })
@@ -196,6 +205,22 @@ export class HomeworkController {
   /* -------------------------------------------------------------------------- */
   /*                                  Helpers                                   */
   /* -------------------------------------------------------------------------- */
+
+  /**
+   * Whether the lesson moved on while the student was answering.
+   *
+   * The work is accepted either way — an edit made while a device was offline
+   * is not the student's fault — but the reviewer is told, so they can open the
+   * version that was actually answered rather than the current one.
+   */
+  private async isSuperseded(answered: entities.LessonVersion): Promise<boolean> {
+    const published = await this.versions.findAll({
+      where: { lessonId: answered.lessonId, status: 'published' },
+    })
+
+    const latest = published.sort((a, b) => b.version - a.version)[0]
+    return Boolean(latest) && latest.id !== answered.id
+  }
 
   /** The student's accepted place on the course this lesson belongs to. */
   private async enrollmentForLessonVersion(lessonId: string, studentId: string) {
