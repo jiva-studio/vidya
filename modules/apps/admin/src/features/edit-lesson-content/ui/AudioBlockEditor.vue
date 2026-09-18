@@ -37,7 +37,7 @@ function onUrl(url: string) {
 
 <template>
   <div :class="fieldStackClasses">
-    <FormField :label="$t('editor-source-label')">
+    <FormField :label="$t('editor-source-label')" :hint="$t('editor-source-hint')">
       <template #default="field">
         <Select
           :id="field.id"
