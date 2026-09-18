@@ -129,7 +129,9 @@ const skip = (reason: SyncSkipReason, detail?: string): ChangeVerdict => ({
  * The order of the checks is the order in which a failure is cheapest to
  * describe, not an accident: a row naming an unknown collection has no fields
  * worth naming, and a row whose `hlc` does not parse cannot be compared to
- * anything at all.
+ * anything at all. The size check sits where it does for a different reason —
+ * it has to see the body the *server* measured, so it runs before the
+ * envelope's school is folded in and before the required fields are counted.
  */
 export function validateChange(change: SyncChange, required: RequiredFields): ChangeVerdict {
   const structural = checkStructure(change)
@@ -138,19 +140,25 @@ export function validateChange(change: SyncChange, required: RequiredFields): Ch
   const collection = change.collection as SyncCollection
   if (change.op === 'delete') return accept(change, collection, null)
 
+  const body = change.data
+  if (body === null || body === undefined) return skip('missingData')
+
+  // Measured on the body as it came off the wire, before anything of ours is
+  // added to it. The ceiling is the server's, the server counts the body it
+  // sent, and a row it let through has to be storable here — a lesson version
+  // carries no school in its payload at all, so folding the envelope's school
+  // in first would measure a row fifty bytes longer than the one that was
+  // checked. A row on the boundary would then be skipped while its position
+  // moved on past it, and the lesson would be missing for good (D-2).
+  const oversized = checkSize(body)
+  if (oversized !== null) return oversized
+
   // The school comes off the envelope, not the document. Homework and enrolments
   // repeat it in their body, content does not — a lesson version has no school
   // of its own, and one local database holds several. Folding it in here, ahead
   // of the required-field check, makes every collection behave the same way and
   // keeps the device from filing a row under no school at all.
-  const data: SyncPayload | null =
-    change.data === null || change.data === undefined
-      ? null
-      : { ...change.data, schoolId: change.schoolId }
-  if (data === null || data === undefined) return skip('missingData')
-
-  const oversized = checkSize(data)
-  if (oversized !== null) return oversized
+  const data: SyncPayload = { ...body, schoolId: change.schoolId }
 
   const missing = required(collection).filter(
     (field) => data[field] === undefined || data[field] === null,
@@ -184,6 +192,10 @@ function checkStructure(change: SyncChange): ChangeVerdict | null {
  * counts — a text of emoji and RTL marks is several times its length in
  * characters, and counting characters would let a row through here that the
  * server already refused (T-X-12, T-X-13).
+ *
+ * Measured on the payload the server sent and on nothing else. The two sides
+ * have to count the same bytes, or the boundary is in two places at once and
+ * whatever falls between them is content the device silently never stores.
  */
 function checkSize(data: SyncPayload): ChangeVerdict | null {
   const bytes = utf8Length(JSON.stringify(data))

@@ -115,6 +115,28 @@ describe('validating one incoming row', () => {
     expect(reasonFor({ data: huge })).toBe('payloadTooLarge')
   })
 
+  it('D-2: a body of exactly the ceiling is stored, school or no school', () => {
+    // The size the server measured is the size of the body it sent. The school
+    // it files the row under travels in the envelope, and a lesson version
+    // carries none of its own — measure the row with ours folded in and the
+    // boundary moves fifty bytes, so a row the server passed is skipped here
+    // while its scope position walks straight past it. The content is then
+    // gone for good: nothing fetches a row below the position again.
+    const shell = JSON.stringify({ id: UUID, text: '' })
+    const text = 'x'.repeat(SYNC_MAX_CHANGE_BYTES - shell.length)
+    const body = { id: UUID, text }
+    expect(utf8Length(JSON.stringify(body))).toBe(SYNC_MAX_CHANGE_BYTES)
+
+    const verdict = validateChange(change({ data: body }), NO_REQUIRED_FIELDS)
+
+    expect(verdict.verdict).toBe('storable')
+    expect(verdict.verdict === 'storable' && verdict.change.data).toEqual({
+      id: UUID,
+      text,
+      schoolId: UUID,
+    })
+  })
+
   it('T-X-13: the ceiling is counted in bytes, not characters', () => {
     // Every one of these is four bytes, so a quarter as many fit as a naive
     // length check would allow — and the server counts bytes too.
