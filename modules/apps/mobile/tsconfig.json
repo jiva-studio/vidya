@@ -3,9 +3,7 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true ,
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "strict": true,
     "jsx": "preserve",
     "resolveJsonModule": true,
@@ -14,17 +12,11 @@
     "lib": ["ESNext", "DOM"],
     "skipLibCheck": true,
     "noEmit": true,
+    "types": ["vite/client", "vitest/globals"],
     "paths": {
-      "@classroom/app/*": ["./modules/app/*"],
-      "@classroom/protocol/*": ["./modules/protocol/lib/*"],
+      "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "modules/app/**/*.ts",
-    "modules/app/**/*.d.ts",
-    "modules/app/**/*.tsx",
-    "modules/app/**/*.vue",
-    "modules/protocol/lib/**/*.ts",
-  ],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
