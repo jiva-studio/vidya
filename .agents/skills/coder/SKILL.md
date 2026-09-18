@@ -15,7 +15,9 @@ at Phase 1, never duplicated here.
    layering, dependency direction, structural limits.
 2. Read the coding-style rule for the layer you are touching, from
    [`../../rules/`](../../rules/).
-3. If a spec exists for the current branch at `.agents/specs/<branch-slug>.md`,
+3. Read [`../../rules/comments.md`](../../rules/comments.md) — what a comment
+   may say and how long it may be.
+4. If a spec exists for the current branch at `.agents/specs/<branch-slug>.md`,
    read it. It is the contract: its acceptance criteria define done, and its
    non-goals define where to stop.
 
@@ -49,6 +51,24 @@ is always cheaper than one that has to be split later.
 Leave nothing unwired. A new module that nothing imports, a handler nothing
 routes to, a component nothing renders — these read as complete and are not.
 Stage 0 of [`../review/SKILL.md`](../review/SKILL.md) rejects exactly this.
+
+### Comments you write in this phase
+
+The full rule is [`../../rules/comments.md`](../../rules/comments.md). The four
+things it forbids, because they are the four that keep happening:
+
+1. **No identifiers from documents that are not in the repository.** `(D-14)`,
+   `(I-2, AC-22f)`, `(T-S-35)` — the plan and the spec are not committed, so for
+   the next reader these point nowhere. This includes test names: a test says
+   what breaks, not which row of which table asked for it.
+2. **No defect history.** What was broken and how it was found belongs in the
+   commit message. The docblock describes the code as it stands.
+3. **Size matches the subject.** One field gets one line. A non-trivial
+   algorithm gets a paragraph. Anything longer is documentation and belongs in
+   `docs/`, linked by path.
+4. **Say why, not what.** What the code does is the code's job — if a comment is
+   needed to explain that, the name is wrong. A comment exists for the constraint,
+   the invariant, or the trade-off that the reader cannot see.
 
 ## Phase 4: Gatekeeper (strict)
 
