@@ -22,10 +22,26 @@ Workspace-wide gates are the exception and stay unprefixed: `check`, `typecheck`
 **Gates**
 - `check` — the full quality gate. Chains typecheck, lint, format-check and test
   across every workspace. The mandatory pre-submit command.
+- `check-package PKG=@vidya/api` — the same four stages against one workspace.
+  The inner loop, not a substitute: a package's own tests say nothing about the
+  packages that import it, so `check` still runs before the branch is handed
+  over.
 - `typecheck` — `tsc --noEmit` in each workspace.
 - `lint` / `lint-fix` — ESLint flat config over `modules/`.
 - `format` / `format-check` — Prettier.
-- `test` — Jest across every workspace that defines a test script.
+- `test` — every suite, backed by pg-mem.
+- `test-package PKG=… ARGS=…` — one workspace's suites, optionally narrowed.
+- `test-postgres-required` — only the suites a real database is required for
+  (`*.postgres.spec.ts`). These skip themselves under pg-mem, so they are only
+  proved here. Fast enough to belong on a branch.
+- `test-postgres` — every suite with a real Postgres behind it. Broader, slower,
+  scheduled rather than per change.
+
+**Mutation testing**
+- `mutate-diff PKG=…` — mutate only what the branch changed, against the merge
+  base with main. The per-change run.
+- `mutate-full PKG=…` — mutate a whole package. Hours for a package the size of
+  the API; manual or scheduled.
 
 **API**
 - `api-build` — `nest build` for `@vidya/api`.
@@ -33,15 +49,23 @@ Workspace-wide gates are the exception and stay unprefixed: `check`, `typecheck`
 - `api-test` — Jest for `@vidya/api` only.
 
 **Database**
-- `db-run` — start the local Postgres instance.
-- `db-drop` — drop the local database.
+- `db-start` — start the local Postgres instance.
+- `db-schema-drop` — drop the development schema.
 - `db-migrate` — run pending migrations.
-- `db-migrate-generate` — generate a migration from entity changes.
+- `db-testdb-drop` — drop the databases the test suite created. Each checkout
+  reuses one, so this is for reclaiming those of worktrees that are gone.
 - `seed` — populate the database with development data.
 
 **Housekeeping**
 - `install` — install workspace dependencies.
 - `clean` — remove `node_modules`, `dist` and build info.
+
+### Variables
+
+- `PKG` — narrows a per-workspace target to one package, e.g.
+  `make check-package PKG=@vidya/api`. Defaults to `@vidya/api`.
+- `ARGS` — extra arguments for the underlying runner, e.g.
+  `make test-package PKG=@vidya/api ARGS='--testPathPattern edu'`.
 
 ### Why Targets Delegate to npm
 
@@ -91,15 +115,29 @@ implementation that can drift.
 # Install workspace dependencies
 make install
 
-# Full quality gate — the mandatory pre-submit command
+# The gate — required before the branch is handed over
 make check
 
-# Individual gates for a fast inner loop
+# The inner loop — one workspace, all four stages
+make check-package PKG=@vidya/api
+
+# Individual gates, workspace-wide
 make typecheck
 make lint
 make lint-fix
 make format
 make test
+
+# One package's tests, optionally narrowed
+make test-package PKG=@vidya/api ARGS='--testPathPattern edu'
+
+# Against a real Postgres
+make test-postgres-required
+make test-postgres
+
+# Mutation testing
+make mutate-diff PKG=@vidya/api
+make mutate-full PKG=@vidya/api
 
 # API
 make api-build
@@ -107,12 +145,32 @@ make api-run
 make api-test
 
 # Database
-make db-run
+make db-start
 make db-migrate
-make db-migrate-generate
 make seed
-make db-drop
+make db-schema-drop
+make db-testdb-drop
 
 # Clean build artifacts
 make clean
 ```
+
+## Script Naming
+
+Files in `scripts/` are named `vidya-<area>-<object>-<action>`, and the name
+answers "what will this run", not "which flag does it set":
+
+```text
+vidya-workspace-build          build every workspace
+vidya-workspace-check          one workspace through all four gate stages
+vidya-test-suite-run           the test suites, against a named backend
+vidya-mutation-suite-run       mutation testing, on the diff or on a package
+vidya-db-server-start          start the local Postgres server
+vidya-db-schema-drop           drop the development schema
+vidya-db-migrations-apply      apply pending migrations
+vidya-db-testdb-drop           drop the databases the test suite created
+```
+
+All of them are extensionless `#!/usr/bin/env bash` and run without `make`.
+A script that takes a mode takes it as an argument, so that two near-identical
+scripts do not drift apart.

@@ -53,24 +53,86 @@ specifiers declared in `modules/tsconfig.base.json`.
 
 ```bash
 make install              # install workspace dependencies
+```
 
-make check                # the full quality gate — run before every commit
+### The gate
+
+`make check` is the gate: typecheck, lint, format-check and test over every
+workspace. It is what CI runs, and a branch is not done until it exits 0.
+
+```bash
+make check                        # every workspace — required before merging
+make check-package PKG=@vidya/api # the same four stages, one workspace
+```
+
+`check-package` is the inner loop, not a substitute. A package's own tests say
+nothing about the packages that import it, so the full gate still has to run
+before the branch is handed over.
+
+Individual stages, workspace-wide:
+
+```bash
 make typecheck            # tsc --noEmit across every workspace
 make lint                 # ESLint (structural limits, purity rules, import order)
 make lint-fix             # autofix what ESLint can
 make format               # Prettier
+make format-check         # Prettier, read-only
+make test                 # every suite, backed by pg-mem
+```
 
+Narrower:
+
+```bash
+make test-package PKG=@vidya/api ARGS='--testPathPattern edu'
+```
+
+### Tests against a real database
+
+The default suite runs on pg-mem, which is fast but is not Postgres: it has one
+session and stubs advisory locking out.
+
+```bash
+make test-postgres-required  # only the suites a real database is required for
+make test-postgres           # every suite, with real Postgres behind it
+```
+
+`test-postgres-required` runs the `*.postgres.spec.ts` suites — the ones that
+skip themselves under pg-mem and therefore prove nothing there. It is quick and
+belongs on every branch that touches the schema or the migration runner.
+`test-postgres` is broader and slower; run it by hand or on a schedule.
+
+Neither falls back to pg-mem when no server is reachable: they stop and say so,
+because a silent fallback reports a pass for suites that never ran.
+
+Each checkout derives its own test database name, so several worktrees can share
+one Postgres server without dropping each other's schema. `make db-testdb-drop`
+reclaims the databases of checkouts that no longer exist.
+
+### Mutation testing
+
+Coverage says a line ran. Mutation testing says the suite would have noticed if
+the line were wrong.
+
+```bash
+make mutate-diff PKG=@vidya/api   # only the files this branch changed
+make mutate-full PKG=@vidya/api   # the whole package — hours; run on a schedule
+```
+
+Both run incrementally against the baseline committed in `.stryker/incremental/`,
+so a branch is scored against what main produced rather than from zero.
+
+### Service and database
+
+```bash
 make api-run              # start the API in watch mode
 make api-test             # Jest for the API only
 
-make db-run               # start Postgres
+make db-start             # start Postgres
 make db-migrate           # apply migrations
-make db-migrate-generate  # generate a migration from entity changes
+make db-schema-drop       # drop the development schema
+make db-testdb-drop       # drop the databases the test suite created
 make seed                 # populate development data
 ```
-
-`make check` chains typecheck, lint, format-check and test. A change is not done
-until it exits 0.
 
 ## Working with AI agents
 
@@ -80,4 +142,6 @@ Conventions that coding agents must follow live in [`AGENTS.md`](./AGENTS.md) an
 - [`.agents/rules/architecture.md`](./.agents/rules/architecture.md) — monorepo layout, layering, dependency rules
 - [`.agents/rules/coding-style-backend.md`](./.agents/rules/coding-style-backend.md) — NestJS and TypeScript conventions
 - [`.agents/rules/coding-style-frontend.md`](./.agents/rules/coding-style-frontend.md) — Vue component conventions
+- [`.agents/rules/comments.md`](./.agents/rules/comments.md) — what a comment may say, and how long it may be
+- [`.agents/rules/process.md`](./.agents/rules/process.md) — roles, file ownership and evidence when several agents share a branch
 - [`.agents/skills/`](./.agents/skills) — the coder, makefile and 4-stage review workflows

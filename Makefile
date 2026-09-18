@@ -1,7 +1,20 @@
-.PHONY: install check typecheck lint lint-fix format format-check test test-postgres \
-        api-build api-run api-test db-run db-drop db-migrate db-migrate-generate seed clean
+.PHONY: install \
+        check check-package typecheck lint lint-fix format format-check \
+        test test-package test-postgres-required test-postgres \
+        mutate-diff mutate-full \
+        api-build api-run api-test \
+        db-start db-schema-drop db-migrate db-migrate-generate db-testdb-drop \
+        seed clean
 
 NPM := npm --prefix modules
+
+# Narrows the per-workspace targets. Example:
+#   make check-package PKG=@vidya/api
+PKG ?= @vidya/api
+
+# Extra arguments handed to the underlying test runner. Example:
+#   make test-package PKG=@vidya/api ARGS='--testPathPattern edu'
+ARGS ?=
 
 # ---------------------------------------------------------------------------
 # Workspace
@@ -10,10 +23,22 @@ NPM := npm --prefix modules
 install:
 	$(NPM) install
 
-# The single gatekeeper. Chains typecheck, lint, format and tests across every
-# workspace in modules/. Run this before marking any coding task complete.
+# ---------------------------------------------------------------------------
+# Quality gate
+#
+# `check` is the gate: typecheck, lint, format and tests over every workspace.
+# It is what CI runs and what a branch must pass before it is merged.
+#
+# `check-package` is the inner loop: the same four stages, one workspace. Use it
+# while working; it does not replace `check`, because a package's own tests say
+# nothing about the packages that import it.
+# ---------------------------------------------------------------------------
+
 check:
 	$(NPM) run check
+
+check-package:
+	./scripts/vidya-workspace-check $(PKG)
 
 typecheck:
 	$(NPM) run typecheck
@@ -31,13 +56,35 @@ format-check:
 	$(NPM) run format:check
 
 test:
-	$(NPM) run test
+	./scripts/vidya-test-suite-run memory
 
-# The same suite against a real Postgres, plus the cases the in-memory database
-# cannot model at all — advisory locks, real constraints under concurrency.
-# Needs a server; see VIDYA_TEST_DB_* for where to find it.
+test-package:
+	$(NPM) run test -w $(PKG) --if-present -- $(ARGS)
+
+# Only the suites that a real database is required for: the properties pg-mem
+# cannot model, such as advisory locking under concurrency. Fast, and part of
+# what a branch must pass.
+test-postgres-required:
+	./scripts/vidya-test-suite-run postgres-required
+
+# Every suite, with a real Postgres behind it instead of pg-mem. Broader and
+# slower; run it by hand or on a schedule, not per change.
 test-postgres:
-	VIDYA_TEST_DB=postgres $(NPM) run test
+	./scripts/vidya-test-suite-run postgres
+
+# ---------------------------------------------------------------------------
+# Mutation testing
+#
+# Coverage says a line ran. Mutation testing says the suite noticed. `mutate-diff`
+# only mutates what the branch changed and is the one to run per change;
+# `mutate-full` re-measures a whole package and is for a schedule.
+# ---------------------------------------------------------------------------
+
+mutate-diff:
+	./scripts/vidya-mutation-suite-run diff $(PKG)
+
+mutate-full:
+	./scripts/vidya-mutation-suite-run full $(PKG)
 
 # ---------------------------------------------------------------------------
 # API service
@@ -50,22 +97,27 @@ api-run:
 	$(NPM) run start:dev -w @vidya/api
 
 api-test:
-	$(NPM) run test -w @vidya/api
+	$(NPM) run test -w @vidya/api -- $(ARGS)
 
 # ---------------------------------------------------------------------------
 # Database
 # ---------------------------------------------------------------------------
 
-db-run:
-	./scripts/vidya-db-run
+db-start:
+	./scripts/vidya-db-server-start
 
-db-drop:
-	./scripts/vidya-db-drop
+db-schema-drop:
+	./scripts/vidya-db-schema-drop
 
 # Migrations are applied by the API at startup; this target exists for the case
 # where you want the schema without running the service.
 db-migrate:
-	./scripts/vidya-db-migrations-run
+	./scripts/vidya-db-migrations-apply
+
+# Drops the databases the test suite created. Each checkout reuses one database,
+# so this is for reclaiming the ones left by worktrees that no longer exist.
+db-testdb-drop:
+	./scripts/vidya-db-testdb-drop
 
 seed:
 	$(NPM) run seed -w @vidya/seeder
