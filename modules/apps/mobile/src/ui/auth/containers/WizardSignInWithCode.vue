@@ -29,13 +29,11 @@ import { AsyncButton } from '@/design'
 import { useConfig } from '@/shared'
 import { CodeInput, HelpMessage } from '@/ui/auth'
 import { auth } from '@/usecases'
+import type { WizardSignInWithCodeEmits } from './types'
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{
-  complete: [isRegistrationRequired: boolean]
-  'go-back': []
-}>()
+const emit = defineEmits<WizardSignInWithCodeEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 

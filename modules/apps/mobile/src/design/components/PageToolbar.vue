@@ -9,8 +9,9 @@
 
 <script setup lang="ts">
 import { IonBackButton, IonButtons, IonTitle, IonToolbar } from '@ionic/vue'
+import type { PageToolbarProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-defineProps<{ title: string }>()
+defineProps<PageToolbarProps>()
 </script>

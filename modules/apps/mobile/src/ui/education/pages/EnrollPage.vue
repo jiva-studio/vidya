@@ -15,7 +15,6 @@
 </template>
 
 <script setup lang="ts">
-import type { CourseId } from '@vidya/domain'
 import { useIonRouter } from '@ionic/vue'
 import { useFluent } from 'fluent-vue'
 import { ref } from 'vue'
@@ -23,10 +22,11 @@ import { ref } from 'vue'
 import { useApi } from '@/app'
 import { AsyncButton, PageWithHeaderLayout } from '@/design'
 import { education } from '@/usecases'
+import type { EnrollPageProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<{ courseId: CourseId }>()
+const props = defineProps<EnrollPageProps>()
 
 /* --------------------------------- State ---------------------------------- */
 

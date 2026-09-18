@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { EnrollmentId, LessonId } from '@vidya/domain'
+import type { LessonId } from '@vidya/domain'
 import { useIonRouter } from '@ionic/vue'
 import { computed } from 'vue'
 
@@ -28,10 +28,11 @@ import { PageWithHeaderLayout } from '@/design'
 import { useFailureMessage, useRemoteData } from '@/shared'
 import { EnrollmentReviewStatus, LessonsList } from '@/ui/education'
 import { education } from '@/usecases'
+import type { MyEnrollmentPageProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<{ enrollmentId: EnrollmentId }>()
+const props = defineProps<MyEnrollmentPageProps>()
 
 /* --------------------------------- State ---------------------------------- */
 

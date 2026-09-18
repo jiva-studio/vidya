@@ -4,14 +4,14 @@
 </template>
 
 <script lang="ts" setup>
-import type { TextBlock } from '@vidya/protocol'
 import { Marked } from '@ts-stack/markdown'
 import DOMPurify from 'dompurify'
 import { computed } from 'vue'
+import type { TextSectionBlockProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<{ block: TextBlock }>()
+const props = defineProps<TextSectionBlockProps>()
 
 /* --------------------------------- State ---------------------------------- */
 

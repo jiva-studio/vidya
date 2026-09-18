@@ -20,20 +20,15 @@
 import { IonButton, IonSpinner, IonIcon } from '@ionic/vue'
 import { ref, toRefs, watch } from 'vue'
 import { alertCircleOutline } from 'ionicons/icons'
+import type { AsyncButtonEmits, AsyncButtonProps } from './types'
 
 /* -------------------------------------------------------------------------- */
 /*                                  Interface                                 */
 /* -------------------------------------------------------------------------- */
 
-const props = defineProps<{
-  busy: boolean
-  disabled?: boolean
-  errorCode?: string
-}>()
+const props = defineProps<AsyncButtonProps>()
 
-const emit = defineEmits<{
-  click: []
-}>()
+const emit = defineEmits<AsyncButtonEmits>()
 
 /* -------------------------------------------------------------------------- */
 /*                                    State                                   */

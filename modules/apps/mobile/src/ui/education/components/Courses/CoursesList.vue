@@ -10,17 +10,17 @@
 
 <script setup lang="ts">
 import type { CourseId } from '@vidya/domain'
-import type { CourseSummary } from '@vidya/protocol'
 
 import CourseCard from './CourseCard.vue'
+import type { CoursesListEmits, CoursesListProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-defineProps<{ items: CourseSummary[] }>()
+defineProps<CoursesListProps>()
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{ click: [courseId: CourseId] }>()
+const emit = defineEmits<CoursesListEmits>()
 
 /* -------------------------------- Handlers -------------------------------- */
 

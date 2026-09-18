@@ -12,12 +12,10 @@
 </template>
 
 <script setup lang="ts">
-import type { LessonSectionViewModel } from './LessonSectionViewModel'
 import { IonLabel, IonSegment, IonSegmentButton } from '@ionic/vue'
+import type { LessonSectionsListProps } from './types'
 
-defineProps<{
-  items: readonly LessonSectionViewModel[]
-}>()
+defineProps<LessonSectionsListProps>()
 
 const selected = defineModel<number>({ default: 0 })
 </script>

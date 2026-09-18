@@ -12,24 +12,16 @@
 </template>
 
 <script setup lang="ts">
-import type { EnrollmentStatus } from '@vidya/domain'
 import { IonItem, IonLabel, IonText } from '@ionic/vue'
+import type { EnrollmentsListItemEmits, EnrollmentsListItemProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-withDefaults(
-  defineProps<{
-    id: string
-    courseName: string
-    groupName?: string
-    status: EnrollmentStatus
-  }>(),
-  { groupName: undefined },
-)
+withDefaults(defineProps<EnrollmentsListItemProps>(), { groupName: undefined })
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{ click: [] }>()
+const emit = defineEmits<EnrollmentsListItemEmits>()
 
 /* -------------------------------- Handlers -------------------------------- */
 

@@ -12,8 +12,9 @@
 
 <script setup lang="ts">
 import { IonCard, IonCardContent, IonCardHeader, IonCardTitle } from '@ionic/vue'
+import type { CourseCardProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-withDefaults(defineProps<{ name: string; description?: string }>(), { description: undefined })
+withDefaults(defineProps<CourseCardProps>(), { description: undefined })
 </script>

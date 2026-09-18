@@ -24,28 +24,18 @@ import { computed } from 'vue'
 
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import PageToolbar from '../components/PageToolbar.vue'
+import type { PageWithHeaderLayoutProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(
-  defineProps<{
-    title: string
-    hasPadding?: boolean
-    busy?: boolean
-    hasData?: boolean
-    isEmpty?: boolean
-    error?: string
-    emptyText?: string
-  }>(),
-  {
-    hasPadding: false,
-    busy: false,
-    hasData: false,
-    isEmpty: false,
-    error: undefined,
-    emptyText: '',
-  },
-)
+const props = withDefaults(defineProps<PageWithHeaderLayoutProps>(), {
+  hasPadding: false,
+  busy: false,
+  hasData: false,
+  isEmpty: false,
+  error: undefined,
+  emptyText: '',
+})
 
 /* --------------------------------- State ---------------------------------- */
 

@@ -7,8 +7,9 @@
 
 <script setup lang="ts">
 import { IonIcon, IonLabel, IonTabButton } from '@ionic/vue'
+import type { EducationTabProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-defineProps<{ tab: string; href: string; icon: string; label: string }>()
+defineProps<EducationTabProps>()
 </script>

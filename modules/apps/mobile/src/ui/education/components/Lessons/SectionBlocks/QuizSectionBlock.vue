@@ -13,20 +13,18 @@
 </template>
 
 <script lang="ts" setup>
-import type { QuizBlock, QuizBlockState } from '@vidya/protocol'
 import { IonItem, IonLabel, IonRadio, IonRadioGroup } from '@ionic/vue'
 import { ref, watch } from 'vue'
+import type { QuizSectionBlockEmits, QuizSectionBlockProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
 // `block.rightAnswer` is deliberately not read: marking is the server's.
-const props = withDefaults(defineProps<{ block: QuizBlock; state?: QuizBlockState }>(), {
-  state: undefined,
-})
+const props = withDefaults(defineProps<QuizSectionBlockProps>(), { state: undefined })
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{ change: [state: QuizBlockState] }>()
+const emit = defineEmits<QuizSectionBlockEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 

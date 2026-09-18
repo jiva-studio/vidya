@@ -13,19 +13,15 @@
 
 <script setup lang="ts">
 import { IonItem, IonLabel } from '@ionic/vue'
-import type { LessonSummary } from '@vidya/protocol'
+import type { LessonsListItemEmits, LessonsListItemProps } from './types'
 
 /* -------------------------------------------------------------------------- */
 /*                                  Interface                                 */
 /* -------------------------------------------------------------------------- */
 
-defineProps<{
-  item: LessonSummary
-}>()
+defineProps<LessonsListItemProps>()
 
-const emit = defineEmits<{
-  click: []
-}>()
+const emit = defineEmits<LessonsListItemEmits>()
 
 /* -------------------------------------------------------------------------- */
 /*                                  Handlers                                  */

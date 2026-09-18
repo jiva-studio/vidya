@@ -27,7 +27,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { BlockId, EnrollmentId, LessonId, SectionId } from '@vidya/domain'
+import type { BlockId, SectionId } from '@vidya/domain'
 import type { LessonBlockState } from '@vidya/protocol'
 import { IonToolbar } from '@ionic/vue'
 import { computed, ref } from 'vue'
@@ -37,10 +37,11 @@ import { PageWithHeaderLayout } from '@/design'
 import { useFailureMessage, useRemoteData } from '@/shared'
 import { HomeworkAnswer, LessonSectionsList, LessonSectionView } from '@/ui/education'
 import { education } from '@/usecases'
+import type { LessonPageProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<{ enrollmentId: EnrollmentId; lessonId: LessonId }>()
+const props = defineProps<LessonPageProps>()
 
 /* --------------------------------- State ---------------------------------- */
 

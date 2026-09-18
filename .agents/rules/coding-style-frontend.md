@@ -180,7 +180,13 @@ Never declare inline complex props or emits in the `.vue` file.
    Every component directory must have a `types.ts` defining:
    - `[ComponentName]Props`
    - `[ComponentName]Emits`
-   - Any local domain types.
+   - Any local domain types, including view models.
+
+   This holds for apps as well as for `libs/ui`. Where a directory holds several
+   components — as the mobile app's slices do — one `types.ts` serves them all,
+   named per component. Pages follow the same rule: their route props live in
+   `pages/types.ts`.
+
 2. **Local `index.ts`**:
    Must export the component as default and re-export types:
    ```ts

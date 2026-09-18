@@ -7,21 +7,17 @@
 
 <script setup lang="ts">
 import { ImageAndButtonLayout } from '@/design'
+import type { EnrollmentReviewStatusEmits, EnrollmentReviewStatusProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
 // Cancelling a request is not offered: the API has no route a student may call
 // to withdraw one. Recorded as a deficit rather than faked here.
-defineProps<{
-  image: string
-  header: string
-  text: string
-  actionText: string
-}>()
+defineProps<EnrollmentReviewStatusProps>()
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{ click: [] }>()
+const emit = defineEmits<EnrollmentReviewStatusEmits>()
 
 /* -------------------------------- Handlers -------------------------------- */
 

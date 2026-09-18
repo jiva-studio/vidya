@@ -15,17 +15,17 @@
 </template>
 
 <script setup lang="ts">
-import type { CourseId } from '@vidya/domain'
 import { IonButton, useIonRouter } from '@ionic/vue'
 
 import { useApi } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
 import { useFailureMessage, useRemoteData } from '@/shared'
 import { education } from '@/usecases'
+import type { CourseDetailsPageProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<{ id: CourseId }>()
+const props = defineProps<CourseDetailsPageProps>()
 
 /* --------------------------------- State ---------------------------------- */
 

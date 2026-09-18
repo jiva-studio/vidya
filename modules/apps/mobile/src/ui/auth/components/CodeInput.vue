@@ -11,14 +11,13 @@
 import { IonInput, IonIcon } from '@ionic/vue'
 import { WithBorders } from '@/design'
 import { arrowBackOutline } from 'ionicons/icons'
+import type { CodeInputEmits } from './types'
 
 /* -------------------------------------------------------------------------- */
 /*                                  Interface                                 */
 /* -------------------------------------------------------------------------- */
 
-const emit = defineEmits<{
-  'back-button-click': []
-}>()
+const emit = defineEmits<CodeInputEmits>()
 
 /* -------------------------------------------------------------------------- */
 /*                                  Handlers                                  */

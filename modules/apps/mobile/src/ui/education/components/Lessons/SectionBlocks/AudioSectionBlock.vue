@@ -10,18 +10,16 @@
 </template>
 
 <script lang="ts" setup>
-import type { AudioBlock, AudioBlockState } from '@vidya/protocol'
 import { ref } from 'vue'
+import type { AudioSectionBlockEmits, AudioSectionBlockProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<{ block: AudioBlock; state?: AudioBlockState }>(), {
-  state: undefined,
-})
+const props = withDefaults(defineProps<AudioSectionBlockProps>(), { state: undefined })
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{ change: [state: AudioBlockState] }>()
+const emit = defineEmits<AudioSectionBlockEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 

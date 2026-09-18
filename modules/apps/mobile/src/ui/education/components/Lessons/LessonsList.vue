@@ -14,17 +14,14 @@ import type { LessonSummary } from '@vidya/protocol'
 
 import LessonsListItem from './LessonsListItem.vue'
 import { WithListHeader } from '@/design'
+import type { LessonsListEmits, LessonsListProps } from './types'
 /* -------------------------------------------------------------------------- */
 /*                                  Interface                                 */
 /* -------------------------------------------------------------------------- */
 
-defineProps<{
-  items: readonly LessonSummary[]
-}>()
+defineProps<LessonsListProps>()
 
-const emit = defineEmits<{
-  click: [lessonId: LessonSummary['id']]
-}>()
+const emit = defineEmits<LessonsListEmits>()
 
 /* -------------------------------------------------------------------------- */
 /*                                  Handlers                                  */

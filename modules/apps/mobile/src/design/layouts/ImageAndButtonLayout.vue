@@ -37,6 +37,7 @@
 import { IonButton, IonAlert } from '@ionic/vue'
 import { useFluent } from 'fluent-vue'
 import { ref } from 'vue'
+import type { ImageAndButtonLayoutEmits, ImageAndButtonLayoutProps } from './types'
 
 /* -------------------------------------------------------------------------- */
 /*                                Dependencies                                */
@@ -48,16 +49,9 @@ const fluent = useFluent()
 /*                                  Interface                                 */
 /* -------------------------------------------------------------------------- */
 
-const props = defineProps<{
-  image: string
-  action: string
-  dangerAction?: string
-  dangerActionAlert?: string
-}>()
+const props = defineProps<ImageAndButtonLayoutProps>()
 
-const emit = defineEmits<{
-  click: [action: 'normal' | 'danger']
-}>()
+const emit = defineEmits<ImageAndButtonLayoutEmits>()
 
 /* -------------------------------------------------------------------------- */
 /*                                    State                                   */

@@ -26,7 +26,6 @@
 import type { BlockId } from '@vidya/domain'
 import type {
   AudioBlockState,
-  LessonBlock,
   LessonBlockState,
   QuizBlockState,
   VideoBlockState,
@@ -38,19 +37,15 @@ import {
   TextSectionBlock,
   VideoSectionBlock,
 } from './SectionBlocks'
+import type { LessonSectionViewEmits, LessonSectionViewProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<{
-  blocks: LessonBlock[]
-
-  /** What this student has already done, keyed by block. */
-  states: Readonly<Record<BlockId, LessonBlockState>>
-}>()
+const props = defineProps<LessonSectionViewProps>()
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{ change: [blockId: BlockId, state: LessonBlockState] }>()
+const emit = defineEmits<LessonSectionViewEmits>()
 
 /* -------------------------------- Handlers -------------------------------- */
 

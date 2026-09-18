@@ -14,15 +14,15 @@
 import type { EnrollmentId } from '@vidya/domain'
 
 import EnrollmentsListItem from './EnrollmentsListItem.vue'
-import type { EnrollmentViewModel } from './EnrollmentViewModel'
+import type { EnrollmentsListEmits, EnrollmentsListProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-defineProps<{ items: EnrollmentViewModel[] }>()
+defineProps<EnrollmentsListProps>()
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{ click: [enrollmentId: EnrollmentId] }>()
+const emit = defineEmits<EnrollmentsListEmits>()
 
 /* -------------------------------- Handlers -------------------------------- */
 

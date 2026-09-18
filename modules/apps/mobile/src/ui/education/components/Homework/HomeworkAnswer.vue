@@ -22,19 +22,19 @@
 </template>
 
 <script lang="ts" setup>
-import type { HomeworkStatus } from '@vidya/domain'
 import { IonNote, IonTextarea } from '@ionic/vue'
 import { computed, ref } from 'vue'
 
 import { AsyncButton } from '@/design'
+import type { HomeworkAnswerEmits, HomeworkAnswerProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<{ status: HomeworkStatus }>()
+const props = defineProps<HomeworkAnswerProps>()
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{ submit: [text: string] }>()
+const emit = defineEmits<HomeworkAnswerEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 

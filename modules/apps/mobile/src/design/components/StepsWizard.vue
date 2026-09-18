@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts" setup>
-const props = defineProps<{
-  currentStep: number
-}>()
+import type { StepsWizardProps } from './types'
+
+const props = defineProps<StepsWizardProps>()
 </script>

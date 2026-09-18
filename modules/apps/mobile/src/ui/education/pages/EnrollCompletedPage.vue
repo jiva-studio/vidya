@@ -21,12 +21,11 @@
 import { useIonRouter } from '@ionic/vue'
 import { IonPage, IonButton } from '@ionic/vue'
 import { CongratsConfetti } from '@/design'
+import type { EnrollCompletedPageProps } from './types'
 
 /* ---------------------------------- Props ----------------------------------- */
 
-defineProps<{
-  id: string
-}>()
+defineProps<EnrollCompletedPageProps>()
 
 /* ---------------------------------- State ----------------------------------- */
 

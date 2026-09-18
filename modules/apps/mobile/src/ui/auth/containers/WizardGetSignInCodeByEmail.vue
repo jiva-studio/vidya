@@ -25,10 +25,11 @@ import { AsyncButton } from '@/design'
 import { useConfig } from '@/shared'
 import { EmailInput, HelpMessage } from '@/ui/auth'
 import { auth } from '@/usecases'
+import type { WizardGetSignInCodeByEmailEmits } from './types'
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{ complete: [] }>()
+const emit = defineEmits<WizardGetSignInCodeByEmailEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 

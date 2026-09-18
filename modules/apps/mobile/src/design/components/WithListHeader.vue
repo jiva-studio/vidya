@@ -9,7 +9,8 @@
 
 <script setup lang="ts">
 import { IonList, IonListHeader, IonLabel } from '@ionic/vue'
-defineProps<{
-  title: string
-}>()
+
+import type { WithListHeaderProps } from './types'
+
+defineProps<WithListHeaderProps>()
 </script>

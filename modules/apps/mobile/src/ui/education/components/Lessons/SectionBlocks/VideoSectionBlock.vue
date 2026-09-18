@@ -14,18 +14,16 @@
 </template>
 
 <script lang="ts" setup>
-import type { VideoBlock, VideoBlockState } from '@vidya/protocol'
 import { computed, ref } from 'vue'
+import type { VideoSectionBlockEmits, VideoSectionBlockProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<{ block: VideoBlock; state?: VideoBlockState }>(), {
-  state: undefined,
-})
+const props = withDefaults(defineProps<VideoSectionBlockProps>(), { state: undefined })
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{ change: [state: VideoBlockState] }>()
+const emit = defineEmits<VideoSectionBlockEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
