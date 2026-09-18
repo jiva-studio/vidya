@@ -18,20 +18,18 @@
     "!src/**/*.module.ts",
     "!src/**/index.ts"
   ],
-  "reporters": [
-    "clear-text",
-    "progress"
-  ],
+  "reporters": ["clear-text", "progress"],
   "clearTextReporter": {
     "maxTestsToLog": 0
   },
-  "timeoutMS": 20000,
+  "timeoutMS": 60000,
   "timeoutFactor": 2,
   "dryRunTimeoutMinutes": 15,
   "disableBail": false,
   "thresholds": {
     "high": 80,
     "low": 60,
-    "break": 0
-  }
+    "break": 50
+  },
+  "concurrency": 8
 }
