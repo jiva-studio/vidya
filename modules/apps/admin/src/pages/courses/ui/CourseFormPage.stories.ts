@@ -21,7 +21,7 @@ const course = {
   id: 'c1',
   name: 'Санскрит с нуля',
   description: 'Алфавит, падежи и сандхи',
-  learningType: 'sequential',
+  learningType: 'group',
 }
 
 const edit = { route: { name: 'course-edit', params: { courseId: 'c1' } } }

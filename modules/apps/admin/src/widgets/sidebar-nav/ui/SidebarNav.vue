@@ -40,7 +40,7 @@ function hasItems(group: MenuGroup): boolean {
 </script>
 
 <template>
-  <nav :class="navClasses" aria-label="Sections">
+  <nav :class="navClasses" :aria-label="$t('nav-label')">
     <div v-for="group in visible" :key="group.label">
       <p :class="groupLabelClasses">{{ $t(group.label) }}</p>
       <RouterLink

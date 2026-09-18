@@ -24,6 +24,7 @@ school-switcher-label = School
 school-unnamed = School { $id }
 
 nav-group-work = Work
+nav-label = Sections
 nav-dashboard = Dashboard
 
 page-dashboard-title = Dashboard

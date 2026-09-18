@@ -23,6 +23,7 @@ school-switcher-label = Школа
 school-unnamed = Школа { $id }
 
 nav-group-work = Работа
+nav-label = Разделы
 nav-dashboard = Главная
 
 page-dashboard-title = Главная

@@ -51,7 +51,7 @@ const mountApp = async (at: string) => {
 
     // Enough for the screens these tests open; each says what it is for.
     '/edu/courses': { items: [] },
-    '/edu/courses/c1': { id: 'c1', name: 'A course', description: '', learningType: 'sequential' },
+    '/edu/courses/c1': { id: 'c1', name: 'A course', description: '', learningType: 'group' },
     '/edu/groups': { items: [] },
   })
 
