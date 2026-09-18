@@ -17,7 +17,10 @@ at Phase 1, never duplicated here.
    [`../../rules/`](../../rules/).
 3. Read [`../../rules/comments.md`](../../rules/comments.md) — what a comment
    may say and how long it may be.
-4. If a spec exists for the current branch at `.agents/specs/<branch-slug>.md`,
+4. Read [`../../rules/process.md`](../../rules/process.md) — who owns which
+   files when more than one agent is on the band, and what you must prove
+   before handing over.
+5. If a spec exists for the current branch at `.agents/specs/<branch-slug>.md`,
    read it. It is the contract: its acceptance criteria define done, and its
    non-goals define where to stop.
 

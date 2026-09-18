@@ -11,6 +11,7 @@ clients for school administration and students, in one npm-workspace monorepo.
 - **Backend Coding Style (NestJS)**: [`.agents/rules/coding-style-backend.md`](./.agents/rules/coding-style-backend.md)
 - **Frontend Coding Style (Vue)**: [`.agents/rules/coding-style-frontend.md`](./.agents/rules/coding-style-frontend.md)
 - **Comments & Docblocks**: [`.agents/rules/comments.md`](./.agents/rules/comments.md)
+- **Working in Bands (multi-agent process)**: [`.agents/rules/process.md`](./.agents/rules/process.md)
 - **Specification Skill (`/spec`)**: [`.agents/skills/spec/SKILL.md`](./.agents/skills/spec/SKILL.md)
 - **Unified Review Skill (`/review`)**: [`.agents/skills/review/SKILL.md`](./.agents/skills/review/SKILL.md)
 - **Coder Agent Skill**: [`.agents/skills/coder/SKILL.md`](./.agents/skills/coder/SKILL.md)
