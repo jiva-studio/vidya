@@ -1,1 +1,1 @@
-export const pageClasses = ['flex', 'flex-col', 'gap-[--space-5]']
+export const pageClasses = ['flex', 'flex-col', 'gap-[var(--space-5)]']

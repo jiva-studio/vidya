@@ -9,6 +9,8 @@ import { LessonEditorView } from '@/widgets/lesson-editor'
 
 const VERSIONS = '/edu/lessons/l1/versions'
 
+const route = { route: { name: 'lesson-editor', params: { courseId: 'c1', lessonId: 'l1' } } }
+
 const FULL = ['lessons:read', 'lessons:update', 'lessons:publish'] as PermissionKey[]
 
 const over =
@@ -20,7 +22,7 @@ const over =
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><RouterView /></div>',
+    template: '<div class="p-[var(--space-6)]"><RouterView /></div>',
   })
 
 const summary = (id: string, version: number, status: string) => ({
@@ -33,10 +35,10 @@ const summary = (id: string, version: number, status: string) => ({
 const sections = [
   {
     id: 's1',
-    title: 'Алфавит',
+    title: 'Alphabet',
     assessment: 'none',
     blocks: [
-      { id: 'b1', type: 'text', content: '# Деванагари\n\nЧитаем **слева направо**.' },
+      { id: 'b1', type: 'text', content: '# Devanagari\n\nЧитаем **слева направо**.' },
       { id: 'b2', type: 'video', source: 'youtube', url: 'https://www.youtube.com/watch?v=abc' },
     ],
   },
@@ -45,13 +47,26 @@ const sections = [
     title: 'Сандхи',
     assessment: 'teacher',
     blocks: [
+      { id: 'b3', type: 'text', content: 'Разберите три примера и пришлите разбор.' },
       {
-        id: 'b3',
+        id: 'b4',
         type: 'quiz',
         question: 'Что меняется на стыке?',
-        answers: ['Гласная', 'Согласная'],
+        answers: ['Vowel', 'Согласная'],
         rightAnswer: 0,
       },
+    ],
+  },
+]
+
+const strange = [
+  {
+    id: 's1',
+    title: 'Alphabet',
+    assessment: 'none',
+    blocks: [
+      { id: 'b1', type: 'text', content: 'Читаем слева направо.' },
+      { id: 'b9', type: 'flashcards', cards: [{ front: 'स', back: 'sa' }] },
     ],
   },
 ]
@@ -63,6 +78,7 @@ const details = (id: string, version: number, status: string, content: unknown) 
 
 const filled = { schemaVersion: 1, sections }
 const blank = { schemaVersion: 1, sections: [] }
+const unknown = { schemaVersion: 1, sections: strange }
 
 const draft = {
   [`GET ${VERSIONS}`]: { items: [summary('v1', 1, 'draft')] },
@@ -78,10 +94,11 @@ const meta: Meta<typeof LessonEditorView> = {
 export default meta
 type Story = StoryObj<typeof LessonEditorView>
 
-export const Draft: Story = { name: 'Черновик', render: over(draft) }
+export const Draft: Story = { parameters: route, name: 'Draft', render: over(draft) }
 
 export const Published: Story = {
-  name: 'Опубликованная версия',
+  parameters: route,
+  name: 'Published version',
   render: over({
     [`GET ${VERSIONS}`]: { items: [summary('v1', 1, 'published')] },
     [`GET ${VERSIONS}/v1`]: details('v1', 1, 'published', filled),
@@ -89,21 +106,37 @@ export const Published: Story = {
 }
 
 export const Empty: Story = {
-  name: 'Пусто',
+  parameters: route,
+  name: 'Empty',
   render: over({
     [`GET ${VERSIONS}`]: { items: [summary('v1', 1, 'draft')] },
     [`GET ${VERSIONS}/v1`]: details('v1', 1, 'draft', blank),
   }),
 }
 
-export const Loading: Story = { name: 'Загрузка', render: over({ [VERSIONS]: pending() }) }
+export const UnknownBlock: Story = {
+  parameters: route,
+  name: 'Unknown block',
+  render: over({
+    [`GET ${VERSIONS}`]: { items: [summary('v1', 1, 'draft')] },
+    [`GET ${VERSIONS}/v1`]: details('v1', 1, 'draft', unknown),
+  }),
+}
+
+export const Loading: Story = {
+  parameters: route,
+  name: 'Loading',
+  render: over({ [VERSIONS]: pending() }),
+}
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  parameters: route,
+  name: 'Error',
   render: over({ [VERSIONS]: refusal(500, 'Версии урока не читаются') }),
 }
 
 export const WithoutRights: Story = {
-  name: 'Без прав',
+  parameters: route,
+  name: 'No permission',
   render: over(draft, ['lessons:read', 'lessons:update'] as PermissionKey[]),
 }

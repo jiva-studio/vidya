@@ -31,11 +31,14 @@ export {
 export type * from './types'
 export { AuthorableSources, BlockTypes } from './types'
 export {
+  AddBlockMenu,
   AudioBlockEditor,
-  BlockList,
+  ItemActions,
+  LessonBlockEditor,
+  MarkdownText,
   QuizBlockEditor,
+  SectionBlocks,
   SectionForm,
-  SectionList,
   TextBlockEditor,
   VideoBlockEditor,
 } from './ui'

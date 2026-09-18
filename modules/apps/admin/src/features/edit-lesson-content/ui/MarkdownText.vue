@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { renderMarkdown } from '@/features/edit-lesson-content'
-
+import { renderMarkdown } from '../model'
 import { markdownClasses } from './styles'
 import type { MarkdownTextProps } from './types'
 

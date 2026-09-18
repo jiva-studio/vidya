@@ -2,7 +2,8 @@
 import type { AudioBlock, QuizBlock, TextBlock, VideoBlock } from '@vidya/domain'
 import { computed } from 'vue'
 
-import MarkdownText from './MarkdownText.vue'
+import { MarkdownText } from '@/features/edit-lesson-content'
+
 import MediaPreview from './MediaPreview.vue'
 import QuizPreview from './QuizPreview.vue'
 import { mutedClasses, previewBlockClasses } from './styles'

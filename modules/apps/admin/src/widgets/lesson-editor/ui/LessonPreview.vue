@@ -11,7 +11,7 @@ const props = defineProps<LessonPreviewProps>()
 </script>
 
 <template>
-  <Card :title="$t('editor-preview-title')" :description="$t('editor-preview-body')" padded>
+  <Card :title="$t('editor-preview-title')" padded>
     <div :class="previewClasses">
       <SectionPreview
         v-for="section in props.content.sections"

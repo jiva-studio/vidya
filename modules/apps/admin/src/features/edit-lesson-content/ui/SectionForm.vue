@@ -1,15 +1,23 @@
 <script setup lang="ts">
 import type { LessonSection } from '@vidya/domain'
-import { FormField, Input, Select } from '@vidya/ui'
+import { Input, Label, Select } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { computed } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
+import { computed, onMounted, ref, useId } from 'vue'
 
-import { fieldStackClasses } from './styles'
+import {
+  hintClasses,
+  propertyControlClasses,
+  propertyRowClasses,
+  sectionFormClasses,
+  sectionHeadingClasses,
+  sectionTitleInputClasses,
+} from './styles'
 import type { SectionFormEmits, SectionFormProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<SectionFormProps>(), { frozen: false })
+const props = withDefaults(defineProps<SectionFormProps>(), { frozen: false, autofocus: false })
 
 /* --------------------------------- Events --------------------------------- */
 
@@ -19,46 +27,66 @@ const emit = defineEmits<SectionFormEmits>()
 
 const { $t } = useFluent()
 
+const title = ref<ComponentPublicInstance | null>(null)
+const homeworkId = useId()
+
 const assessments: LessonSection['assessment'][] = ['none', 'auto', 'teacher']
 
-const assessmentOptions = computed(() =>
-  assessments.map((value) => ({ value, label: $t(`editor-assessment-${value}`) })),
+const options = computed(() =>
+  assessments.map((value) => ({ value, label: $t(`editor-homework-${value}`) })),
 )
+
+const asked = computed(() => props.section.assessment !== 'none')
+
+/* --------------------------------- Hooks ---------------------------------- */
+
+onMounted(() => {
+  if (props.autofocus && !props.frozen) focusTitle()
+})
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onTitle(title: string) {
-  emit('rename', props.section.id, title)
+function onTitle(value: string) {
+  emit('rename', props.section.id, value)
 }
 
-function onAssessment(assessment: string) {
-  emit('assessment', props.section.id, assessment as LessonSection['assessment'])
+function onAssessment(value: string) {
+  emit('assessment', props.section.id, value as LessonSection['assessment'])
+}
+
+/* -------------------------------- Helpers --------------------------------- */
+
+function focusTitle() {
+  const element = title.value?.$el
+  if (element instanceof HTMLInputElement) element.focus()
 }
 </script>
 
 <template>
-  <div :class="fieldStackClasses">
-    <FormField :label="$t('editor-section-title-label')">
-      <template #default="field">
-        <Input
-          :id="field.id"
-          :model-value="props.section.title"
-          :described-by="field.describedBy"
-          :readonly="props.frozen"
-          @update:model-value="onTitle"
-        />
-      </template>
-    </FormField>
-    <FormField :label="$t('editor-assessment-label')" :hint="$t('editor-assessment-hint')">
-      <template #default="field">
-        <Select
-          :id="field.id"
-          :model-value="props.section.assessment"
-          :options="assessmentOptions"
-          :disabled="props.frozen"
-          @update:model-value="onAssessment"
-        />
-      </template>
-    </FormField>
+  <div :class="sectionFormClasses">
+    <div :class="sectionHeadingClasses">
+      <Input
+        ref="title"
+        :model-value="props.section.title"
+        :readonly="props.frozen"
+        :class="sectionTitleInputClasses"
+        :aria-label="$t('editor-section-title-label')"
+        :placeholder="$t('editor-section-untitled')"
+        @update:model-value="onTitle"
+      />
+      <slot name="actions" />
+    </div>
+    <div :class="propertyRowClasses">
+      <Label :for="homeworkId">{{ $t('editor-homework-label') }}</Label>
+      <Select
+        :id="homeworkId"
+        :model-value="props.section.assessment"
+        :options="options"
+        :disabled="props.frozen"
+        :class="propertyControlClasses"
+        @update:model-value="onAssessment"
+      />
+    </div>
+    <p v-if="asked" :class="hintClasses">{{ $t('editor-homework-note') }}</p>
   </div>
 </template>

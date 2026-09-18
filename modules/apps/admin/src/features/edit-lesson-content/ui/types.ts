@@ -16,33 +16,30 @@ interface Frozen {
   frozen?: boolean
 }
 
-export interface SectionListProps extends Frozen {
-  sections: readonly LessonSection[]
-  selectedId?: SectionId
-}
-
-export interface SectionListEmits {
-  select: [id: SectionId]
-  add: []
-  move: [id: SectionId, delta: MoveDirection]
-  remove: [id: SectionId]
-}
-
-export interface SectionListRowProps extends Frozen {
-  section: LessonSection
+export interface ItemActionsProps {
   index: number
   count: number
-  selected?: boolean
+  upLabel: string
+  downLabel: string
+  removeLabel: string
 }
 
-export interface SectionListRowEmits {
-  select: [id: SectionId]
-  move: [id: SectionId, delta: MoveDirection]
-  remove: [id: SectionId]
+export interface ItemActionsEmits {
+  move: [delta: MoveDirection]
+  remove: []
+}
+
+export interface AddBlockMenuProps {
+  label?: string
+}
+
+export interface AddBlockMenuEmits {
+  add: [type: BlockType]
 }
 
 export interface SectionFormProps extends Frozen {
   section: LessonSection
+  autofocus?: boolean
 }
 
 export interface SectionFormEmits {
@@ -50,27 +47,46 @@ export interface SectionFormEmits {
   assessment: [id: SectionId, assessment: LessonSection['assessment']]
 }
 
-export interface BlockListProps extends Frozen {
+export interface SectionBlocksProps extends Frozen {
   blocks: readonly LessonBlock[]
 }
 
-export interface BlockListEmits {
+export interface SectionBlocksEmits {
   add: [type: BlockType]
   update: [block: LessonBlock]
   move: [id: BlockId, delta: MoveDirection]
   remove: [id: BlockId]
 }
 
-export interface BlockListItemProps extends Frozen {
+export interface LessonBlockEditorProps extends Frozen {
   block: LessonBlock
   index: number
   count: number
 }
 
-export interface BlockListItemEmits {
+export interface LessonBlockEditorEmits {
   update: [block: LessonBlock]
   move: [id: BlockId, delta: MoveDirection]
   remove: [id: BlockId]
+}
+
+export interface BlockShellProps extends Frozen {
+  label: string
+  index: number
+  count: number
+}
+
+export interface BlockShellEmits {
+  move: [delta: MoveDirection]
+  remove: []
+}
+
+export interface MarkdownTextProps {
+  markdown: string
+}
+
+export interface UnknownBlockNoticeProps {
+  type: string
 }
 
 export interface TextBlockEditorProps extends Frozen {
@@ -110,21 +126,11 @@ export interface QuizAnswerRowProps extends Frozen {
   index: number
   text: string
   right?: boolean
+  autofocus?: boolean
 }
 
 export interface QuizAnswerRowEmits {
   text: [index: number, text: string]
   right: [index: number]
   remove: [index: number]
-}
-
-export interface MoveButtonsProps {
-  index: number
-  count: number
-  upLabel: string
-  downLabel: string
-}
-
-export interface MoveButtonsEmits {
-  move: [delta: MoveDirection]
 }

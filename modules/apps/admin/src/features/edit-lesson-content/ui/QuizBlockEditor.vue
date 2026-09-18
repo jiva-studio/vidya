@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import { Button, FormField, Input } from '@vidya/ui'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import { addAnswer, removeAnswer, setAnswer, setQuestion, setRightAnswer } from '../model'
 import QuizAnswerRow from './QuizAnswerRow.vue'
-import { fieldStackClasses } from './styles'
+import {
+  answerListClasses,
+  answersGroupClasses,
+  fieldStackClasses,
+  groupLabelClasses,
+  hintClasses,
+} from './styles'
 import type { QuizBlockEditorEmits, QuizBlockEditorProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -19,6 +25,10 @@ const emit = defineEmits<QuizBlockEditorEmits>()
 
 const answers = computed(() => props.block.answers)
 const group = computed(() => `quiz-${props.block.id}`)
+
+// The option just added, so the caret lands in it rather than at the top of the
+// list the author was already working down.
+const fresh = ref(-1)
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -35,10 +45,12 @@ function onRight(index: number) {
 }
 
 function onRemoveAnswer(index: number) {
+  fresh.value = -1
   emit('update', removeAnswer(props.block, index))
 }
 
 function onAddAnswer() {
+  fresh.value = props.block.answers.length
   emit('update', addAnswer(props.block))
 }
 </script>
@@ -52,12 +64,15 @@ function onAddAnswer() {
           :model-value="props.block.question"
           :described-by="field.describedBy"
           :readonly="props.frozen"
+          :placeholder="$t('editor-quiz-question-placeholder')"
           @update:model-value="onQuestion"
         />
       </template>
     </FormField>
-    <FormField :label="$t('editor-quiz-answers-label')" :hint="$t('editor-quiz-answers-hint')">
-      <template #default>
+    <div :class="answersGroupClasses">
+      <span :class="groupLabelClasses">{{ $t('editor-quiz-answers-label') }}</span>
+      <p :class="hintClasses">{{ $t('editor-quiz-answers-hint') }}</p>
+      <ul :class="answerListClasses">
         <QuizAnswerRow
           v-for="(answer, index) in answers"
           :key="`${group}-${index}`"
@@ -65,15 +80,16 @@ function onAddAnswer() {
           :index="index"
           :text="answer"
           :right="index === props.block.rightAnswer"
+          :autofocus="index === fresh"
           :frozen="props.frozen"
           @text="onAnswerText"
           @right="onRight"
           @remove="onRemoveAnswer"
         />
-      </template>
-    </FormField>
-    <Button v-if="!props.frozen" size="sm" variant="secondary" @click="onAddAnswer">
-      {{ $t('editor-quiz-answer-add') }}
-    </Button>
+      </ul>
+      <Button v-if="!props.frozen" size="sm" variant="ghost" @click="onAddAnswer">
+        {{ $t('editor-quiz-answer-add') }}
+      </Button>
+    </div>
   </div>
 </template>

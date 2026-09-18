@@ -10,10 +10,11 @@ import { useCan } from '@/shared/access'
 import { useDraftSaving, useLessonPublishing, useLessonVersionDocument } from '../model'
 import ContentProblemsNotice from './ContentProblemsNotice.vue'
 import EditorToolbar from './EditorToolbar.vue'
-import LessonContentPanes from './LessonContentPanes.vue'
+import LessonDocument from './LessonDocument.vue'
+import LessonOutline from './LessonOutline.vue'
 import LessonPreview from './LessonPreview.vue'
-import { bodyClasses, editorClasses } from './styles'
-import type { LessonEditorViewEmits, LessonEditorViewProps } from './types'
+import { editorClasses, readingClasses } from './styles'
+import type { EditorMode, LessonEditorViewEmits, LessonEditorViewProps } from './types'
 import UnsavedChangesGuard from './UnsavedChangesGuard.vue'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -33,11 +34,14 @@ const publishing = useLessonPublishing(props.lessonId)
 
 const canPublish = useCan('lessons:publish')
 const publishOpen = ref(false)
+const mode = ref<EditorMode>('write')
 
 const frozen = computed(() => versionDoc.version.value?.status === 'published')
 const problems = computed(() => contentProblems(editor.content.value))
 const blocked = computed(() => problems.value.length > 0)
 const actionError = computed(() => draft.error.value ?? publishing.error.value)
+const writing = computed(() => mode.value === 'write')
+const sections = computed(() => editor.content.value.sections)
 
 /* --------------------------------- Hooks ---------------------------------- */
 
@@ -45,11 +49,20 @@ watch(versionDoc.version, (version) => {
   if (version) editor.load(version.content)
 })
 
+// A version nobody can change opens as what it is: something to read.
+watch(frozen, (value) => {
+  mode.value = value ? 'read' : 'write'
+})
+
 onMounted(() => {
   void versionDoc.open()
 })
 
 /* -------------------------------- Handlers -------------------------------- */
+
+function onMode(next: EditorMode) {
+  mode.value = next
+}
 
 function onContent(content: LessonContent) {
   editor.set(content)
@@ -109,6 +122,7 @@ async function store(): Promise<boolean> {
     <EditorToolbar
       :title="props.title"
       :version="versionDoc.version.value?.version"
+      :mode="mode"
       :frozen="frozen"
       :dirty="editor.dirty.value"
       :saving="draft.saving.value"
@@ -116,6 +130,7 @@ async function store(): Promise<boolean> {
       :can-publish="canPublish"
       :blocked="blocked"
       :error="actionError && $t(actionError)"
+      @update:mode="onMode"
       @back="onBack"
       @save="onSave"
       @publish="onPublish"
@@ -129,12 +144,15 @@ async function store(): Promise<boolean> {
       :retry-label="$t('editor-retry')"
       @retry="onRetry"
     />
-    <div v-else :class="bodyClasses">
-      <LessonContentPanes
+    <template v-else-if="writing">
+      <LessonOutline v-if="sections.length > 0" :sections="sections" />
+      <LessonDocument
         :content="editor.content.value"
         :frozen="frozen"
         @update:content="onContent"
       />
+    </template>
+    <div v-else :class="readingClasses">
       <LessonPreview :content="editor.content.value" />
     </div>
     <PublishDialog
