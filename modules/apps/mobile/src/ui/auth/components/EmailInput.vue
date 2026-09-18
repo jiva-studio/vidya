@@ -11,12 +11,10 @@
   </WithBorders>
 </template>
 
-
 <script lang="ts" setup>
 import { IonInput } from '@ionic/vue'
 import { WithBorders } from '@/design'
 </script>
-
 
 <fluent locale="en">
 email = EMail

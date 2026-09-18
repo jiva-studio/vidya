@@ -1,24 +1,9 @@
 <template>
-  <PageWithHeaderLayout
-    :title="$t('enroll')"
-    :has-padding="true"
-    :has-data="true"
-    :error="error"
-  >
-    <IonList>
-      <IonItem lines="none">
-        <IonLabel class="ion-text-wrap">
-          <h2>{{ $t('enroll') }}</h2>
-          <p>{{ $t('moderated') }}</p>
-        </IonLabel>
-      </IonItem>
-    </IonList>
+  <PageWithHeaderLayout :title="$t('enroll')" :has-padding="true" :has-data="true" :error="error">
+    <h2>{{ $t('enroll') }}</h2>
+    <p>{{ $t('moderated') }}</p>
 
-    <AsyncButton
-      :busy="busy"
-      expand="block"
-      @click="onEnrollButtonClicked"
-    >
+    <AsyncButton :busy="busy" expand="block" @click="onEnrollButtonClicked">
       {{ $t('enroll') }}
     </AsyncButton>
   </PageWithHeaderLayout>
@@ -26,7 +11,7 @@
 
 <script setup lang="ts">
 import type { CourseId } from '@vidya/domain'
-import { IonItem, IonLabel, IonList, useIonRouter } from '@ionic/vue'
+import { useIonRouter } from '@ionic/vue'
 import { useFluent } from 'fluent-vue'
 import { ref } from 'vue'
 

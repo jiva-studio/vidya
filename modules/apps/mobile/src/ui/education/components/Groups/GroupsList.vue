@@ -1,11 +1,6 @@
 <template>
   <IonRadioGroup v-model="model">
-    <GroupsListItem
-      v-for="group in groups"
-      :id="group.id"
-      :key="group.id"
-      :name="group.name"
-    />
+    <GroupsListItem v-for="group in groups" :id="group.id" :key="group.id" :name="group.name" />
   </IonRadioGroup>
 </template>
 

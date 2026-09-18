@@ -6,18 +6,11 @@
 
   <EmailInput v-model="email" />
 
-  <IonNote
-    v-if="error"
-    color="danger"
-  >
+  <IonNote v-if="error" color="danger">
     {{ error }}
   </IonNote>
 
-  <AsyncButton
-    :busy="busy"
-    :disabled="email.length === 0"
-    @click="onSignInClicked()"
-  >
+  <AsyncButton :busy="busy" :disabled="email.length === 0" @click="onSignInClicked()">
     {{ $t('request-signin-code') }}
   </AsyncButton>
 </template>

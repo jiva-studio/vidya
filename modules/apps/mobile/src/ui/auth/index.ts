@@ -2,6 +2,5 @@ export { default as CodeInput } from './components/CodeInput.vue'
 export { default as EmailInput } from './components/EmailInput.vue'
 export { default as HelpMessage } from './components/HelpMessage.vue'
 export { default as SchoolOfDevotionLogo } from './components/SchoolOfDevotionLogo.vue'
-
 export { default as WizardGetSignInCodeByEmail } from './containers/WizardGetSignInCodeByEmail.vue'
 export { default as WizardSignInWithCode } from './containers/WizardSignInWithCode.vue'

@@ -10,7 +10,9 @@ const client = new FetchHttpClient({
 })
 
 const respondWith = (response: Partial<Response>) => {
-  const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}), ...response })
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValue({ ok: true, status: 200, json: async () => ({}), ...response })
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock
 }
@@ -33,7 +35,9 @@ describe('FetchHttpClient', () => {
     it('appends a query string and drops the keys that carry no value', async () => {
       const fetchMock = respondWith({})
       await client.get('/edu/enrollments', { studentId: 'u-1', groupId: undefined })
-      expect(fetchMock.mock.calls[0][0]).toBe('https://api.example.test/edu/enrollments?studentId=u-1')
+      expect(fetchMock.mock.calls[0][0]).toBe(
+        'https://api.example.test/edu/enrollments?studentId=u-1',
+      )
     })
 
     it('leaves the path alone when every query value is absent', async () => {
@@ -55,7 +59,12 @@ describe('FetchHttpClient', () => {
     })
 
     it('does not try to parse a body out of 204', async () => {
-      respondWith({ status: 204, json: async () => { throw new Error('no body') } })
+      respondWith({
+        status: 204,
+        json: async () => {
+          throw new Error('no body')
+        },
+      })
       await expect(client.delete('/edu/courses/1')).resolves.toBeUndefined()
     })
   })

@@ -1,9 +1,6 @@
 {
   "name": "Classroom :: Mobile",
-  "dockerComposeFile": [
-    "docker-compose.yml",
-    "docker-compose.local.yml"
-  ],
+  "dockerComposeFile": ["docker-compose.yml", "docker-compose.local.yml"],
   "service": "app",
   "workspaceFolder": "/akd-studios/classroom/classroom-mobile",
   "customizations": {

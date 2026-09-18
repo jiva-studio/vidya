@@ -1,9 +1,5 @@
 <template>
-  <ImageAndButtonLayout
-    :image="image"
-    :action="actionText"
-    @click="onButtonClicked"
-  >
+  <ImageAndButtonLayout :image="image" :action="actionText" @click="onButtonClicked">
     <h1>{{ header }}</h1>
     {{ text }}
   </ImageAndButtonLayout>

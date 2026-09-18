@@ -1,7 +1,5 @@
 <template>
-  <WithListHeader
-    :title="$t('lessons')"
-  >
+  <WithListHeader :title="$t('lessons')">
     <LessonsListItem
       v-for="(lesson, idx) in items"
       :key="lesson.id"
@@ -10,7 +8,6 @@
     />
   </WithListHeader>
 </template>
-
 
 <script setup lang="ts">
 import type { LessonSummary } from '@vidya/protocol'
@@ -29,18 +26,14 @@ const emit = defineEmits<{
   click: [lessonId: LessonSummary['id']]
 }>()
 
-
 /* -------------------------------------------------------------------------- */
 /*                                  Handlers                                  */
 /* -------------------------------------------------------------------------- */
 
-function onLessonClicked(
-  lessonId: LessonSummary['id']
-) {
+function onLessonClicked(lessonId: LessonSummary['id']) {
   emit('click', lessonId)
 }
 </script>
-
 
 <fluent locale="en">
 lessons = Lessons

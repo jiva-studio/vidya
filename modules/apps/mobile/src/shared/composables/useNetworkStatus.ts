@@ -7,15 +7,13 @@ import { ref } from 'vue'
 
 const connected = ref(true)
 
-
 /* -------------------------------------------------------------------------- */
 /*                               Global Handlers                              */
 /* -------------------------------------------------------------------------- */
 
-Network.addListener('networkStatusChange', status => {
+Network.addListener('networkStatusChange', (status) => {
   connected.value = status.connected
 })
-
 
 /* -------------------------------------------------------------------------- */
 /*                                 Composable                                 */

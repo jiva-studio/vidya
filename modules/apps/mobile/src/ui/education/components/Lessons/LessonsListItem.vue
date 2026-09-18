@@ -1,9 +1,5 @@
 <template>
-  <IonItem
-    :detail="true"
-    lines="full"
-    @click="onClicked"
-  >
+  <IonItem :detail="true" lines="full" @click="onClicked">
     <IonLabel>
       <h2>
         {{ item.title }}
@@ -14,7 +10,6 @@
     </IonLabel>
   </IonItem>
 </template>
-
 
 <script setup lang="ts">
 import { IonItem, IonLabel } from '@ionic/vue'
@@ -29,9 +24,8 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  click: [],
+  click: []
 }>()
-
 
 /* -------------------------------------------------------------------------- */
 /*                                  Handlers                                  */

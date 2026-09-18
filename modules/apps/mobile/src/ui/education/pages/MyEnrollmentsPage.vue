@@ -7,10 +7,7 @@
     :empty-text="$t('nothing-yet')"
     :error="failure && $t(failure)"
   >
-    <EnrollmentsList
-      :items="items"
-      @click="onEnrollmentClicked"
-    />
+    <EnrollmentsList :items="items" @click="onEnrollmentClicked" />
   </PageWithHeaderLayout>
 </template>
 

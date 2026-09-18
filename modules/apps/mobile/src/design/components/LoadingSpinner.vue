@@ -1,16 +1,12 @@
 <template>
-  <div
-    class="spinner"
-  >
+  <div class="spinner">
     <ion-spinner name="dots" />
   </div>
 </template>
 
-
 <script setup lang="ts">
 import { IonSpinner } from '@ionic/vue'
 </script>
-
 
 <style scoped>
 .spinner {

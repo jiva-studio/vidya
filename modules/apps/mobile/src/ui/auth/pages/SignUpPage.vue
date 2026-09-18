@@ -3,8 +3,8 @@
     <IonList>
       <h1>{{ $t('sign-up') }}</h1>
       {{ $t('need-some-information') }}
-      <br>
-      <br>
+      <br />
+      <br />
 
       <IonInput
         v-model="name"
@@ -13,7 +13,7 @@
         fill="outline"
         :placeholder="$t('name-placeholder')"
       />
-      <br>
+      <br />
 
       <IonInput
         v-model="phoneNumber"
@@ -23,30 +23,18 @@
         placeholder="888-888-8888"
         type="tel"
       />
-      <br>
+      <br />
 
-      <IonCheckbox
-        v-model="conditionsAccepted"
-        label-placement="end"
-        justify="start"
-      >
+      <IonCheckbox v-model="conditionsAccepted" label-placement="end" justify="start">
         {{ $t('i-agree-to-the-terms') }}
       </IonCheckbox>
     </IonList>
 
-    <IonNote
-      v-if="error"
-      color="danger"
-    >
+    <IonNote v-if="error" color="danger">
       {{ error }}
     </IonNote>
 
-    <AsyncButton
-      expand="block"
-      :disabled="!canSubmit"
-      :busy="busy"
-      @click="onSignUpButtonClicked"
-    >
+    <AsyncButton expand="block" :disabled="!canSubmit" :busy="busy" @click="onSignUpButtonClicked">
       {{ $t('sign-up') }}
     </AsyncButton>
   </IonPage>

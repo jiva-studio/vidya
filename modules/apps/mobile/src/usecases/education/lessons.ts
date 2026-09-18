@@ -1,8 +1,8 @@
 import type { CourseId, LessonId } from '@vidya/domain'
 import type {
+  GetLessonsResponse,
   GetLessonVersionResponse,
   GetLessonVersionsResponse,
-  GetLessonsResponse,
   LessonSummary,
   LessonVersionDetails,
 } from '@vidya/protocol'
@@ -38,7 +38,5 @@ export const getPublishedLessonVersion = async (
     .sort((left, right) => right.version - left.version)[0]
 
   if (!published) return undefined
-  return http.get<GetLessonVersionResponse>(
-    routes.edu.lessons.versions.get(lessonId, published.id),
-  )
+  return http.get<GetLessonVersionResponse>(routes.edu.lessons.versions.get(lessonId, published.id))
 }

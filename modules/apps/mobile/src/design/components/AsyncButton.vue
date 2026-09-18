@@ -5,24 +5,16 @@
     expand="block"
     @click="onButtonClicked"
   >
-    <ion-spinner
-      v-if="busy"
-      class="spinner"
-      name="dots"
-    />
+    <ion-spinner v-if="busy" class="spinner" name="dots" />
 
     <template v-if="isInErrorState">
-      <ion-icon
-        slot="start"
-        :icon="alertCircleOutline"
-      />
+      <ion-icon slot="start" :icon="alertCircleOutline" />
       {{ errorCode ? $t(errorCode) : 'Error' }}
     </template>
 
     <slot v-if="!(busy || isInErrorState)" />
   </ion-button>
 </template>
-
 
 <script lang="ts" setup>
 import { IonButton, IonSpinner, IonIcon } from '@ionic/vue'
@@ -34,8 +26,8 @@ import { alertCircleOutline } from 'ionicons/icons'
 /* -------------------------------------------------------------------------- */
 
 const props = defineProps<{
-  busy: boolean,
-  disabled?: boolean,
+  busy: boolean
+  disabled?: boolean
   errorCode?: string
 }>()
 
@@ -43,15 +35,13 @@ const emit = defineEmits<{
   click: []
 }>()
 
-
 /* -------------------------------------------------------------------------- */
 /*                                    State                                   */
 /* -------------------------------------------------------------------------- */
 
 const isInErrorState = ref(false)
 const { errorCode } = toRefs(props)
-let timer: NodeJS.Timeout | undefined = undefined
-
+let timer: ReturnType<typeof setTimeout> | undefined = undefined
 
 /* -------------------------------------------------------------------------- */
 /*                                    Hooks                                   */
@@ -59,21 +49,22 @@ let timer: NodeJS.Timeout | undefined = undefined
 
 watch(errorCode, onErrorStateChanged)
 
-
 /* -------------------------------------------------------------------------- */
 /*                                  Handlers                                  */
 /* -------------------------------------------------------------------------- */
 
-function onErrorStateChanged(
-  errorCode: string | undefined
-) {
+function onErrorStateChanged(errorCode: string | undefined) {
   const errorOccured = !isInErrorState.value && errorCode !== undefined
   if (errorOccured) {
     isInErrorState.value = true
-    if (timer) { clearTimeout(timer) }
-    timer = setTimeout(() => isInErrorState.value = false, 2500)
+    if (timer) {
+      clearTimeout(timer)
+    }
+    timer = setTimeout(() => (isInErrorState.value = false), 2500)
   } else {
-    if (timer) { clearTimeout(timer) }
+    if (timer) {
+      clearTimeout(timer)
+    }
   }
 }
 
@@ -85,7 +76,6 @@ function onButtonClicked() {
   emit('click')
 }
 </script>
-
 
 <style scoped>
 .spinner {

@@ -1,20 +1,12 @@
 <template>
   <div class="center ion-padding">
     <div class="ctnt">
-      <img
-        :src="image"
-        class="img"
-      >
+      <img :src="image" class="img" />
       <slot />
     </div>
 
     <div class="buttons-group">
-      <ion-button
-        class="btn"
-        expand="block"
-        fill="clear"
-        @click="onActionButtonClicked"
-      >
+      <ion-button class="btn" expand="block" fill="clear" @click="onActionButtonClicked">
         {{ action }}
       </ion-button>
 
@@ -40,7 +32,6 @@
     @did-dismiss="onAlertDismiss"
   />
 </template>
-
 
 <script setup lang="ts">
 import { IonButton, IonAlert } from '@ionic/vue'
@@ -68,7 +59,6 @@ const emit = defineEmits<{
   click: [action: 'normal' | 'danger']
 }>()
 
-
 /* -------------------------------------------------------------------------- */
 /*                                    State                                   */
 /* -------------------------------------------------------------------------- */
@@ -84,9 +74,7 @@ const alertButtons = [
   },
 ]
 
-
 const isAlertOpen = ref(false)
-
 
 /* -------------------------------------------------------------------------- */
 /*                                  Handlers                                  */
@@ -111,7 +99,6 @@ function onAlertDismiss(ev: CustomEvent) {
   isAlertOpen.value = false
 }
 </script>
-
 
 <style scoped>
 .center {
@@ -140,7 +127,7 @@ function onAlertDismiss(ev: CustomEvent) {
 .buttons-group {
   display: flex;
   flex-direction: column;
-  gap: .5rem;
+  gap: 0.5rem;
   margin: 2rem;
 }
 </style>

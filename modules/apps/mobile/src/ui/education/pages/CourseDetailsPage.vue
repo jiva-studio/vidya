@@ -8,10 +8,7 @@
   >
     <p v-if="course?.description">{{ course.description }}</p>
 
-    <IonButton
-      expand="block"
-      @click="onEnrollButtonClicked"
-    >
+    <IonButton expand="block" @click="onEnrollButtonClicked">
       {{ $t('enroll') }}
     </IonButton>
   </PageWithHeaderLayout>

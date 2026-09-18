@@ -3,15 +3,9 @@
     {{ $t('enter-code') }}
   </HelpMessage>
 
-  <CodeInput
-    v-model="code"
-    @back-button-click="onBackButtonClicked"
-  />
+  <CodeInput v-model="code" @back-button-click="onBackButtonClicked" />
 
-  <IonNote
-    v-if="error"
-    color="danger"
-  >
+  <IonNote v-if="error" color="danger">
     {{ error }}
   </IonNote>
 
@@ -40,7 +34,7 @@ import { auth } from '@/usecases'
 
 const emit = defineEmits<{
   complete: [isRegistrationRequired: boolean]
-  goBack: []
+  'go-back': []
 }>()
 
 /* --------------------------------- State ---------------------------------- */
@@ -74,7 +68,7 @@ async function onValidateCodeClicked() {
 }
 
 function onBackButtonClicked() {
-  emit('goBack')
+  emit('go-back')
 }
 </script>
 

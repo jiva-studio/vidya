@@ -7,6 +7,5 @@ export function useTimeFormatter() {
     }
   }
 
-
   return { formatHoursAndMinutes }
 }

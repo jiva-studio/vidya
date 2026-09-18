@@ -9,17 +9,11 @@
   >
     <template #toolbar>
       <IonToolbar>
-        <IonSearchbar
-          v-model="searchQuery"
-          :placeholder="$t('search')"
-        />
+        <IonSearchbar v-model="searchQuery" :placeholder="$t('search')" />
       </IonToolbar>
     </template>
 
-    <CoursesList
-      :items="visibleCourses"
-      @click="onCourseCardClicked"
-    />
+    <CoursesList :items="visibleCourses" @click="onCourseCardClicked" />
   </PageWithHeaderLayout>
 </template>
 

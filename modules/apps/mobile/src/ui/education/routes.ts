@@ -10,7 +10,7 @@ export const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: '',
-        redirect: '/education/courses'
+        redirect: '/education/courses',
       },
       {
         path: 'courses',
@@ -21,7 +21,7 @@ export const routes: Array<RouteRecordRaw> = [
         name: 'course',
         path: 'courses/:id',
         component: () => import('./pages/CourseDetailsPage.vue'),
-        props: route => ({
+        props: (route) => ({
           id: route.params.id as domain.CourseId,
         }),
       },
@@ -29,7 +29,7 @@ export const routes: Array<RouteRecordRaw> = [
         name: 'enroll',
         path: 'courses/:id/enroll',
         component: () => import('./pages/EnrollPage.vue'),
-        props: route => ({
+        props: (route) => ({
           courseId: route.params.id as domain.CourseId,
         }),
       },
@@ -37,20 +37,20 @@ export const routes: Array<RouteRecordRaw> = [
         name: 'enroll-completed',
         path: 'courses/:id/enroll/completed',
         component: () => import('./pages/EnrollCompletedPage.vue'),
-        props: route => ({
+        props: (route) => ({
           id: route.params.id,
         }),
       },
       {
         name: 'my-enrollments',
         path: 'my-enrollments',
-        component: () => import('./pages/MyEnrollmentsPage.vue')
+        component: () => import('./pages/MyEnrollmentsPage.vue'),
       },
       {
         name: 'my-enrollment',
         path: 'my-enrollments/:id',
         component: () => import('./pages/MyEnrollmentPage.vue'),
-        props: route => ({
+        props: (route) => ({
           enrollmentId: route.params.id as domain.EnrollmentId,
         }),
       },
@@ -65,6 +65,6 @@ export const routes: Array<RouteRecordRaw> = [
           lessonId: route.params.lessonId as domain.LessonId,
         }),
       },
-    ]
-  }
+    ],
+  },
 ]

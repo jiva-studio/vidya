@@ -7,10 +7,7 @@
   >
     <template #toolbar>
       <IonToolbar>
-        <LessonSectionsList
-          v-model="selected"
-          :items="sectionViews"
-        />
+        <LessonSectionsList v-model="selected" :items="sectionViews" />
       </IonToolbar>
     </template>
 
@@ -75,10 +72,11 @@ const sectionViews = computed(() =>
   })),
 )
 
-const blockStates = computed(() =>
-  Object.fromEntries(
-    (data.value?.states ?? []).map((state) => [state.blockId, state.state]),
-  ) as Record<BlockId, LessonBlockState>,
+const blockStates = computed(
+  () =>
+    Object.fromEntries(
+      (data.value?.states ?? []).map((state) => [state.blockId, state.state]),
+    ) as Record<BlockId, LessonBlockState>,
 )
 
 const selectedHomework = computed(() =>

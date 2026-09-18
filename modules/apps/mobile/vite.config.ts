@@ -1,5 +1,5 @@
-import vue from '@vitejs/plugin-vue'
 import legacy from '@vitejs/plugin-legacy'
+import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import { SFCFluentPlugin } from 'unplugin-fluent-vue/vite'
 import { defineConfig } from 'vite'

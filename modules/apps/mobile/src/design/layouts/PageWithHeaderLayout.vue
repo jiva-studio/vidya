@@ -1,36 +1,16 @@
 <template>
   <IonPage>
     <IonHeader>
-      <IonToolbar>
-        <IonTitle>{{ title }}</IonTitle>
-        <IonButtons slot="start">
-          <IonBackButton />
-        </IonButtons>
-      </IonToolbar>
+      <PageToolbar :title="title" />
       <slot name="toolbar" />
     </IonHeader>
 
-    <IonContent
-      :fullscreen="true"
-      :class="{ 'ion-padding': hasPadding }"
-    >
-      <IonHeader collapse="condense">
-        <IonToolbar>
-          <IonTitle size="large">{{ title }}</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-
+    <IonContent :fullscreen="true" :class="{ 'ion-padding': hasPadding }">
       <LoadingSpinner v-if="showSpinner" />
-      <slot
-        v-else-if="error"
-        name="error"
-      >
+      <slot v-else-if="error" name="error">
         <IonNote class="page-state">{{ error }}</IonNote>
       </slot>
-      <slot
-        v-else-if="isEmpty"
-        name="empty"
-      >
+      <slot v-else-if="isEmpty" name="empty">
         <IonNote class="page-state">{{ emptyText }}</IonNote>
       </slot>
       <slot v-else />
@@ -39,19 +19,11 @@
 </template>
 
 <script setup lang="ts">
-import {
-  IonBackButton,
-  IonButtons,
-  IonContent,
-  IonHeader,
-  IonNote,
-  IonPage,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/vue'
+import { IonContent, IonHeader, IonNote, IonPage } from '@ionic/vue'
 import { computed } from 'vue'
 
-import { LoadingSpinner } from '@/design'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
+import PageToolbar from '../components/PageToolbar.vue'
 
 /* --------------------------------- Props ---------------------------------- */
 

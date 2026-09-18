@@ -1,9 +1,7 @@
 <template>
-  <IonSegment
-    :value="selected"
-  >
+  <IonSegment :value="selected">
     <IonSegmentButton
-      v-for="section, idx in items"
+      v-for="(section, idx) in items"
       :key="idx"
       :value="idx"
       @click="selected = idx"
@@ -12,7 +10,6 @@
     </IonSegmentButton>
   </IonSegment>
 </template>
-
 
 <script setup lang="ts">
 import type { LessonSectionViewModel } from './LessonSectionViewModel'

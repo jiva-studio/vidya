@@ -1,9 +1,5 @@
 <template>
-  <IonItem
-    :detail="true"
-    lines="none"
-    @click="onClicked"
-  >
+  <IonItem :detail="true" lines="none" @click="onClicked">
     <IonLabel>
       <h2>{{ courseName }}</h2>
       <p class="ion-text-wrap">

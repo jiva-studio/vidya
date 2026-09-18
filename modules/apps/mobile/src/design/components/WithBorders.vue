@@ -1,17 +1,12 @@
 <template>
-  <ion-item
-    lines="none"
-    class="rounded"
-  >
+  <ion-item lines="none" class="rounded">
     <slot />
   </ion-item>
 </template>
 
-
 <script lang="ts" setup>
 import { IonItem } from '@ionic/vue'
 </script>
-
 
 <style scoped>
 ion-item {

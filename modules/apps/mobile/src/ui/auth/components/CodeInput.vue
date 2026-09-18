@@ -1,19 +1,11 @@
 <template>
   <WithBorders>
-    <IonIcon
-      slot="end"
-      :icon="arrowBackOutline"
-      aria-hidden="true"
-      @click="onBackClicked"
-    />
-    <IonInput
-      v-bind="$attrs"
-      type="number"
-      :placeholder="$t('code')"
-    />
+    <template #end>
+      <IonIcon :icon="arrowBackOutline" aria-hidden="true" @click="onBackClicked" />
+    </template>
+    <IonInput v-bind="$attrs" type="number" :placeholder="$t('code')" />
   </WithBorders>
 </template>
-
 
 <script lang="ts" setup>
 import { IonInput, IonIcon } from '@ionic/vue'
@@ -25,24 +17,22 @@ import { arrowBackOutline } from 'ionicons/icons'
 /* -------------------------------------------------------------------------- */
 
 const emit = defineEmits<{
-  backButtonClick: []
+  'back-button-click': []
 }>()
-
 
 /* -------------------------------------------------------------------------- */
 /*                                  Handlers                                  */
 /* -------------------------------------------------------------------------- */
 
 function onBackClicked() {
-  emit('backButtonClick')
+  emit('back-button-click')
 }
 </script>
 
-
 <style scoped>
 ion-icon {
-  opacity: .5;
-  scale: .8;
+  opacity: 0.5;
+  scale: 0.8;
 }
 </style>
 

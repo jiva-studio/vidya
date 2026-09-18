@@ -6,9 +6,7 @@
 
     <StepsWizard :current-step="authenticationStep">
       <template #item0>
-        <WizardGetSignInCodeByEmail
-          @complete="onWizardGetSignInCodeByEmailCompleted"
-        />
+        <WizardGetSignInCodeByEmail @complete="onWizardGetSignInCodeByEmailCompleted" />
       </template>
       <template #item1>
         <WizardSignInWithCode
@@ -19,7 +17,6 @@
     </StepsWizard>
   </ion-page>
 </template>
-
 
 <script lang="ts" setup>
 import { IonPage, useIonRouter } from '@ionic/vue'
@@ -42,17 +39,14 @@ function onWizardGetSignInCodeByEmailCompleted() {
   authenticationStep.value += 1
 }
 
-function onWizardSignInWithCodeCompleted(
-  isRegistrationRequired: boolean
-) {
+function onWizardSignInWithCodeCompleted(isRegistrationRequired: boolean) {
   if (isRegistrationRequired) {
-    router.navigate({name: 'signup'}, 'root', 'replace')
+    router.navigate({ name: 'signup' }, 'root', 'replace')
   } else {
-    router.navigate({name: 'courses'}, 'root', 'replace')
+    router.navigate({ name: 'courses' }, 'root', 'replace')
   }
 }
 </script>
-
 
 <style scoped>
 .logo {

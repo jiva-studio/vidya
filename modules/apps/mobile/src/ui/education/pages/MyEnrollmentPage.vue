@@ -14,11 +14,7 @@
       @click="onStatusButtonClicked"
     />
 
-    <LessonsList
-      v-else-if="enrollment"
-      :items="lessons"
-      @click="onLessonClicked"
-    />
+    <LessonsList v-else-if="enrollment" :items="lessons" @click="onLessonClicked" />
   </PageWithHeaderLayout>
 </template>
 

@@ -32,11 +32,6 @@ export default tseslint.config(
       '**/*.tsbuildinfo',
       'apps/*/android/**',
       'apps/*/ios/**',
-
-      // The ported mobile app joins the gate in its own commit, once its
-      // architecture settles. Until then its findings would drown every other
-      // diff on this branch.
-      'apps/mobile/**',
     ],
   },
 
@@ -210,4 +205,14 @@ export default tseslint.config(
   },
 
   prettier,
+
+  /* --------------------------------- Ionic ---------------------------------- */
+
+  {
+    // Ionic's components are custom elements and take their children through
+    // the real `slot` attribute. The rule is about Vue 2's `slot`, which is a
+    // different thing that these files never use.
+    files: ['apps/mobile/**/*.vue'],
+    rules: { 'vue/no-deprecated-slot-attribute': 'off' },
+  },
 )

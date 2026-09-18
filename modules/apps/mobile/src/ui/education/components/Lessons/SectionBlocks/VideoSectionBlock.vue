@@ -10,13 +10,7 @@
     @loadedmetadata="onLoadedMetadata"
   />
 
-  <iframe
-    v-else
-    class="media"
-    :src="block.url"
-    allowfullscreen
-    :title="$t('embedded-video')"
-  />
+  <iframe v-else class="media" :src="block.url" allowfullscreen :title="$t('embedded-video')" />
 </template>
 
 <script lang="ts" setup>

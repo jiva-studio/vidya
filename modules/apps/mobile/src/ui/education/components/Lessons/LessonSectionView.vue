@@ -1,12 +1,6 @@
 <template>
-  <div
-    v-for="block in blocks"
-    :key="block.id"
-  >
-    <TextSectionBlock
-      v-if="block.type === 'text'"
-      :block="block"
-    />
+  <div v-for="block in blocks" :key="block.id">
+    <TextSectionBlock v-if="block.type === 'text'" :block="block" />
     <VideoSectionBlock
       v-else-if="block.type === 'video'"
       :block="block"

@@ -3,25 +3,19 @@
     <CongratsConfetti />
 
     <div class="ctnt">
-      <img src="/congrats.png">
+      <img src="/congrats.png" />
       <h2>{{ $t('congratulations') }}</h2>
       <div>{{ $t('enrollment-request-submited') }}</div>
       {{ $t('wait-for-assignment') }}
     </div>
 
     <div>
-      <IonButton
-        class="btn"
-        expand="block"
-        fill="clear"
-        @click="onGoToMyGroupsClicked"
-      >
+      <IonButton class="btn" expand="block" fill="clear" @click="onGoToMyGroupsClicked">
         {{ $t('go-to-my-enrollments') }}
       </IonButton>
     </div>
   </ion-page>
 </template>
-
 
 <script setup lang="ts">
 import { useIonRouter } from '@ionic/vue'
@@ -41,7 +35,6 @@ function onGoToMyGroupsClicked() {
   router.navigate({ name: 'my-enrollments' }, 'root', 'pop')
 }
 </script>
-
 
 <style scoped>
 .center {
@@ -67,7 +60,6 @@ function onGoToMyGroupsClicked() {
   max-height: 60%;
 }
 </style>
-
 
 <fluent locale="en">
 congratulations = Congratulations!

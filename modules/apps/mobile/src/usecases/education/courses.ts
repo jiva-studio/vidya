@@ -1,5 +1,10 @@
 import type { CourseId } from '@vidya/domain'
-import type { CourseDetails, CourseSummary, GetCourseResponse, GetCoursesResponse } from '@vidya/protocol'
+import type {
+  CourseDetails,
+  CourseSummary,
+  GetCourseResponse,
+  GetCoursesResponse,
+} from '@vidya/protocol'
 import { Routes } from '@vidya/protocol'
 
 import type { HttpClient } from '@/ports'

@@ -1,9 +1,6 @@
 <template>
-  <slot
-    :name="'item' + props.currentStep.toString()"
-  />
+  <slot :name="'item' + props.currentStep.toString()" />
 </template>
-
 
 <script lang="ts" setup>
 const props = defineProps<{

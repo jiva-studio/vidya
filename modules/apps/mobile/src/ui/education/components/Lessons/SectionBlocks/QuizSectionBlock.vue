@@ -1,17 +1,10 @@
 <template>
-  <IonItem
-    lines="full"
-    color="light"
-  >
+  <IonItem lines="full" color="light">
     <h3>{{ block.question }}</h3>
   </IonItem>
 
   <IonRadioGroup v-model="answer">
-    <IonItem
-      v-for="(option, idx) in block.answers"
-      :key="idx"
-      lines="none"
-    >
+    <IonItem v-for="(option, idx) in block.answers" :key="idx" lines="none">
       <IonRadio :value="idx">
         <IonLabel class="ion-text-wrap">{{ option }}</IonLabel>
       </IonRadio>

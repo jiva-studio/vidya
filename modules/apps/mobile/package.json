@@ -27,6 +27,7 @@
     "@vidya/protocol": "^0.0.0",
     "@vueuse/core": "^10.9.0",
     "canvas-confetti": "^1.9.2",
+    "dompurify": "^3.4.15",
     "fluent-vue": "^3.5.0",
     "ionicons": "^7.0.0",
     "vue": "^3.4.14",
