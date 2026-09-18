@@ -3,8 +3,7 @@ import { ref } from 'vue'
 
 import { saveLessonVersion } from '@/features/edit-lesson-content'
 import { useHttp } from '@/shared/api'
-
-import { reasonOf } from '../lib'
+import { reasonOf } from '@/shared/lib'
 
 /**
  * Saving the draft: one request, the whole document.

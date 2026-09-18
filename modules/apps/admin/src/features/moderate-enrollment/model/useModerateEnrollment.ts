@@ -1,7 +1,8 @@
 import type { EnrollmentId, EnrollmentStatus } from '@vidya/domain'
 import { ref } from 'vue'
 
-import { reason, useEnrollmentApi } from '@/entities/enrollment'
+import { useEnrollmentApi } from '@/entities/enrollment'
+import { reasonOf } from '@/shared/lib'
 
 type Decision = Extract<EnrollmentStatus, 'accepted' | 'declined'>
 
@@ -27,7 +28,7 @@ export const useModerateEnrollment = () => {
       await api.moderate(id, { status })
       return true
     } catch (failure) {
-      error.value = reason(failure)
+      error.value = reasonOf(failure)
       return false
     } finally {
       deciding.value = undefined

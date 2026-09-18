@@ -3,9 +3,9 @@ import { onMounted, ref, watch } from 'vue'
 
 import { useCurrentSchool } from '@/shared/access'
 import { useHttp } from '@/shared/api'
+import { reasonOf } from '@/shared/lib'
 
 import { getGroups } from '../api'
-import { reasonOf } from '../lib'
 
 /**
  * The groups the operator may see, optionally narrowed to one course.

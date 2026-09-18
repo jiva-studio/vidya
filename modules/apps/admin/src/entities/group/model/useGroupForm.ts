@@ -2,9 +2,9 @@ import type { GroupId } from '@vidya/domain'
 import { ref } from 'vue'
 
 import { useHttp } from '@/shared/api'
+import { reasonOf } from '@/shared/lib'
 
 import { createGroup, getGroup, updateGroup } from '../api'
-import { reasonOf } from '../lib'
 import type { GroupFormValues } from '../types'
 
 const blank = (): GroupFormValues => ({ name: '', courseId: '', description: '' })

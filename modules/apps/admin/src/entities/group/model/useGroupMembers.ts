@@ -3,9 +3,9 @@ import { onMounted, ref, watch } from 'vue'
 
 import { useCurrentSchool } from '@/shared/access'
 import { useHttp } from '@/shared/api'
+import { reasonOf } from '@/shared/lib'
 
 import { getEnrollment, getGroupEnrollments, getSchoolUserNames } from '../api'
-import { reasonOf } from '../lib'
 import type { GroupMember } from '../types'
 
 /**

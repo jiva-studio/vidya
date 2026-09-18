@@ -5,7 +5,8 @@ import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { PermissionsPicker, reason, useRoleApi } from '@/entities/role'
+import { reasonOf } from '@/shared/lib'
+import { PermissionsPicker, useRoleApi } from '@/entities/role'
 import { useCurrentSchool } from '@/shared/access'
 
 import { formClasses } from './styles'
@@ -59,7 +60,7 @@ async function onSubmit() {
     await send()
     void router.push({ name: 'roles' })
   } catch (failure) {
-    error.value = reason(failure)
+    error.value = reasonOf(failure)
   } finally {
     busy.value = false
   }
@@ -82,7 +83,7 @@ async function load(): Promise<void> {
     description.value = role.description
     permissions.value = role.permissions
   } catch (failure) {
-    error.value = reason(failure)
+    error.value = reasonOf(failure)
   } finally {
     busy.value = false
   }

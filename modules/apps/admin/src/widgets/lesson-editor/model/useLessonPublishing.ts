@@ -9,8 +9,7 @@ import {
   publishLessonVersion,
 } from '@/features/publish-lesson'
 import { useHttp } from '@/shared/api'
-
-import { reasonOf } from '../lib'
+import { reasonOf } from '@/shared/lib'
 
 /**
  * Freezing a version, and starting the next one.

@@ -6,5 +6,5 @@
 export type { HomeworkApi } from './api'
 export { homeworkApi, useHomeworkApi } from './api'
 export type { ContextLookup, HomeworkFilters, HomeworkRow, WorkContext } from './model'
-export { filterHomeworkRows, reason, toHomeworkRows, useHomework, useHomeworkQueue } from './model'
+export { filterHomeworkRows, toHomeworkRows, useHomework, useHomeworkQueue } from './model'
 export { homeworkLabels, HomeworkStatusBadge, homeworkTones } from './ui'

@@ -1,9 +1,9 @@
 import { ref, watch } from 'vue'
 
 import { useCurrentSchool } from '@/shared/access'
+import { reasonOf } from '@/shared/lib'
 
 import { useSchoolApi } from '../api'
-import { reason } from './reason'
 import type { SchoolRow } from './types'
 
 /**
@@ -29,7 +29,7 @@ export const useSchools = () => {
       const response = await api.list()
       rows.value = response.items
     } catch (failure) {
-      error.value = reason(failure)
+      error.value = reasonOf(failure)
     } finally {
       loading.value = false
     }

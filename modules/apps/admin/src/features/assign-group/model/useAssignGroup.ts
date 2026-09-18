@@ -1,7 +1,8 @@
 import type { EnrollmentId, GroupId } from '@vidya/domain'
 import { ref } from 'vue'
 
-import { reason, useEnrollmentApi } from '@/entities/enrollment'
+import { useEnrollmentApi } from '@/entities/enrollment'
+import { reasonOf } from '@/shared/lib'
 
 /**
  * Placing an accepted student in a group, and taking it back.
@@ -25,7 +26,7 @@ export const useAssignGroup = () => {
       await api.assignGroup(id, groupId)
       return true
     } catch (failure) {
-      error.value = reason(failure)
+      error.value = reasonOf(failure)
       return false
     } finally {
       busy.value = false

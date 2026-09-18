@@ -3,7 +3,8 @@ import { ref } from 'vue'
 
 import type { RoleRow } from '@/entities/role'
 import { useRoleApi } from '@/entities/role'
-import { reason, useUserApi } from '@/entities/user'
+import { useUserApi } from '@/entities/user'
+import { reasonOf } from '@/shared/lib'
 
 import type { UserIdSource } from './types'
 
@@ -36,7 +37,7 @@ export const useUserRoles = (userId: UserIdSource) => {
       assigned.value = held.userRoles.map((entry) => entry.roleId)
       available.value = all.items
     } catch (failure) {
-      error.value = reason(failure)
+      error.value = reasonOf(failure)
     } finally {
       loading.value = false
     }
@@ -50,7 +51,7 @@ export const useUserRoles = (userId: UserIdSource) => {
       await users.setRoles(userId(), next)
       assigned.value = next
     } catch (failure) {
-      error.value = reason(failure)
+      error.value = reasonOf(failure)
     } finally {
       saving.value = false
     }

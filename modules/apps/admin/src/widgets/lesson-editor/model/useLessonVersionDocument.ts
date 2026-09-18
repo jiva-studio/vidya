@@ -6,8 +6,7 @@ import { getLessonVersions } from '@/entities/lesson'
 import { getLessonVersion } from '@/features/edit-lesson-content'
 import { versionToOpen } from '@/features/publish-lesson'
 import { useHttp } from '@/shared/api'
-
-import { reasonOf } from '../lib'
+import { reasonOf } from '@/shared/lib'
 
 /**
  * The version the editor has open.

@@ -1,1 +1,0 @@
-export { reasonOf } from './reasonOf'

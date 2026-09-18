@@ -4,7 +4,8 @@ import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { reason, useSchoolApi } from '@/entities/school'
+import { reasonOf } from '@/shared/lib'
+import { useSchoolApi } from '@/entities/school'
 
 import type { SchoolFormPageProps } from './types'
 import { formClasses } from './styles'
@@ -49,7 +50,7 @@ async function onSubmit() {
     await send()
     void router.push({ name: 'schools' })
   } catch (failure) {
-    error.value = reason(failure)
+    error.value = reasonOf(failure)
   } finally {
     busy.value = false
   }
@@ -70,7 +71,7 @@ async function load(): Promise<void> {
     const school = await api.get(id)
     name.value = school.name
   } catch (failure) {
-    error.value = reason(failure)
+    error.value = reasonOf(failure)
   } finally {
     busy.value = false
   }

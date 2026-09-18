@@ -19,7 +19,8 @@ import { useRouter } from 'vue-router'
 
 import type { RoleRow } from '@/entities/role'
 import { roleApi } from '@/entities/role'
-import { reason, useSchoolApi } from '@/entities/school'
+import { reasonOf } from '@/shared/lib'
+import { useSchoolApi } from '@/entities/school'
 import { useHttp } from '@/shared/api'
 
 import type { SchoolSettingsPageProps } from './types'
@@ -82,7 +83,7 @@ async function onSubmit() {
     })
     void router.push({ name: 'schools' })
   } catch (failure) {
-    error.value = reason(failure)
+    error.value = reasonOf(failure)
   } finally {
     busy.value = false
   }
@@ -110,7 +111,7 @@ async function load(): Promise<void> {
     studentRoleIds.value = configs.studentRoleIds ?? []
     available.value = list.items
   } catch (failure) {
-    error.value = reason(failure)
+    error.value = reasonOf(failure)
   } finally {
     loading.value = false
   }

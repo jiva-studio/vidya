@@ -2,8 +2,9 @@ import type { HomeworkId } from '@vidya/domain'
 import type { HomeworkDetails } from '@vidya/protocol'
 import { ref } from 'vue'
 
+import { reasonOf } from '@/shared/lib'
+
 import { useHomeworkApi } from '../api'
-import { reason } from './reason'
 
 /**
  * One piece of work, in full.
@@ -28,7 +29,7 @@ export const useHomework = () => {
     try {
       work.value = await api.get(id)
     } catch (failure) {
-      error.value = reason(failure)
+      error.value = reasonOf(failure)
     } finally {
       loading.value = false
     }

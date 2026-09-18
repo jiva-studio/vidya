@@ -5,7 +5,8 @@ import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 
 import { useSchoolApi } from '@/entities/school'
-import { reason, useUserApi } from '@/entities/user'
+import { reasonOf } from '@/shared/lib'
+import { useUserApi } from '@/entities/user'
 
 import { badgesClasses } from './styles'
 import type { UserSchoolsListProps } from './types'
@@ -53,7 +54,7 @@ async function load(): Promise<void> {
     ids.value = mine.userSchools
     names.value = new Map(all.items.map((school) => [school.id, school.name]))
   } catch (failure) {
-    error.value = reason(failure)
+    error.value = reasonOf(failure)
   } finally {
     loading.value = false
   }

@@ -2,4 +2,4 @@
 export type { SchoolApi, SchoolConfigs, UpdateSchoolConfigsRequest } from './api'
 export { schoolApi, useSchoolApi } from './api'
 export type { SchoolConfigsValues, SchoolFormValues, SchoolRow } from './model'
-export { reason, useSchools } from './model'
+export { useSchools } from './model'

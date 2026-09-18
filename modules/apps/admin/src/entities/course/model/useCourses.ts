@@ -3,9 +3,9 @@ import { onMounted, ref, watch } from 'vue'
 
 import { useCurrentSchool } from '@/shared/access'
 import { useHttp } from '@/shared/api'
+import { reasonOf } from '@/shared/lib'
 
 import { getCourses } from '../api'
-import { reasonOf } from '../lib'
 
 /**
  * The courses of the school the operator is working in.

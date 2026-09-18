@@ -4,7 +4,8 @@ import { ErrorState, FormSection, PageHeader, Skeleton } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 
-import { reason, useUserApi } from '@/entities/user'
+import { reasonOf } from '@/shared/lib'
+import { useUserApi } from '@/entities/user'
 import { UserRolesSelector } from '@/features/manage-user-roles'
 import { useCan } from '@/shared/access'
 
@@ -54,7 +55,7 @@ async function load(): Promise<void> {
   try {
     user.value = await api.get(props.id)
   } catch (failure) {
-    error.value = reason(failure)
+    error.value = reasonOf(failure)
   } finally {
     loading.value = false
   }

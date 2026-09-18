@@ -3,7 +3,8 @@ import { FormActions, FormField, Input } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
 
-import { reason, useUserApi } from '@/entities/user'
+import { reasonOf } from '@/shared/lib'
+import { useUserApi } from '@/entities/user'
 
 import { formClasses } from './styles'
 import type { UserDetailsFormProps } from './types'
@@ -43,7 +44,7 @@ async function onSubmit() {
       phone: phone.value.trim() || undefined,
     })
   } catch (failure) {
-    error.value = reason(failure)
+    error.value = reasonOf(failure)
   } finally {
     busy.value = false
   }

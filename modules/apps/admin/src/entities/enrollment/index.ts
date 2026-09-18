@@ -15,7 +15,6 @@ export type {
   StudentNames,
 } from './model'
 export {
-  reason,
   toEnrollmentRows,
   useDirectory,
   useEnrollmentLookup,

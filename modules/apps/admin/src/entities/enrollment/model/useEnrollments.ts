@@ -2,10 +2,10 @@ import type { EnrollmentSummary } from '@vidya/protocol'
 import { computed, ref, watch } from 'vue'
 
 import { useCurrentSchool } from '@/shared/access'
+import { reasonOf } from '@/shared/lib'
 
 import { useEnrollmentApi } from '../api'
 import { toEnrollmentRows } from './enrollmentRows'
-import { reason } from './reason'
 import type { EnrollmentFilters, StudentNames } from './types'
 import { useDirectory } from './useDirectory'
 import { useEnrollmentLookup } from './useEnrollmentLookup'
@@ -68,7 +68,7 @@ export const useEnrollments = (students: StudentNames) => {
       items.value = response.items.filter(inCurrentSchool)
       await resolveRows(items.value)
     } catch (failure) {
-      error.value = reason(failure)
+      error.value = reasonOf(failure)
     } finally {
       loading.value = false
     }

@@ -2,7 +2,8 @@ import type { HomeworkId } from '@vidya/domain'
 import type { HomeworkDetails } from '@vidya/protocol'
 import { ref } from 'vue'
 
-import { reason, useHomeworkApi } from '@/entities/homework'
+import { useHomeworkApi } from '@/entities/homework'
+import { reasonOf } from '@/shared/lib'
 
 /**
  * The two decisions a reviewer makes about a piece of work.
@@ -33,7 +34,7 @@ export const useGradeHomework = () => {
     try {
       return await api.review(id, { status, grade })
     } catch (failure) {
-      error.value = reason(failure)
+      error.value = reasonOf(failure)
       return undefined
     } finally {
       busy.value = false

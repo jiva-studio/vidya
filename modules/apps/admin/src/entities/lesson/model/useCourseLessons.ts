@@ -4,9 +4,9 @@ import { onMounted, ref, watch } from 'vue'
 
 import { useCurrentSchool } from '@/shared/access'
 import { useHttp } from '@/shared/api'
+import { reasonOf } from '@/shared/lib'
 
 import { createLesson, getLessons, getLessonVersions } from '../api'
-import { reasonOf } from '../lib'
 import type { LessonRow } from '../types'
 import { draftVersionOf, lessonVersionState, publishedVersionOf } from './versionState'
 

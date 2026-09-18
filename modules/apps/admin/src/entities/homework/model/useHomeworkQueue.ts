@@ -1,8 +1,9 @@
 import type { HomeworkSummary } from '@vidya/protocol'
 import { ref } from 'vue'
 
+import { reasonOf } from '@/shared/lib'
+
 import { useHomeworkApi } from '../api'
-import { reason } from './reason'
 import type { HomeworkFilters } from './types'
 
 /**
@@ -34,7 +35,7 @@ export const useHomeworkQueue = () => {
       const response = await api.list({ status: filters.value.status })
       items.value = response.items
     } catch (failure) {
-      error.value = reason(failure)
+      error.value = reasonOf(failure)
     } finally {
       loading.value = false
     }

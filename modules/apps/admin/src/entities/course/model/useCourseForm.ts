@@ -3,9 +3,9 @@ import { ref } from 'vue'
 
 import { useCurrentSchool } from '@/shared/access'
 import { useHttp } from '@/shared/api'
+import { reasonOf } from '@/shared/lib'
 
 import { createCourse, getCourse, updateCourse } from '../api'
-import { reasonOf } from '../lib'
 import type { CourseFormValues } from '../types'
 
 const blank = (): CourseFormValues => ({ name: '', description: '', learningType: 'individual' })
