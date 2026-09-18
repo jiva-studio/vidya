@@ -10,7 +10,7 @@ import { v4 as uuid } from 'uuid'
 /**
  * What only a real Postgres can prove about the journal.
  *
- * The whole of Д-1 is a disagreement between two orders — the order `BIGSERIAL`
+ * The whole of D-1 is a disagreement between two orders — the order `BIGSERIAL`
  * hands out numbers and the order transactions become visible. pg-mem has one
  * session and no MVCC, so there is no disagreement to observe there and these
  * cases would pass while proving nothing. They run under
@@ -105,7 +105,7 @@ describeOnPostgres('sync journal under concurrency', () => {
     const [slow, fast, reader] = await Promise.all([connect(), connect(), connect()])
 
     // The slow writer takes its number and stays open. This is the transaction
-    // Д-1 loses: a lower number that only becomes visible later.
+    // D-1 loses: a lower number that only becomes visible later.
     await slow.query('BEGIN')
     const slowSeq = Number(await append(slow, scope, '000001700000000001-000000-slow'))
 
@@ -248,7 +248,7 @@ describeOnPostgres('sync journal under concurrency', () => {
 
     await hog.query('CREATE TABLE reports (id int)')
 
-    // The rejected cure (И-1) reads the journal only below
+    // The rejected cure (I-1) reads the journal only below
     // `pg_snapshot_xmin(pg_current_snapshot())`. That horizon is held down by
     // ANY open transaction in ANY table, so this two-statement stand-in for an
     // admin report would hide the journal from every device for as long as it
@@ -283,7 +283,7 @@ describeOnPostgres('sync journal under concurrency', () => {
     const seq = await append(writer, scope, '000001700000003000-000000-w')
     await writer.query('COMMIT')
 
-    // What И-1 would have delivered: committed rows whose writing transaction
+    // What I-1 would have delivered: committed rows whose writing transaction
     // is already below the horizon of every session still running.
     const { rows: gated } = await reader.query(
       `SELECT global_seq FROM sync_journal
