@@ -438,7 +438,7 @@ describe('POST /sync/push', () => {
   /* ------------------------------- T-S-46 ------------------------------- */
 
   /**
-   * D-1: a row is answered under the id the server actually wrote it to.
+   * A row is answered under the id the server actually wrote it to.
    *
    * The table's key is `(enrolment, version, section)`, so the second device
    * writes onto the row the first created — which is right, and is how the HLC

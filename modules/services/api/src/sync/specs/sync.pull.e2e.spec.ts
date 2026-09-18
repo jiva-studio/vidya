@@ -86,7 +86,7 @@ describe('POST /sync/pull', () => {
   /* ------------------------------- T-S-44 ------------------------------- */
 
   /**
-   * D-1. The echo filter used to stop the cursor as well as the delivery: the
+   * The echo filter used to stop the cursor as well as the delivery: the
    * page advanced by the highest `serverSeq` it *returned*, and a scope whose
    * tail is the caller's own work returns nothing from that tail. The device's
    * own rows carry a `serverSeq` it is told nowhere else — `PushResult` names
@@ -114,7 +114,7 @@ describe('POST /sync/pull', () => {
   /* ------------------------------- T-S-45 ------------------------------- */
 
   /**
-   * The other half of D-1: echo and rights are different filters. A row the
+   * The other half of it: echo and rights are different filters. A row the
    * caller never had a claim to was never delivered and must never be counted
    * as applied, so no position comes back for that scope at all — otherwise a
    * later enrolment would start above the history it is entitled to.

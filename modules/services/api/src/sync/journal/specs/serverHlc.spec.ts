@@ -8,7 +8,7 @@ import { v4 as uuid } from 'uuid'
 import { createJournalContext, JournalContext } from './context'
 
 /**
- * D-1: two API instances must not stamp one document with one HLC.
+ * Two API instances must not stamp one document with one HLC.
  *
  * The clock is frozen on purpose, and both services are handed the *same*
  * frozen clock: that is the shape of the accident — two pods answering two

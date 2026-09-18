@@ -37,7 +37,7 @@ export const isServerDeviceId = (deviceId: string): boolean =>
  *    from `max(hlc)` in the journal, so a restart does not re-issue stamps the
  *    journal already contains.
  *
- * **Why the device id is not the bare `server` (D-1).** `lastSeen` and `seeded`
+ * **Why the device id is not the bare `server`.** `lastSeen` and `seeded`
  * are fields of one object in one process, so they order the writes of that
  * process and of nothing else. Two API instances stamping the same document in
  * the same millisecond therefore produced the *same string*, and the journal's

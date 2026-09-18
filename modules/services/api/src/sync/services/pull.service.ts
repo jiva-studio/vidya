@@ -82,8 +82,8 @@ export class SyncPullService {
     const found = await this.read(positions, limit)
 
     // What this page covered, and what of it the caller is handed. The two
-    // differ by the echo filter alone, and the cursor follows the first (D-1):
-    // see `advanced`.
+    // differ by the echo filter alone, and the cursor follows the first: see
+    // `advanced`.
     const scanned = found.slice(0, limit)
     const changes = scanned.filter((row) => row.device_id !== request.deviceId).map(toChange)
 
@@ -161,7 +161,7 @@ export class SyncPullService {
  * The position each scope reached on this page — and no entry for the rest.
  *
  * It counts every row the page *read*, not every row it hands back, and the
- * difference is the whole of D-1. A device's own rows are filtered out of the
+ * difference is the whole of the fix. A device's own rows are filtered out of the
  * answer, and their `serverSeq` is reported nowhere else — `PushResult` names
  * the stamp, not the sequence. Advancing by the returned rows therefore left
  * the cursor stuck below `headSeq` whenever a scope's tail was the caller's
