@@ -1,6 +1,6 @@
 # Texts for courses. Owned by T3.
 
-nav-group-edu = Teaching
+nav-group-edu = Curriculum
 nav-courses = Courses
 
 courses-title = Courses

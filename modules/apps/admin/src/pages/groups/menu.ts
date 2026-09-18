@@ -1,11 +1,6 @@
 import type { MenuGroup } from '@/shared/navigation'
 
-/**
- * Sidebar entries for groups. Owned by T3.
- *
- * Declared under the same heading as courses; the composition root gathers the
- * sections, so the two entries meet only there.
- */
+/** Groups in the teaching-material group. Owned by T3. */
 export const menu: MenuGroup[] = [
   {
     label: 'nav-group-edu',

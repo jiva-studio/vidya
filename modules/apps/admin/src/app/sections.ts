@@ -16,7 +16,7 @@ import * as roles from '@/pages/roles'
 import * as schools from '@/pages/schools'
 import * as users from '@/pages/users'
 import { addMessages, type LocaleMessages } from '@/shared/i18n'
-import type { MenuGroup } from '@/shared/navigation'
+import type { MenuGroup, MenuItem } from '@/shared/navigation'
 
 interface Section {
   routes?: RouteRecordRaw[]
@@ -52,7 +52,27 @@ const fallbacks: Section[] = [forbidden, notFound]
 export const sectionRoutes = (): RouteRecordRaw[] =>
   [...sections, ...fallbacks].flatMap((section) => section.routes ?? [])
 
-export const sectionMenu = (): MenuGroup[] => sections.flatMap((section) => section.menu ?? [])
+/**
+ * The sidebar, with one heading per group however many sections declare it.
+ *
+ * Courses and groups are both `edu`, requests and homework are both `process`:
+ * each section declares its own entry under the heading it belongs to, and the
+ * headings are merged here, in the order they were first declared. Without the
+ * merge a section had to either draw its heading a second time or hand its
+ * entry to a neighbour, and both are worse than eight lines of gathering.
+ */
+export const sectionMenu = (): MenuGroup[] => {
+  const merged = new Map<string, MenuItem[]>()
+
+  for (const section of sections) {
+    for (const group of section.menu ?? []) {
+      const items = merged.get(group.label) ?? []
+      merged.set(group.label, [...items, ...group.items])
+    }
+  }
+
+  return [...merged].map(([label, items]) => ({ label, items }))
+}
 
 export const installSectionMessages = (): void => {
   addMessages(authMessages)

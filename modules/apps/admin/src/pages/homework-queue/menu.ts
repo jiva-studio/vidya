@@ -1,10 +1,16 @@
 import type { MenuGroup } from '@/shared/navigation'
 
-/**
- * Sidebar entries for the homework queue. Owned by T4.
- *
- * The entry itself is declared with the requests one, in the group both belong
- * to: the sidebar draws a heading per group, and two sections declaring the
- * same heading would draw it twice.
- */
-export const menu: MenuGroup[] = []
+/** The homework queue in the teaching group. Owned by T4. */
+export const menu: MenuGroup[] = [
+  {
+    label: 'nav-group-process',
+    items: [
+      {
+        route: 'homework-queue',
+        label: 'nav-homework-queue',
+        icon: 'check-square',
+        permission: 'homework:read',
+      },
+    ],
+  },
+]

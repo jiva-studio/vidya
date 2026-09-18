@@ -1,10 +1,14 @@
 import type { MenuGroup } from '@/shared/navigation'
 
 /**
- * Roles sit in the organisation group, which `pages/schools` declares.
+ * Roles in the organisation group. Owned by T2.
  *
- * The sidebar draws one heading per group, so three sections declaring the
- * same heading would draw it three times. The entry for this section lives in
- * that one group; its label is defined by this section's own resources.
+ * The heading is declared by every section that belongs under it and drawn
+ * once: the composition root merges groups by label.
  */
-export const menu: MenuGroup[] = []
+export const menu: MenuGroup[] = [
+  {
+    label: 'nav-group-org',
+    items: [{ route: 'roles', label: 'nav-roles', icon: 'shield', permission: 'roles:read' }],
+  },
+]

@@ -1,7 +1,7 @@
 import type { MenuGroup } from '@/shared/navigation'
 
 /**
- * Sidebar entries for courses. Owned by T3.
+ * Courses in the teaching-material group. Owned by T3.
  *
  * Lessons are reached through their course rather than from the sidebar: a
  * lessons list with no course chosen has nothing to show.
