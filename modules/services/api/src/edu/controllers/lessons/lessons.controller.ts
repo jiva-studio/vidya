@@ -16,6 +16,7 @@ import * as dto from '@vidya/api/edu/dto'
 import { CoursesService, LessonsService, LessonVersionsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
 import * as domain from '@vidya/domain'
+import { emptyLessonContent } from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
 
 import { toCreatedId, toLessonDetails, toLessonSummaries } from '../../mappers/education.mapper'
@@ -118,7 +119,7 @@ export class LessonsController {
       lessonId: created.id,
       version: 1,
       status: 'draft',
-      content: { sections: [] },
+      content: emptyLessonContent(),
     })
 
     return toCreatedId(created)

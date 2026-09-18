@@ -2,9 +2,14 @@
 
 This document defines the strict coding conventions for all frontend code in `vidya` (Vue 3, TypeScript, Tailwind CSS v4).
 
-> **Status.** `modules/apps/admin` and `modules/apps/mobile` are greenfield — they
-> currently hold only a README. These conventions are the contract the first
-> commit of real UI code must satisfy, not a description of code that exists.
+> **Status.** `modules/apps/mobile` holds the student application, ported from
+> `classroom-mobile` and live under the workspace gate. `modules/apps/admin` is
+> still greenfield. These conventions bind both: the mobile app was brought to
+> them as part of its port, and the first commit of admin UI must satisfy them.
+>
+> One rule is switched off for the mobile app:
+> `vue/no-deprecated-slot-attribute`. Ionic's components are custom elements and
+> take their children through the real `slot` attribute.
 >
 > **Enforcement.** The stock rules below (`vue/*`, `max-lines`, `complexity`,
 > `max-depth`, `no-empty`, `no-restricted-syntax`) are live in
@@ -24,6 +29,7 @@ To prevent monoliths ("God Components"), the following hard limits are enforced 
 - **Total file size**: Maximum **350 lines**.
 
 If a component approaches these limits, it MUST be decomposed:
+
 1. Extract subcomponents for distinct visual groups (e.g. `DiffFloats.vue`).
 2. Extract headless state and interaction logic into composables (e.g. `useKeyNavigation.ts`, `useSurfaceMotion.ts`).
 3. Break deeply nested hierarchies into dedicated shallow subcomponents (e.g. `DiffCodeRow.vue`, `DiffFoldRow.vue`).
@@ -37,7 +43,8 @@ The template must be purely declarative. The following patterns are strictly for
 1. **NO Nested Ternaries**:
    ```vue
    <!-- FORBIDDEN (will fail ESLint): -->
-   :tokens="row.kind === 'code' ? (row.change === 'added' ? newTokens[...] : oldTokens[...]) : undefined"
+   :tokens="row.kind === 'code' ? (row.change === 'added' ? newTokens[...] :
+   oldTokens[...]) : undefined"
 
    <!-- REQUIRED: -->
    :tokens="tokensForRow(row)"
@@ -45,7 +52,8 @@ The template must be purely declarative. The following patterns are strictly for
 2. **NO Inline Logical Expressions in Event Handlers**:
    ```vue
    <!-- FORBIDDEN (will fail ESLint): -->
-   @note:edit="row.kind === 'note' && remarks.saveEdit(row.annotationId, $event)"
+   @note:edit="row.kind === 'note' && remarks.saveEdit(row.annotationId,
+   $event)"
 
    <!-- REQUIRED: -->
    @note:edit="onNoteEdit(row, $event)"
@@ -62,11 +70,8 @@ The template must be purely declarative. The following patterns are strictly for
    Do NOT construct inline class arrays with template literals and boolean conditionals in the template:
    ```vue
    <!-- FORBIDDEN: -->
-   :class="[
-     `cp-row--${row.kind}`,
-     row.kind === 'code' && `cp-row--${row.change}`,
-     phase && `cp-row--${phase}`,
-   ]"
+   :class="[ `cp-row--${row.kind}`, row.kind === 'code' &&
+   `cp-row--${row.change}`, phase && `cp-row--${phase}`, ]"
 
    <!-- REQUIRED: -->
    :class="rowClasses"
@@ -97,7 +102,6 @@ The template must be purely declarative. The following patterns are strictly for
 
 ---
 
-
 ## 4. Component File Structure & Sections
 
 Every Vue component (`*.vue`) in `@vidya/ui` must follow this exact section structure and comment banner style inside `<script setup lang="ts">`:
@@ -105,34 +109,34 @@ Every Vue component (`*.vue`) in `@vidya/ui` must follow this exact section stru
 ```vue
 <script setup lang="ts">
 // 1. External & internal imports
-import { computed, ref, onMounted } from 'vue'
-import { cva } from 'class-variance-authority'
-import type { FloatActionProps, FloatActionEmits } from './types'
-import { cn } from '../../lib/utils'
+import { computed, ref, onMounted } from "vue";
+import { cva } from "class-variance-authority";
+import type { FloatActionProps, FloatActionEmits } from "./types";
+import { cn } from "../../lib/utils";
 
 /* --------------------------------- Props ---------------------------------- */
 
 const props = withDefaults(defineProps<FloatActionProps>(), {
   disabled: false,
-  tone: 'default',
+  tone: "default",
   class: undefined,
-})
+});
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<FloatActionEmits>()
+const emit = defineEmits<FloatActionEmits>();
 
 /* --------------------------------- State ---------------------------------- */
 
 // Reactive state, refs, computed, cva variants
-const isOpen = ref(false)
+const isOpen = ref(false);
 
 /* --------------------------------- Hooks ---------------------------------- */
 
 // Lifecycle hooks (onMounted, onUnmounted, watch, etc.)
 onMounted(() => {
   // ...
-})
+});
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -145,7 +149,7 @@ function onClick(event: MouseEvent) {
 
 // Pure calculations, formatters, local helper logic
 function formatLabel(val: string): string {
-  return val.trim()
+  return val.trim();
 }
 </script>
 
@@ -155,6 +159,7 @@ function formatLabel(val: string): string {
 ```
 
 ### Section Rules:
+
 - Only include headers for sections that actually exist in the component.
 - The order is **always**:
   1. `Props`
@@ -175,18 +180,24 @@ Never declare inline complex props or emits in the `.vue` file.
    Every component directory must have a `types.ts` defining:
    - `[ComponentName]Props`
    - `[ComponentName]Emits`
-   - Any local domain types.
+   - Any local domain types, including view models.
+
+   This holds for apps as well as for `libs/ui`. Where a directory holds several
+   components — as the mobile app's slices do — one `types.ts` serves them all,
+   named per component. Pages follow the same rule: their route props live in
+   `pages/types.ts`.
+
 2. **Local `index.ts`**:
    Must export the component as default and re-export types:
    ```ts
-   export { default } from './FloatAction.vue'
-   export type * from './types'
+   export { default } from "./FloatAction.vue";
+   export type * from "./types";
    ```
 3. **Package Root `src/index.ts`**:
    Must re-export the component and its types:
    ```ts
-   export { default as FloatAction } from './components/FloatAction'
-   export type * from './components/FloatAction/types'
+   export { default as FloatAction } from "./components/FloatAction";
+   export type * from "./components/FloatAction/types";
    ```
 
 ---
@@ -194,7 +205,9 @@ Never declare inline complex props or emits in the `.vue` file.
 ## 6. Tailwind & Styling Guidelines (No Monolithic Strings)
 
 ### Style Extraction Rule: Extract Static Class Arrays and CVA to Adjacent `styles.ts`
+
 To keep `<script setup>` clean and focused strictly on component logic and reactivity:
+
 - **FORBIDDEN**: Static class arrays (`const fooClasses = [ ... ]`) and `cva()` declarations directly inside `<script>` in `.vue` files. Enforced by ESLint: `vidya/no-static-styles-in-script`.
 - **REQUIRED**: Extract static class arrays and CVA variants to an adjacent `styles.ts` file in the component directory (e.g. `AnnotationNote/styles.ts`), and import them into the `.vue` component:
   ```ts
@@ -209,6 +222,7 @@ To keep `<script setup>` clean and focused strictly on component logic and react
 ---
 
 ## 7. Prettier, Linter & Gatekeeper Standards
+
 - `semi: false`
 - `singleQuote: true`
 - `printWidth: 100`
@@ -243,18 +257,15 @@ To keep `<script setup>` clean and focused strictly on component logic and react
 ## 9. Event Parameter Unification Principle
 
 Do NOT declare duplicate sibling events that differ only by scope, granularity, or a boolean flag:
+
 ```vue
 <!-- FORBIDDEN: -->
-defineEmits<{
-  annotate: []
-  annotateBlock: []
-}>()
+defineEmits<{ annotate: [] annotateBlock: [] }>()
 
 <!-- REQUIRED: -->
-defineEmits<{
-  annotate: [block?: boolean]
-}>()
+defineEmits<{ annotate: [block?: boolean] }>()
 ```
+
 Callers emit `@click="$emit('annotate', false)"` or `@click="$emit('annotate', true)"`, avoiding redundant event bridges and duplicate wrapper handlers.
 
 ---
@@ -262,6 +273,7 @@ Callers emit `@click="$emit('annotate', false)"` or `@click="$emit('annotate', t
 ## 10. Strict Props & Emits Contract in Vue
 
 Every Vue SFC must adhere to strict type-based contracts:
+
 1. **Type-Based Props Only**: Always use `defineProps<Props>()` with `withDefaults(...)`. Runtime object declarations (`defineProps({ ... })`) are forbidden (`vue/define-props-declaration: ['error', 'type-based']`).
 2. **Explicit Emits**: All events emitted by a component must be declared in `defineEmits<Emits>()` (`vue/require-explicit-emits`).
 3. **No Undefined Components**: Every component used in `<template>` must be explicitly imported or defined (`vue/no-undef-components`).
@@ -273,6 +285,7 @@ Every Vue SFC must adhere to strict type-based contracts:
 ## 11. Complexity & Nesting Limits
 
 To guarantee readable, maintainable, and testable code:
+
 - **Cyclomatic Complexity**: Maximum **10** per function (`complexity: ['error', 10]`).
   - If branching exceeds 10, decompose into dispatch tables, lookup maps, or focused pure helpers.
 - **Control Flow Nesting Depth**: Maximum **3** levels (`max-depth: ['error', 3]`).
@@ -283,6 +296,7 @@ To guarantee readable, maintainable, and testable code:
 ## 12. Non-Deterministic Environment Restrictions in Pure Logic
 
 In pure computational layers (`model/`, `lib/`, `@vidya/domain`):
+
 - `Date.now()` and `new Date()` are forbidden — inject clock interfaces instead.
 - `setTimeout` and `setInterval` are forbidden — pass clock ports with controllable schedule/cancel methods.
 - `Math.random()` is forbidden — use seeded generators or parameter ports.
@@ -292,8 +306,8 @@ In pure computational layers (`model/`, `lib/`, `@vidya/domain`):
 ## 13. Prohibition of Empty Catch Blocks
 
 Empty catch blocks (`try { ... } catch (err) {}`) are forbidden by AST linter:
-- Every catch clause must either handle the error, rethrow it, log it, or contain an explicit statement with a comment explaining why it is safely ignored.
 
+- Every catch clause must either handle the error, rethrow it, log it, or contain an explicit statement with a comment explaining why it is safely ignored.
 
 ---
 

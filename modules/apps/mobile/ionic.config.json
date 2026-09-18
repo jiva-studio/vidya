@@ -1,0 +1,7 @@
+{
+  "name": "Classroom",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}

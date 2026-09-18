@@ -118,7 +118,7 @@ export class LessonVersionSummary implements protocol.LessonVersionSummary {
 }
 
 export class LessonVersionDetails extends LessonVersionSummary {
-  @ApiProperty({ example: { sections: [] } })
+  @ApiProperty({ example: { schemaVersion: 1, sections: [] } })
   content: protocol.LessonContent
 }
 
@@ -130,7 +130,7 @@ export class GetLessonVersionsResponse implements protocol.GetLessonVersionsResp
 export class GetLessonVersionResponse extends LessonVersionDetails {}
 
 export class UpdateLessonVersionRequest implements protocol.UpdateLessonVersionRequest {
-  @ApiProperty({ example: { sections: [] } })
+  @ApiProperty({ example: { schemaVersion: 1, sections: [] } })
   @IsObject()
   content: protocol.LessonContent
 }

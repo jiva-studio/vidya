@@ -205,4 +205,14 @@ export default tseslint.config(
   },
 
   prettier,
+
+  /* --------------------------------- Ionic ---------------------------------- */
+
+  {
+    // Ionic's components are custom elements and take their children through
+    // the real `slot` attribute. The rule is about Vue 2's `slot`, which is a
+    // different thing that these files never use.
+    files: ['apps/mobile/**/*.vue'],
+    rules: { 'vue/no-deprecated-slot-attribute': 'off' },
+  },
 )

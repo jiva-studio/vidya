@@ -1,0 +1,64 @@
+<template>
+  <ion-page class="center">
+    <CongratsConfetti />
+
+    <div class="ctnt">
+      <img src="/congrats.png" />
+      <h2>{{ $t('enroll-completed-congratulations') }}</h2>
+      <div>{{ $t('enroll-completed-submitted') }}</div>
+      {{ $t('enroll-completed-wait') }}
+    </div>
+
+    <div>
+      <IonButton class="btn" expand="block" fill="clear" @click="onGoToMyGroupsClicked">
+        {{ $t('enroll-completed-go-to-my-enrollments') }}
+      </IonButton>
+    </div>
+  </ion-page>
+</template>
+
+<script setup lang="ts">
+import { useIonRouter } from '@ionic/vue'
+import { IonPage, IonButton } from '@ionic/vue'
+import { CongratsConfetti } from '@/design'
+import type { EnrollCompletedPageProps } from './types'
+
+/* ---------------------------------- Props ----------------------------------- */
+
+defineProps<EnrollCompletedPageProps>()
+
+/* ---------------------------------- State ----------------------------------- */
+
+const router = useIonRouter()
+
+/* --------------------------------- Handlers --------------------------------- */
+
+function onGoToMyGroupsClicked() {
+  router.navigate({ name: 'my-enrollments' }, 'root', 'pop')
+}
+</script>
+
+<style scoped>
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ctnt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}
+
+.btn {
+  margin: 20px;
+}
+
+.icon {
+  max-width: 60%;
+  max-height: 60%;
+}
+</style>
