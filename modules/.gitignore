@@ -1,0 +1,7 @@
+# Patterns are written without a trailing slash so that they also match the
+# symlinks used by git worktrees (a symlink is not a directory to git, and a
+# `dir/` pattern would leave those symlinks showing up as untracked noise).
+node_modules
+dist
+*.tsbuildinfo
+coverage

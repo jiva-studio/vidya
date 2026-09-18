@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+
+# npm workspace commands below resolve against modules/package.json, so the
+# script works from any cwd rather than only from modules/.
+MODULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../modules" && pwd)"
+cd "$MODULES_DIR"
+
+# ---------------------------------------------------------------------------- #
+#                                     Doc                                      #
+# ---------------------------------------------------------------------------- #
+
+echo "
+# ---------------------------------------------- #
+#                Starting Database               #
+# ---------------------------------------------- #
+"
+
+# ---------------------------------------------------------------------------- #
+#                                     Task                                     #
+# ---------------------------------------------------------------------------- #
+
+echo "Starting Postgres..."
+sudo service postgresql start >> /dev/null
