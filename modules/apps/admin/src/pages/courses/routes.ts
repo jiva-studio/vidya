@@ -27,6 +27,7 @@ export const routes: RouteRecordRaw[] = [
     name: 'course-edit',
     component: () => import('./ui/CourseFormPage.vue'),
     meta: {
+      section: 'courses',
       permission: 'courses:update',
       breadcrumbs: ['nav-courses', 'course-form-edit-title'],
     },

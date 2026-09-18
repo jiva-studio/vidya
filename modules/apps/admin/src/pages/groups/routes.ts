@@ -23,12 +23,20 @@ export const routes: RouteRecordRaw[] = [
     path: '/groups/:groupId/edit',
     name: 'group-edit',
     component: () => import('./ui/GroupFormPage.vue'),
-    meta: { permission: 'groups:update', breadcrumbs: ['nav-groups', 'group-form-edit-title'] },
+    meta: {
+      section: 'groups',
+      permission: 'groups:update',
+      breadcrumbs: ['nav-groups', 'group-form-edit-title'],
+    },
   },
   {
     path: '/groups/:groupId/members',
     name: 'group-members',
     component: () => import('./ui/GroupMembersPage.vue'),
-    meta: { permission: 'enrollments:read', breadcrumbs: ['nav-groups', 'group-members-title'] },
+    meta: {
+      section: 'groups',
+      permission: 'enrollments:read',
+      breadcrumbs: ['nav-groups', 'group-members-title'],
+    },
   },
 ]

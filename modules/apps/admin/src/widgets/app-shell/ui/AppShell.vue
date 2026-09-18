@@ -28,6 +28,7 @@ function onSignOut() {
       <slot name="school" />
       <slot name="nav" />
       <div :class="footerClasses">
+        <slot name="profile" />
         <button :class="signOutClasses" type="button" @click="onSignOut">
           {{ $t('action-sign-out') }}
         </button>

@@ -15,6 +15,10 @@ export const routes: RouteRecordRaw[] = [
     name: 'user',
     props: true,
     component: () => import('./ui/UserCardPage.vue'),
-    meta: { permission: 'users:read', breadcrumbs: ['nav-users', 'users-card-title'] },
+    meta: {
+      section: 'users',
+      permission: 'users:read',
+      breadcrumbs: ['nav-users', 'users-card-title'],
+    },
   },
 ]

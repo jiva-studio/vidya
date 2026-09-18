@@ -11,6 +11,10 @@ export const routes: RouteRecordRaw[] = [
     path: '/courses/:courseId/lessons',
     name: 'lessons',
     component: () => import('./ui/LessonsPage.vue'),
-    meta: { permission: 'lessons:read', breadcrumbs: ['nav-courses', 'lessons-title'] },
+    meta: {
+      section: 'courses',
+      permission: 'lessons:read',
+      breadcrumbs: ['nav-courses', 'lessons-title'],
+    },
   },
 ]

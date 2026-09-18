@@ -13,6 +13,10 @@ export const routes: RouteRecordRaw[] = [
     name: 'homework-review',
     props: true,
     component: () => import('./ui/HomeworkReviewPage.vue'),
-    meta: { permission: 'homework:read', breadcrumbs: ['nav-homework-queue', 'homework-one'] },
+    meta: {
+      section: 'homework-queue',
+      permission: 'homework:read',
+      breadcrumbs: ['nav-homework-queue', 'homework-one'],
+    },
   },
 ]

@@ -27,7 +27,11 @@ export const routes: RouteRecordRaw[] = [
     name: 'school-edit',
     props: true,
     component: () => import('./ui/SchoolFormPage.vue'),
-    meta: { permission: 'schools:update', breadcrumbs: ['nav-schools', 'schools-form-edit-title'] },
+    meta: {
+      section: 'schools',
+      permission: 'schools:update',
+      breadcrumbs: ['nav-schools', 'schools-form-edit-title'],
+    },
   },
   {
     // The identifier is a prop rather than something read from the router, so
@@ -37,6 +41,7 @@ export const routes: RouteRecordRaw[] = [
     props: true,
     component: () => import('./ui/SchoolSettingsPage.vue'),
     meta: {
+      section: 'schools',
       permission: 'schools:update',
       breadcrumbs: ['nav-schools', 'schools-settings-title'],
     },

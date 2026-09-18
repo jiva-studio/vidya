@@ -17,6 +17,8 @@ error-offline = Нет связи. Ничего не удалось загруз
 error-forbidden = У вас нет доступа к этому разделу.
 error-not-found = Такой страницы нет.
 
+language-label = Язык интерфейса
+
 school-switcher-label = Школа
 school-unnamed = Школа { $id }
 

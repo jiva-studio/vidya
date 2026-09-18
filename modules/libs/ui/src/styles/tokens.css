@@ -121,6 +121,11 @@
   --sidebar-width: 15rem;
   --content-max: 80rem;
 
+  /* A form is read down a single column, and a line of text stops being
+     readable somewhere past sixty characters, so a form stops here however
+     wide the content area is. */
+  --form-max: 42rem;
+
   /* ------------------------------------------------------------------ */
   /*  Radius, border, shadow. Three shadows, and they stay subtle.        */
   /* ------------------------------------------------------------------ */

@@ -13,6 +13,7 @@ export const routes: RouteRecordRaw[] = [
     name: 'lesson-editor',
     component: () => import('./ui/LessonEditorPage.vue'),
     meta: {
+      section: 'courses',
       permission: 'lessons:update',
       breadcrumbs: ['nav-courses', 'lessons-title', 'editor-title'],
     },
@@ -25,6 +26,7 @@ export const routes: RouteRecordRaw[] = [
     name: 'lesson-version',
     component: () => import('./ui/LessonVersionPage.vue'),
     meta: {
+      section: 'courses',
       permission: 'lessons:read',
       breadcrumbs: ['nav-courses', 'lessons-title', 'version-title'],
     },

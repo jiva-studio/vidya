@@ -21,6 +21,10 @@ export const routes: RouteRecordRaw[] = [
     name: 'role-edit',
     props: true,
     component: () => import('./ui/RoleFormPage.vue'),
-    meta: { permission: 'roles:update', breadcrumbs: ['nav-roles', 'roles-form-edit-title'] },
+    meta: {
+      section: 'roles',
+      permission: 'roles:update',
+      breadcrumbs: ['nav-roles', 'roles-form-edit-title'],
+    },
   },
 ]

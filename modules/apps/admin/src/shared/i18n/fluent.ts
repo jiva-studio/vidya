@@ -5,6 +5,7 @@ import { ref, watch } from 'vue'
 import enMessages from './en.ftl?raw'
 import ruMessages from './ru.ftl?raw'
 import type { Locale, LocaleMessages } from './types'
+import { Locales } from './types'
 
 /**
  * One bundle per language, each holding that language's resources only.
@@ -19,13 +20,33 @@ export const ruBundle = new FluentBundle('ru')
 
 const bundles: Record<Locale, FluentBundle> = { en: enBundle, ru: ruBundle }
 
-export const locale = ref<Locale>('ru')
+/** Where the chosen language is remembered between visits. */
+const localeKey = 'vidya.locale'
 
-export const fluent = createFluentVue({ bundles: [ruBundle] })
+const remembered = (): Locale | undefined => {
+  try {
+    const stored = localStorage.getItem(localeKey)
+    return Locales.find((candidate) => candidate === stored)
+  } catch {
+    // Storage can be refused outright — a private window, a locked-down
+    // browser. A language nobody could remember is not a reason to fail.
+    return undefined
+  }
+}
+
+export const locale = ref<Locale>(remembered() ?? 'ru')
+
+export const fluent = createFluentVue({ bundles: [bundles[locale.value]] })
 
 /** Switching is a bundle swap, so the screen re-renders without a reload. */
 watch(locale, (value) => {
   fluent.bundles = [bundles[value]]
+
+  try {
+    localStorage.setItem(localeKey, value)
+  } catch {
+    // The language still changed; it just will not survive the next visit.
+  }
 })
 
 /** Adds a slice's translations to both bundles at once. */

@@ -11,6 +11,14 @@ declare module 'vue-router' {
     /** `false` for screens shown outside the shell, such as sign-in. */
     chrome?: boolean
 
+    /**
+     * The index screen of the section this one belongs to.
+     *
+     * A screen showing one record of one school cannot stay open when the
+     * school changes, so the shell sends the operator here instead (AC-6).
+     */
+    section?: string
+
     /** Fluent keys of the breadcrumb trail, root first. */
     breadcrumbs?: readonly string[]
   }

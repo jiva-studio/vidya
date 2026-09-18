@@ -17,7 +17,16 @@ export const brandClasses = [
   'font-[--weight-semibold]',
 ]
 
-export const footerClasses = ['mt-auto', 'border-t', 'border-[--color-border]', 'p-[--space-3]']
+export const footerClasses = [
+  'mt-auto',
+  'flex',
+  'flex-col',
+  'items-start',
+  'gap-[--space-2]',
+  'border-t',
+  'border-[--color-border]',
+  'p-[--space-3]',
+]
 
 export const signOutClasses = [
   'text-[length:--text-sm]',

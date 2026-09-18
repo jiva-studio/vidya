@@ -18,6 +18,8 @@ error-offline = No connection. Nothing could be loaded.
 error-forbidden = You do not have access to this.
 error-not-found = This page does not exist.
 
+language-label = Interface language
+
 school-switcher-label = School
 school-unnamed = School { $id }
 

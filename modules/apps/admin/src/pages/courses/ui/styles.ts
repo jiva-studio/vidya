@@ -6,8 +6,7 @@ export const formClasses = [
   'flex',
   'flex-col',
   'gap-[--space-5]',
-  // A form has no width token of its own yet; until libs/ui grows one it
-  // takes the width of the content area rather than an invented number.
+  'max-w-[--form-max]',
   'rounded-[--radius-lg]',
   'border',
   'border-[--color-border]',
