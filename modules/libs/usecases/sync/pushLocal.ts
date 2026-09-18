@@ -61,7 +61,15 @@ export async function pushLocal(deps: SyncEngineDeps): Promise<PushLocalResult> 
     sent: 0,
     accepted: 0,
     rejected: 0,
-    journaledOutboxId: 0,
+
+    // The watermark, not zero (D-6). A run with nothing to send is the ordinary
+    // case — the student has typed nothing since the last one — and it has to
+    // answer "how far have my rows reached the journal" with what the device
+    // already knows, which is the id every answered row sits at or below. Zero
+    // is the answer for a device that has never pushed anything, and reporting
+    // it after an empty round tells the interface the journal is missing work
+    // it took long ago, so the screen stops painting for good (I-6, AC-22n).
+    journaledOutboxId: await deps.state.getPushedOutboxId(),
     paused: false,
   }
 

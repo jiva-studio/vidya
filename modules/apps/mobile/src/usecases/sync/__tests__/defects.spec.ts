@@ -9,7 +9,7 @@ import type {
 } from '@vidya/domain'
 import { asId, syncScopeKey } from '@vidya/domain'
 import { SYNC_MAX_CHANGE_BYTES } from '@vidya/protocol'
-import { INCOMPLETE_CHECKSUM } from '@vidya/usecases'
+import { INCOMPLETE_CHECKSUM, journalHasLocalWrites } from '@vidya/usecases'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
@@ -285,5 +285,18 @@ describe('the seven defects', () => {
     // push that could deliver the edit, so holding it on top of the server's
     // copy would show an answer nobody will ever read.
     expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('the text that was accepted')
+  })
+
+  it('D-6: a run with nothing to send does not report the journal short of local writes', async () => {
+    await harness.engine.homework.saveAnswer(answer('typed once'))
+    await harness.engine.runner.run()
+
+    // The next run has nothing to push, which is the ordinary case.
+    const result = await harness.engine.runner.run()
+
+    expect(result.push?.sent).toBe(0)
+    const latest = await harness.engine.outbox.latestId(OWNER)
+    expect(result.push!.journaledOutboxId).toBe(latest)
+    expect(journalHasLocalWrites(result.push!.journaledOutboxId, latest)).toBe(true)
   })
 })
