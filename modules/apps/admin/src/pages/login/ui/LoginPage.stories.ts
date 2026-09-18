@@ -27,13 +27,13 @@ export default meta
 type Story = StoryObj<typeof LoginPage>
 
 export const WithData: Story = {
-  name: 'Данные',
+  name: 'Data',
   render: over({ [OTP]: { success: true }, [SIGN_IN]: {} }),
 }
 
-export const Loading: Story = { name: 'Загрузка', render: over({ [OTP]: pending() }) }
+export const Loading: Story = { name: 'Loading', render: over({ [OTP]: pending() }) }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   render: over({ [OTP]: new HttpError(500, OTP, { message: 'Почта сейчас не отправляется' }) }),
 }

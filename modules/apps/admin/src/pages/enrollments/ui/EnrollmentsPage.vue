@@ -35,8 +35,6 @@ const columns = computed<TableColumn[]>(() => [
   { key: 'course', label: $t('enrollments-column-course') },
   { key: 'group', label: $t('enrollments-column-group') },
   { key: 'status', label: $t('enrollments-column-status') },
-  { key: 'requested', label: $t('enrollments-column-requested') },
-  { key: 'decided', label: $t('enrollments-column-decided') },
   { key: 'actions', label: $t('enrollments-column-actions'), align: 'end' },
 ])
 

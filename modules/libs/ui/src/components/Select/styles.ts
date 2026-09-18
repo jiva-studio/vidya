@@ -20,7 +20,7 @@ export const triggerVariants = cva(
 
 // The surface every menu-like overlay shares: select, combobox, dropdown.
 export const surfaceClasses = [
-  'z-[var(--z-dialog)] min-w-[var(--sidebar-width)] overflow-hidden',
+  'z-[var(--z-dialog)] min-w-[var(--menu-min-width)] overflow-hidden',
   'bg-[var(--color-surface)] text-[var(--color-text)]',
   'border border-[var(--color-border)] rounded-[var(--radius-md)]',
   'shadow-[var(--shadow-md)] p-[var(--space-1)]',

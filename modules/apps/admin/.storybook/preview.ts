@@ -40,9 +40,16 @@ const inStorySchool = (target: RouteLocationRaw | undefined): RouteLocationRaw =
 installSectionMessages()
 
 setup((app) => {
+  // Hot reload re-registers this callback, and installing the router twice on
+  // one app throws on $route.
+  if (app.config.globalProperties.$router) return
   app.use(fluent)
   app.use(router)
 })
+
+// A screen in the application sits inside the shell's content area, which gives
+// it its margins and its width. A story has no shell, so it needs them here.
+const storyFrame = 'padding: var(--space-5); max-width: var(--content-max); margin: 0 auto;'
 
 const preview: Preview = {
   parameters: {
@@ -53,6 +60,10 @@ const preview: Preview = {
   // A screen that reads its parameters from the address says which address with
   // `parameters.route`, and the router is there before the screen mounts.
   decorators: [
+    (story) => ({
+      components: { story },
+      template: `<div style="${storyFrame}"><story /></div>`,
+    }),
     (story, context) => {
       void router.replace(inStorySchool(context.parameters.route as RouteLocationRaw | undefined))
       return story()

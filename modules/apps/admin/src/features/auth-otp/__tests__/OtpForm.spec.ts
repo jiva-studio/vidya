@@ -112,7 +112,7 @@ describe('OtpForm', () => {
     await form.find('form').trigger('submit')
     await flushPromises()
 
-    expect(form.text()).toContain('Код неверный')
+    expect(form.text()).toContain('Неверный код')
     expect((form.find('input[name="one-time-code"]').element as HTMLInputElement).value).toBe(
       '000000',
     )

@@ -122,6 +122,7 @@ async function load(): Promise<void> {
   <PageHeader :title="$t('schools-settings-title')" />
   <Skeleton v-if="loading" shape="block" :lines="4" />
   <ErrorState
+    :title="$t('state-error-title')"
     v-else-if="loadFailed"
     :description="errorText ?? $t('state-error')"
     :retry-label="$t('action-retry')"

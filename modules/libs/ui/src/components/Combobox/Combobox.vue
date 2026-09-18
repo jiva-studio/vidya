@@ -18,8 +18,8 @@ import type { ComboboxEmits, ComboboxProps } from './types'
 
 const props = withDefaults(defineProps<ComboboxProps>(), {
   modelValue: undefined,
-  placeholder: 'Search',
-  emptyLabel: 'Nothing matches that search.',
+  placeholder: undefined,
+  emptyLabel: undefined,
   disabled: false,
   invalid: false,
   searchDebounce: 250,
@@ -41,6 +41,16 @@ const selectedLabel = computed(() => labelFor(props.modelValue))
 /* --------------------------------- Hooks ---------------------------------- */
 
 watch(term, (value) => scheduleSearch(value))
+
+// reka puts the value into the field, and our value is an id. What a person
+// has to read there is the label of what they picked.
+watch(
+  () => [props.modelValue, props.options] as const,
+  () => {
+    if (selectedLabel.value) term.value = selectedLabel.value
+  },
+  { immediate: true },
+)
 
 onBeforeUnmount(() => clearTimeout(pending.value))
 
@@ -77,7 +87,7 @@ function scheduleSearch(value: string) {
         :id="props.id"
         v-model="term"
         :class="inputClasses"
-        :placeholder="selectedLabel || props.placeholder"
+        :placeholder="props.placeholder"
         :aria-invalid="props.invalid || undefined"
         :aria-describedby="props.describedBy"
       />
@@ -85,7 +95,7 @@ function scheduleSearch(value: string) {
         <ChevronsUpDown :class="iconClasses" />
       </ComboboxTrigger>
     </ComboboxAnchor>
-    <ComboboxContent :class="contentClasses" position="inline">
+    <ComboboxContent :class="contentClasses" position="popper" :side-offset="4">
       <ComboboxList :options="props.options" :empty-label="props.emptyLabel" />
     </ComboboxContent>
   </ComboboxRoot>

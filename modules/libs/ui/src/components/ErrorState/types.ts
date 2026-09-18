@@ -1,8 +1,8 @@
 export interface ErrorStateProps {
-  title?: string
+  title: string
   // The reason the server gave. A generic message hides the one fact that helps.
-  description: string
-  retryLabel?: string
+  description?: string
+  retryLabel: string
   class?: string
 }
 

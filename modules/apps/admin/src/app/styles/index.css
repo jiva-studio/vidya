@@ -10,6 +10,11 @@
 @import '@ui/styles/tokens.css';
 @import 'tailwindcss';
 
+/* Tailwind 4 detects sources from the build root, which differs between Vite
+   and Storybook, and never looks inside node_modules where @vidya/ui is linked. */
+@source '../../../src';
+@source '../../../../../libs/ui/src';
+
 @layer base {
   html,
   body,

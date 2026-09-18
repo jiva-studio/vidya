@@ -8,7 +8,7 @@ export interface ComboboxProps {
   modelValue?: string
   options: ComboboxOption[]
   placeholder?: string
-  emptyLabel?: string
+  emptyLabel: string
   disabled?: boolean
   invalid?: boolean
   // Remote lists are searched on the server; the delay keeps one keystroke

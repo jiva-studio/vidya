@@ -1,18 +1,10 @@
 <script setup lang="ts">
+import { Button, FormField, Input } from '@vidya/ui'
 import { computed, ref, watch } from 'vue'
 
 import type { OtpFormEmits } from '../types'
 import { useOtpSignIn } from '../model'
-import {
-  codeInputClasses,
-  errorClasses,
-  formClasses,
-  hintClasses,
-  inputClasses,
-  labelClasses,
-  linkButtonClasses,
-  primaryButtonClasses,
-} from './styles'
+import { codeInputClasses, formClasses, linkButtonClasses, secondaryRowClasses } from './styles'
 
 /* --------------------------------- Events --------------------------------- */
 
@@ -21,15 +13,19 @@ const emit = defineEmits<OtpFormEmits>()
 /* --------------------------------- State ---------------------------------- */
 
 const signIn = useOtpSignIn()
-const codeField = ref<HTMLInputElement | undefined>(undefined)
+const codeField = ref<{ $el?: HTMLInputElement } | undefined>(undefined)
 
 const showCodeStep = computed(() => signIn.step.value === 'code')
 const canResend = computed(() => signIn.countdown.canResend.value)
 
+// The error stands where the hint stands, so a refusal does not add a line and
+// push everything below it down the page.
+const error = computed(() => signIn.error.value)
+
 /* ---------------------------------- Hooks --------------------------------- */
 
 watch(showCodeStep, (shown) => {
-  if (shown) codeField.value?.focus()
+  if (shown) codeField.value?.$el?.focus()
 })
 
 /* -------------------------------- Handlers -------------------------------- */
@@ -55,51 +51,79 @@ function onChangeEmail() {
 
 <template>
   <form v-if="!showCodeStep" :class="formClasses" @submit.prevent="onEmailSubmit">
-    <label :class="labelClasses" for="otp-email">{{ $t('auth-email-label') }}</label>
-    <input
-      id="otp-email"
-      v-model="signIn.email.value"
-      :class="inputClasses"
-      type="email"
-      name="email"
-      autocomplete="email"
+    <FormField
+      :label="$t('auth-email-label')"
+      :hint="$t('auth-email-hint')"
+      :error="error ? $t(error) : undefined"
       required
-    />
-    <p :class="hintClasses">{{ $t('auth-email-hint') }}</p>
-    <p v-if="signIn.error.value" :class="errorClasses" role="alert">
-      {{ $t(signIn.error.value) }}
-    </p>
-    <button :class="primaryButtonClasses" type="submit" :disabled="signIn.busy.value">
+    >
+      <template #default="field">
+        <Input
+          :id="field.id"
+          v-model="signIn.email.value"
+          :aria-describedby="field.describedBy"
+          :invalid="field.invalid"
+          type="email"
+          name="email"
+          autocomplete="email"
+          required
+        />
+      </template>
+    </FormField>
+
+    <Button
+      type="submit"
+      size="lg"
+      full-width
+      :busy="signIn.busy.value"
+      :busy-label="$t('auth-email-sending')"
+    >
       {{ $t('auth-email-submit') }}
-    </button>
+    </Button>
   </form>
 
   <form v-else :class="formClasses" @submit.prevent="onCodeSubmit">
-    <label :class="labelClasses" for="otp-code">{{ $t('auth-code-label') }}</label>
-    <input
-      id="otp-code"
-      ref="codeField"
-      v-model="signIn.code.value"
-      :class="codeInputClasses"
-      type="text"
-      name="one-time-code"
-      autocomplete="one-time-code"
-      inputmode="numeric"
+    <FormField
+      :label="$t('auth-code-label')"
+      :hint="$t('auth-code-hint', { email: signIn.email.value })"
+      :error="error ? $t(error) : undefined"
       required
-    />
-    <p :class="hintClasses">{{ $t('auth-code-hint', { email: signIn.email.value }) }}</p>
-    <p v-if="signIn.error.value" :class="errorClasses" role="alert">
-      {{ $t(signIn.error.value) }}
-    </p>
-    <button :class="primaryButtonClasses" type="submit" :disabled="signIn.busy.value">
+    >
+      <template #default="field">
+        <Input
+          :id="field.id"
+          ref="codeField"
+          v-model="signIn.code.value"
+          :class="codeInputClasses"
+          :aria-describedby="field.describedBy"
+          :invalid="field.invalid"
+          type="text"
+          name="one-time-code"
+          autocomplete="one-time-code"
+          inputmode="numeric"
+          required
+        />
+      </template>
+    </FormField>
+
+    <Button
+      type="submit"
+      size="lg"
+      full-width
+      :busy="signIn.busy.value"
+      :busy-label="$t('auth-code-checking')"
+    >
       {{ $t('auth-code-submit') }}
-    </button>
-    <button :class="linkButtonClasses" type="button" :disabled="!canResend" @click="onResend">
-      <span v-if="canResend">{{ $t('auth-code-resend') }}</span>
-      <span v-else>{{ $t('auth-code-wait', { time: signIn.countdown.label.value }) }}</span>
-    </button>
-    <button :class="linkButtonClasses" type="button" @click="onChangeEmail">
-      {{ $t('auth-code-change-email') }}
-    </button>
+    </Button>
+
+    <div :class="secondaryRowClasses">
+      <button :class="linkButtonClasses" type="button" :disabled="!canResend" @click="onResend">
+        <span v-if="canResend">{{ $t('auth-code-resend') }}</span>
+        <span v-else>{{ $t('auth-code-wait', { time: signIn.countdown.label.value }) }}</span>
+      </button>
+      <button :class="linkButtonClasses" type="button" @click="onChangeEmail">
+        {{ $t('auth-code-change-email') }}
+      </button>
+    </div>
   </form>
 </template>

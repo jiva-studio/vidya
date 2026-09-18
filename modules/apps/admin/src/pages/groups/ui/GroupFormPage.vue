@@ -65,6 +65,7 @@ function idFromRoute(): GroupId | undefined {
       <Skeleton shape="block" :lines="4" />
     </div>
     <ErrorState
+      :title="$t('state-error-title')"
       v-else-if="loadFailed"
       :description="$t(form.error.value ?? 'group-load-failed')"
       :retry-label="$t('action-retry')"

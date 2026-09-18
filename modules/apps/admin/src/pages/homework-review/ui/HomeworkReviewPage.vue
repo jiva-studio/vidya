@@ -124,6 +124,7 @@ function advance(id: HomeworkId, updated: HomeworkDetails) {
     </PageHeader>
     <Skeleton v-if="details.loading.value" shape="block" :lines="6" />
     <ErrorState
+      :title="$t('state-error-title')"
       v-else-if="errorText"
       :description="errorText"
       :retry-label="$t('action-retry')"

@@ -1,19 +1,19 @@
-export const switchClasses = ['flex', 'items-center', 'gap-[--space-1]']
+export const switchClasses = ['flex', 'items-center', 'gap-[var(--space-1)]']
 
 export const optionClasses = [
-  'rounded-[--radius-sm]',
-  'px-[--space-2]',
-  'py-[--space-1]',
-  'text-[length:--text-sm]',
-  'text-[--color-text-muted]',
+  'rounded-[var(--radius-sm)]',
+  'px-[var(--space-2)]',
+  'py-[var(--space-1)]',
+  'text-[length:var(--text-sm)]',
+  'text-[var(--color-text-muted)]',
   'transition-colors',
   'duration-100',
-  'hover:text-[--color-text]',
+  'hover:text-[var(--color-text)]',
 ]
 
 export const currentClasses = [
   ...optionClasses,
-  'bg-[--color-surface-sunken]',
-  'font-[--weight-medium]',
-  'text-[--color-text]',
+  'bg-[var(--color-surface-sunken)]',
+  'font-[var(--weight-medium)]',
+  'text-[var(--color-text)]',
 ]

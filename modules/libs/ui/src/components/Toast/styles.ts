@@ -42,5 +42,5 @@ export const iconClasses = ['size-[var(--space-4)]']
 
 export const viewportClasses = [
   'fixed bottom-[var(--space-4)] right-[var(--space-4)] z-[var(--z-toast)]',
-  'flex flex-col gap-[var(--space-2)] w-[var(--sidebar-width)] m-0 p-0 list-none outline-none',
+  'flex flex-col gap-[var(--space-2)] w-[var(--toast-width)] m-0 p-0 list-none outline-none',
 ]

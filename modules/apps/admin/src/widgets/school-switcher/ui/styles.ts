@@ -1,36 +1,36 @@
 export const wrapperClasses = [
   'flex',
   'flex-col',
-  'gap-[--space-1]',
+  'gap-[var(--space-1)]',
   'border-b',
-  'border-[--color-border]',
-  'px-[--space-3]',
-  'py-[--space-3]',
+  'border-[var(--color-border)]',
+  'px-[var(--space-4)]',
+  'py-[var(--space-3)]',
 ]
 
 export const labelClasses = [
-  'text-[length:--text-2xs]',
+  'text-[length:var(--text-2xs)]',
   'uppercase',
   'tracking-wide',
-  'text-[--color-text-muted]',
+  'text-[var(--color-text-muted)]',
 ]
 
 export const selectClasses = [
-  'h-[--control-md]',
+  'h-[var(--control-md)]',
   'w-full',
-  'rounded-[--radius-md]',
+  'rounded-[var(--radius-md)]',
   'border',
-  'border-[--color-border]',
-  'bg-[--color-surface]',
-  'px-[--space-2]',
-  'text-[length:--text-base]',
-  'text-[--color-text]',
+  'border-[var(--color-border)]',
+  'bg-[var(--color-surface)]',
+  'px-[var(--space-2)]',
+  'text-[length:var(--text-base)]',
+  'text-[var(--color-text)]',
   'outline-none',
-  'focus:shadow-[--focus-ring]',
+  'focus:shadow-[var(--focus-ring)]',
 ]
 
 export const singleClasses = [
-  'text-[length:--text-base]',
-  'font-[--weight-medium]',
-  'text-[--color-text]',
+  'text-[length:var(--text-base)]',
+  'font-[var(--weight-medium)]',
+  'text-[var(--color-text)]',
 ]

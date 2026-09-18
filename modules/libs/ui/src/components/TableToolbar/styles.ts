@@ -3,7 +3,7 @@ export const toolbarClasses = [
   'pb-[var(--space-3)]',
 ]
 
-export const searchWrapClasses = ['relative flex-1 min-w-[var(--sidebar-width)]']
+export const searchWrapClasses = ['relative flex-1 min-w-[var(--search-width)]']
 
 export const searchIconClasses = [
   'absolute left-[var(--space-2)] top-1/2 -translate-y-1/2 pointer-events-none',

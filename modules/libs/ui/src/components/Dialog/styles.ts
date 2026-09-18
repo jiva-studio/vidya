@@ -13,7 +13,7 @@ export const contentVariants = cva(
   ],
   {
     variants: {
-      size: { md: 'max-w-[var(--sidebar-width)]', lg: 'max-w-[var(--content-max)]' },
+      size: { md: 'max-w-[var(--dialog-width)]', lg: 'max-w-[var(--dialog-width-lg)]' },
     },
     defaultVariants: { size: 'md' },
   },

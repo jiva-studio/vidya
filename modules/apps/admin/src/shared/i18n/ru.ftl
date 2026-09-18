@@ -10,6 +10,7 @@ action-retry = Повторить
 action-sign-out = Выйти
 
 state-loading = Загрузка…
+state-error-title = Не удалось загрузить
 state-error = Не получилось. Попробуйте ещё раз.
 
 error-offline = Нет связи с интернетом. Проверьте подключение и попробуйте снова.
@@ -38,3 +39,4 @@ page-forbidden-back = На главную
 page-not-found-title = Страница не найдена
 page-not-found-body = Проверьте адрес — возможно, в нём опечатка.
 page-not-found-back = На главную
+state-nothing-matches = Ничего не найдено

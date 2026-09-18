@@ -95,10 +95,12 @@ function errorFor(field: 'name' | 'courseId', key: string): string | undefined {
     >
       <template #default="field">
         <Combobox
+          :empty-label="$t('state-nothing-matches')"
           :id="field.id"
           :model-value="props.modelValue.courseId"
           :options="props.courses"
           :disabled="props.courseLocked"
+          :placeholder="$t('groups-course-placeholder')"
           :described-by="field.describedBy"
           :invalid="field.invalid"
           @update:model-value="onCourse"

@@ -19,6 +19,7 @@ export interface TableProps {
   caption?: string
   loading?: boolean
   error?: string
+  errorTitle?: string
   emptyTitle?: string
   emptyDescription?: string
   emptyActionLabel?: string

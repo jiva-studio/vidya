@@ -18,7 +18,7 @@ import type { SelectEmits, SelectProps } from './types'
 
 const props = withDefaults(defineProps<SelectProps>(), {
   modelValue: undefined,
-  placeholder: 'Select',
+  placeholder: undefined,
   disabled: false,
   invalid: false,
   id: undefined,

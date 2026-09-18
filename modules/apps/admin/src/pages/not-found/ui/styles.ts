@@ -1,21 +1,21 @@
-export const pageClasses = ['py-[--space-7]', 'text-center']
+export const pageClasses = ['py-[var(--space-7)]', 'text-center']
 
 export const titleClasses = [
-  'text-[length:--text-lg]',
-  'font-[--weight-semibold]',
-  'text-[--color-text]',
+  'text-[length:var(--text-lg)]',
+  'font-[var(--weight-semibold)]',
+  'text-[var(--color-text)]',
 ]
 
 export const bodyClasses = [
-  'pt-[--space-2]',
-  'text-[length:--text-base]',
-  'text-[--color-text-muted]',
+  'pt-[var(--space-2)]',
+  'text-[length:var(--text-base)]',
+  'text-[var(--color-text-muted)]',
 ]
 
 export const linkClasses = [
   'inline-block',
-  'pt-[--space-4]',
-  'text-[length:--text-base]',
-  'text-[--color-primary]',
+  'pt-[var(--space-4)]',
+  'text-[length:var(--text-base)]',
+  'text-[var(--color-primary)]',
   'hover:underline',
 ]

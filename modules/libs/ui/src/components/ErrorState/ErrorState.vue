@@ -9,8 +9,6 @@ import type { ErrorStateEmits, ErrorStateProps } from './types'
 /* --------------------------------- Props ---------------------------------- */
 
 const props = withDefaults(defineProps<ErrorStateProps>(), {
-  title: 'That did not load',
-  retryLabel: 'Try again',
   class: undefined,
 })
 

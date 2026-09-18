@@ -13,13 +13,13 @@ const GROUPS = '/edu/groups'
 const FULL = ['groups:read', 'groups:create', 'groups:update'] as PermissionKey[]
 
 const items = [
-  { id: 'g1', name: 'Утренняя группа', courseId: 'c1' },
-  { id: 'g2', name: 'Вечерняя группа', courseId: 'c1' },
+  { id: 'g1', name: 'Morning group', courseId: 'c1' },
+  { id: 'g2', name: 'Evening group', courseId: 'c1' },
 ]
 
 const world: FakeAnswers = {
   [GROUPS]: { items },
-  '/edu/courses': { items: [{ id: 'c1', name: 'Санскрит с нуля' }] },
+  '/edu/courses': { items: [{ id: 'c1', name: 'Sanskrit from scratch' }] },
 }
 
 const over =
@@ -31,7 +31,7 @@ const over =
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><GroupsPage /></div>',
+    template: '<div class="p-[var(--space-6)]"><GroupsPage /></div>',
   })
 
 const meta: Meta<typeof GroupsPage> = { title: 'Edu/Groups', component: GroupsPage }
@@ -39,18 +39,18 @@ const meta: Meta<typeof GroupsPage> = { title: 'Edu/Groups', component: GroupsPa
 export default meta
 type Story = StoryObj<typeof GroupsPage>
 
-export const WithData: Story = { name: 'Данные', render: over(world) }
+export const WithData: Story = { name: 'Data', render: over(world) }
 
-export const Empty: Story = { name: 'Пусто', render: over({ ...world, [GROUPS]: { items: [] } }) }
+export const Empty: Story = { name: 'Empty', render: over({ ...world, [GROUPS]: { items: [] } }) }
 
-export const Loading: Story = { name: 'Загрузка', render: over({ ...world, [GROUPS]: pending() }) }
+export const Loading: Story = { name: 'Loading', render: over({ ...world, [GROUPS]: pending() }) }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   render: over({ ...world, [GROUPS]: refusal(503, 'Группы сейчас не читаются') }),
 }
 
 export const WithoutRights: Story = {
-  name: 'Без прав',
+  name: 'No permission',
   render: over(world, ['groups:read'] as PermissionKey[]),
 }

@@ -3,24 +3,24 @@ export const pageClasses = [
   'min-h-screen',
   'items-center',
   'justify-center',
-  'bg-[--color-page]',
-  'px-[--space-4]',
+  'bg-[var(--color-page)]',
+  'px-[var(--space-4)]',
 ]
 
 export const panelClasses = [
   'w-full',
   'max-w-[22rem]',
-  'rounded-[--radius-lg]',
+  'rounded-[var(--radius-lg)]',
   'border',
-  'border-[--color-border]',
-  'bg-[--color-surface]',
-  'p-[--space-6]',
-  'shadow-[--shadow-sm]',
+  'border-[var(--color-border)]',
+  'bg-[var(--color-surface)]',
+  'p-[var(--space-6)]',
+  'shadow-[var(--shadow-sm)]',
 ]
 
 export const titleClasses = [
-  'pb-[--space-5]',
-  'text-[length:--text-lg]',
-  'font-[--weight-semibold]',
-  'text-[--color-text]',
+  'pb-[var(--space-5)]',
+  'text-[length:var(--text-lg)]',
+  'font-[var(--weight-semibold)]',
+  'text-[var(--color-text)]',
 ]

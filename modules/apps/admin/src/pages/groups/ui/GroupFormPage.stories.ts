@@ -8,14 +8,14 @@ import { fakeHttpClient, pending, refusal, signInAs } from '@/shared/testing'
 import GroupFormPage from './GroupFormPage.vue'
 
 /**
- * The group form. "Без прав" is absent on purpose: the screen is behind
+ * The group form. "No permission" is absent on purpose: the screen is behind
  * `groups:update`, and a reader without it never reaches it (AC-7).
  */
 const GROUP = '/edu/groups/g1'
 
 const FULL = ['groups:read', 'groups:create', 'groups:update', 'courses:read'] as PermissionKey[]
 
-const courses = { '/edu/courses': { items: [{ id: 'c1', name: 'Санскрит с нуля' }] } }
+const courses = { '/edu/courses': { items: [{ id: 'c1', name: 'Sanskrit from scratch' }] } }
 
 const edit = { route: { name: 'group-edit', params: { groupId: 'g1' } } }
 
@@ -26,7 +26,7 @@ const over = (answers: FakeAnswers) => () => ({
     return {}
   },
   provide: { [httpClientKey as symbol]: fakeHttpClient({ ...courses, ...answers }).client },
-  template: '<div class="p-[--space-6]"><GroupFormPage /></div>',
+  template: '<div class="p-[var(--space-6)]"><GroupFormPage /></div>',
 })
 
 const meta: Meta<typeof GroupFormPage> = { title: 'Edu/GroupForm', component: GroupFormPage }
@@ -35,25 +35,25 @@ export default meta
 type Story = StoryObj<typeof GroupFormPage>
 
 export const WithData: Story = {
-  name: 'Данные',
+  name: 'Data',
   parameters: edit,
-  render: over({ [GROUP]: { id: 'g1', name: 'Утренняя группа', courseId: 'c1' } }),
+  render: over({ [GROUP]: { id: 'g1', name: 'Morning group', courseId: 'c1' } }),
 }
 
 export const Empty: Story = {
-  name: 'Пусто',
+  name: 'Empty',
   parameters: { route: { name: 'group-create' } },
   render: over({}),
 }
 
 export const Loading: Story = {
-  name: 'Загрузка',
+  name: 'Loading',
   parameters: edit,
   render: over({ [GROUP]: pending() }),
 }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   parameters: edit,
   render: over({ [GROUP]: refusal(503, 'Группа сейчас не читается') }),
 }

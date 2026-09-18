@@ -73,12 +73,14 @@
   --color-focus: var(--color-accent-500);
 
   /* ------------------------------------------------------------------ */
-  /*  Type. IBM Plex covers Cyrillic, which Inter's usual pairing does    */
-  /*  not do well, and it does not look like every other generated admin. */
+  /*  Type                                                               */
   /* ------------------------------------------------------------------ */
 
-  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  /* Latin and Cyrillic must come from one file, or fontconfig serves a row of a
+     table in two typefaces. Arial and Helvetica are deliberately absent: they
+     substitute to a Latin-only face and push Cyrillic into another family. */
+  --font-sans: 'Noto Sans', 'Segoe UI', Roboto, 'Liberation Sans', sans-serif;
+  --font-mono: var(--font-sans);
 
   /* Seven steps, base 14px: an admin is read at arm's length, not scrolled. */
   --text-2xs: 0.6875rem; /* 11px — table meta, rarely */
@@ -125,6 +127,13 @@
   --col-text: 24rem; /*   384px — where free text starts to truncate */
 
   --sidebar-width: 15rem;
+  --dialog-width: 28rem;
+  --menu-min-width: 11rem;
+  --toast-width: 22rem;
+  --tooltip-max: 18rem;
+  --search-width: 16rem;
+  --prose-max: 34rem;
+  --dialog-width-lg: 40rem;
   --content-max: 80rem;
 
   /* A form is read down a single column, and a line of text stops being

@@ -2,7 +2,7 @@ export const overlayClasses = ['fixed inset-0 z-[var(--z-dialog)] bg-[var(--colo
 
 export const contentClasses = [
   'fixed left-1/2 top-1/2 z-[var(--z-dialog)] -translate-x-1/2 -translate-y-1/2',
-  'w-[calc(100%-var(--space-6))] max-w-[var(--sidebar-width)]',
+  'w-[calc(100%-var(--space-6))] max-w-[var(--dialog-width)]',
   'flex flex-col gap-[var(--space-3)]',
   'bg-[var(--color-surface)] border border-[var(--color-border)]',
   'rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] p-[var(--space-5)]',

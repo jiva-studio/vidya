@@ -17,13 +17,13 @@ export default meta
 type Story = StoryObj<typeof DashboardPage>
 
 export const WithData: Story = {
-  name: 'Данные',
+  name: 'Data',
   render: () => ({
     components: { DashboardPage },
     setup() {
       signInAs(['*'])
       return {}
     },
-    template: '<div class="p-[--space-6]"><DashboardPage /></div>',
+    template: '<div class="p-[var(--space-6)]"><DashboardPage /></div>',
   }),
 }

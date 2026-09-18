@@ -11,7 +11,10 @@ export const boxClasses = [
   'data-[state=checked]:border-[var(--color-primary)]',
   'data-[state=indeterminate]:bg-[var(--color-primary)]',
   'data-[state=indeterminate]:border-[var(--color-primary)]',
-  'disabled:opacity-50',
+  'disabled:cursor-not-allowed disabled:border-[var(--color-border)]',
+  'disabled:bg-[var(--color-surface-sunken)]',
+  'disabled:data-[state=checked]:bg-[var(--color-neutral-400)]',
+  'disabled:data-[state=checked]:border-[var(--color-neutral-400)]',
 ]
 
 export const textClasses = ['flex flex-col gap-[var(--space-1)]']
@@ -19,6 +22,7 @@ export const textClasses = ['flex flex-col gap-[var(--space-1)]']
 export const labelClasses = [
   'text-[length:var(--text-base)] leading-[var(--leading-tight)]',
   'text-[var(--color-text)] cursor-pointer',
+  'peer-disabled:text-[var(--color-text-muted)] peer-disabled:cursor-not-allowed',
 ]
 
 export const descriptionClasses = [

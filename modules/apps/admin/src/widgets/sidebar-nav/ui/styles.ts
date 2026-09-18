@@ -1,37 +1,37 @@
 export const navClasses = [
   'flex',
   'flex-col',
-  'gap-[--space-5]',
-  'px-[--space-3]',
-  'py-[--space-4]',
+  'gap-[var(--space-5)]',
+  'px-[var(--space-3)]',
+  'py-[var(--space-4)]',
 ]
 
 export const groupLabelClasses = [
-  'px-[--space-2]',
-  'pb-[--space-2]',
-  'text-[length:--text-2xs]',
-  'font-[--weight-semibold]',
+  'px-[var(--space-2)]',
+  'pb-[var(--space-2)]',
+  'text-[length:var(--text-2xs)]',
+  'font-[var(--weight-semibold)]',
   'uppercase',
   'tracking-wide',
-  'text-[--color-text-muted]',
+  'text-[var(--color-text-muted)]',
 ]
 
 export const itemClasses = [
   'flex',
-  'h-[--control-md]',
+  'h-[var(--control-md)]',
   'items-center',
-  'gap-[--space-2]',
-  'rounded-[--radius-md]',
-  'px-[--space-2]',
-  'text-[length:--text-base]',
-  'text-[--color-text]',
+  'gap-[var(--space-2)]',
+  'rounded-[var(--radius-md)]',
+  'px-[var(--space-2)]',
+  'text-[length:var(--text-base)]',
+  'text-[var(--color-text)]',
   'transition-colors',
-  'duration-[--duration-fast]',
-  'hover:bg-[--color-surface-hover]',
+  'duration-[var(--duration-fast)]',
+  'hover:bg-[var(--color-surface-hover)]',
 ]
 
 export const activeItemClasses = [
-  'bg-[--color-surface-hover]',
-  'font-[--weight-medium]',
-  'text-[--color-primary]',
+  'bg-[var(--color-surface-hover)]',
+  'font-[var(--weight-medium)]',
+  'text-[var(--color-primary)]',
 ]

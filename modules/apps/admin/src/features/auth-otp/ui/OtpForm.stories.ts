@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
+import { userEvent, within } from 'storybook/test'
 
 import { httpClientKey, HttpError } from '@/shared/api'
 import { addMessages } from '@/shared/i18n'
@@ -19,7 +20,7 @@ const SIGN_IN = '/auth/signin/otp'
 const over = (answers: Record<string, unknown>) => () => ({
   components: { OtpForm },
   provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-  template: '<div class="max-w-[22rem] p-[--space-6]"><OtpForm /></div>',
+  template: '<div class="max-w-[22rem] p-[var(--space-6)]"><OtpForm /></div>',
 })
 
 const meta: Meta<typeof OtpForm> = { title: 'Auth/OtpForm', component: OtpForm }
@@ -27,22 +28,49 @@ const meta: Meta<typeof OtpForm> = { title: 'Auth/OtpForm', component: OtpForm }
 export default meta
 type Story = StoryObj<typeof OtpForm>
 
+/**
+ * Every state past the first one is reached by using the form, so a story that
+ * only wires the transport shows the first screen five times. These ask for the
+ * code the way a person does.
+ */
+const askForCode = async (canvasElement: HTMLElement) => {
+  const form = within(canvasElement)
+  await userEvent.type(form.getByLabelText(/почта|mail/i), 'anna@example.com')
+  await userEvent.click(form.getByRole('button', { name: /код|code/i }))
+}
+
+const enterCode = async (canvasElement: HTMLElement) => {
+  await askForCode(canvasElement)
+  const form = within(canvasElement)
+  await userEvent.type(await form.findByLabelText(/код|code/i), '123456')
+  await userEvent.click(form.getByRole('button', { name: /войти|sign in/i }))
+}
+
 export const AskingForTheAddress: Story = {
   render: over({ [OTP]: { success: true }, [SIGN_IN]: {} }),
 }
 
+export const WaitingForTheCode: Story = {
+  render: over({ [OTP]: { success: true }, [SIGN_IN]: {} }),
+  play: ({ canvasElement }) => askForCode(canvasElement),
+}
+
 export const Sending: Story = {
   render: over({ [OTP]: pending() }),
+  play: ({ canvasElement }) => askForCode(canvasElement),
 }
 
 export const CodeStillValid: Story = {
   render: over({ [OTP]: new HttpError(429, OTP, { message: 'still valid' }) }),
+  play: ({ canvasElement }) => askForCode(canvasElement),
 }
 
 export const WrongCode: Story = {
   render: over({ [OTP]: { success: true }, [SIGN_IN]: new HttpError(401, SIGN_IN) }),
+  play: ({ canvasElement }) => enterCode(canvasElement),
 }
 
 export const CouldNotSend: Story = {
   render: over({ [OTP]: new HttpError(500, OTP, { message: 'Mailer is down' }) }),
+  play: ({ canvasElement }) => askForCode(canvasElement),
 }

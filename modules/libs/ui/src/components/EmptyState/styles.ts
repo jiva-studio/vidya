@@ -11,7 +11,7 @@ export const titleClasses = [
 ]
 
 export const descriptionClasses = [
-  'max-w-[var(--sidebar-width)] text-[length:var(--text-sm)]',
+  'max-w-[var(--prose-max)] text-[length:var(--text-sm)]',
   'leading-[var(--leading-normal)] text-[var(--color-text-muted)]',
 ]
 

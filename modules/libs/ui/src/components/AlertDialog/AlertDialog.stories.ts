@@ -15,7 +15,10 @@ export default { title: 'Overlay/AlertDialog', component: AlertDialog }
 
 export const Closed = {
   render,
-  args: { title: 'Delete this section?', description: 'Answers to it stop opening.' },
+  args: {
+    title: 'Delete this section?',
+    description: 'Answers written in it will no longer open.',
+  },
 }
 
 export const Destructive = {
@@ -24,7 +27,8 @@ export const Destructive = {
     open: true,
     destructive: true,
     title: 'Delete this section?',
-    description: 'Twelve students answered inside it. Their answers stop opening.',
+    description:
+      'Twelve students have answered in this section. Their answers will no longer open.',
     confirmLabel: 'Delete section',
   },
 }
@@ -36,7 +40,8 @@ export const Busy = {
     busy: true,
     destructive: true,
     title: 'Delete this section?',
-    description: 'Twelve students answered inside it. Their answers stop opening.',
+    description:
+      'Twelve students have answered in this section. Their answers will no longer open.',
     confirmLabel: 'Delete section',
   },
 }

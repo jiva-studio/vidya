@@ -11,6 +11,7 @@ action-retry = Try again
 action-sign-out = Sign out
 
 state-loading = Loading…
+state-error-title = Could not load
 state-error = That did not work. Try again.
 
 error-offline = No internet connection. Check it and try again.
@@ -39,3 +40,4 @@ page-forbidden-back = Back to the dashboard
 page-not-found-title = Page not found
 page-not-found-body = Check the address — it may have a typo.
 page-not-found-back = Back to the dashboard
+state-nothing-matches = Nothing found

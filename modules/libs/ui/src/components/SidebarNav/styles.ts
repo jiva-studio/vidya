@@ -1,6 +1,6 @@
 export const navClasses = [
   'flex-1 min-h-0 overflow-y-auto',
-  'flex flex-col gap-[var(--space-5)] p-[var(--space-3)]',
+  'flex flex-col gap-[var(--space-5)] px-[var(--space-2)] py-[var(--space-3)]',
 ]
 
 export const groupClasses = ['flex flex-col gap-[var(--space-1)]']

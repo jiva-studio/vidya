@@ -11,7 +11,10 @@ const options = [
 ]
 
 function mountCombobox() {
-  return mount(Combobox, { props: { options }, attachTo: document.body })
+  return mount(Combobox, {
+    props: { options, emptyLabel: 'Nothing found' },
+    attachTo: document.body,
+  })
 }
 
 async function settle() {
@@ -62,6 +65,6 @@ describe('Combobox', () => {
     await settle()
 
     expect(wrapper.findAll('[role="option"]')).toHaveLength(0)
-    expect(wrapper.text()).toContain('Nothing matches that search.')
+    expect(wrapper.text()).toContain('Nothing found')
   })
 })

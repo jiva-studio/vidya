@@ -16,14 +16,17 @@ export const anchorVariants = cva(
 )
 
 export const inputClasses = [
-  'w-full min-w-0 bg-transparent outline-none',
+  // The anchor draws the focus ring for the whole control; without this the
+  // global :focus-visible rule draws a second one around the field inside it.
+  'w-full min-w-0 bg-transparent outline-none focus-visible:shadow-none',
   'text-[length:var(--text-base)] leading-[var(--leading-normal)]',
   'text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]',
   'disabled:opacity-50',
 ]
 
 export const contentClasses = [
-  'w-full mt-[var(--space-1)] max-h-[var(--space-8)] overflow-y-auto',
+  'w-[var(--reka-combobox-trigger-width)] max-h-[14rem] overflow-y-auto',
+  'z-[var(--z-drawer)]',
   'bg-[var(--color-surface)] border border-[var(--color-border)]',
   'rounded-[var(--radius-md)] shadow-[var(--shadow-md)] p-[var(--space-1)]',
 ]

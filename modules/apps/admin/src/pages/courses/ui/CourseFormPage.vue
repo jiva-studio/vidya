@@ -63,6 +63,7 @@ function idFromRoute(): CourseId | undefined {
       <Skeleton shape="block" :lines="4" />
     </div>
     <ErrorState
+      :title="$t('state-error-title')"
       v-else-if="loadFailed"
       :description="$t(form.error.value ?? 'course-load-failed')"
       :retry-label="$t('action-retry')"

@@ -53,8 +53,9 @@ function keyOf(row: TableRowData, index: number): string {
 <template>
   <ErrorState
     v-if="props.error"
-    :description="props.error"
-    :retry-label="props.retryLabel"
+    :title="props.errorTitle ?? props.error"
+    :description="props.errorTitle ? props.error : undefined"
+    :retry-label="props.retryLabel ?? ''"
     :class="props.class"
     @retry="onRetry"
   />

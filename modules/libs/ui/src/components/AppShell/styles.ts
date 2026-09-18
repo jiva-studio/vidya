@@ -11,12 +11,12 @@ export const mainClasses = ['flex-1 min-w-0 flex flex-col']
 export const headerClasses = [
   'sticky top-0 z-[var(--z-sticky)]',
   'flex items-center gap-[var(--space-3)]',
-  'h-[var(--space-7)] px-[var(--space-5)]',
+  'h-[var(--space-7)] px-[var(--space-6)]',
   'bg-[var(--color-surface)] border-b border-[var(--color-border)]',
 ]
 
 export const contentClasses = [
-  'flex-1 w-full max-w-[var(--content-max)] mx-auto',
-  'px-[var(--space-5)] py-[var(--space-5)]',
+  'flex-1 w-full max-w-[var(--content-max)]',
+  'px-[var(--space-6)] py-[var(--space-6)]',
   'flex flex-col gap-[var(--space-5)]',
 ]

@@ -33,8 +33,8 @@ const world: FakeAnswers = {
   [`${ENROLLMENTS}/e2`]: member('e2', 'u2'),
   '/edu/users': {
     items: [
-      { id: 'u1', name: 'Аня Иванова' },
-      { id: 'u2', name: 'Борис Петров' },
+      { id: 'u1', name: 'Anya Ivanova' },
+      { id: 'u2', name: 'Boris Petrov' },
     ],
   },
 }
@@ -48,7 +48,7 @@ const over =
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><GroupMembersPage /></div>',
+    template: '<div class="p-[var(--space-6)]"><GroupMembersPage /></div>',
   })
 
 const meta: Meta<typeof GroupMembersPage> = {
@@ -59,28 +59,28 @@ const meta: Meta<typeof GroupMembersPage> = {
 export default meta
 type Story = StoryObj<typeof GroupMembersPage>
 
-export const WithData: Story = { name: 'Данные', parameters: route, render: over(world) }
+export const WithData: Story = { name: 'Data', parameters: route, render: over(world) }
 
 export const Empty: Story = {
-  name: 'Пусто',
+  name: 'Empty',
   parameters: route,
   render: over({ ...world, [ENROLLMENTS]: { items: [] } }),
 }
 
 export const Loading: Story = {
-  name: 'Загрузка',
+  name: 'Loading',
   parameters: route,
   render: over({ ...world, [ENROLLMENTS]: pending() }),
 }
 
 export const Failed: Story = {
-  name: 'Ошибка',
+  name: 'Error',
   parameters: route,
   render: over({ ...world, [ENROLLMENTS]: refusal(503, 'Состав группы сейчас не читается') }),
 }
 
 export const WithoutRights: Story = {
-  name: 'Без прав',
+  name: 'No permission',
   parameters: route,
   render: over({ ...world, '/edu/users': refusal(403, 'Forbidden') }, [
     'groups:read',
