@@ -2,16 +2,10 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import type { PermissionKey } from '@vidya/domain'
 
 import { httpClientKey } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
 import type { FakeAnswers } from '@/shared/testing'
-import { fakeHttpClient, pending, refusal } from '@/shared/testing'
+import { fakeHttpClient, pending, refusal, signInAs } from '@/shared/testing'
 
-import { messages } from '../i18n'
 import SchoolFormPage from './SchoolFormPage.vue'
-import { installStoryRouter, signInWith } from './storyHarness'
-
-addMessages(messages)
-installStoryRouter()
 
 const SCHOOL = '/edu/schools/school-1'
 
@@ -22,7 +16,7 @@ const over =
   () => ({
     components: { SchoolFormPage },
     setup() {
-      signInWith(permissions)
+      signInAs(permissions)
       return { props }
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },

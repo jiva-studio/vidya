@@ -3,16 +3,9 @@ import type { PermissionKey } from '@vidya/domain'
 import { RouterView } from 'vue-router'
 
 import { httpClientKey } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
 import type { FakeAnswers } from '@/shared/testing'
-import { fakeHttpClient, pending, refusal } from '@/shared/testing'
+import { fakeHttpClient, pending, refusal, signInAs } from '@/shared/testing'
 import { LessonEditorView } from '@/widgets/lesson-editor'
-
-import { messages } from '../i18n'
-import { installStoryRouter, signInWith } from './storyHarness'
-
-addMessages(messages)
-installStoryRouter()
 
 const VERSIONS = '/edu/lessons/l1/versions'
 
@@ -23,7 +16,7 @@ const over =
   () => ({
     components: { RouterView },
     setup() {
-      signInWith(permissions)
+      signInAs(permissions)
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },

@@ -2,16 +2,10 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import type { PermissionKey } from '@vidya/domain'
 
 import { httpClientKey } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
 import type { FakeAnswers } from '@/shared/testing'
-import { fakeHttpClient, pending, refusal } from '@/shared/testing'
+import { fakeHttpClient, pending, refusal, signInAs } from '@/shared/testing'
 
-import { messages } from '../i18n'
-import { installStoryRouter, signInWith } from './storyHarness'
 import UserCardPage from './UserCardPage.vue'
-
-addMessages(messages)
-installStoryRouter()
 
 const USER = '/edu/users/user-1'
 const USER_ROLES = '/edu/users/user-1/roles'
@@ -25,7 +19,7 @@ const over =
   () => ({
     components: { UserCardPage },
     setup() {
-      signInWith(permissions)
+      signInAs(permissions)
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
