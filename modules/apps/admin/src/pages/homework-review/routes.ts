@@ -3,13 +3,13 @@ import type { RouteRecordRaw } from 'vue-router'
 /**
  * Routes for the homework review screen. Owned by T4.
  *
- * An address for one work, so a link can point at it. It opens the same
- * workplace with that work already selected rather than a screen of its own:
- * deciding on it and carrying on with the queue is the same job.
+ * One address for one work, with room to read it and decide on it. "Next"
+ * moves to the next address rather than to another state of this one, so every
+ * work a reviewer passes through can be linked to.
  */
 export const routes: RouteRecordRaw[] = [
   {
-    path: '/homework/:id',
+    path: '/s/:schoolId/homework/:id',
     name: 'homework-review',
     props: true,
     component: () => import('./ui/HomeworkReviewPage.vue'),

@@ -8,7 +8,7 @@ import type { RouteRecordRaw } from 'vue-router'
  */
 export const routes: RouteRecordRaw[] = [
   {
-    path: '/homework',
+    path: '/s/:schoolId/homework',
     name: 'homework-queue',
     component: () => import('./ui/HomeworkQueuePage.vue'),
     meta: { permission: 'homework:read', breadcrumbs: ['nav-homework-queue'] },

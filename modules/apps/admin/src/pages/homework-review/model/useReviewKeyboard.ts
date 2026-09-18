@@ -1,29 +1,29 @@
 import { onBeforeUnmount, onMounted } from 'vue'
 
-/** What each key does. The pane decides what the words mean. */
-export interface QueueKeyHandlers {
-  next: () => void
-  previous: () => void
+/** What each key does. The screen decides what the words mean. */
+export interface ReviewKeyHandlers {
   accept: () => void
   returnWork: () => void
+  next: () => void
 }
 
 const EDITABLE = ['INPUT', 'TEXTAREA', 'SELECT']
 
 /**
- * The four keys that make the queue a workplace rather than a list of links.
+ * The keys that make the review screen a workplace rather than a form.
  *
- * `j` and `k` move, `a` accepts and `r` returns, exactly as they read in the
- * hint under the work. Typing a grade must not decide anything, so a key
- * pressed inside a field is left to the field, and a key held with a modifier
- * belongs to the browser.
+ * `j` moves on as it did when the list and the work shared a screen, and `n`
+ * does the same for anyone who reads the tooltip rather than remembering it.
+ *
+ * Typing a mark must not decide anything, so a key pressed inside a field is
+ * left to the field, and a key held with a modifier belongs to the browser.
  */
-export const useQueueKeyboard = (handlers: QueueKeyHandlers): void => {
+export const useReviewKeyboard = (handlers: ReviewKeyHandlers): void => {
   const actions: Record<string, () => void> = {
-    j: handlers.next,
-    k: handlers.previous,
     a: handlers.accept,
     r: handlers.returnWork,
+    j: handlers.next,
+    n: handlers.next,
   }
 
   const onKeydown = (event: KeyboardEvent): void => {

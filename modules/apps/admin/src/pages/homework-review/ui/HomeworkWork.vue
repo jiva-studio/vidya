@@ -2,40 +2,39 @@
 import { HomeworkStatusBadge } from '@/entities/homework'
 import { formatDateTime } from '@/shared/lib'
 
-import type { HomeworkAnswerProps } from '../types'
 import { answerClasses, metaClasses, titleClasses, workClasses } from './styles'
 import SupersededVersionNotice from './SupersededVersionNotice.vue'
+import type { HomeworkWorkProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<HomeworkAnswerProps>(), {
-  row: undefined,
-  reviewerName: undefined,
-  answeredLessonId: undefined,
-})
+const props = defineProps<HomeworkWorkProps>()
 </script>
 
 <template>
   <article :class="workClasses">
     <header :class="metaClasses">
       <span :class="titleClasses">
-        {{ props.row?.studentName ?? $t('homework-student-unknown') }}
+        {{ props.context.studentName ?? $t('homework-student-unknown') }}
       </span>
       <HomeworkStatusBadge :status="props.work.status" />
-      <span v-if="props.row?.courseName">{{ props.row.courseName }}</span>
-      <span v-if="props.row?.groupName">{{ props.row.groupName }}</span>
+      <span v-if="props.context.courseName">{{ props.context.courseName }}</span>
+      <span v-if="props.context.groupName">{{ props.context.groupName }}</span>
+      <span v-if="props.context.lessonTitle">
+        {{ $t('homework-lesson', { title: props.context.lessonTitle }) }}
+      </span>
       <span>{{ $t('homework-submitted', { at: formatDateTime(props.work.submittedAt) }) }}</span>
     </header>
     <SupersededVersionNotice
       v-if="props.work.answeredSupersededVersion"
       :lesson-version-id="props.work.lessonVersionId"
-      :lesson-id="props.answeredLessonId"
+      :lesson-id="props.context.lessonId"
     />
     <p :class="answerClasses">{{ props.work.text }}</p>
     <p v-if="props.work.reviewedAt" :class="metaClasses">
       {{
         $t('homework-reviewed-by', {
-          who: props.reviewerName ?? $t('homework-student-unknown'),
+          who: props.context.reviewerName ?? $t('homework-student-unknown'),
           at: formatDateTime(props.work.reviewedAt),
         })
       }}

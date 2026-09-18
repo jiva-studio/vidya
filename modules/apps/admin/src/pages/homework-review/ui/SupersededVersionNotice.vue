@@ -2,8 +2,8 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import type { SupersededVersionNoticeProps } from '../types'
 import { linkClasses, noticeClasses } from './styles'
+import type { SupersededVersionNoticeProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -12,7 +12,7 @@ const props = defineProps<SupersededVersionNoticeProps>()
 /* --------------------------------- State ---------------------------------- */
 
 // A version is read through its lesson, and a piece of work names only the
-// version, so the lesson is resolved by the pane. Until it arrives — or if it
+// version, so the lesson is resolved by the screen. Until it arrives — or if it
 // never does — the notice still says what happened, without a link that would
 // lead nowhere.
 const linked = computed(() => props.lessonId !== undefined)
