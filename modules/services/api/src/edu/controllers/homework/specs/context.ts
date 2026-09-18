@@ -12,12 +12,17 @@ import {
 import * as domain from '@vidya/domain'
 
 const SECTION_ID = domain.asId<domain.SectionId>('11111111-1111-4111-8111-111111111111')
+const BLOCK_ID = domain.asId<domain.BlockId>('22222222-2222-4222-8222-222222222222')
 
 export type Context = {
-  schoolId: string
-  sectionId: string
+  schoolId: domain.SchoolId
+  sectionId: domain.SectionId
+  blockId: domain.BlockId
   publishedVersionId: domain.LessonVersionId
-  enrollmentId: string
+  enrollmentId: domain.EnrollmentId
+
+  /** The request that was never accepted, so it grants nothing. */
+  pendingEnrollmentId: domain.EnrollmentId
   tokens: {
     /** Accepted on the course. */
     student: string
@@ -59,7 +64,14 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
     status: 'published',
     publishedAt: new Date(),
     content: {
-      sections: [{ id: SECTION_ID, title: 'Introduction', assessment: 'teacher', blocks: [] }],
+      sections: [
+        {
+          id: SECTION_ID,
+          title: 'Introduction',
+          assessment: 'teacher',
+          blocks: [{ id: BLOCK_ID, type: 'text', content: 'Read this' }],
+        },
+      ],
     },
   })
 
@@ -75,7 +87,7 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
     status: 'accepted',
   })
 
-  await enrollments.create({
+  const pending = await enrollments.create({
     courseId: course.id,
     studentId: pendingStudent.id,
     schoolId: school.id,
@@ -88,8 +100,10 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
   return {
     schoolId: school.id,
     sectionId: SECTION_ID,
+    blockId: BLOCK_ID,
     publishedVersionId: version.id,
     enrollmentId: enrollment.id,
+    pendingEnrollmentId: pending.id,
     tokens: {
       student: await token(student.id, []),
       pendingStudent: await token(pendingStudent.id, []),
