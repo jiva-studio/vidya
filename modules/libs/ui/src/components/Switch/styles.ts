@@ -16,7 +16,7 @@ export const thumbClasses = [
   'block size-[var(--space-3)] rounded-[var(--radius-full)]',
   'bg-[var(--color-surface)] shadow-[var(--shadow-sm)]',
   'transition-transform duration-[var(--duration-fast)] ease-[var(--ease)]',
-  'data-[state=checked]:translate-x-[var(--space-2)]',
+  'data-[state=checked]:translate-x-[var(--space-4)]',
 ]
 
 export const textClasses = ['flex flex-col gap-[var(--space-1)]']
