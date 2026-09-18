@@ -1,6 +1,7 @@
+import path from 'node:path'
+
 import tailwind from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
-import path from 'node:path'
 import { defineConfig } from 'vite'
 
 const port = Number(process.env.VIDYA_ADMIN_PORT || 7811)

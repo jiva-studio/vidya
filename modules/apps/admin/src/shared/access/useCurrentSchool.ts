@@ -1,5 +1,5 @@
-import { createGlobalState } from '@vueuse/core'
 import type { SchoolId } from '@vidya/domain'
+import { createGlobalState } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 
 import { useSession } from '../session'
@@ -24,6 +24,18 @@ export const useCurrentSchool = createGlobalState(() => {
   )
 
   const hasChoice = computed(() => schoolIds.value.length > 1)
+
+  // A new token is a new set of grants, and possibly a different person. The
+  // school picked under the old one is not theirs to inherit.
+  watch(
+    () => schoolIds.value.join(','),
+    () => {
+      selected.value = undefined
+    },
+    // Synchronously, so that signing in and then choosing a school in the same
+    // tick leaves the choice standing rather than having it wiped a tick later.
+    { flush: 'sync' },
+  )
 
   // Every list on screen belongs to the school it was loaded for. Bumping this
   // is how a screen learns its data is stale without each of them subscribing

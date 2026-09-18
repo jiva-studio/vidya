@@ -20,6 +20,7 @@ error-not-found = Такой страницы нет.
 school-switcher-label = Школа
 school-unnamed = Школа { $id }
 
+nav-group-work = Работа
 nav-dashboard = Главная
 
 page-dashboard-title = Главная

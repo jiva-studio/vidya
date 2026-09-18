@@ -1,5 +1,5 @@
-import { HttpError } from '../api'
 import type { HttpClient, HttpQuery } from '../api'
+import { HttpError } from '../api'
 import type { FakeAnswer, FakeAnswers, RecordedCall } from './types'
 
 const matches = (path: string, key: string): boolean => {

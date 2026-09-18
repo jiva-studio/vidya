@@ -21,6 +21,7 @@ error-not-found = This page does not exist.
 school-switcher-label = School
 school-unnamed = School { $id }
 
+nav-group-work = Work
 nav-dashboard = Dashboard
 
 page-dashboard-title = Dashboard

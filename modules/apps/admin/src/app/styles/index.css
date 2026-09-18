@@ -1,0 +1,33 @@
+/*
+ * The admin's own stylesheet.
+ *
+ * The design tokens come from @vidya/ui and are read here, never redefined: a
+ * second copy of a colour is how two screens end up with two greys. Binding
+ * Tailwind's utilities to those tokens belongs to that package; this file only
+ * sets what the document itself needs.
+ */
+
+@import '@ui/styles/tokens.css';
+@import 'tailwindcss';
+
+@layer base {
+  html,
+  body,
+  #app {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-page);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+}

@@ -17,3 +17,15 @@ export interface RecordedCall {
 export type FakeAnswer = unknown | Error | ((call: RecordedCall) => unknown)
 
 export type FakeAnswers = Record<string, FakeAnswer>
+
+/** The mounting options the tracks actually use; anything else belongs in a test. */
+export interface MountOptions {
+  readonly props?: Record<string, unknown>
+  readonly slots?: Record<string, unknown>
+  readonly attachTo?: Element | string
+  readonly global?: {
+    readonly plugins?: unknown[]
+    readonly stubs?: Record<string, unknown>
+    readonly provide?: Record<string | symbol, unknown>
+  }
+}

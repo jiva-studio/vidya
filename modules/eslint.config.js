@@ -23,6 +23,28 @@ const nonDeterministicEnvironment = [
   },
 ]
 
+// Feature-Sliced Design, as import rules. `app` is above every layer, so no
+// layer may reach for it; each layer below then names the ones above itself.
+const upward = (layers) => [
+  {
+    group: ['@/app', '@/app/*'],
+    message:
+      'The composition root sits above every layer. Move what you need down into shared/, or take it as a prop.',
+  },
+  ...layers.map((layer) => ({
+    group: [`@/${layer}`, `@/${layer}/*`],
+    message: `A lower layer cannot import ${layer}/. Imports go down, never up.`,
+  })),
+]
+
+// Within a layer, a slice is reached through its public index.ts and no deeper.
+const sidestep = [
+  {
+    group: ['@/pages/*/*', '@/widgets/*/*', '@/features/*/*', '@/entities/*/*'],
+    message: 'Import a slice through its index.ts, not past it.',
+  },
+]
+
 export default tseslint.config(
   {
     ignores: [
@@ -68,7 +90,6 @@ export default tseslint.config(
 
       // An empty catch silently swallows a failure; say why or handle it.
       'no-empty': ['error', { allowEmptyCatch: false }],
-
 
       // Cross-package imports go through the package's public entry point.
       // A relative path that climbs out of a package bypasses it, and with it
@@ -201,6 +222,53 @@ export default tseslint.config(
       'vue/custom-event-name-casing': ['error', 'kebab-case'],
       'vue/attribute-hyphenation': ['error', 'always'],
       'max-lines': ['error', { max: 350, skipBlankLines: true, skipComments: true }],
+    },
+  },
+
+  /* ------------------------- Feature-Sliced Design ------------------------- */
+
+  {
+    // Each layer, and what it is forbidden to reach for. Listed one layer at a
+    // time because a single pattern list cannot say "pages may see widgets but
+    // widgets may not see pages".
+    files: ['apps/admin/src/pages/**/*.{ts,vue}'],
+    rules: { 'no-restricted-imports': ['error', { patterns: [...upward([]), ...sidestep] }] },
+  },
+
+  {
+    files: ['apps/admin/src/widgets/**/*.{ts,vue}'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [...upward(['pages']), ...sidestep] }],
+    },
+  },
+
+  {
+    files: ['apps/admin/src/features/**/*.{ts,vue}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { patterns: [...upward(['pages', 'widgets']), ...sidestep] },
+      ],
+    },
+  },
+
+  {
+    files: ['apps/admin/src/entities/**/*.{ts,vue}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { patterns: [...upward(['pages', 'widgets', 'features']), ...sidestep] },
+      ],
+    },
+  },
+
+  {
+    files: ['apps/admin/src/shared/**/*.{ts,vue}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { patterns: upward(['pages', 'widgets', 'features', 'entities']) },
+      ],
     },
   },
 

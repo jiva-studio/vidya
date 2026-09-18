@@ -1,5 +1,5 @@
 export { HttpError, isTooManyRequests, isUnauthorized, OfflineError } from './errors'
 export { FetchHttpClient } from './fetchHttpClient'
 export { refreshOn401 } from './refreshOn401'
-export { resetApi, useApi } from './useApi'
 export type * from './types'
+export { resetApi, useApi } from './useApi'
