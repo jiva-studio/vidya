@@ -1,3 +1,5 @@
+export * from './dto'
+export { SyncRequestException } from './errors'
 export * from './journal'
 export * from './services'
 export { SyncModule } from './sync.module'
