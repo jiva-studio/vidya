@@ -1,1 +1,1 @@
-export { useSchoolOptions } from './useSchoolOptions'
+export { resetSchoolNames, useSchoolOptions } from './useSchoolOptions'

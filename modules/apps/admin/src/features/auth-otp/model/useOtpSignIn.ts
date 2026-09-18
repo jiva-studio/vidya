@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-import { HttpError, isTooManyRequests, OfflineError, useApi } from '@/shared/api'
+import { HttpError, isTooManyRequests, OfflineError, useHttp } from '@/shared/api'
 import { useSession } from '@/shared/session'
 
 import { requestCode, signInWithCode } from '../api'
@@ -21,7 +21,7 @@ const reasonFor = (error: unknown): string => {
  * six, and clearing the box makes them read the email again for no reason.
  */
 export const useOtpSignIn = () => {
-  const http = useApi()
+  const http = useHttp()
   const session = useSession()
   const countdown = useResendCountdown()
 

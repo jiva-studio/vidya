@@ -2,9 +2,9 @@ import type { SchoolId } from '@vidya/domain'
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { resetSchoolNames } from '@/features/switch-school'
 import { useCurrentSchool } from '@/shared/access'
-import * as api from '@/shared/api'
-import { resetApi } from '@/shared/api'
+import { httpClientKey, HttpError, resetApi } from '@/shared/api'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
 
@@ -31,8 +31,10 @@ const signIn = (ids: SchoolId[]) =>
 
 const mountSwitcher = (answers: Record<string, unknown>) => {
   const transport = fakeHttpClient(answers)
-  vi.spyOn(api, 'useApi').mockReturnValue(transport.client)
-  return { transport, switcher: mountWithApp(SchoolSwitcher) }
+  const switcher = mountWithApp(SchoolSwitcher, {
+    global: { provide: { [httpClientKey as symbol]: transport.client } },
+  })
+  return { transport, switcher }
 }
 
 const namesAnswer = {
@@ -49,6 +51,7 @@ describe('SchoolSwitcher', () => {
     vi.restoreAllMocks()
     localStorage.clear()
     resetApi()
+    resetSchoolNames()
     useSession().end()
   })
 
@@ -105,7 +108,7 @@ describe('SchoolSwitcher', () => {
   it('falls back to the id when the operator may not read the school list', async () => {
     signIn([SCHOOL_A, SCHOOL_B])
     const { switcher } = mountSwitcher({
-      [SCHOOLS]: new api.HttpError(403, SCHOOLS, { message: 'Forbidden' }),
+      [SCHOOLS]: new HttpError(403, SCHOOLS, { message: 'Forbidden' }),
     })
     await flushPromises()
 
@@ -117,7 +120,9 @@ describe('SchoolSwitcher', () => {
     const { transport, switcher } = mountSwitcher(namesAnswer)
     await flushPromises()
 
-    mountWithApp(SchoolSwitcher)
+    mountWithApp(SchoolSwitcher, {
+      global: { provide: { [httpClientKey as symbol]: transport.client } },
+    })
     await flushPromises()
 
     expect(transport.callsTo(SCHOOLS)).toHaveLength(1)

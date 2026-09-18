@@ -1,2 +1,2 @@
-export { useSchoolOptions } from './model'
+export { resetSchoolNames, useSchoolOptions } from './model'
 export type * from './types'

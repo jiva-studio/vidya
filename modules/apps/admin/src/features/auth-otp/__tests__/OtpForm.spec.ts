@@ -1,8 +1,7 @@
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HttpError, resetApi } from '@/shared/api'
-import * as api from '@/shared/api'
+import { httpClientKey, HttpError, resetApi } from '@/shared/api'
 import { addMessages } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
@@ -20,8 +19,10 @@ const tokens = {
 
 const mountForm = (answers: Record<string, unknown>) => {
   const transport = fakeHttpClient(answers)
-  vi.spyOn(api, 'useApi').mockReturnValue(transport.client)
-  return { transport, form: mountWithApp(OtpForm) }
+  const form = mountWithApp(OtpForm, {
+    global: { provide: { [httpClientKey as symbol]: transport.client } },
+  })
+  return { transport, form }
 }
 
 const typeEmail = async (form: ReturnType<typeof mountWithApp>, value: string) => {
