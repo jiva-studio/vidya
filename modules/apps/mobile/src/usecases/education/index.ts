@@ -1,5 +1,4 @@
 export * from './courses'
 export * from './enrollments'
-export * from './groups'
 export * from './homework'
 export * from './lessons'

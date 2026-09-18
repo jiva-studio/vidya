@@ -45,7 +45,7 @@ async function onEnrollButtonClicked() {
   error.value = undefined
   try {
     await education.requestEnrollment(api, props.courseId)
-    router.navigate({ name: 'enroll-completed' }, 'none', 'pop')
+    router.navigate({ name: 'enroll-completed', params: { id: props.courseId } }, 'none', 'pop')
   } catch {
     error.value = fluent.$t('enroll-failed')
   } finally {

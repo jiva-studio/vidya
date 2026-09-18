@@ -61,6 +61,6 @@ function onStatusButtonClicked() {
 }
 
 function onLessonClicked(lessonId: LessonId) {
-  router.push({ name: 'lesson', params: { lessonId } })
+  router.push({ name: 'lesson', params: { enrollmentId: props.enrollmentId, lessonId } })
 }
 </script>
