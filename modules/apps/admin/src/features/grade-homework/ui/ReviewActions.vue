@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { AlertDialog, Button, FormField } from '@vidya/ui'
+import { AlertDialog, Button, FormField, Tooltip } from '@vidya/ui'
 import { computed } from 'vue'
 
+import { isGradeGiven } from '../model'
 import type { ReviewActionsEmits, ReviewActionsProps } from '../types'
-import GradeInput from './GradeInput.vue'
-import { actionsClasses, errorClasses, gradeClasses, hintClasses } from './styles'
+import GradePicker from './GradePicker.vue'
+import { actionsClasses, errorClasses } from './styles'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -22,7 +23,7 @@ const emit = defineEmits<ReviewActionsEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
-const gradeGiven = computed(() => props.grade !== undefined && props.grade >= 0)
+const gradeGiven = computed(() => isGradeGiven(props.grade))
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -50,21 +51,29 @@ function onReturnConfirmed() {
 
 <template>
   <div v-if="props.canGrade" :class="actionsClasses">
-    <FormField v-slot="field" :class="gradeClasses" :label="$t('homework-grade')" required>
-      <GradeInput
+    <FormField
+      v-slot="field"
+      :label="$t('homework-grade')"
+      :hint="$t('homework-grade-range')"
+      required
+    >
+      <GradePicker
         :id="field.id"
         :model-value="props.grade"
         :described-by="field.describedBy"
         @update:model-value="onGrade"
       />
     </FormField>
-    <Button :busy="props.busy" :disabled="!gradeGiven" @click="onAccept">
-      {{ $t('homework-accept') }}
-    </Button>
-    <Button variant="ghost" :busy="props.busy" @click="onReturnAsked">
-      {{ $t('homework-return') }}
-    </Button>
-    <p :class="hintClasses">{{ $t('homework-keys-hint') }}</p>
+    <Tooltip :text="$t('homework-key-accept')">
+      <Button :busy="props.busy" :disabled="!gradeGiven" @click="onAccept">
+        {{ $t('homework-accept') }}
+      </Button>
+    </Tooltip>
+    <Tooltip :text="$t('homework-key-return')">
+      <Button variant="ghost" :busy="props.busy" @click="onReturnAsked">
+        {{ $t('homework-return') }}
+      </Button>
+    </Tooltip>
     <p v-if="props.error" :class="errorClasses" role="alert">{{ props.error }}</p>
     <AlertDialog
       :open="props.confirming"

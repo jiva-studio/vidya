@@ -2,14 +2,22 @@ export const actionsClasses = [
   'flex',
   'flex-wrap',
   'items-end',
-  'gap-[--space-3]',
+  'gap-[var(--space-4)]',
   'border-t',
-  'border-[--color-border]',
-  'pt-[--space-4]',
+  'border-[var(--color-border)]',
+  'pt-[var(--space-4)]',
 ]
 
-export const gradeClasses = 'w-[8rem]'
+export const pickerClasses = ['flex', 'flex-wrap', 'items-center', 'gap-[var(--space-2)]']
 
-export const errorClasses = ['basis-full', 'text-[length:--text-sm]', 'text-[--color-danger-fg]']
+// Three digits and no more: a mark is not a sentence, and the browser's spinner
+// arrows a number field would bring are not how a person enters one.
+export const fieldClasses = 'w-[var(--menu-min-width)]'
 
-export const hintClasses = ['basis-full', 'text-[length:--text-sm]', 'text-[--color-text-muted]']
+export const marksClasses = ['flex', 'flex-wrap', 'gap-[var(--space-1)]']
+
+export const errorClasses = [
+  'basis-full',
+  'text-[length:var(--text-sm)]',
+  'text-[var(--color-danger-fg)]',
+]

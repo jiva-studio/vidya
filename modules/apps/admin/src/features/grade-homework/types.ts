@@ -1,12 +1,11 @@
-export interface GradeInputProps {
+export interface GradePickerProps {
   modelValue?: number
   disabled?: boolean
-  invalid?: boolean
   id?: string
   describedBy?: string
 }
 
-export interface GradeInputEmits {
+export interface GradePickerEmits {
   'update:modelValue': [value: number | undefined]
 }
 
@@ -19,7 +18,7 @@ export interface ReviewActionsProps {
   busy?: boolean
   error?: string
 
-  /** Raised by the keyboard as well as by the button, so the pane owns it. */
+  /** Raised by the keyboard as well as by the button, so the screen owns it. */
   confirming?: boolean
 }
 
