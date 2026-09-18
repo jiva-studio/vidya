@@ -1,10 +1,15 @@
 <template>
-  <PageWithHeaderLayout :title="$t('enroll')" :has-padding="true" :has-data="true" :error="error">
-    <h2>{{ $t('enroll') }}</h2>
-    <p>{{ $t('moderated') }}</p>
+  <PageWithHeaderLayout
+    :title="$t('enroll-title')"
+    :has-padding="true"
+    :has-data="true"
+    :error="error"
+  >
+    <h2>{{ $t('enroll-title') }}</h2>
+    <p>{{ $t('enroll-moderated') }}</p>
 
     <AsyncButton :busy="busy" expand="block" @click="onEnrollButtonClicked">
-      {{ $t('enroll') }}
+      {{ $t('enroll-title') }}
     </AsyncButton>
   </PageWithHeaderLayout>
 </template>
@@ -48,15 +53,3 @@ async function onEnrollButtonClicked() {
   }
 }
 </script>
-
-<fluent locale="en">
-enroll = Enroll
-moderated = Your request goes to the school. You will be placed in a group once one is running.
-enroll-failed = The request could not be sent. Check your connection and try again.
-</fluent>
-
-<fluent locale="ru">
-enroll = Записаться
-moderated = Заявка уйдёт в школу. Группу назначат, когда подходящая наберётся.
-enroll-failed = Заявку не удалось отправить. Проверьте соединение и попробуйте ещё раз.
-</fluent>

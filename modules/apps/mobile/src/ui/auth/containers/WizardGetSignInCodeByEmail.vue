@@ -55,17 +55,3 @@ async function onSignInClicked() {
   }
 }
 </script>
-
-<fluent locale="en">
-welcome = Welcome to the School of Devotion!
-enter-your-email = Enter your email and we will send you a code to log in.
-request-signin-code = Request Code
-could-not-send = The code could not be sent. Check the address and your connection.
-</fluent>
-
-<fluent locale="ru">
-welcome = Добро пожаловать в Школу Преданности!
-enter-your-email = Введите почту, и мы пришлём код для входа.
-request-signin-code = Получить код
-could-not-send = Код не отправился. Проверьте адрес и соединение.
-</fluent>

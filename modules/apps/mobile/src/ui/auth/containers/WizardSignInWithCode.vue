@@ -71,15 +71,3 @@ function onBackButtonClicked() {
   emit('go-back')
 }
 </script>
-
-<fluent locale="en">
-enter-code = Enter the code we sent you.
-sign-in = Sign In
-wrong-code = That code did not work. Check it and try again.
-</fluent>
-
-<fluent locale="ru">
-enter-code = Введите код, который мы прислали.
-sign-in = Войти
-wrong-code = Код не подошёл. Проверьте и попробуйте ещё раз.
-</fluent>

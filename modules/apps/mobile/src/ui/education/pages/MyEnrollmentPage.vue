@@ -1,16 +1,16 @@
 <template>
   <PageWithHeaderLayout
-    :title="$t('my-enrollment')"
+    :title="$t('my-enrollment-title')"
     :busy="busy"
     :has-data="loaded"
-    :error="failure && $t(failure)"
+    :error="errorMessage"
   >
     <EnrollmentReviewStatus
       v-if="enrollment && enrollment.status !== 'accepted'"
       :image="`enrollment/${enrollment.status}.webp`"
       :header="$t(`enrollment-${enrollment.status}`)"
       :text="$t(`enrollment-${enrollment.status}-summary`)"
-      :action-text="$t('go-back')"
+      :action-text="$t('my-enrollment-go-back')"
       @click="onStatusButtonClicked"
     />
 
@@ -25,7 +25,7 @@ import { computed } from 'vue'
 
 import { useApi } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
-import { useRemoteData } from '@/shared'
+import { useFailureMessage, useRemoteData } from '@/shared'
 import { EnrollmentReviewStatus, LessonsList } from '@/ui/education'
 import { education } from '@/usecases'
 
@@ -49,6 +49,8 @@ const { data, busy, loaded, failure } = useRemoteData(async () => {
   return { enrollment, lessons }
 }, undefined)
 
+const errorMessage = useFailureMessage(failure)
+
 const enrollment = computed(() => data.value?.enrollment)
 const lessons = computed(() => data.value?.lessons ?? [])
 
@@ -62,27 +64,3 @@ function onLessonClicked(lessonId: LessonId) {
   router.push({ name: 'lesson', params: { lessonId } })
 }
 </script>
-
-<fluent locale="en">
-my-enrollment = Enrolment
-go-back = Go back
-enrollment-pending = Request pending
-enrollment-pending-summary = The school will look at it shortly.
-enrollment-declined = Request declined
-enrollment-declined-summary = No reason was given.
-offline = No connection. The enrolment could not be loaded.
-unauthorized = Your session has expired. Sign in again.
-failed = The enrolment could not be loaded.
-</fluent>
-
-<fluent locale="ru">
-my-enrollment = Заявка
-go-back = Назад
-enrollment-pending = Заявка на рассмотрении
-enrollment-pending-summary = Школа рассмотрит её в ближайшее время.
-enrollment-declined = Заявка отклонена
-enrollment-declined-summary = Причина не указана.
-offline = Нет соединения. Заявка не загрузилась.
-unauthorized = Сессия истекла. Войдите заново.
-failed = Заявка не загрузилась.
-</fluent>

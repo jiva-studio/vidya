@@ -3,13 +3,13 @@
     :title="course?.name ?? ''"
     :busy="busy"
     :has-data="loaded"
-    :error="failure && $t(failure)"
+    :error="errorMessage"
     :has-padding="true"
   >
     <p v-if="course?.description">{{ course.description }}</p>
 
     <IonButton expand="block" @click="onEnrollButtonClicked">
-      {{ $t('enroll') }}
+      {{ $t('course-enroll') }}
     </IonButton>
   </PageWithHeaderLayout>
 </template>
@@ -20,7 +20,7 @@ import { IonButton, useIonRouter } from '@ionic/vue'
 
 import { useApi } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
-import { useRemoteData } from '@/shared'
+import { useFailureMessage, useRemoteData } from '@/shared'
 import { education } from '@/usecases'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -39,23 +39,11 @@ const {
   failure,
 } = useRemoteData(() => education.getCourse(api, props.id), undefined)
 
+const errorMessage = useFailureMessage(failure)
+
 /* -------------------------------- Handlers -------------------------------- */
 
 function onEnrollButtonClicked() {
   router.push({ name: 'enroll', params: { id: props.id } })
 }
 </script>
-
-<fluent locale="en">
-enroll = Enroll
-offline = No connection. The course could not be loaded.
-unauthorized = Your session has expired. Sign in again.
-failed = The course could not be loaded.
-</fluent>
-
-<fluent locale="ru">
-enroll = Записаться
-offline = Нет соединения. Курс не загрузился.
-unauthorized = Сессия истекла. Войдите заново.
-failed = Курс не загрузился.
-</fluent>

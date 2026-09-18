@@ -1,20 +1,18 @@
 welcome = Добро пожаловать в Школу Преданности!
-enter-your-email = Введите адрес электронной почты, и мы вышлем вам код для входа.
+enter-your-email = Введите почту, и мы пришлём код для входа.
 request-signin-code = Получить код
-sign-in = Проверить код
-enter-code = Введите код, который мы отправили на вашу почту
+could-not-send = Код не отправился. Проверьте адрес и соединение.
+
+enter-code = Введите код, который мы прислали.
+sign-in = Войти
 code = Код
-email = EMail
+email = Почта
+wrong-code = Код не подошёл. Проверьте и попробуйте ещё раз.
 
 sign-up = Регистрация
-need-some-information = Для завершения регистрации нам нужна дополнительная информация
+need-some-information = Немного данных, прежде чем начать.
 name = Имя
 name-placeholder = Кришна дас
-phone-number = Номер телефона
-location = Город
-location-placeholder = Вриндаван
-i-agree-to-the-terms = Я согласен с условиями и положениями
-
-error-invalid-email = Неверный адрес EMail
-error-invalid-signin-code = Неверный код аутентификации
-error-invalid-value = Неверное значение
+phone-number = Телефон
+i-agree-to-the-terms = Я принимаю условия
+could-not-save = Данные не сохранились. Проверьте соединение и попробуйте ещё раз.

@@ -1,9 +1,9 @@
 <template>
   <PageWithHeaderLayout
-    :title="$t('lesson')"
+    :title="$t('lesson-title')"
     :busy="busy"
     :has-data="loaded"
-    :error="failure && $t(failure)"
+    :error="errorMessage"
   >
     <template #toolbar>
       <IonToolbar>
@@ -34,7 +34,7 @@ import { computed, ref } from 'vue'
 
 import { useApi } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
-import { useRemoteData } from '@/shared'
+import { useFailureMessage, useRemoteData } from '@/shared'
 import { HomeworkAnswer, LessonSectionsList, LessonSectionView } from '@/ui/education'
 import { education } from '@/usecases'
 
@@ -57,6 +57,8 @@ const { data, busy, loaded, failure, reload } = useRemoteData(async () => {
   ])
   return { version, states, homework }
 }, undefined)
+
+const errorMessage = useFailureMessage(failure)
 
 const sections = computed(() => data.value?.version.content.sections ?? [])
 const selectedSection = computed(() => sections.value[selected.value])
@@ -110,17 +112,3 @@ function homeworkFor(sectionId: SectionId) {
   return data.value?.homework.find((item) => item.sectionId === sectionId)
 }
 </script>
-
-<fluent locale="en">
-lesson = Lesson
-offline = No connection. The lesson could not be loaded.
-unauthorized = Your session has expired. Sign in again.
-failed = The lesson could not be loaded.
-</fluent>
-
-<fluent locale="ru">
-lesson = Урок
-offline = Нет соединения. Урок не загрузился.
-unauthorized = Сессия истекла. Войдите заново.
-failed = Урок не загрузился.
-</fluent>

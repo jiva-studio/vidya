@@ -4,11 +4,11 @@
       v-model="text"
       :auto-grow="true"
       :disabled="isFrozen"
-      :label="$t('your-answer')"
+      :label="$t('homework-your-answer')"
       label-placement="stacked"
     />
 
-    <IonNote color="primary">{{ $t(status) }}</IonNote>
+    <IonNote color="primary">{{ $t(`homework-status-${status}`) }}</IonNote>
 
     <AsyncButton
       :busy="busy"
@@ -16,7 +16,7 @@
       expand="block"
       @click="onSubmitClicked"
     >
-      {{ $t('send-to-review') }}
+      {{ $t('homework-send-to-review') }}
     </AsyncButton>
   </div>
 </template>
@@ -56,23 +56,3 @@ async function onSubmitClicked() {
   }
 }
 </script>
-
-<fluent locale="en">
-your-answer = Your answer
-send-to-review = Send to review
-open = Not submitted
-pending = Submitted, waiting for review
-in_review = Being reviewed
-returned = Returned for revision
-accepted = Accepted
-</fluent>
-
-<fluent locale="ru">
-your-answer = Ваш ответ
-send-to-review = Отправить на проверку
-open = Не отправлено
-pending = Отправлено, ждёт проверки
-in_review = На проверке
-returned = Возвращено на доработку
-accepted = Принято
-</fluent>

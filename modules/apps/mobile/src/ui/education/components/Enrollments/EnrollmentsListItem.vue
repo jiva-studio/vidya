@@ -3,9 +3,9 @@
     <IonLabel>
       <h2>{{ courseName }}</h2>
       <p class="ion-text-wrap">
-        {{ groupName ?? $t('no-group-yet') }}
+        {{ groupName ?? $t('enrollment-no-group-yet') }}
 
-        <IonText color="primary">{{ $t(status) }}</IonText>
+        <IonText color="primary">{{ $t(`enrollment-status-${status}`) }}</IonText>
       </p>
     </IonLabel>
   </IonItem>
@@ -37,17 +37,3 @@ function onClicked() {
   emit('click')
 }
 </script>
-
-<fluent locale="en">
-pending = Pending
-accepted = Accepted
-declined = Declined
-no-group-yet = Waiting for a group
-</fluent>
-
-<fluent locale="ru">
-pending = На рассмотрении
-accepted = Принято
-declined = Отклонено
-no-group-yet = Ожидает группу
-</fluent>

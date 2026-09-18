@@ -1,15 +1,15 @@
 <template>
   <PageWithHeaderLayout
-    :title="$t('courses')"
+    :title="$t('courses-title')"
     :busy="busy"
     :has-data="loaded"
     :is-empty="visibleCourses.length === 0"
-    :empty-text="$t('nothing-found')"
-    :error="failure && $t(failure)"
+    :empty-text="$t('courses-empty')"
+    :error="errorMessage"
   >
     <template #toolbar>
       <IonToolbar>
-        <IonSearchbar v-model="searchQuery" :placeholder="$t('search')" />
+        <IonSearchbar v-model="searchQuery" :placeholder="$t('courses-search')" />
       </IonToolbar>
     </template>
 
@@ -24,7 +24,7 @@ import { computed, ref } from 'vue'
 
 import { useApi } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
-import { useRemoteData } from '@/shared'
+import { useFailureMessage, useRemoteData } from '@/shared'
 import { CoursesList } from '@/ui/education'
 import { education } from '@/usecases'
 
@@ -39,6 +39,8 @@ const { data: courses, busy, loaded, failure } = useRemoteData(() => education.l
 // The API takes no search term, so the catalogue is filtered where it is held.
 // Fine while a school runs a handful of courses; a server-side search is a
 // recorded deficit.
+const errorMessage = useFailureMessage(failure)
+
 const visibleCourses = computed(() => courses.value.filter(matchesQuery))
 
 /* -------------------------------- Handlers -------------------------------- */
@@ -53,21 +55,3 @@ function matchesQuery(course: { name: string }): boolean {
   return course.name.toLowerCase().includes(searchQuery.value.trim().toLowerCase())
 }
 </script>
-
-<fluent locale="en">
-courses = Courses
-search = Search
-nothing-found = No courses here yet
-offline = No connection. The catalogue could not be loaded.
-unauthorized = Your session has expired. Sign in again.
-failed = The catalogue could not be loaded.
-</fluent>
-
-<fluent locale="ru">
-courses = Курсы
-search = Поиск
-nothing-found = Курсов пока нет
-offline = Нет соединения. Каталог не загрузился.
-unauthorized = Сессия истекла. Войдите заново.
-failed = Каталог не загрузился.
-</fluent>

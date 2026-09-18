@@ -84,23 +84,3 @@ async function onSignUpButtonClicked() {
   }
 }
 </script>
-
-<fluent locale="en">
-sign-up = Sign Up
-need-some-information = We need a few details before you start.
-name = Name
-name-placeholder = How should we address you?
-phone-number = Phone number
-i-agree-to-the-terms = I agree to the terms
-could-not-save = Your details could not be saved. Check your connection and try again.
-</fluent>
-
-<fluent locale="ru">
-sign-up = Регистрация
-need-some-information = Немного данных, прежде чем начать.
-name = Имя
-name-placeholder = Как к вам обращаться?
-phone-number = Телефон
-i-agree-to-the-terms = Я принимаю условия
-could-not-save = Данные не сохранились. Проверьте соединение и попробуйте ещё раз.
-</fluent>

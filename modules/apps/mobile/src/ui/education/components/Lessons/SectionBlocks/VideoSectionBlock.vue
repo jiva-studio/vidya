@@ -56,11 +56,3 @@ function onTimeUpdate() {
   border: 0;
 }
 </style>
-
-<fluent locale="en">
-embedded-video = Embedded video
-</fluent>
-
-<fluent locale="ru">
-embedded-video = Встроенное видео
-</fluent>

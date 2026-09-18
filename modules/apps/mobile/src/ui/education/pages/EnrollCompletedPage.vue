@@ -4,14 +4,14 @@
 
     <div class="ctnt">
       <img src="/congrats.png" />
-      <h2>{{ $t('congratulations') }}</h2>
-      <div>{{ $t('enrollment-request-submited') }}</div>
-      {{ $t('wait-for-assignment') }}
+      <h2>{{ $t('enroll-completed-congratulations') }}</h2>
+      <div>{{ $t('enroll-completed-submitted') }}</div>
+      {{ $t('enroll-completed-wait') }}
     </div>
 
     <div>
       <IonButton class="btn" expand="block" fill="clear" @click="onGoToMyGroupsClicked">
-        {{ $t('go-to-my-enrollments') }}
+        {{ $t('enroll-completed-go-to-my-enrollments') }}
       </IonButton>
     </div>
   </ion-page>
@@ -60,10 +60,3 @@ function onGoToMyGroupsClicked() {
   max-height: 60%;
 }
 </style>
-
-<fluent locale="en">
-congratulations = Congratulations!
-enrollment-request-submited = The enrolment request has been submitted
-wait-for-assignment = Wait for assignment
-go-to-my-enrollments = Go to my groups
-</fluent>

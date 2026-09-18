@@ -35,7 +35,3 @@ ion-icon {
   scale: 0.8;
 }
 </style>
-
-<fluent locale="en">
-code = Code
-</fluent>

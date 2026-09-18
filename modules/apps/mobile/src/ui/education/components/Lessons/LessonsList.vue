@@ -1,5 +1,5 @@
 <template>
-  <WithListHeader :title="$t('lessons')">
+  <WithListHeader :title="$t('lessons-title')">
     <LessonsListItem
       v-for="(lesson, idx) in items"
       :key="lesson.id"
@@ -34,11 +34,3 @@ function onLessonClicked(lessonId: LessonSummary['id']) {
   emit('click', lessonId)
 }
 </script>
-
-<fluent locale="en">
-lessons = Lessons
-</fluent>
-
-<fluent locale="ru">
-lessons = Уроки
-</fluent>
