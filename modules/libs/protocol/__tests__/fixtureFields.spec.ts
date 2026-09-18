@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import type { CourseDetails } from '../courses'
 import type { EnrollmentDetails } from '../enrollments'
 import type { BlockStateDetails, HomeworkDetails } from '../homework'
+import type { LessonDetails, LessonVersionDetails } from '../lessons'
 
 /**
  * The fixtures are the contract both sides of the wire are tested against, and
@@ -25,6 +26,15 @@ const ALLOWED: Partial<Record<string, readonly string[]>> = {
     'description',
     'learningType',
   ] satisfies readonly (keyof CourseDetails)[],
+  lessons: ['id', 'courseId', 'lessonNumber', 'title'] satisfies readonly (keyof LessonDetails)[],
+  lesson_versions: [
+    'id',
+    'lessonId',
+    'version',
+    'status',
+    'content',
+    'publishedAt',
+  ] satisfies readonly (keyof LessonVersionDetails)[],
   enrollments: [
     'id',
     'courseId',
