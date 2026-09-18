@@ -1,4 +1,4 @@
-import { asId, EnrollmentId, SchoolId } from '@vidya/domain'
+import { asId, EnrollmentId, SchoolId, SyncCollection } from '@vidya/domain'
 import {
   BlockState,
   Course,
@@ -29,7 +29,15 @@ export interface JournalTarget {
  * to change the order two devices agree on, or the day a deadline falls on.
  */
 export interface CollectionProjection<TEntity> {
-  collection: string
+  /**
+   * The name this entity travels under.
+   *
+   * Typed, not `string`: a typo here is not a compile error waiting to happen,
+   * it is a silent loss. The server would journal `lesson_version`, the device
+   * would drop the row as a collection it does not know, and the scope cursor
+   * would move past it — the row is gone and nothing anywhere reports it.
+   */
+  collection: SyncCollection
   scopeKind: SyncScopeKind
   /** `false` keeps the row out of the journal entirely. Drafts never leave. */
   journals?: (entity: TEntity) => boolean
