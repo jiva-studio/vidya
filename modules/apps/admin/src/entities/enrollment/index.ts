@@ -3,9 +3,10 @@
 // Requests live in `api/`, the view model in `model/`, small pieces of the
 // entity's own interface in `ui/`. Nothing outside this slice reaches past
 // this file.
-export type { DirectoryApi, EnrollmentApi } from './api'
-export { directoryApi, enrollmentApi, useDirectoryApi, useEnrollmentApi } from './api'
+export type { EnrollmentApi } from './api'
+export { enrollmentApi, useEnrollmentApi } from './api'
 export type {
+  Directory,
   EnrollmentDetailsById,
   EnrollmentFilters,
   EnrollmentRow,
@@ -14,11 +15,5 @@ export type {
   RowSources,
   StudentNames,
 } from './model'
-export {
-  toEnrollmentRows,
-  useDirectory,
-  useEnrollmentLookup,
-  useEnrollments,
-  useStudentNames,
-} from './model'
+export { toEnrollmentRows, useEnrollmentLookup, useEnrollments, useStudentNames } from './model'
 export { enrollmentLabels, EnrollmentStatusBadge, enrollmentTones } from './ui'

@@ -13,11 +13,6 @@ export default defineConfig([
   {
     files: ['./src/**'],
     rules: {
-      // Placeholder slices are deliberately empty and deliberately unreferenced:
-      // the sections that fill them are being written on other branches right
-      // now, and a slice they each have to create is a slice two of them create.
-      'fsd/insignificant-slice': 'off',
-
       // `pluralize` reads `homework` as a plural, because the word has no
       // separate plural form, and then reports the other seven entities as
       // inconsistent with it. The names are fixed by the specification, so the
@@ -31,5 +26,34 @@ export default defineConfig([
     // nowhere else.
     files: ['./src/**/types.ts'],
     rules: { 'fsd/segments-by-purpose': 'off' },
+  },
+  {
+    // Seven slices have exactly one consumer today, and `insignificant-slice`
+    // suggests merging each into it. They stay separate, named one by one so
+    // that a slice nobody uses is still reported everywhere else:
+    //
+    //   an action of the operator is a feature whether one screen offers it or
+    //   three — moderating a request, grading a piece of work, placing a
+    //   student, giving somebody a role, editing lesson content, publishing a
+    //   version — and merging any of them into the screen that calls it puts
+    //   the request, the rules and the markup in one slice, over the file and
+    //   size limits this project enforces (AGENTS.md, §1);
+    //
+    //   `widgets/lesson-editor` is used by one page because the editor is one
+    //   screen, and the page is the route that leads to it, and
+    //   `entities/homework` is read by that one workplace because a piece of
+    //   work is shown in exactly one place — a domain noun does not become part
+    //   of a widget by being read from a single one.
+    files: [
+      './src/entities/homework/**',
+      './src/features/assign-group/**',
+      './src/features/edit-lesson-content/**',
+      './src/features/grade-homework/**',
+      './src/features/manage-user-roles/**',
+      './src/features/moderate-enrollment/**',
+      './src/features/publish-lesson/**',
+      './src/widgets/lesson-editor/**',
+    ],
+    rules: { 'fsd/insignificant-slice': 'off' },
   },
 ])

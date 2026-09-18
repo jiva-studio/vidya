@@ -1,10 +1,11 @@
 import type { EnrollmentId, HomeworkId } from '@vidya/domain'
 import { computed, watch } from 'vue'
 
-import { useDirectory, useEnrollmentLookup, useStudentNames } from '@/entities/enrollment'
+import { useEnrollmentLookup, useStudentNames } from '@/entities/enrollment'
 import type { WorkContext } from '@/entities/homework'
 import { filterHomeworkRows, toHomeworkRows, useHomeworkQueue } from '@/entities/homework'
 import { useUserApi } from '@/entities/user'
+import { useDirectory } from '@/features/school-directory'
 import { useCurrentSchool } from '@/shared/access'
 
 /**

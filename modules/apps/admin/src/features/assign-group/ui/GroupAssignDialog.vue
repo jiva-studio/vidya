@@ -4,7 +4,8 @@ import type { SelectOption } from '@vidya/ui'
 import { Button, Dialog, DialogFooter, FormField, Select } from '@vidya/ui'
 import { ref, watch } from 'vue'
 
-import { useDirectoryApi } from '@/entities/enrollment'
+import { getGroups } from '@/entities/group'
+import { useHttp } from '@/shared/api'
 
 import type { GroupAssignDialogEmits, GroupAssignDialogProps } from '../types'
 import { bodyClasses, errorClasses } from './styles'
@@ -25,7 +26,7 @@ const emit = defineEmits<GroupAssignDialogEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
-const api = useDirectoryApi()
+const http = useHttp()
 const options = ref<SelectOption[]>([])
 const selected = ref<string>('')
 
@@ -55,7 +56,9 @@ async function load() {
   selected.value = props.groupId ?? ''
   if (!props.courseId) return
 
-  const response = await api.groups(props.courseId)
+  // The groups of that course only: a student is placed in a group of the
+  // course they applied to, and the whole school's list would offer the rest.
+  const response = await getGroups(http, { courseId: props.courseId })
   options.value = response.items.map((item) => ({ value: item.id, label: item.name }))
 }
 </script>

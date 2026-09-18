@@ -37,6 +37,18 @@ export interface StudentNames {
   resolve: (ids: (UserId | undefined)[]) => Promise<void>
 }
 
+/**
+ * The names of the school's courses and groups, as the list needs them.
+ *
+ * Passed in rather than read here: a course and a group are two other slices,
+ * and an entity may not reach into its neighbour.
+ */
+export interface Directory {
+  courseNames: Ref<Map<CourseId, string>>
+  groupNames: Ref<Map<GroupId, string>>
+  load: () => Promise<void>
+}
+
 /** The fields the list endpoint leaves out, once they have been read. */
 export interface ResolvedEnrollment {
   studentId: UserId

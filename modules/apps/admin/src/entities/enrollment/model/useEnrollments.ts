@@ -6,8 +6,7 @@ import { reasonOf } from '@/shared/lib'
 
 import { useEnrollmentApi } from '../api'
 import { toEnrollmentRows } from './enrollmentRows'
-import type { EnrollmentFilters, StudentNames } from './types'
-import { useDirectory } from './useDirectory'
+import type { Directory, EnrollmentFilters, StudentNames } from './types'
 import { useEnrollmentLookup } from './useEnrollmentLookup'
 
 /**
@@ -17,13 +16,13 @@ import { useEnrollmentLookup } from './useEnrollmentLookup'
  * are kept to the courses of the school in hand; without that, switching school
  * would leave another school's requests on screen (AC-6).
  *
- * Names are not the entity's to fetch — people live in another slice — so the
- * caller passes the cache in and the same one serves the whole page.
+ * Neither the names of people nor the names of courses are this entity's to
+ * fetch — both live in other slices — so the caller passes them in and the same
+ * two caches serve the whole page.
  */
-export const useEnrollments = (students: StudentNames) => {
+export const useEnrollments = (students: StudentNames, directory: Directory) => {
   const api = useEnrollmentApi()
   const lookup = useEnrollmentLookup()
-  const directory = useDirectory()
   const { generation } = useCurrentSchool()
 
   const items = ref<EnrollmentSummary[]>([])
@@ -78,5 +77,5 @@ export const useEnrollments = (students: StudentNames) => {
     void load()
   })
 
-  return { rows, filters, loading, error, load, directory }
+  return { rows, filters, loading, error, load }
 }

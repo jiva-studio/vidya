@@ -10,6 +10,7 @@ import { useEnrollments, useStudentNames } from '@/entities/enrollment'
 import { useUserApi } from '@/entities/user'
 import { GroupAssignDialog, useGroupAssignment } from '@/features/assign-group'
 import { useModerateEnrollment } from '@/features/moderate-enrollment'
+import { useDirectory } from '@/features/school-directory'
 import { useCan } from '@/shared/access'
 
 import EnrollmentsFilters from './EnrollmentsFilters.vue'
@@ -21,7 +22,8 @@ import { errorClasses, sectionClasses } from './styles'
 const { $t } = useFluent()
 const users = useUserApi()
 const students = useStudentNames(async (id) => (await users.get(id)).name)
-const enrollments = useEnrollments(students)
+const directory = useDirectory()
+const enrollments = useEnrollments(students, directory)
 const moderation = useModerateEnrollment()
 const assignment = useGroupAssignment()
 
@@ -106,8 +108,8 @@ function isBusy(row: TableRowData): boolean {
     <PageHeader :title="$t('enrollments-title')" :description="$t('enrollments-description')" />
     <EnrollmentsFilters
       :filters="enrollments.filters.value"
-      :course-options="enrollments.directory.courseOptions.value"
-      :group-options="enrollments.directory.groupOptions.value"
+      :course-options="directory.courseOptions.value"
+      :group-options="directory.groupOptions.value"
       @update:filters="onFilters"
     />
     <p v-if="failure" :class="errorClasses" role="alert">{{ failure }}</p>
