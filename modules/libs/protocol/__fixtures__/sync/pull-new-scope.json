@@ -1,0 +1,66 @@
+{
+  "name": "pull-new-scope",
+  "covers": ["T-C-1", "T-C-6"],
+  "endpoint": "POST /sync/pull",
+  "description": "A course the student has just been enrolled on. The client has no position for it, the server reports it in scopes, and its history arrives through this ordinary pull. There is no backfill endpoint: this fixture IS the backfill.",
+  "request": {
+    "deviceId": "device-8f2a6c14",
+    "cursors": {
+      "course:2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10": 1182,
+      "course:b6d40e27-8c31-4a95-b7f2-0e5a1d38c624": 0
+    }
+  },
+  "response": {
+    "changes": [
+      {
+        "serverSeq": 205,
+        "collection": "courses",
+        "docId": "b6d40e27-8c31-4a95-b7f2-0e5a1d38c624",
+        "op": "upsert",
+        "data": {
+          "id": "b6d40e27-8c31-4a95-b7f2-0e5a1d38c624",
+          "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+          "title": "Sanskrit for beginners",
+          "learningType": "individual"
+        },
+        "hlc": "001789689100000:00000:server",
+        "scope": {
+          "kind": "course",
+          "id": "b6d40e27-8c31-4a95-b7f2-0e5a1d38c624"
+        },
+        "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+        "createdAt": "2026-09-17T23:51:40.000Z"
+      }
+    ],
+    "cursors": {
+      "course:b6d40e27-8c31-4a95-b7f2-0e5a1d38c624": 205
+    },
+    "scopes": [
+      {
+        "scope": {
+          "kind": "course",
+          "id": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10"
+        },
+        "headSeq": 1190
+      },
+      {
+        "scope": {
+          "kind": "course",
+          "id": "b6d40e27-8c31-4a95-b7f2-0e5a1d38c624"
+        },
+        "headSeq": 640
+      },
+      {
+        "scope": {
+          "kind": "user",
+          "id": "7b3d5e90-1c44-4a2b-8f61-2d9e0c4a5b73"
+        },
+        "headSeq": 1183
+      }
+    ],
+    "checksums": {
+      "course:b6d40e27-8c31-4a95-b7f2-0e5a1d38c624": "0c7e4b19a2f53d68"
+    },
+    "hasMore": true
+  }
+}

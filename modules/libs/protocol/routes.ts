@@ -13,6 +13,11 @@ export const Routes = (baseUrl: string = '') => ({
   otp: {
     root: () => `${baseUrl}/auth/otp`,
   },
+  sync: {
+    pull: () => `${baseUrl}/sync/pull`,
+    push: () => `${baseUrl}/sync/push`,
+    cursor: () => `${baseUrl}/sync/cursor`,
+  },
   edu: {
     roles: {
       find: () => `${baseUrl}/edu/roles`,

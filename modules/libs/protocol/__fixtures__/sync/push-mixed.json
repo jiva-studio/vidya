@@ -1,0 +1,78 @@
+{
+  "name": "push-mixed",
+  "covers": ["T-C-2"],
+  "endpoint": "POST /sync/push",
+  "description": "A batch whose rows are answered one by one: results has the length of changes and the same order, and a refusal leaves its neighbours applied.",
+  "request": {
+    "deviceId": "device-8f2a6c14",
+    "changes": [
+      {
+        "outboxId": 41,
+        "collection": "homework",
+        "docId": "d7e93f41-5a0c-4b62-8e17-9c3d5f2a1b48",
+        "op": "upsert",
+        "data": {
+          "text": "A longer answer, written on the train.",
+          "submittedAt": "2026-09-17T23:00:00.000Z"
+        },
+        "hlc": "001789686000000:00000:device-8f2a6c14",
+        "baseHlc": "001789603200000:00000:server"
+      },
+      {
+        "outboxId": 42,
+        "collection": "block_states",
+        "docId": "4e8a1c93-7b25-4f60-8d31-2a9c5e0b7f43",
+        "op": "upsert",
+        "data": {
+          "state": {
+            "type": "video",
+            "watched": 214,
+            "duration": 600
+          }
+        },
+        "hlc": "001789686000000:00001:device-8f2a6c14",
+        "baseHlc": null
+      },
+      {
+        "outboxId": 43,
+        "collection": "courses",
+        "docId": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10",
+        "op": "upsert",
+        "data": {
+          "title": "Renamed from the device"
+        },
+        "hlc": "001789686000000:00002:device-8f2a6c14",
+        "baseHlc": null
+      }
+    ]
+  },
+  "response": {
+    "results": [
+      {
+        "outboxId": 41,
+        "collection": "homework",
+        "docId": "d7e93f41-5a0c-4b62-8e17-9c3d5f2a1b48",
+        "status": "accepted",
+        "serverHlc": "001789686000000:00000:device-8f2a6c14",
+        "restamped": false
+      },
+      {
+        "outboxId": 42,
+        "collection": "block_states",
+        "docId": "4e8a1c93-7b25-4f60-8d31-2a9c5e0b7f43",
+        "status": "accepted",
+        "serverHlc": "001789686000000:00001:device-8f2a6c14",
+        "restamped": false
+      },
+      {
+        "outboxId": 43,
+        "collection": "courses",
+        "docId": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10",
+        "status": "rejected",
+        "reason": "readOnlyCollection",
+        "detail": "courses replicate downward only"
+      }
+    ],
+    "journaledOutboxId": 42
+  }
+}

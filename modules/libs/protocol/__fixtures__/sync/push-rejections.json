@@ -1,0 +1,158 @@
+{
+  "name": "push-rejections",
+  "covers": ["T-C-2", "T-C-3"],
+  "endpoint": "POST /sync/push",
+  "description": "Every rejection reason, once each. The work stays on the device in all seven cases: a refusal is a state of the row, never a lost edit.",
+  "request": {
+    "deviceId": "device-8f2a6c14",
+    "changes": [
+      {
+        "outboxId": 100,
+        "collection": "courses",
+        "docId": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10",
+        "op": "upsert",
+        "data": {
+          "state": {
+            "type": "text",
+            "read": true
+          }
+        },
+        "hlc": "001789682400000:00000:device-8f2a6c14",
+        "baseHlc": null
+      },
+      {
+        "outboxId": 101,
+        "collection": "homework",
+        "docId": "8c2f1b74-6e50-4a39-b1d8-3f7e0c5a2946",
+        "op": "upsert",
+        "data": {
+          "text": "..."
+        },
+        "hlc": "001789682400000:00001:device-8f2a6c14",
+        "baseHlc": null
+      },
+      {
+        "outboxId": 102,
+        "collection": "homework",
+        "docId": "1f6b3d85-0c92-4e47-a5f3-7d2b8e14c063",
+        "op": "upsert",
+        "data": {
+          "text": "..."
+        },
+        "hlc": "001789682400000:00002:device-8f2a6c14",
+        "baseHlc": null
+      },
+      {
+        "outboxId": 103,
+        "collection": "homework",
+        "docId": "5b9e0a34-2d68-4c17-8f95-6a3c1e7d4b20",
+        "op": "upsert",
+        "data": {
+          "text": "..."
+        },
+        "hlc": "001789682400000:00003:device-8f2a6c14",
+        "baseHlc": null
+      },
+      {
+        "outboxId": 104,
+        "collection": "homework",
+        "docId": "d7e93f41-5a0c-4b62-8e17-9c3d5f2a1b48",
+        "op": "upsert",
+        "data": {
+          "text": "..."
+        },
+        "hlc": "001789682400000:00004:device-8f2a6c14",
+        "baseHlc": null
+      },
+      {
+        "outboxId": 105,
+        "collection": "block_states",
+        "docId": "7d1c5f38-9b04-4e26-a7c1-0f8d3b5e6249",
+        "op": "upsert",
+        "data": {
+          "state": {
+            "type": "text",
+            "read": true
+          }
+        },
+        "hlc": "001789682400000:00005:device-8f2a6c14",
+        "baseHlc": null
+      },
+      {
+        "outboxId": 106,
+        "collection": "block_states",
+        "docId": "2a8f6c50-4d13-4b79-9e05-8c1f7a3d2b64",
+        "op": "upsert",
+        "data": {
+          "state": {
+            "type": "text",
+            "read": true
+          }
+        },
+        "hlc": "001789682400000:00006:device-8f2a6c14",
+        "baseHlc": null
+      }
+    ]
+  },
+  "response": {
+    "results": [
+      {
+        "outboxId": 100,
+        "collection": "courses",
+        "docId": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10",
+        "status": "rejected",
+        "reason": "readOnlyCollection",
+        "detail": "courses replicate downward only"
+      },
+      {
+        "outboxId": 101,
+        "collection": "homework",
+        "docId": "8c2f1b74-6e50-4a39-b1d8-3f7e0c5a2946",
+        "status": "rejected",
+        "reason": "notYourEnrollment",
+        "detail": "the row is addressed to another student enrolment"
+      },
+      {
+        "outboxId": 102,
+        "collection": "homework",
+        "docId": "1f6b3d85-0c92-4e47-a5f3-7d2b8e14c063",
+        "status": "rejected",
+        "reason": "enrollmentRevoked",
+        "detail": "the enrolment no longer grants access"
+      },
+      {
+        "outboxId": 103,
+        "collection": "homework",
+        "docId": "5b9e0a34-2d68-4c17-8f95-6a3c1e7d4b20",
+        "status": "rejected",
+        "reason": "unknownLessonVersion",
+        "detail": "the answered lesson version was never published"
+      },
+      {
+        "outboxId": 104,
+        "collection": "homework",
+        "docId": "d7e93f41-5a0c-4b62-8e17-9c3d5f2a1b48",
+        "status": "rejected",
+        "reason": "alreadyAccepted",
+        "detail": "the work has been accepted and its text is frozen"
+      },
+      {
+        "outboxId": 105,
+        "collection": "block_states",
+        "docId": "7d1c5f38-9b04-4e26-a7c1-0f8d3b5e6249",
+        "status": "rejected",
+        "reason": "payloadTooLarge",
+        "detail": "the row is over the size ceiling"
+      },
+      {
+        "outboxId": 106,
+        "collection": "block_states",
+        "docId": "2a8f6c50-4d13-4b79-9e05-8c1f7a3d2b64",
+        "status": "rejected",
+        "reason": "malformed",
+        "detail": "state is not a known block state"
+      }
+    ],
+    "journaledOutboxId": 0
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "name": "optional-fields",
+  "covers": ["T-C-4"],
+  "endpoint": "POST /sync/pull, POST /sync/push",
+  "description": "Every optional and nullable field at its edge, so both sides read them the same way: a pull request without limit, a delete tombstone whose data is null, a row whose nullable fields are all null, an empty text, an empty page with no scopes advanced, and an accepted result with no detail.",
+  "request": {
+    "deviceId": "device-8f2a6c14",
+    "cursors": {}
+  },
+  "response": {
+    "changes": [
+      {
+        "serverSeq": 1301,
+        "collection": "lesson_versions",
+        "docId": "a41c7d02-33b5-4e8f-9c6a-71e204f5d8b3",
+        "op": "delete",
+        "data": null,
+        "hlc": "001789689609000:00000:server",
+        "scope": {
+          "kind": "course",
+          "id": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10"
+        },
+        "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+        "createdAt": "2026-09-18T00:00:09.000Z"
+      },
+      {
+        "serverSeq": 1302,
+        "collection": "enrollments",
+        "docId": "3a5c7e92-4b18-4d06-9f2e-1c8b6d4a3f57",
+        "op": "upsert",
+        "data": {
+          "id": "3a5c7e92-4b18-4d06-9f2e-1c8b6d4a3f57",
+          "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+          "courseId": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10",
+          "status": "pending",
+          "groupId": null,
+          "decidedById": null,
+          "decidedAt": null,
+          "comment": ""
+        },
+        "hlc": "001789689609500:00000:server",
+        "scope": {
+          "kind": "user",
+          "id": "7b3d5e90-1c44-4a2b-8f61-2d9e0c4a5b73"
+        },
+        "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+        "createdAt": "2026-09-18T00:00:09.500Z"
+      }
+    ],
+    "cursors": {
+      "course:2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10": 1301,
+      "user:7b3d5e90-1c44-4a2b-8f61-2d9e0c4a5b73": 1302
+    },
+    "scopes": [],
+    "checksums": {},
+    "hasMore": false
+  },
+  "push": {
+    "request": {
+      "deviceId": "device-8f2a6c14",
+      "changes": [
+        {
+          "outboxId": 70,
+          "collection": "homework",
+          "docId": "d7e93f41-5a0c-4b62-8e17-9c3d5f2a1b48",
+          "op": "upsert",
+          "data": {
+            "text": "",
+            "submittedAt": null
+          },
+          "hlc": "001789689540000:00000:device-8f2a6c14",
+          "baseHlc": null
+        }
+      ]
+    },
+    "response": {
+      "results": [
+        {
+          "outboxId": 70,
+          "collection": "homework",
+          "docId": "d7e93f41-5a0c-4b62-8e17-9c3d5f2a1b48",
+          "status": "accepted",
+          "serverHlc": "001789689540000:00000:device-8f2a6c14",
+          "restamped": false
+        }
+      ],
+      "journaledOutboxId": 70
+    }
+  }
+}

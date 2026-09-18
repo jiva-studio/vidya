@@ -1,0 +1,113 @@
+{
+  "name": "pull-page",
+  "covers": ["T-C-1"],
+  "endpoint": "POST /sync/pull",
+  "description": "A pull page mixing two scopes: the course content going down and the student own rows. hasMore is true, so cursors carry the position each scope reached.",
+  "request": {
+    "deviceId": "device-8f2a6c14",
+    "cursors": {
+      "course:2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10": 1180,
+      "user:7b3d5e90-1c44-4a2b-8f61-2d9e0c4a5b73": 940
+    },
+    "limit": 200
+  },
+  "response": {
+    "changes": [
+      {
+        "serverSeq": 1181,
+        "collection": "courses",
+        "docId": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10",
+        "op": "upsert",
+        "data": {
+          "id": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10",
+          "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+          "title": "Bhagavad-gita: an overview",
+          "learningType": "group"
+        },
+        "hlc": "001789689601000:00000:server",
+        "scope": {
+          "kind": "course",
+          "id": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10"
+        },
+        "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+        "createdAt": "2026-09-18T00:00:01.000Z"
+      },
+      {
+        "serverSeq": 1182,
+        "collection": "lesson_versions",
+        "docId": "a41c7d02-33b5-4e8f-9c6a-71e204f5d8b3",
+        "op": "upsert",
+        "data": {
+          "id": "a41c7d02-33b5-4e8f-9c6a-71e204f5d8b3",
+          "lessonId": "c92b48e1-0f77-4d35-a8b2-6e1d3c05f482",
+          "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+          "status": "published",
+          "version": 3,
+          "content": {
+            "schemaVersion": 1,
+            "sections": []
+          }
+        },
+        "hlc": "001789689602000:00000:server",
+        "scope": {
+          "kind": "course",
+          "id": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10"
+        },
+        "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+        "createdAt": "2026-09-18T00:00:02.000Z"
+      },
+      {
+        "serverSeq": 1183,
+        "collection": "homework",
+        "docId": "d7e93f41-5a0c-4b62-8e17-9c3d5f2a1b48",
+        "op": "upsert",
+        "data": {
+          "id": "d7e93f41-5a0c-4b62-8e17-9c3d5f2a1b48",
+          "enrollmentId": "3a5c7e92-4b18-4d06-9f2e-1c8b6d4a3f57",
+          "lessonVersionId": "a41c7d02-33b5-4e8f-9c6a-71e204f5d8b3",
+          "sectionId": "b18f4c60-27d9-4e51-a3c8-5f0b9e2d7614",
+          "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+          "status": "in_review",
+          "text": "My answer to the first section.",
+          "grade": null,
+          "reviewedById": null,
+          "reviewedAt": null,
+          "submittedAt": "2026-09-17T00:00:00.000Z",
+          "answeredSupersededVersion": false
+        },
+        "hlc": "001789689602500:00001:server",
+        "scope": {
+          "kind": "user",
+          "id": "7b3d5e90-1c44-4a2b-8f61-2d9e0c4a5b73"
+        },
+        "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+        "createdAt": "2026-09-18T00:00:02.500Z"
+      }
+    ],
+    "cursors": {
+      "course:2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10": 1182,
+      "user:7b3d5e90-1c44-4a2b-8f61-2d9e0c4a5b73": 1183
+    },
+    "scopes": [
+      {
+        "scope": {
+          "kind": "course",
+          "id": "2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10"
+        },
+        "headSeq": 1190
+      },
+      {
+        "scope": {
+          "kind": "user",
+          "id": "7b3d5e90-1c44-4a2b-8f61-2d9e0c4a5b73"
+        },
+        "headSeq": 1183
+      }
+    ],
+    "checksums": {
+      "course:2f9a1c58-6d21-4f0e-9a44-0b7c1e5d3a10": "9f2c4a7b51e0d386",
+      "user:7b3d5e90-1c44-4a2b-8f61-2d9e0c4a5b73": "3d0b8e61c47a2f95"
+    },
+    "hasMore": true
+  }
+}

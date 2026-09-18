@@ -1,0 +1,59 @@
+{
+  "name": "push-restamped",
+  "covers": ["T-C-2", "T-C-5"],
+  "endpoint": "POST /sync/push",
+  "description": "serverHlc comes back on every accepted row, not only when it differs. Here the first row is a genuine repeat (same stamp, same body) and keeps its HLC; the second arrived from a device whose clock is a year fast, or whose id is shared with another phone restored from the same backup, and the server restamped it. Both records are kept; neither write is swallowed as an imagined repeat.",
+  "request": {
+    "deviceId": "device-8f2a6c14",
+    "changes": [
+      {
+        "outboxId": 61,
+        "collection": "homework",
+        "docId": "d7e93f41-5a0c-4b62-8e17-9c3d5f2a1b48",
+        "op": "upsert",
+        "data": {
+          "text": "Resent after the connection dropped.",
+          "submittedAt": "2026-09-17T23:00:00.000Z"
+        },
+        "hlc": "001789686000000:00000:device-8f2a6c14",
+        "baseHlc": "001789603200000:00000:server"
+      },
+      {
+        "outboxId": 62,
+        "collection": "block_states",
+        "docId": "4e8a1c93-7b25-4f60-8d31-2a9c5e0b7f43",
+        "op": "upsert",
+        "data": {
+          "state": {
+            "type": "audio",
+            "listened": 30,
+            "duration": 300
+          }
+        },
+        "hlc": "001821225600000:00000:device-8f2a6c14",
+        "baseHlc": null
+      }
+    ]
+  },
+  "response": {
+    "results": [
+      {
+        "outboxId": 61,
+        "collection": "homework",
+        "docId": "d7e93f41-5a0c-4b62-8e17-9c3d5f2a1b48",
+        "status": "accepted",
+        "serverHlc": "001789686000000:00000:device-8f2a6c14",
+        "restamped": false
+      },
+      {
+        "outboxId": 62,
+        "collection": "block_states",
+        "docId": "4e8a1c93-7b25-4f60-8d31-2a9c5e0b7f43",
+        "status": "accepted",
+        "serverHlc": "001789689603000:00000:server",
+        "restamped": true
+      }
+    ],
+    "journaledOutboxId": 62
+  }
+}

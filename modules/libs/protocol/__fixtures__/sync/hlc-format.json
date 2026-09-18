@@ -1,0 +1,49 @@
+{
+  "name": "hlc-format",
+  "covers": ["T-C-5"],
+  "endpoint": "n/a",
+  "description": "The HLC as it travels: physical unix milliseconds zero-padded to 15 digits, counter to 5, then the device id, which may itself contain colons. The padding is the point — the server compares the column as text, and that order has to be the domain order. Times beside them are UTC ISO 8601 with milliseconds (Д-17).",
+  "samples": [
+    {
+      "hlc": "000000000000001:00000:d",
+      "physical": 1,
+      "counter": 0,
+      "deviceId": "d"
+    },
+    {
+      "hlc": "001789689600000:00000:device-8f2a6c14",
+      "physical": 1789689600000,
+      "counter": 0,
+      "deviceId": "device-8f2a6c14",
+      "createdAt": "2026-09-18T00:00:00.000Z"
+    },
+    {
+      "hlc": "001789689600000:99999:device-8f2a6c14",
+      "physical": 1789689600000,
+      "counter": 99999,
+      "deviceId": "device-8f2a6c14",
+      "createdAt": "2026-09-18T00:00:00.000Z"
+    },
+    {
+      "hlc": "001789689600000:00007:a:b:c",
+      "physical": 1789689600000,
+      "counter": 7,
+      "deviceId": "a:b:c",
+      "createdAt": "2026-09-18T00:00:00.000Z"
+    },
+    {
+      "hlc": "001789689600000:00003:server",
+      "physical": 1789689600000,
+      "counter": 3,
+      "deviceId": "server",
+      "createdAt": "2026-09-18T00:00:00.000Z"
+    }
+  ],
+  "ascending": [
+    "000000000000001:00000:d",
+    "001789689600000:00000:device-8f2a6c14",
+    "001789689600000:00003:server",
+    "001789689600000:00007:a:b:c",
+    "001789689600000:99999:device-8f2a6c14"
+  ]
+}
