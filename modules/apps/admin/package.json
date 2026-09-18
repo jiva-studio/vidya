@@ -1,0 +1,41 @@
+{
+  "name": "@vidya/admin",
+  "version": "0.0.1",
+  "description": "Vidya school administration panel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "vue-tsc --noEmit",
+    "lint:fsd": "steiger ./src",
+    "storybook": "storybook dev -p ${VIDYA_SB_PORT:-7812} --no-open",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "@fluent/bundle": "^0.18.0",
+    "@vidya/domain": "^0.0.0",
+    "@vidya/protocol": "^0.0.0",
+    "@vueuse/core": "^10.9.0",
+    "fluent-vue": "^3.5.0",
+    "vue": "^3.5.43",
+    "vue-router": "^4.2.0"
+  },
+  "devDependencies": {
+    "@feature-sliced/steiger-plugin": "^0.7.0",
+    "@storybook/vue3-vite": "^10.6.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "@vue/test-utils": "^2.5.1",
+    "jsdom": "^27.4.0",
+    "steiger": "^0.6.0",
+    "storybook": "^10.6.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.7.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1",
+    "vue-tsc": "^2.1.10"
+  }
+}
