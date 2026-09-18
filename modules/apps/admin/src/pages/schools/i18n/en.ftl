@@ -20,7 +20,7 @@ schools-form-name-required = Enter a name.
 
 schools-settings-title = School settings
 schools-settings-default-role = New student's role
-schools-settings-default-role-hint = Everyone accepted onto a course gets this role.
+schools-settings-default-role-hint = Everyone accepted onto a course gets this role
 schools-settings-default-role-none = Not set
 schools-settings-student-roles = Student roles
 schools-settings-empty-title = This school has no roles yet

@@ -20,7 +20,7 @@ schools-form-name-required = Укажите название.
 
 schools-settings-title = Настройки школы
 schools-settings-default-role = Роль нового студента
-schools-settings-default-role-hint = Её получит каждый, кого примут на курс.
+schools-settings-default-role-hint = Её получит каждый, кого примут на курс
 schools-settings-default-role-none = Не выбрана
 schools-settings-student-roles = Роли студентов
 schools-settings-empty-title = В этой школе ещё нет ролей

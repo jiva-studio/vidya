@@ -9,13 +9,12 @@ homework-review-title = Домашняя работа
 homework-lesson = Урок: { $title }
 homework-submitted = Сдана { $at }
 homework-reviewed-by = Проверил { $who }, { $at }
-homework-pick-work = Выберите работу в списке слева.
 
 homework-superseded = Ответ написан по версии урока, которая больше не опубликована.
 homework-superseded-open = Открыть эту версию
 
 homework-grade = Оценка
-homework-grade-range = От 0 до 100.
+homework-grade-range = От 0 до 100
 homework-accept = Принять
 homework-return = Вернуть на доработку
 homework-return-title = Вернуть работу?

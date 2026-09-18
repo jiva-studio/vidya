@@ -51,7 +51,7 @@ editor-homework-label = Домашняя работа
 editor-homework-none = Не задаётся
 editor-homework-auto = Задаётся, проверяется автоматически
 editor-homework-teacher = Задаётся, проверяет преподаватель
-editor-homework-note = Отдельного поля для задания нет — сформулируйте его в тексте секции.
+editor-homework-note = Отдельного поля для задания нет — сформулируйте его в тексте секции
 
 # Блоки
 
@@ -71,7 +71,7 @@ editor-block-unknown-body = Здесь его не отредактироват�
 
 editor-text-label = Текст урока
 editor-text-edit = Редактировать текст
-editor-text-hint = Markdown: # заголовок, **жирный**, *курсив*, - список, [ссылка](https://example.org), > цитата.
+editor-text-hint = Markdown: # заголовок, **жирный**, *курсив*, - список, [ссылка](https://example.org), > цитата
 editor-text-placeholder = Наберите текст урока здесь.
 
 editor-source-label = Источник
@@ -81,14 +81,14 @@ editor-source-youtube = YouTube
 editor-source-vimeo = Vimeo
 editor-source-upload = Загруженный файл
 editor-url-label = Ссылка
-editor-url-hint = Адрес по http или https.
+editor-url-hint = Адрес по http или https
 editor-poster-label = Обложка
 editor-poster-hint = Ссылка на картинку — её видно до запуска видео
 
 editor-quiz-question-label = Вопрос
 editor-quiz-question-placeholder = О чём спрашиваете?
 editor-quiz-answers-label = Варианты ответа
-editor-quiz-answers-hint = Отметьте правильный вариант.
+editor-quiz-answers-hint = Отметьте правильный вариант
 editor-quiz-answer-label = Вариант { $number }
 editor-quiz-answer-placeholder = Текст варианта
 editor-quiz-answer-add = Добавить вариант

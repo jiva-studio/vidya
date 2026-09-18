@@ -127,7 +127,7 @@ describe('GroupFormPage', () => {
       },
     })
 
-    expect(page.text()).toContain('The course cannot be changed once the group exists.')
+    expect(page.text()).toContain('The course cannot be changed once the group exists')
   })
 
   it('shows the reason a save was refused', async () => {

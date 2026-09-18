@@ -9,13 +9,12 @@ homework-review-title = Homework
 homework-lesson = Lesson: { $title }
 homework-submitted = Handed in { $at }
 homework-reviewed-by = Reviewed by { $who }, { $at }
-homework-pick-work = Choose a work in the list on the left.
 
 homework-superseded = Answered against a lesson version that is no longer published.
 homework-superseded-open = Open that version
 
 homework-grade = Grade
-homework-grade-range = From 0 to 100.
+homework-grade-range = From 0 to 100
 homework-accept = Accept
 homework-return = Return for revision
 homework-return-title = Return this work?

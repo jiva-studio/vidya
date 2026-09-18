@@ -51,7 +51,7 @@ editor-homework-label = Homework
 editor-homework-none = Not asked for
 editor-homework-auto = Asked for, marked automatically
 editor-homework-teacher = Asked for, a teacher marks it
-editor-homework-note = There is no separate assignment field — write what you ask for in the section text.
+editor-homework-note = There is no separate assignment field — write what you ask for in the section text
 
 # Blocks
 
@@ -71,7 +71,7 @@ editor-block-unknown-body = It cannot be edited here, and while it is in the les
 
 editor-text-label = Lesson text
 editor-text-edit = Edit this text
-editor-text-hint = Markdown: # heading, **bold**, *italic*, - list, [link](https://example.org), > quote.
+editor-text-hint = Markdown: # heading, **bold**, *italic*, - list, [link](https://example.org), > quote
 editor-text-placeholder = Write the lesson text here.
 
 editor-source-label = Source
@@ -81,14 +81,14 @@ editor-source-youtube = YouTube
 editor-source-vimeo = Vimeo
 editor-source-upload = Uploaded file
 editor-url-label = Link
-editor-url-hint = An http or https address.
+editor-url-hint = An http or https address
 editor-poster-label = Poster image
 editor-poster-hint = A link to an image — it shows before the video plays
 
 editor-quiz-question-label = Question
 editor-quiz-question-placeholder = What are you asking?
 editor-quiz-answers-label = Answers
-editor-quiz-answers-hint = Mark the right answer.
+editor-quiz-answers-hint = Mark the right answer
 editor-quiz-answer-label = Answer { $number }
 editor-quiz-answer-placeholder = Answer text
 editor-quiz-answer-add = Add answer
