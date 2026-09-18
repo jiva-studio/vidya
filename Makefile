@@ -89,6 +89,13 @@ export VIDYA_ADMIN_PORT   := 7811
 export VIDYA_SB_PORT      := 7812
 export VIDYA_API_URL      := http://localhost:7810
 
+# The admin builds its school list and its whole menu out of the access token's
+# `permissions` claim, and the API leaves that claim out unless this is on. With
+# it off a signed-in owner gets a token that grants nothing visible: no school in
+# the switcher, no section in the sidebar. There is no endpoint to ask for the
+# permissions instead — `GET /auth/profile` answers with id, email and name.
+export VIDYA_AUTH_SAVE_PERMISSIONS_IN_JWT_TOKEN := true
+
 dev-up:
 	$(COMPOSE) up -d
 	@echo ""
@@ -109,7 +116,13 @@ mail:
 	@xdg-open $(MAIL_UI) >/dev/null 2>&1 || echo "$(MAIL_UI)"
 
 dev: dev-up
+	@echo ""
+	@echo "  admin     http://localhost:$(VIDYA_ADMIN_PORT)"
+	@echo "  swagger   http://localhost:$(VIDYA_API_PORT)/swagger"
+	@echo "  mail      $(MAIL_UI)"
+	@echo ""
 	$(NPM) run dev
+
 
 # The admin, component by component and screen by screen, without API or database.
 storybook:
