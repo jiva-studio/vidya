@@ -2,22 +2,32 @@ import {
   Body,
   Controller,
   ForbiddenException,
+  Get,
   NotFoundException,
   Param,
   ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
-import { LessonsService, LessonVersionsService } from '@vidya/api/edu/services'
+import {
+  EnrollmentsService,
+  LessonsService,
+  LessonVersionsService,
+} from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
 import * as domain from '@vidya/domain'
+import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
 
-import { toVersionDetails, toVersionSummary } from '../../mappers/education.mapper'
+import {
+  toStudentVersionDetails,
+  toVersionDetails,
+  toVersionSummary,
+} from '../../mappers/education.mapper'
 
 const Crud = CrudDecorators({
   entityName: 'LessonVersion',
@@ -36,6 +46,7 @@ export class LessonVersionsController {
   constructor(
     private readonly lessons: LessonsService,
     private readonly versions: LessonVersionsService,
+    private readonly enrollments: EnrollmentsService,
   ) {}
 
   /**
@@ -73,6 +84,49 @@ export class LessonVersionsController {
     return {
       items: versions.map((v) => toVersionSummary(v)),
     }
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*              GET /edu/lessons/:lessonId/versions/published                 */
+  /* -------------------------------------------------------------------------- */
+
+  /**
+   * The version students work against, content included.
+   *
+   * It is declared above the `:versionId` route because Express matches in
+   * declaration order and `published` is not a uuid.
+   *
+   * Reading a lesson used to cost two requests — list the versions, then fetch
+   * one — and that list also handed drafts to whoever asked. This route answers
+   * the only question a student has, and answers it with the quiz keys withheld.
+   */
+  @Get(Routes().edu.lessons.versions.published(':lessonId'))
+  @ApiOperation({
+    summary: 'Get the published version of a lesson',
+    operationId: 'LessonVersion::getPublished',
+  })
+  @ApiOkResponse({
+    type: dto.GetPublishedLessonVersionResponse,
+    description: 'Published lesson version, without quiz answer keys',
+  })
+  async getPublished(
+    @Param('lessonId', new ParseUUIDPipe()) lessonId: domain.LessonId,
+    @Authentication() auth: UserAuthentication,
+  ): Promise<dto.GetPublishedLessonVersionResponse> {
+    const lesson = await this.lessons.findOneBy({ id: lessonId })
+
+    if (!lesson) {
+      throw new NotFoundException(`Lesson with id ${lessonId} not found`)
+    }
+
+    await this.assertMayReadPublished(lesson, auth)
+    const published = await this.versions.latestPublished(lessonId)
+
+    if (!published) {
+      throw new NotFoundException(`Lesson ${lessonId} has no published version`)
+    }
+
+    return toStudentVersionDetails(published)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -154,5 +208,31 @@ export class LessonVersionsController {
     const published = await this.versions.publish(lessonId, versionId)
 
     return toVersionSummary(published)
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                  Helpers                                   */
+  /* -------------------------------------------------------------------------- */
+
+  /**
+   * Staff reach published content through their permission; a student reaches
+   * it by holding a place on the course. A student holds no `lessons:read`, so
+   * this is the one version route that does not go through `lessonOr404`.
+   */
+  private async assertMayReadPublished(
+    lesson: entities.Lesson,
+    auth: UserAuthentication,
+  ): Promise<void> {
+    if (auth.permissions.has(['lessons:read'], { schoolId: lesson.schoolId })) return
+
+    const enrollment = await this.enrollments.findOneBy({
+      studentId: auth.userId,
+      courseId: lesson.courseId,
+      status: 'accepted',
+    })
+
+    if (!enrollment) {
+      throw new ForbiddenException('Not enrolled on the course this lesson belongs to')
+    }
   }
 }
