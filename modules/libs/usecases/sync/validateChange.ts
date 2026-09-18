@@ -82,6 +82,16 @@ export interface ValidChange {
   readonly data: SyncPayload | null
   readonly hlc: string
   readonly scope: SyncScopeRef
+
+  /**
+   * The school the row belongs to, off the envelope rather than the document.
+   *
+   * One local database holds several schools, so every stored row needs one —
+   * but only some documents repeat it in their body. A lesson version, for
+   * instance, has no school of its own: its school is a fact about where the
+   * row sits, which is exactly what the envelope states.
+   */
+  readonly schoolId: string
 }
 
 /**
@@ -128,7 +138,15 @@ export function validateChange(change: SyncChange, required: RequiredFields): Ch
   const collection = change.collection as SyncCollection
   if (change.op === 'delete') return accept(change, collection, null)
 
-  const data = change.data
+  // The school comes off the envelope, not the document. Homework and enrolments
+  // repeat it in their body, content does not — a lesson version has no school
+  // of its own, and one local database holds several. Folding it in here, ahead
+  // of the required-field check, makes every collection behave the same way and
+  // keeps the device from filing a row under no school at all.
+  const data: SyncPayload | null =
+    change.data === null || change.data === undefined
+      ? null
+      : { ...change.data, schoolId: change.schoolId }
   if (data === null || data === undefined) return skip('missingData')
 
   const oversized = checkSize(data)
@@ -189,6 +207,7 @@ function accept(
       data,
       hlc: change.hlc,
       scope: change.scope,
+      schoolId: change.schoolId,
     },
   }
 }

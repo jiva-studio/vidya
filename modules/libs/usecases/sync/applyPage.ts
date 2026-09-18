@@ -169,6 +169,10 @@ async function applyOne(
     docId: change.docId,
     hlc: change.hlc,
     deleted: change.op === 'delete',
+
+    // `data` already carries the envelope's school: validateChange folds it in
+    // before the required-field check, so every collection is stored the same
+    // way whether or not its document repeats the school.
     data: change.data,
   }
 

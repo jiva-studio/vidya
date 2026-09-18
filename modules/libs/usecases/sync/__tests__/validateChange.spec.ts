@@ -126,7 +126,14 @@ describe('validating one incoming row', () => {
     const text = 'श्री · 🙏🏽 · مرحبا · שלום'
     const verdict = validateChange(change({ data: { id: UUID, text } }), NO_REQUIRED_FIELDS)
 
-    expect(verdict.verdict === 'storable' && verdict.change.data).toEqual({ id: UUID, text })
+    // The school is folded in from the envelope — one local database holds
+    // several, and not every document repeats its own. Everything the server
+    // actually wrote survives byte for byte, which is what this test is about.
+    expect(verdict.verdict === 'storable' && verdict.change.data).toEqual({
+      id: UUID,
+      text,
+      schoolId: UUID,
+    })
   })
 
   it('T-X-14: an empty string and an empty array are values, not absences', () => {
