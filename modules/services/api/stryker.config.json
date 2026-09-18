@@ -1,0 +1,38 @@
+{
+  "$schema": "../../node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "npm",
+  "testRunner": "jest",
+  "jest": {
+    "projectType": "custom",
+    "configFile": "jest.config.js"
+  },
+  "inPlace": true,
+  "coverageAnalysis": "perTest",
+  "ignoreStatic": true,
+  "incremental": true,
+  "incrementalFile": "../../../.stryker/incremental/api.json",
+  "mutate": [
+    "src/**/*.ts",
+    "!src/**/specs/**",
+    "!src/**/*.spec.ts",
+    "!src/main.ts",
+    "!src/**/*.module.ts",
+    "!src/**/index.ts"
+  ],
+  "reporters": [
+    "clear-text",
+    "progress"
+  ],
+  "clearTextReporter": {
+    "maxTestsToLog": 0
+  },
+  "timeoutMS": 20000,
+  "timeoutFactor": 2,
+  "dryRunTimeoutMinutes": 15,
+  "disableBail": false,
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "break": 0
+  }
+}
