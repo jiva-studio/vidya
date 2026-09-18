@@ -122,6 +122,20 @@ describe('sync scopes, checksums and the acknowledged position', () => {
       expect(second.checksums).toEqual(first.checksums)
     })
 
+    it('gives a scope standing at the head the same sum on the next run', async () => {
+      // The device only compares the sum where its position did not move, so a
+      // sum that drifted on its own would have it refetch the scope every run.
+      const first = (await pull({ limit: protocol.SYNC_MAX_PULL_LIMIT }).expect(200))
+        .body as protocol.PullResponse
+
+      const atHead = (
+        await pull({ cursors: first.cursors, limit: protocol.SYNC_MAX_PULL_LIMIT }).expect(200)
+      ).body as protocol.PullResponse
+
+      expect(atHead.changes).toEqual([])
+      expect(atHead.checksums).toEqual(first.checksums)
+    })
+
     it('moves the changed scope and leaves the other alone', async () => {
       const before = (await pull().expect(200)).body as protocol.PullResponse
 

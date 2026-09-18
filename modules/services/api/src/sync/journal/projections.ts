@@ -125,6 +125,9 @@ const enrollments: CollectionProjection<Enrollment> = {
     studentId: enrollment.studentId,
     schoolId: enrollment.schoolId,
     status: enrollment.status,
+    decidedById: enrollment.decidedById ?? null,
+    decidedAt: enrollment.decidedAt ?? null,
+    createdAt: enrollment.createdAt,
   }),
 }
 
@@ -141,6 +144,7 @@ const homework: CollectionProjection<Homework> = {
     status: item.status,
     text: item.text,
     grade: item.grade ?? null,
+    reviewedById: item.reviewedById ?? null,
     answeredSupersededVersion: item.answeredSupersededVersion,
     submittedAt: item.submittedAt ?? null,
     reviewedAt: item.reviewedAt ?? null,
