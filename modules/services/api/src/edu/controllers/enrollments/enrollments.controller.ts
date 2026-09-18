@@ -106,7 +106,7 @@ export class EnrollmentsController {
   ): Promise<dto.GetEnrollmentResponse> {
     const enrollment = await this.enrollments.getOrFail(id)
 
-    const isOwner = enrollment.studentId === auth.userId
+    const isOwner = this.enrollments.isOwnedBy(enrollment, auth.userId)
     const isStaff = auth.permissions.has(['enrollments:read'], {
       schoolId: enrollment.schoolId,
     })

@@ -49,9 +49,6 @@ export class Enrollment {
   @Column({ type: 'timestamptz', nullable: true })
   decidedAt: Date
 
-  @Column({ type: 'timestamptz', nullable: true })
-  archivedAt: Date
-
   @Column({ type: 'timestamptz', nullable: false, default: () => 'now()' })
   createdAt: Date
 }

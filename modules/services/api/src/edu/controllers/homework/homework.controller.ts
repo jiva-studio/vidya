@@ -65,7 +65,7 @@ export class HomeworkController {
       throw new NotFoundException(`Lesson version ${request.lessonVersionId} not found`)
     }
 
-    const enrollment = await this.enrollmentForLessonVersion(version.lessonId, auth.userId)
+    const enrollment = await this.enrollments.forLessonVersion(request.lessonVersionId, auth.userId)
 
     const saved = await this.homework.submit({
       enrollment,
@@ -155,33 +155,13 @@ export class HomeworkController {
   /*                                  Helpers                                   */
   /* -------------------------------------------------------------------------- */
 
-  /** The student's accepted place on the course this lesson belongs to. */
-  private async enrollmentForLessonVersion(lessonId: string, studentId: string) {
-    const lesson = await this.lessons.findOneBy({ id: lessonId })
-
-    if (!lesson) {
-      throw new NotFoundException(`Lesson with id ${lessonId} not found`)
-    }
-
-    const enrollment = await this.enrollments.findOneBy({
-      studentId,
-      courseId: lesson.courseId,
-      status: 'accepted',
-    })
-
-    // Access to course content comes from being enrolled, not from a permission.
-    // A pending or declined request is not a place on the course.
-    if (!enrollment) {
-      throw new ForbiddenException('Not enrolled on the course this lesson belongs to')
-    }
-
-    return enrollment
-  }
-
   private async assertMayRead(work: entities.Homework, auth: UserAuthentication): Promise<void> {
     if (auth.permissions.has(['homework:read'], { schoolId: work.schoolId })) return
 
     const enrollment = await this.enrollments.findOneBy({ id: work.enrollmentId })
-    this.homework.assertMayRead(work, enrollment, auth.userId)
+
+    if (!this.enrollments.isOwnedBy(enrollment, auth.userId)) {
+      throw new ForbiddenException('User does not have permission')
+    }
   }
 }

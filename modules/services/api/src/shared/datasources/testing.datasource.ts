@@ -1,6 +1,7 @@
 import { MigrationClient, runMigrations } from '@vidya/api/shared/migrations'
 import { Entities } from '@vidya/entities'
 import { join } from 'path'
+import { Client } from 'pg'
 import { DataType, newDb } from 'pg-mem'
 import { DataSource } from 'typeorm'
 import { v4 } from 'uuid'
@@ -118,6 +119,7 @@ const inMemoryDataSource = async (): Promise<DataSource> => {
 const postgresDataSource = async (): Promise<DataSource> => {
   const database = workerDatabase()
   await ensureDatabase(database)
+  await resetSchema(database)
 
   const ds = new DataSource({
     type: 'postgres',
@@ -126,34 +128,57 @@ const postgresDataSource = async (): Promise<DataSource> => {
   })
 
   await ds.initialize()
-
-  // Every suite starts from an empty schema. Dropping rather than truncating
-  // means a migration that only works against a database it has already run on
-  // cannot hide here.
-  await ds.query('DROP SCHEMA IF EXISTS public CASCADE')
-  await ds.query('CREATE SCHEMA public')
-  await ds.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
-
   await applyMigrations(ds)
 
   return ds
 }
 
-/** Creates the worker's database on first use; a second call is a no-op. */
-const ensureDatabase = async (database: string): Promise<void> => {
-  const admin = new DataSource({ type: 'postgres', ...postgresTestConfig('postgres') })
-  await admin.initialize()
+/**
+ * Empties the worker's database before the pool is opened.
+ *
+ * Dropping rather than truncating means a migration that only works against a
+ * database it has already run on cannot hide here.
+ *
+ * It runs on its own connection, and before `initialize()`, for a reason that
+ * cost an afternoon: a pooled connection resolves `public` to a schema OID when
+ * it is first used, so a connection opened before the drop keeps pointing at
+ * the schema that no longer exists. The next statement on it fails with "no
+ * schema has been selected to create in" — intermittently, depending on which
+ * connection the pool hands out.
+ */
+const resetSchema = async (database: string): Promise<void> => {
+  const client = new Client(pgClientConfig(database))
+  await client.connect()
 
   try {
-    const existing = await admin.query('SELECT 1 FROM pg_database WHERE datname = $1', [database])
+    await client.query('DROP SCHEMA IF EXISTS public CASCADE')
+    await client.query('CREATE SCHEMA public')
+    await client.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
+  } finally {
+    await client.end()
+  }
+}
 
-    if (existing.length === 0) {
+/** Creates the worker's database on first use; a second call is a no-op. */
+const ensureDatabase = async (database: string): Promise<void> => {
+  const admin = new Client(pgClientConfig('postgres'))
+  await admin.connect()
+
+  try {
+    const { rows } = await admin.query('SELECT 1 FROM pg_database WHERE datname = $1', [database])
+
+    if (rows.length === 0) {
       // Not parameterisable: CREATE DATABASE takes an identifier, not a value.
       // The name is built from a worker id we generated, never from input.
       await admin.query(`CREATE DATABASE "${database}"`)
     }
+  } catch (error) {
+    // Two workers can reach this at the same moment on a cold database; the
+    // loser sees a duplicate and can carry on, because the database it wanted
+    // now exists.
+    if (!/already exists/.test((error as Error).message)) throw error
   } finally {
-    await admin.destroy()
+    await admin.end()
   }
 }
 

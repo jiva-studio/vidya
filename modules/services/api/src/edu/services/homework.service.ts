@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common'
+import { ConflictException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { canTransitionHomework, HomeworkStatus } from '@vidya/domain'
 import { Enrollment, Homework, LessonVersion } from '@vidya/entities'
@@ -113,12 +113,5 @@ export class HomeworkService extends ScopedEntitiesService<Homework, Scope> {
     if (enrollments.length === 0) return []
 
     return this.findAll({ where: enrollments.map((e) => ({ enrollmentId: e.id, status })) })
-  }
-
-  /** A student reads their own work; staff read their school's. */
-  assertMayRead(work: Homework, enrollment: Enrollment | null, userId: string): void {
-    if (enrollment?.studentId !== userId) {
-      throw new ForbiddenException('User does not have permission')
-    }
   }
 }

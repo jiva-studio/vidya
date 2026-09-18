@@ -11,7 +11,6 @@ CREATE TABLE "enrollments" (
   "status"       character varying NOT NULL DEFAULT 'pending',
   "decidedById"  uuid,
   "decidedAt"    TIMESTAMPTZ,
-  "archivedAt"   TIMESTAMPTZ,
   "createdAt"    TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT "PK_enrollments" PRIMARY KEY ("id"),
   CONSTRAINT "UQ_enrollments_course_student" UNIQUE ("courseId", "studentId"),
