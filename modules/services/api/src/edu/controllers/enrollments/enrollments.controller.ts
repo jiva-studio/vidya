@@ -2,7 +2,6 @@ import { Mapper } from '@automapper/core'
 import { InjectMapper } from '@automapper/nestjs'
 import {
   Body,
-  ConflictException,
   Controller,
   ForbiddenException,
   NotFoundException,
@@ -16,7 +15,7 @@ import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
-import { CoursesService, EnrollmentsService, GroupsService } from '@vidya/api/edu/services'
+import { CoursesService, EnrollmentsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
 import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
@@ -38,7 +37,6 @@ export class EnrollmentsController {
   constructor(
     private readonly enrollments: EnrollmentsService,
     private readonly courses: CoursesService,
-    private readonly groups: GroupsService,
     @InjectMapper() private readonly mapper: Mapper,
   ) {}
 
@@ -64,23 +62,7 @@ export class EnrollmentsController {
       throw new NotFoundException(`Course with id ${request.courseId} not found`)
     }
 
-    const existing = await this.enrollments.findOneBy({
-      courseId: request.courseId,
-      studentId: auth.userId,
-    })
-
-    if (existing) {
-      throw new ConflictException('Already enrolled on this course')
-    }
-
-    // The request starts pending: a school decides who joins, and which group
-    // they land in. Until then groupId stays empty and the student waits.
-    const created = await this.enrollments.create({
-      courseId: request.courseId,
-      studentId: auth.userId,
-      schoolId: course.schoolId,
-      status: 'pending',
-    })
+    const created = await this.enrollments.request(course, auth.userId)
 
     return this.mapper.map(created, entities.Enrollment, dto.CreateEnrollmentResponse)
   }
@@ -122,11 +104,7 @@ export class EnrollmentsController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetEnrollmentResponse> {
-    const enrollment = await this.enrollments.findOneBy({ id })
-
-    if (!enrollment) {
-      throw new NotFoundException(`Enrollment with id ${id} not found`)
-    }
+    const enrollment = await this.enrollments.getOrFail(id)
 
     const isOwner = enrollment.studentId === auth.userId
     const isStaff = auth.permissions.has(['enrollments:read'], {
@@ -150,35 +128,17 @@ export class EnrollmentsController {
     @Body() request: dto.ModerateEnrollmentRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.ModerateEnrollmentResponse> {
-    const enrollment = await this.enrollments.findOneBy({ id })
-
-    if (!enrollment) {
-      throw new NotFoundException(`Enrollment with id ${id} not found`)
-    }
+    const enrollment = await this.enrollments.getOrFail(id)
 
     if (!auth.permissions.has(['enrollments:moderate'], { schoolId: enrollment.schoolId })) {
       throw new ForbiddenException('User does not have permission')
     }
 
-    if (enrollment.status !== 'pending') {
-      throw new ConflictException(`Enrollment ${id} has already been decided`)
-    }
-
-    if (request.groupId) {
-      await this.assertGroupBelongsToCourse(request.groupId, enrollment.courseId)
-    }
-
-    const updated = await this.enrollments.updateOneBy(
-      { id },
-      {
-        status: request.status,
-        // Accepting without a group is deliberate: the student is in, and waits
-        // in the queue until a suitable group exists.
-        groupId: request.groupId ?? null,
-        decidedById: auth.userId,
-        decidedAt: new Date(),
-      },
-    )
+    const updated = await this.enrollments.moderate(enrollment, {
+      status: request.status,
+      groupId: request.groupId,
+      decidedById: auth.userId,
+    })
 
     return this.mapper.map(updated, entities.Enrollment, dto.ModerateEnrollmentResponse)
   }
@@ -193,42 +153,14 @@ export class EnrollmentsController {
     @Body() request: dto.AssignEnrollmentGroupRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.AssignEnrollmentGroupResponse> {
-    const enrollment = await this.enrollments.findOneBy({ id })
-
-    if (!enrollment) {
-      throw new NotFoundException(`Enrollment with id ${id} not found`)
-    }
+    const enrollment = await this.enrollments.getOrFail(id)
 
     if (!auth.permissions.has(['enrollments:moderate'], { schoolId: enrollment.schoolId })) {
       throw new ForbiddenException('User does not have permission')
     }
 
-    if (enrollment.status !== 'accepted') {
-      throw new ConflictException(`Enrollment ${id} is not accepted`)
-    }
-
-    if (request.groupId) {
-      await this.assertGroupBelongsToCourse(request.groupId, enrollment.courseId)
-    }
-
-    const updated = await this.enrollments.updateOneBy({ id }, { groupId: request.groupId })
+    const updated = await this.enrollments.assignGroup(enrollment, request.groupId)
 
     return this.mapper.map(updated, entities.Enrollment, dto.AssignEnrollmentGroupResponse)
-  }
-
-  /**
-   * A group belongs to exactly one course. Placing a student in a group from a
-   * different course would give them a place in a course they never applied to.
-   */
-  private async assertGroupBelongsToCourse(groupId: string, courseId: string): Promise<void> {
-    const group = await this.groups.findOneBy({ id: groupId })
-
-    if (!group) {
-      throw new NotFoundException(`Group with id ${groupId} not found`)
-    }
-
-    if (group.courseId !== courseId) {
-      throw new ConflictException(`Group ${groupId} does not belong to course ${courseId}`)
-    }
   }
 }

@@ -2,7 +2,6 @@ import { Mapper } from '@automapper/core'
 import { InjectMapper } from '@automapper/nestjs'
 import {
   Body,
-  ConflictException,
   Controller,
   ForbiddenException,
   NotFoundException,
@@ -56,16 +55,6 @@ export class LessonVersionsController {
     return lesson
   }
 
-  private async versionOr404(lessonId: string, versionId: string) {
-    const version = await this.versions.findOneBy({ id: versionId, lessonId })
-
-    if (!version) {
-      throw new NotFoundException(`Version ${versionId} of lesson ${lessonId} not found`)
-    }
-
-    return version
-  }
-
   /* -------------------------------------------------------------------------- */
   /*                    GET /edu/lessons/:lessonId/versions                     */
   /* -------------------------------------------------------------------------- */
@@ -104,7 +93,7 @@ export class LessonVersionsController {
     }
 
     await this.lessonOr404(lessonId, auth)
-    const version = await this.versionOr404(lessonId, versionId)
+    const version = await this.versions.getOrFail(lessonId, versionId)
 
     return this.mapper.map(version, entities.LessonVersion, dto.GetLessonVersionResponse)
   }
@@ -123,26 +112,7 @@ export class LessonVersionsController {
     }
 
     await this.lessonOr404(lessonId, auth)
-    const existing = await this.versions.findAll({ where: { lessonId } })
-
-    // Only one draft at a time: a second one would make "the draft" ambiguous
-    // for the editor and for publishing.
-    if (existing.some((v) => v.status === 'draft')) {
-      throw new ConflictException(`Lesson ${lessonId} already has an open draft`)
-    }
-
-    // A new draft starts from the latest published content rather than empty,
-    // because a revision is nearly always an edit of what is live.
-    const latestPublished = existing
-      .filter((v) => v.status === 'published')
-      .sort((a, b) => b.version - a.version)[0]
-
-    const created = await this.versions.create({
-      lessonId,
-      version: Math.max(0, ...existing.map((v) => v.version)) + 1,
-      status: 'draft',
-      content: latestPublished?.content ?? { sections: [] },
-    })
+    const created = await this.versions.openDraft(lessonId)
 
     return this.mapper.map(created, entities.LessonVersion, dto.LessonVersionSummary)
   }
@@ -163,17 +133,7 @@ export class LessonVersionsController {
     }
 
     await this.lessonOr404(lessonId, auth)
-    const version = await this.versionOr404(lessonId, versionId)
-
-    // Published content is what submitted homework points at. Editing it would
-    // silently change the question a student already answered.
-    if (version.status === 'published') {
-      throw new ConflictException(
-        `Version ${versionId} is published and cannot be edited. Create a new draft instead.`,
-      )
-    }
-
-    const updated = await this.versions.updateOneBy({ id: versionId }, { content: request.content })
+    const updated = await this.versions.saveDraft(lessonId, versionId, request.content)
 
     return this.mapper.map(updated, entities.LessonVersion, dto.UpdateLessonVersionResponse)
   }
@@ -195,16 +155,7 @@ export class LessonVersionsController {
     }
 
     await this.lessonOr404(lessonId, auth)
-    const version = await this.versionOr404(lessonId, versionId)
-
-    if (version.status === 'published') {
-      throw new ConflictException(`Version ${versionId} is already published`)
-    }
-
-    const published = await this.versions.updateOneBy(
-      { id: versionId },
-      { status: 'published', publishedAt: new Date() },
-    )
+    const published = await this.versions.publish(lessonId, versionId)
 
     return this.mapper.map(published, entities.LessonVersion, dto.PublishLessonVersionResponse)
   }

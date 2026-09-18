@@ -2,7 +2,6 @@ import { Mapper } from '@automapper/core'
 import { InjectMapper } from '@automapper/nestjs'
 import {
   Body,
-  ConflictException,
   Controller,
   ForbiddenException,
   NotFoundException,
@@ -23,7 +22,6 @@ import {
   LessonVersionsService,
 } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import { canTransitionHomework } from '@vidya/domain'
 import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
 
@@ -70,37 +68,12 @@ export class HomeworkController {
 
     const enrollment = await this.enrollmentForLessonVersion(version.lessonId, auth.userId)
 
-    const existing = await this.homework.findOneBy({
-      enrollmentId: enrollment.id,
-      lessonVersionId: request.lessonVersionId,
+    const saved = await this.homework.submit({
+      enrollment,
+      version,
       sectionId: request.sectionId,
-    })
-
-    // Submitting freezes the answer. The student edits again only after the work
-    // comes back for revision.
-    if (existing && !['open', 'returned'].includes(existing.status)) {
-      throw new ConflictException(
-        existing.status === 'accepted'
-          ? 'This work has already been accepted'
-          : `Work is ${existing.status} and cannot be edited`,
-      )
-    }
-
-    const fields = {
-      enrollmentId: enrollment.id,
-      lessonVersionId: request.lessonVersionId,
-      sectionId: request.sectionId,
-      schoolId: enrollment.schoolId,
-      status: 'pending' as const,
       text: request.text,
-      answeredSupersededVersion: await this.isSuperseded(version),
-      submittedAt: new Date(),
-      updatedAt: new Date(),
-    }
-
-    const saved = existing
-      ? await this.homework.updateOneBy({ id: existing.id }, fields)
-      : await this.homework.create(fields)
+    })
 
     return this.mapper.map(saved, entities.Homework, dto.SubmitHomeworkResponse)
   }
@@ -127,17 +100,7 @@ export class HomeworkController {
     // A student without the permission sees only their own work, which is found
     // through their enrollments rather than by trusting an id in the query.
     const mine = await this.enrollments.findAll({ where: { studentId: auth.userId } })
-
-    // An OR over an empty list is `where: []`, which TypeORM reads as "no
-    // filter" and answers with every row in the table. A student with no
-    // enrollments must see nothing, not everything.
-    if (mine.length === 0) {
-      return { items: [] }
-    }
-
-    const found = await this.homework.findAll({
-      where: mine.map((e) => ({ enrollmentId: e.id, status: query.status })),
-    })
+    const found = await this.homework.forEnrollments(mine, query.status)
 
     return {
       items: found.map((h) => this.mapper.map(h, entities.Homework, dto.HomeworkSummary)),
@@ -184,20 +147,11 @@ export class HomeworkController {
       throw new ForbiddenException('User does not have permission')
     }
 
-    if (!canTransitionHomework(work.status, request.status)) {
-      throw new ConflictException(`Cannot move work from ${work.status} to ${request.status}`)
-    }
-
-    const updated = await this.homework.updateOneBy(
-      { id },
-      {
-        status: request.status,
-        grade: request.status === 'accepted' ? request.grade : null,
-        reviewedById: auth.userId,
-        reviewedAt: new Date(),
-        updatedAt: new Date(),
-      },
-    )
+    const updated = await this.homework.review(work, {
+      status: request.status,
+      grade: request.grade,
+      reviewerId: auth.userId,
+    })
 
     return this.mapper.map(updated, entities.Homework, dto.ReviewHomeworkResponse)
   }
@@ -205,22 +159,6 @@ export class HomeworkController {
   /* -------------------------------------------------------------------------- */
   /*                                  Helpers                                   */
   /* -------------------------------------------------------------------------- */
-
-  /**
-   * Whether the lesson moved on while the student was answering.
-   *
-   * The work is accepted either way — an edit made while a device was offline
-   * is not the student's fault — but the reviewer is told, so they can open the
-   * version that was actually answered rather than the current one.
-   */
-  private async isSuperseded(answered: entities.LessonVersion): Promise<boolean> {
-    const published = await this.versions.findAll({
-      where: { lessonId: answered.lessonId, status: 'published' },
-    })
-
-    const latest = published.sort((a, b) => b.version - a.version)[0]
-    return Boolean(latest) && latest.id !== answered.id
-  }
 
   /** The student's accepted place on the course this lesson belongs to. */
   private async enrollmentForLessonVersion(lessonId: string, studentId: string) {
@@ -249,9 +187,6 @@ export class HomeworkController {
     if (auth.permissions.has(['homework:read'], { schoolId: work.schoolId })) return
 
     const enrollment = await this.enrollments.findOneBy({ id: work.enrollmentId })
-
-    if (enrollment?.studentId !== auth.userId) {
-      throw new ForbiddenException('User does not have permission')
-    }
+    this.homework.assertMayRead(work, enrollment, auth.userId)
   }
 }
