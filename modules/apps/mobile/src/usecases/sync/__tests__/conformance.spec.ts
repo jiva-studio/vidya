@@ -110,12 +110,25 @@ describe('reading a pull page as the contract prints it', () => {
 
     expect(result.applied).toBe(page.changes.length)
 
+    // Compared as a whole rather than scope by scope. A loop over the fixture's
+    // own keys asserts nothing at all if the fixture ever loses its `cursors`:
+    // the body would simply not run, and the case would stay green while the
+    // device stored no position whatsoever.
     const scopes = await engine.state.listScopes()
-    for (const [key, cursor] of Object.entries(page.cursors)) {
-      const stored = scopes.find((scope) => syncScopeKey(scope.scope) === key)
-      expect(stored?.cursor).toBe(cursor)
-      expect(stored?.checksum).toBe(page.checksums[key as never])
-    }
+    const stored = Object.fromEntries(
+      scopes.map((scope) => [
+        syncScopeKey(scope.scope),
+        { cursor: scope.cursor, checksum: scope.checksum },
+      ]),
+    )
+    const promised = Object.fromEntries(
+      Object.entries(page.cursors).map(([key, cursor]) => [
+        key,
+        { cursor, checksum: page.checksums[key as never] ?? null },
+      ]),
+    )
+
+    expect(stored).toEqual(promised)
 
     // `hasMore` is true, and the second page repeats itself, so the guard that
     // stops a loop with no progress is what ends the run (D-19).
