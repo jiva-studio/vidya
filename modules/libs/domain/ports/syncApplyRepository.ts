@@ -58,6 +58,17 @@ export interface ISyncApplyRepository {
    */
   latestServerHlc(): Promise<string | null>
 
+  /**
+   * The same, for every identity on this installation.
+   *
+   * The observed half of the device's clock seat. A stamp this handset has seen
+   * is part of its clock whichever account was signed in when it arrived, and
+   * the counter that keeps two writes of one millisecond apart belongs to the
+   * device id they share (D-7). Reading it per identity lets the seat fall back
+   * when the student changes, and a stamp already issued gets issued again.
+   */
+  latestServerHlcOnDevice(): Promise<string | null>
+
   /** Record a server HLC for a document — the push path's `accepted` answer. */
   recordServerHlc(collection: SyncCollection, docId: string, hlc: string): Promise<void>
 

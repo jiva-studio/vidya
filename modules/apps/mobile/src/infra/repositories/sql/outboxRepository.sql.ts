@@ -68,6 +68,7 @@ export function createSqlOutboxRepository(deps: SqlOutboxRepositoryDeps): IOutbo
     append: (entry) => append(db, now, entry),
     acknowledge: (results) => acknowledge(db, results),
     latestHlc: (ownerId) => latestHlc(db, ownerId),
+    latestHlcOnDevice: () => latestHlcOnDevice(db),
     latestId: (ownerId) => latestId(db, ownerId),
   }
 }
@@ -178,6 +179,20 @@ async function latestHlc(db: IDatabase, ownerId: string): Promise<string | null>
     'SELECT MAX(hlc) AS hlc FROM outbox WHERE owner_id = ?',
     [ownerId],
   )
+
+  return rows[0]?.hlc ?? null
+}
+
+/**
+ * The highest HLC on this installation, whoever journaled it (D-7).
+ *
+ * No `owner_id` in the statement, and that absence is the point: the stamp's
+ * counter belongs to the device id every row here shares, so the seat it is
+ * read from has to be the device's too. Filtering by identity hands the next
+ * student a counter that starts again from a millisecond already spent.
+ */
+async function latestHlcOnDevice(db: IDatabase): Promise<string | null> {
+  const rows = await db.query<{ hlc: string | null }>('SELECT MAX(hlc) AS hlc FROM outbox')
 
   return rows[0]?.hlc ?? null
 }

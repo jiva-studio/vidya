@@ -135,6 +135,19 @@ export interface IOutboxRepository {
   latestHlc(ownerId: string): Promise<string | null>
 
   /**
+   * The highest HLC ever journaled on this installation, whoever wrote it.
+   *
+   * The HLC is the **device's** clock, not an identity's: one `device_id` sits
+   * in every stamp this installation issues, and the counter that makes two
+   * stamps of the same millisecond distinct is counted per device. Seeding that
+   * counter from one identity's rows restarts it when the handset changes
+   * hands, and the next student's first write is then stamped with an HLC the
+   * previous one already used — two different writes under one idempotency key
+   * (D-7). Hence: every row, every owner, one seat.
+   */
+  latestHlcOnDevice(): Promise<string | null>
+
+  /**
    * The highest `id` ever journaled, `0` when the journal is empty. The push
    * watermark is moved to it, so the rows already answered for are stepped
    * over without being removed.

@@ -23,7 +23,7 @@ import {
   SECTION_ID,
   USER_SCOPE,
 } from './fakeSyncServer'
-import { type Harness, openHarness, OWNER } from './harness'
+import { type Harness, openHarness, OTHER_OWNER, OWNER } from './harness'
 
 /**
  * The seven defects a hostile review reproduced on this engine, each pinned by
@@ -298,5 +298,20 @@ describe('the seven defects', () => {
     const latest = await harness.engine.outbox.latestId(OWNER)
     expect(result.push!.journaledOutboxId).toBe(latest)
     expect(journalHasLocalWrites(result.push!.journaledOutboxId, latest)).toBe(true)
+  })
+
+  it('D-7: the clock seat is the device one, so a handover cannot reissue a stamp', async () => {
+    // Four writes inside one millisecond, the handset changing hands halfway.
+    await harness.engine.homework.saveAnswer(answer('one'))
+    await harness.engine.homework.saveAnswer(answer('two'))
+    harness.ownerId = OTHER_OWNER
+    await harness.engine.homework.saveAnswer(answer('three'))
+    await harness.engine.homework.saveAnswer(answer('four'))
+
+    const stamps = (await harness.allOutboxRows()).map((row) => row.hlc)
+
+    expect(stamps).toHaveLength(4)
+    expect(new Set(stamps).size).toBe(4)
+    expect([...stamps].sort()).toEqual(stamps)
   })
 })

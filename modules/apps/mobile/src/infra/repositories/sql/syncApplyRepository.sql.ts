@@ -171,6 +171,22 @@ export function createSqlSyncApplyRepository(
     },
 
     /**
+     * The same over every identity on this installation — the observed half of
+     * the device's clock seat (D-7).
+     *
+     * Deliberately unfiltered. The stamps in this table were all seen by one
+     * handset, whose device id is the one every local stamp carries, so the
+     * seat the next stamp starts from is the handset's and not the account's.
+     */
+    async latestServerHlcOnDevice(): Promise<string | null> {
+      const rows = await db.query<{ hlc: string | null }>(
+        'SELECT MAX(server_hlc) AS hlc FROM sync_doc_hlc',
+      )
+
+      return rows[0]?.hlc ?? null
+    },
+
+    /**
      * Whether writing `data` would change anything. A cheap guard for the
      * screens: an identical page redelivered after a reconnect must not repaint
      * a lesson the student is reading (T-R-3).

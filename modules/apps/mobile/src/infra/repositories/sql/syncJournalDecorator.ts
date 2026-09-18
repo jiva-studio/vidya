@@ -188,10 +188,19 @@ function createJournal(deps: SyncJournalDeps): Journal {
  * clock trails another's stamps its edit *below* the change that edit descends
  * from — the server accepts the push, and every device that later pulls both
  * resolves the conflict in favour of the older text.
+ *
+ * Neither half is read per identity, and that is the whole of D-7. An HLC is
+ * the clock of a *device*: the `device_id` it ends with is this installation's,
+ * and the counter before it is what keeps two writes of the same millisecond
+ * apart. Seat that counter on the signed-in account and it starts again the
+ * moment the handset changes hands — the next student's first write is stamped
+ * with a string the previous student's first write already carries, and the
+ * stamp doubles as the idempotency key of a push. Every row on this disk was
+ * written by this one device, so every row on this disk is its clock.
  */
 async function lastSeen(deps: SyncJournalDeps) {
-  const journaled = await deps.outbox.latestHlc(deps.ownerId())
-  const observed = await deps.apply.latestServerHlc()
+  const journaled = await deps.outbox.latestHlcOnDevice()
+  const observed = await deps.apply.latestServerHlcOnDevice()
   const seed = maxHlcString(journaled, observed)
 
   return seed === null ? null : parseHlc(seed)
