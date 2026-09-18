@@ -1,4 +1,4 @@
-# 📋 Task Specification: Stage 1 — Data Foundation & Migration Mechanism
+# 📋 Task Specification: Stage 1 — Teaching API
 
 **Branch / Worktree**: `stage-1-foundation`
 **Status**: `IN_PROGRESS`
@@ -43,32 +43,38 @@
 
 ## 2. Goals, Non-Goals & Scope Guardrails (The 80/20 Rule)
 
+The API already serves `auth`, `edu/schools`, `edu/roles` and `edu/users` on
+eight migrations. This stage adds the teaching half and the mechanism that
+applies schema changes.
+
 ### In-Scope Goals
 
+- Migration mechanism: hand-written `.sql`, applied by the API at startup, with
+  the eight existing migrations converted and `services/database` dissolved.
 - Lesson content model — sections and typed blocks — declared in `@vidya/protocol`.
 - Lesson versioning: content belongs to an immutable published version, not to
   the lesson row.
 - Schema and entities for `lesson_versions`, `enrollments`, `homework`, `block_states`.
-- Permission keys for courses, lessons, groups, enrollments and homework.
-- Migration mechanism: hand-written `.sql`, applied by the API at startup, with
-  the eight existing migrations converted and `services/database` dissolved.
+- Endpoints, following the shape the existing `edu` controllers already use:
+  `edu/courses`, `edu/lessons` (with draft/publish), `edu/groups`,
+  `edu/enrollments` (with moderation), `edu/homework` (submit, review, grade).
+- Permission keys for courses, lessons, groups, enrollments and homework, scoped
+  by school like the existing ones.
+- Quiz auto-grading on submit.
 - Correct the inverted JWT token lifetimes.
+- NestJS 10 → 11 and Node 22.
 
 ### Non-Goals (Strict Scope Boundaries / Anti-Rabbit-Holes)
 
-- **No endpoints.** No controller, DTO, mapper or service for courses, lessons,
-  enrollments or homework. That is Stage 2, and mixing it in makes this diff
-  unreviewable.
-- **No framework major upgrades.** NestJS 10 → 11, Vue 3.5, Ionic 8 and
-  Capacitor 8 each carry their own breakage. Bundling a framework major with a
-  schema change leaves a failing gate with two possible causes. These get their
-  own spec and their own branch.
-- **No sync tables.** `outbox`, `sync_state` and the pull/push endpoints are
-  Stage 3. Only the `schoolId` column that synced rows will need is added now,
-  so Stage 3 does not have to migrate devices.
-- **No quiz auto-grading.** Deferred to Stage 2 by decision.
+- **No sync engine.** `outbox`, `sync_state`, HLC and the pull/push endpoints
+  are Stage 2. Only the `schoolId` column that synced rows will need is added
+  now, so Stage 2 never has to migrate databases already on devices.
+- **No client work.** No `libs/ui`, no admin panel, no lesson editor, no mobile.
+  Frontend package versions are chosen when those packages are created; the
+  Ionic and Capacitor upgrade belongs to the mobile stage.
+- **No media storage.** Video is embed-only in v1, so the `source` discriminator
+  is declared but no upload, signed URL or download queue is built.
 - **No seed data** for the new tables.
-- **No UI.**
 
 ---
 
