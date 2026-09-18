@@ -1,22 +1,18 @@
+import { RoleId, SchoolId } from '@vidya/domain'
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
 export type SchoolConfig = {
-  /**
-   * The default role for students in this school.
-   * This role will be assigned to students when they are joined.
-   */
-  defaultStudentRoleId: string
+  /** Assigned to a student when they join this school. */
+  defaultStudentRoleId: RoleId
 
-  /**
-   * List of student roles that are available in this school.
-   */
-  studentRoleIds: string[]
+  /** The roles a student in this school may hold. */
+  studentRoleIds: RoleId[]
 }
 
 @Entity({ name: 'schools' })
 export class School {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: SchoolId
 
   @Column({ nullable: false })
   name: string

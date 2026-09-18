@@ -1,3 +1,5 @@
 export const AppName = 'Vidya'
+export * from './content'
+export * from './identity'
 export * from './lifecycle'
 export * from './permissions'

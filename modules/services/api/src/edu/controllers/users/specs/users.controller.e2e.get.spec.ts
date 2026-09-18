@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker'
 import { INestApplication } from '@nestjs/common'
 import { toUserDetails, toUserSummaries } from '@vidya/api/edu/mappers/org.mapper'
 import { createTestingApp } from '@vidya/api/edu/shared'
+import { onTheWire } from '@vidya/api/edu/shared'
 import { Routes } from '@vidya/protocol'
 import { instanceToPlain } from 'class-transformer'
 import * as request from 'supertest'
@@ -53,9 +54,7 @@ describe('/edu/users', () => {
       .get(Routes().edu.user(ctx.one.users.oneAdmin.id).get())
       .set('Authorization', `Bearer ${ctx.one.tokens.oneAdmin}`)
       .expect(200)
-      .expect({
-        ...instanceToPlain(toUserDetails(ctx.one.users.oneAdmin)),
-      })
+      .expect(onTheWire(instanceToPlain(toUserDetails(ctx.one.users.oneAdmin))))
   })
 
   it(`GET /edu/users returns permitted users`, async () => {

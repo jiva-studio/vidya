@@ -12,6 +12,7 @@ import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
+import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
 
 import { SchoolExistsPipe } from '../../pipes'
@@ -35,7 +36,7 @@ export class SchoolConfigsController {
 
   @Crud.GetMany(Routes().edu.schools.configs.getAll(':schoolId'))
   async getAll(
-    @Param('schoolId', new ParseUUIDPipe(), SchoolExistsPipe) schoolId: string,
+    @Param('schoolId', new ParseUUIDPipe(), SchoolExistsPipe) schoolId: domain.SchoolId,
     @Authentication() auth: UserAuthentication,
   ) {
     // Check if user has permission to read`
@@ -49,7 +50,7 @@ export class SchoolConfigsController {
 
   @Crud.UpdateOne(Routes().edu.schools.configs.update(':schoolId'))
   async updateOne(
-    @Param('schoolId', new ParseUUIDPipe(), SchoolExistsPipe) schoolId: string,
+    @Param('schoolId', new ParseUUIDPipe(), SchoolExistsPipe) schoolId: domain.SchoolId,
     @Body() request: dto.UpdateSchoolConfigsRequest,
     @Authentication() auth: UserAuthentication,
   ) {

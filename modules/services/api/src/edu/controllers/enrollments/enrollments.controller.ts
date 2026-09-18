@@ -15,6 +15,7 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { CoursesService, EnrollmentsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
+import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
 
 import {
@@ -100,7 +101,7 @@ export class EnrollmentsController {
 
   @Crud.GetOne(Routes().edu.enrollments.get(':id'))
   async getOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.EnrollmentId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetEnrollmentResponse> {
     const enrollment = await this.enrollments.getOrFail(id)
@@ -123,7 +124,7 @@ export class EnrollmentsController {
 
   @Crud.UpdateOne(Routes().edu.enrollments.moderate(':id'))
   async moderate(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.EnrollmentId,
     @Body() request: dto.ModerateEnrollmentRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.ModerateEnrollmentResponse> {
@@ -148,7 +149,7 @@ export class EnrollmentsController {
 
   @Crud.UpdateOne(Routes().edu.enrollments.group(':id'))
   async assignGroup(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.EnrollmentId,
     @Body() request: dto.AssignEnrollmentGroupRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.AssignEnrollmentGroupResponse> {

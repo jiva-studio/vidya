@@ -1,6 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { canTransitionHomework, HomeworkStatus } from '@vidya/domain'
+import * as domain from '@vidya/domain'
 import { Enrollment, Homework, LessonVersion } from '@vidya/entities'
 import { Repository } from 'typeorm'
 
@@ -12,7 +13,7 @@ import { scopedBySchool } from './scoped-by-school'
 export type SubmitHomework = {
   enrollment: Enrollment
   version: LessonVersion
-  sectionId: string
+  sectionId: domain.SectionId
   text: string
 }
 
@@ -20,7 +21,7 @@ export type SubmitHomework = {
 export type ReviewHomework = {
   status: Extract<HomeworkStatus, 'in_review' | 'returned' | 'accepted'>
   grade?: number
-  reviewerId: string
+  reviewerId: domain.UserId
 }
 
 /**

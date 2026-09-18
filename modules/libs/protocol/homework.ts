@@ -8,20 +8,20 @@ import { LessonBlockState } from './lessons'
 /* -------------------------------------------------------------------------- */
 
 export type HomeworkDetails = {
-  id: string
-  enrollmentId: string
+  id: domain.HomeworkId
+  enrollmentId: domain.EnrollmentId
 
   /** The version answered, not the lesson: published versions are frozen. */
-  lessonVersionId: string
+  lessonVersionId: domain.LessonVersionId
 
-  sectionId: string
-  schoolId: string
+  sectionId: domain.SectionId
+  schoolId: domain.SchoolId
   status: domain.HomeworkStatus
   text: string
   grade?: number
-  reviewedById?: string
-  submittedAt?: string
-  reviewedAt?: string
+  reviewedById?: domain.UserId
+  submittedAt?: domain.IsoDateTime
+  reviewedAt?: domain.IsoDateTime
 
   /** Set when the answered version is no longer the published one: accepted, but flagged. */
   answeredSupersededVersion?: boolean
@@ -41,8 +41,8 @@ export type HomeworkSummary = Pick<
  * the text cannot be edited again until the work is returned for revision.
  */
 export type SubmitHomeworkRequest = {
-  lessonVersionId: string
-  sectionId: string
+  lessonVersionId: domain.LessonVersionId
+  sectionId: domain.SectionId
   text: string
 }
 
@@ -53,8 +53,8 @@ export type SubmitHomeworkResponse = crud.UpdateItemResponse<HomeworkDetails>
 /* -------------------------------------------------------------------------- */
 
 export type GetHomeworkQuery = {
-  enrollmentId?: string
-  groupId?: string
+  enrollmentId?: domain.EnrollmentId
+  groupId?: domain.GroupId
   status?: domain.HomeworkStatus
 }
 
@@ -79,18 +79,18 @@ export type ReviewHomeworkResponse = crud.UpdateItemResponse<HomeworkDetails>
 /* -------------------------------------------------------------------------- */
 
 export type BlockStateDetails = {
-  id: string
-  enrollmentId: string
-  lessonVersionId: string
-  blockId: string
-  schoolId: string
+  id: domain.BlockStateId
+  enrollmentId: domain.EnrollmentId
+  lessonVersionId: domain.LessonVersionId
+  blockId: domain.BlockId
+  schoolId: domain.SchoolId
   state: LessonBlockState
-  updatedAt: string
+  updatedAt: domain.IsoDateTime
 }
 
 export type SaveBlockStateRequest = {
-  lessonVersionId: string
-  blockId: string
+  lessonVersionId: domain.LessonVersionId
+  blockId: domain.BlockId
   state: LessonBlockState
 }
 

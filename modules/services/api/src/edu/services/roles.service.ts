@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import * as domain from '@vidya/domain'
 import { Role, UserRole } from '@vidya/entities'
 import { In, Repository } from 'typeorm'
 
@@ -31,7 +32,7 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
     })
   }
 
-  async getRolesOfUser(userId: string): Promise<Role[]> {
+  async getRolesOfUser(userId: domain.UserId): Promise<Role[]> {
     return await this.repository
       .createQueryBuilder('role')
       .innerJoin('role.userRoles', 'userRole')
@@ -39,7 +40,7 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
       .getMany()
   }
 
-  async setRolesForUser(userId: string, roleIds: string[]): Promise<void> {
+  async setRolesForUser(userId: domain.UserId, roleIds: string[]): Promise<void> {
     const existing = await this.userRolesRepo.findBy({ userId })
 
     // find roles to add or remove

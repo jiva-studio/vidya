@@ -1,3 +1,5 @@
+import * as domain from '@vidya/domain'
+
 import * as crud from './crud'
 
 /* -------------------------------------------------------------------------- */
@@ -5,12 +7,12 @@ import * as crud from './crud'
 /* -------------------------------------------------------------------------- */
 
 export type UserSummary = {
-  id: string
+  id: domain.UserId
   name: string
 }
 
 export type UserDetailsRole = {
-  id: string
+  id: domain.RoleId
   name?: string
 }
 
@@ -25,7 +27,7 @@ export type UserDetails = UserSummary & {
 /* -------------------------------------------------------------------------- */
 
 export type GetUsersQuery = {
-  schoolId?: string
+  schoolId?: domain.SchoolId
 }
 
 export type GetUserResponse = crud.GetItemResponse<UserDetails>

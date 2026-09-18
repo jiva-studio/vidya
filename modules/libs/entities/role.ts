@@ -1,3 +1,4 @@
+import { RoleId, SchoolId } from '@vidya/domain'
 import * as domain from '@vidya/domain'
 import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm'
 
@@ -7,7 +8,7 @@ import { UserRole } from './userRole'
 @Entity({ name: 'roles' })
 export class Role {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: RoleId
 
   @Column({ nullable: false })
   name: string
@@ -16,7 +17,7 @@ export class Role {
   description: string
 
   @Column({ nullable: false })
-  schoolId: string
+  schoolId: SchoolId
 
   @OneToOne(() => School)
   school: School

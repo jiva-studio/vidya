@@ -3,6 +3,7 @@ import { ConfigType } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
 import { AuthConfig } from '@vidya/api/configs'
 import { RedisService } from '@vidya/api/shared/services'
+import * as domain from '@vidya/domain'
 import { Role, User } from '@vidya/entities'
 import { UserPermission, UserPermissionsStorageKey } from '@vidya/protocol'
 import { Repository } from 'typeorm'
@@ -33,7 +34,7 @@ export class AuthUsersService {
    * @param id Id of the user
    * @returns User with the given id or null if not found
    */
-  async findById(id: string): Promise<User | null> {
+  async findById(id: domain.UserId): Promise<User | null> {
     return await this.users.findOne({ where: { id }, relations: ['roles'] })
   }
 
@@ -64,7 +65,7 @@ export class AuthUsersService {
    * @param userId Id of the user
    * @returns Roles of the user
    */
-  async getRolesOfUser(userId: string): Promise<Role[]> {
+  async getRolesOfUser(userId: domain.UserId): Promise<Role[]> {
     return await this.roles
       .createQueryBuilder('role')
       .innerJoin('role.userRoles', 'userRole')
@@ -77,7 +78,7 @@ export class AuthUsersService {
    * @param userId User id
    * @returns User permissions
    */
-  async getUserPermissions(userId: string): Promise<UserPermission[]> {
+  async getUserPermissions(userId: domain.UserId): Promise<UserPermission[]> {
     // Get permissions from cache if available
     const permissions = await this.redis.get(UserPermissionsStorageKey(userId))
 

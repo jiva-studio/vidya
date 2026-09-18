@@ -1,8 +1,8 @@
 import { AuthenticatedUserPermissions } from '@vidya/api/auth/utils'
 import { validate, ValidationError } from 'class-validator'
-import { DeepPartial, FindManyOptions, FindOptionsWhere, Repository } from 'typeorm'
+import { DeepPartial, FindManyOptions, FindOptionsWhere, ObjectLiteral, Repository } from 'typeorm'
 
-export abstract class EntitiesService<TEntity extends object> {
+export abstract class EntitiesService<TEntity extends ObjectLiteral> {
   constructor(protected readonly repository: Repository<TEntity>) {}
 
   /**
@@ -89,8 +89,8 @@ export abstract class EntitiesService<TEntity extends object> {
  *  @typeparam TScope The scope type.
  */
 export class ScopedEntitiesService<
-  TEntity extends object,
-  TScope extends object,
+  TEntity extends ObjectLiteral,
+  TScope extends ObjectLiteral,
 > extends EntitiesService<TEntity> {
   /**
    * Creates a new instance of the ScopedEntitiesService.
@@ -124,7 +124,7 @@ export class ScopedEntitiesService<
  * A request to access entities with a scope.
  * @typeparam TEntity The entity type.
  */
-export class ScopedEntitiesServiceRequest<TEntity extends object> {
+export class ScopedEntitiesServiceRequest<TEntity extends ObjectLiteral> {
   /**
    * Creates a new instance of the ScopedEntitiesServiceRequest.
    * @param service Service to access the entities.

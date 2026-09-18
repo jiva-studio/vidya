@@ -14,11 +14,11 @@ import {
 
 export class LessonDetails implements protocol.LessonDetails {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.LessonId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
-  courseId: string
+  courseId: domain.CourseId
 
   @ApiProperty({ example: 1 })
   lessonNumber: number
@@ -29,7 +29,7 @@ export class LessonDetails implements protocol.LessonDetails {
 
 export class LessonSummary implements protocol.LessonSummary {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.LessonId
 
   @ApiProperty({ example: 1 })
   lessonNumber: number
@@ -41,7 +41,7 @@ export class LessonSummary implements protocol.LessonSummary {
 export class CreateLessonRequest implements protocol.CreateLessonRequest {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
-  courseId: string
+  courseId: domain.CourseId
 
   @ApiProperty({ example: 1 })
   @IsInt()
@@ -57,14 +57,14 @@ export class CreateLessonRequest implements protocol.CreateLessonRequest {
 
 export class CreateLessonResponse implements protocol.CreateLessonResponse {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.LessonId
 }
 
 export class GetLessonsQuery implements protocol.GetLessonsQuery {
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
-  courseId?: string
+  courseId?: domain.CourseId
 }
 
 export class GetLessonsResponse implements protocol.GetLessonsResponse {
@@ -102,10 +102,10 @@ export class DeleteLessonResponse implements protocol.DeleteLessonResponse {
 
 export class LessonVersionSummary implements protocol.LessonVersionSummary {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.LessonVersionId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  lessonId: string
+  lessonId: domain.LessonId
 
   @ApiProperty({ example: 1 })
   version: number
@@ -114,7 +114,7 @@ export class LessonVersionSummary implements protocol.LessonVersionSummary {
   status: domain.LessonVersionStatus
 
   @ApiPropertyOptional({ example: '2026-09-18T10:00:00.000Z' })
-  publishedAt?: string
+  publishedAt?: domain.IsoDateTime
 }
 
 export class LessonVersionDetails extends LessonVersionSummary {

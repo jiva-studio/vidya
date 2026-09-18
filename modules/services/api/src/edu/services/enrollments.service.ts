@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { EnrollmentStatus } from '@vidya/domain'
+import * as domain from '@vidya/domain'
 import { Course, Enrollment } from '@vidya/entities'
 import { Repository } from 'typeorm'
 
@@ -17,8 +18,8 @@ import { scopedBySchool } from './scoped-by-school'
 
 export type ModerationDecision = {
   status: Extract<EnrollmentStatus, 'accepted' | 'declined'>
-  groupId?: string
-  decidedById: string
+  groupId?: domain.GroupId
+  decidedById: domain.UserId
 }
 
 /**
@@ -39,7 +40,7 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
     super(repository, scopedBySchool<Enrollment>('enrollments:read'))
   }
 
-  async getOrFail(id: string): Promise<Enrollment> {
+  async getOrFail(id: domain.EnrollmentId): Promise<Enrollment> {
     const enrollment = await this.findOneBy({ id })
 
     if (!enrollment) {
@@ -58,7 +59,10 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
    * homework and the progress endpoints need it, which is why it is not a
    * private helper on either of them.
    */
-  async forLessonVersion(lessonVersionId: string, studentId: string): Promise<Enrollment> {
+  async forLessonVersion(
+    lessonVersionId: domain.LessonVersionId,
+    studentId: domain.UserId,
+  ): Promise<Enrollment> {
     const version = await this.versions.findOneBy({ id: lessonVersionId })
 
     if (!version) {
@@ -86,12 +90,12 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
   }
 
   /** Whether this enrolment is the caller's own. */
-  isOwnedBy(enrollment: Enrollment | null, userId: string): boolean {
+  isOwnedBy(enrollment: Enrollment | null, userId: domain.UserId): boolean {
     return enrollment?.studentId === userId
   }
 
   /** A student asks to join. The school decides later. */
-  async request(course: Course, studentId: string): Promise<Enrollment> {
+  async request(course: Course, studentId: domain.UserId): Promise<Enrollment> {
     const existing = await this.findOneBy({ courseId: course.id, studentId })
 
     if (existing) {
@@ -128,7 +132,7 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
   }
 
   /** Moves an accepted student between groups, or out of the queue into one. */
-  async assignGroup(enrollment: Enrollment, groupId: string | null): Promise<Enrollment> {
+  async assignGroup(enrollment: Enrollment, groupId: domain.GroupId | null): Promise<Enrollment> {
     if (enrollment.status !== 'accepted') {
       throw new ConflictException(`Enrollment ${enrollment.id} is not accepted`)
     }
@@ -144,7 +148,10 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
    * A group belongs to exactly one course. Placing a student in a group from a
    * different course would give them a place on a course they never applied to.
    */
-  private async assertGroupBelongsToCourse(groupId: string, courseId: string): Promise<void> {
+  private async assertGroupBelongsToCourse(
+    groupId: domain.GroupId,
+    courseId: domain.CourseId,
+  ): Promise<void> {
     const group = await this.groups.findOneBy({ id: groupId })
 
     if (!group) {

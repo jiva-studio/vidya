@@ -1,4 +1,4 @@
-import { EnrollmentStatus } from '@vidya/domain'
+import { CourseId, EnrollmentId, EnrollmentStatus, GroupId, SchoolId, UserId } from '@vidya/domain'
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 import { Course } from './course'
@@ -10,31 +10,31 @@ import { User } from './user'
 @Entity({ name: 'enrollments' })
 export class Enrollment {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: EnrollmentId
 
   @Column({ nullable: false })
-  courseId: string
+  courseId: CourseId
 
   @ManyToOne(() => Course)
   @JoinColumn()
   course: Course
 
   @Column({ nullable: true })
-  groupId: string
+  groupId: GroupId
 
   @ManyToOne(() => Group)
   @JoinColumn()
   group: Group
 
   @Column({ nullable: false })
-  studentId: string
+  studentId: UserId
 
   @ManyToOne(() => User)
   @JoinColumn()
   student: User
 
   @Column({ nullable: false })
-  schoolId: string
+  schoolId: SchoolId
 
   @ManyToOne(() => School)
   @JoinColumn()
@@ -44,7 +44,7 @@ export class Enrollment {
   status: EnrollmentStatus
 
   @Column({ nullable: true })
-  decidedById: string
+  decidedById: UserId
 
   @Column({ type: 'timestamptz', nullable: true })
   decidedAt: Date

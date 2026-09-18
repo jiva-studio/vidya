@@ -1,4 +1,4 @@
-import { LessonVersionStatus } from '@vidya/domain'
+import { LessonContent, LessonId, LessonVersionId, LessonVersionStatus } from '@vidya/domain'
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 import { Lesson } from './lesson'
@@ -11,10 +11,10 @@ import { Lesson } from './lesson'
 @Entity({ name: 'lesson_versions' })
 export class LessonVersion {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: LessonVersionId
 
   @Column({ nullable: false })
-  lessonId: string
+  lessonId: LessonId
 
   @ManyToOne(() => Lesson)
   @JoinColumn()
@@ -24,7 +24,7 @@ export class LessonVersion {
   version: number
 
   @Column('json')
-  content: object
+  content: LessonContent
 
   @Column({ nullable: false, default: 'draft' })
   status: LessonVersionStatus

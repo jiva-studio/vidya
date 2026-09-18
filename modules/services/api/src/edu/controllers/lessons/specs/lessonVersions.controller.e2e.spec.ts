@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common'
 import { createTestingApp } from '@vidya/api/edu/shared'
+import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
 
@@ -23,11 +24,15 @@ describe('/edu/lessons/:lessonId/versions', () => {
   const content = (title: string): protocol.LessonContent => ({
     sections: [
       {
-        id: '11111111-1111-4111-8111-111111111111',
+        id: domain.asId<domain.SectionId>('11111111-1111-4111-8111-111111111111'),
         title,
         assessment: 'teacher',
         blocks: [
-          { id: '22222222-2222-4222-8222-222222222222', type: 'text', content: 'Read this' },
+          {
+            id: domain.asId<domain.BlockId>('22222222-2222-4222-8222-222222222222'),
+            type: 'text',
+            content: 'Read this',
+          },
         ],
       },
     ],

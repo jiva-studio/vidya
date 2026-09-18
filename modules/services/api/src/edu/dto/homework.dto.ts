@@ -16,19 +16,19 @@ import {
 
 export class HomeworkDetails implements protocol.HomeworkDetails {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.HomeworkId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  enrollmentId: string
+  enrollmentId: domain.EnrollmentId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  lessonVersionId: string
+  lessonVersionId: domain.LessonVersionId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  sectionId: string
+  sectionId: domain.SectionId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  schoolId: string
+  schoolId: domain.SchoolId
 
   @ApiProperty({ enum: domain.HomeworkStatuses, example: 'pending' })
   status: domain.HomeworkStatus
@@ -40,13 +40,13 @@ export class HomeworkDetails implements protocol.HomeworkDetails {
   grade?: number
 
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  reviewedById?: string
+  reviewedById?: domain.UserId
 
   @ApiPropertyOptional({ example: '2026-09-18T10:00:00.000Z' })
-  submittedAt?: string
+  submittedAt?: domain.IsoDateTime
 
   @ApiPropertyOptional({ example: '2026-09-18T10:00:00.000Z' })
-  reviewedAt?: string
+  reviewedAt?: domain.IsoDateTime
 
   @ApiPropertyOptional({ example: false })
   @IsOptional()
@@ -56,13 +56,13 @@ export class HomeworkDetails implements protocol.HomeworkDetails {
 
 export class HomeworkSummary implements protocol.HomeworkSummary {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.HomeworkId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  enrollmentId: string
+  enrollmentId: domain.EnrollmentId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  sectionId: string
+  sectionId: domain.SectionId
 
   @ApiProperty({ enum: domain.HomeworkStatuses, example: 'pending' })
   status: domain.HomeworkStatus
@@ -71,17 +71,17 @@ export class HomeworkSummary implements protocol.HomeworkSummary {
   grade?: number
 
   @ApiPropertyOptional({ example: '2026-09-18T10:00:00.000Z' })
-  submittedAt?: string
+  submittedAt?: domain.IsoDateTime
 }
 
 export class SubmitHomeworkRequest implements protocol.SubmitHomeworkRequest {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
-  lessonVersionId: string
+  lessonVersionId: domain.LessonVersionId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
-  sectionId: string
+  sectionId: domain.SectionId
 
   @ApiProperty({ example: 'My answer' })
   @IsString()
@@ -95,12 +95,12 @@ export class GetHomeworkQuery implements protocol.GetHomeworkQuery {
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
-  enrollmentId?: string
+  enrollmentId?: domain.EnrollmentId
 
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
-  groupId?: string
+  groupId?: domain.GroupId
 
   @ApiPropertyOptional({ enum: domain.HomeworkStatuses })
   @IsOptional()
@@ -142,35 +142,35 @@ export class ReviewHomeworkResponse extends HomeworkDetails {}
 
 export class BlockStateDetails implements protocol.BlockStateDetails {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.BlockStateId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  enrollmentId: string
+  enrollmentId: domain.EnrollmentId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  lessonVersionId: string
+  lessonVersionId: domain.LessonVersionId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  blockId: string
+  blockId: domain.BlockId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  schoolId: string
+  schoolId: domain.SchoolId
 
   @ApiProperty({ example: { type: 'quiz', answer: 1 } })
   state: protocol.LessonBlockState
 
   @ApiProperty({ example: '2026-09-18T10:00:00.000Z' })
-  updatedAt: string
+  updatedAt: domain.IsoDateTime
 }
 
 export class SaveBlockStateRequest implements protocol.SaveBlockStateRequest {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
-  lessonVersionId: string
+  lessonVersionId: domain.LessonVersionId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
-  blockId: string
+  blockId: domain.BlockId
 
   @ApiProperty({ example: { type: 'quiz', answer: 1 } })
   @IsObject()
@@ -182,12 +182,12 @@ export class SaveBlockStateResponse extends BlockStateDetails {}
 export class GetBlockStatesQuery implements protocol.GetBlockStatesQuery {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
-  enrollmentId: string
+  enrollmentId: domain.EnrollmentId
 
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
-  lessonVersionId?: string
+  lessonVersionId?: domain.LessonVersionId
 }
 
 export class GetBlockStatesResponse implements protocol.GetBlockStatesResponse {

@@ -5,76 +5,76 @@ import { IsEnum, IsIn, IsOptional, IsUUID, ValidateIf } from 'class-validator'
 
 export class EnrollmentDetails implements protocol.EnrollmentDetails {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.EnrollmentId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  courseId: string
+  courseId: domain.CourseId
 
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  groupId?: string
+  groupId?: domain.GroupId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  studentId: string
+  studentId: domain.UserId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  schoolId: string
+  schoolId: domain.SchoolId
 
   @ApiProperty({ enum: domain.EnrollmentStatuses, example: 'pending' })
   status: domain.EnrollmentStatus
 
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  decidedById?: string
+  decidedById?: domain.UserId
 
   @ApiPropertyOptional({ example: '2026-09-18T10:00:00.000Z' })
-  decidedAt?: string
+  decidedAt?: domain.IsoDateTime
 
   @ApiProperty({ example: '2026-09-18T10:00:00.000Z' })
-  createdAt: string
+  createdAt: domain.IsoDateTime
 }
 
 export class EnrollmentSummary implements protocol.EnrollmentSummary {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.EnrollmentId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  courseId: string
+  courseId: domain.CourseId
 
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  groupId?: string
+  groupId?: domain.GroupId
 
   @ApiProperty({ enum: domain.EnrollmentStatuses, example: 'pending' })
   status: domain.EnrollmentStatus
 
   @ApiProperty({ example: '2026-09-18T10:00:00.000Z' })
-  createdAt: string
+  createdAt: domain.IsoDateTime
 }
 
 export class CreateEnrollmentRequest implements protocol.CreateEnrollmentRequest {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
-  courseId: string
+  courseId: domain.CourseId
 }
 
 export class CreateEnrollmentResponse implements protocol.CreateEnrollmentResponse {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.EnrollmentId
 }
 
 export class GetEnrollmentsQuery implements protocol.GetEnrollmentsQuery {
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
-  courseId?: string
+  courseId?: domain.CourseId
 
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
-  groupId?: string
+  groupId?: domain.GroupId
 
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
-  studentId?: string
+  studentId?: domain.UserId
 
   @ApiPropertyOptional({ enum: domain.EnrollmentStatuses })
   @IsOptional()
@@ -97,7 +97,7 @@ export class ModerateEnrollmentRequest implements protocol.ModerateEnrollmentReq
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
-  groupId?: string
+  groupId?: domain.GroupId
 }
 
 export class ModerateEnrollmentResponse extends EnrollmentDetails {}
@@ -106,7 +106,7 @@ export class AssignEnrollmentGroupRequest implements protocol.AssignEnrollmentGr
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd', nullable: true })
   @ValidateIf((_, value) => value !== null)
   @IsUUID()
-  groupId: string | null
+  groupId: domain.GroupId | null
 }
 
 export class AssignEnrollmentGroupResponse extends EnrollmentDetails {}

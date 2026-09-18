@@ -134,6 +134,34 @@ export default tseslint.config(
     },
   },
 
+  /* ------------------------------ Shared types ----------------------------- */
+
+  {
+    // `object` and `{}` say "some fields, unspecified", which is what a JSON
+    // column degenerates to when nobody names its shape. That is how
+    // `LessonVersion.content` and `BlockState.state` sat as `object` while the
+    // DTOs promised `LessonContent` and `LessonBlockState`: the mapper cast
+    // between them, so neither the compiler nor a test ever disagreed.
+    //
+    // Name the domain type. If it does not exist yet, that is the finding.
+    files: ['libs/**/*.ts', 'services/**/*.ts', 'apps/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-empty-object-type': 'error',
+      '@typescript-eslint/no-restricted-types': [
+        'error',
+        {
+          types: {
+            object: {
+              message:
+                'Name the shape. A domain type belongs in @vidya/domain, not an anonymous object.',
+            },
+            Object: { message: 'Use a named type, or Record<string, unknown> for a bag.' },
+          },
+        },
+      ],
+    },
+  },
+
   /* ------------------------------- Wire types ------------------------------ */
 
   {

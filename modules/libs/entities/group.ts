@@ -1,3 +1,4 @@
+import { CourseId, GroupId, SchoolId } from '@vidya/domain'
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 import { Course } from './course'
@@ -12,7 +13,7 @@ export enum GroupStatus {
 @Entity({ name: 'groups' })
 export class Group {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: GroupId
 
   @Column({ unique: true })
   name: string
@@ -21,14 +22,14 @@ export class Group {
   description: string
 
   @Column({ nullable: false })
-  courseId: string
+  courseId: CourseId
 
   @ManyToOne(() => Course)
   @JoinColumn()
   course: Course
 
   @Column({ nullable: false })
-  schoolId: string
+  schoolId: SchoolId
 
   @ManyToOne(() => School)
   @JoinColumn()

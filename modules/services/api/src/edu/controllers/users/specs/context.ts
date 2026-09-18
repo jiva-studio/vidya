@@ -3,6 +3,8 @@ import { INestApplication } from '@nestjs/common'
 import { AuthService, AuthUsersService } from '@vidya/api/auth/services'
 import { UserAuthentication } from '@vidya/api/auth/utils'
 import { RolesService, SchoolsService, UsersService } from '@vidya/api/edu/services'
+import { newId } from '@vidya/api/edu/shared'
+import * as domain from '@vidya/domain'
 import { Role, School, User } from '@vidya/entities'
 
 export type Context = {
@@ -114,11 +116,11 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
     { sid: one.id, p: orgAdmin.permissions },
   ])
 
-  const dummyToken = await authService.generateTokens(faker.string.uuid(), [
-    { sid: faker.string.uuid(), p: ['users:read'] },
+  const dummyToken = await authService.generateTokens(newId<domain.UserId>(), [
+    { sid: newId<domain.SchoolId>(), p: ['users:read'] },
   ])
 
-  const emptyToken = await authService.generateTokens(faker.string.uuid(), [])
+  const emptyToken = await authService.generateTokens(newId<domain.UserId>(), [])
 
   /* -------------------------------------------------------------------------- */
   /*                                   Return                                   */

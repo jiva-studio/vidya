@@ -20,7 +20,7 @@ import { IsPermissionsProhibited } from '../validations'
 
 export class RoleDetails implements protocol.RoleDetails {
   @ApiProperty({ example: 'id' })
-  id: string
+  id: domain.RoleId
 
   @ApiProperty({ example: 'name' })
   name: string
@@ -33,12 +33,12 @@ export class RoleDetails implements protocol.RoleDetails {
 
   @ApiProperty({ example: 'schoolId' })
   @IsUUID()
-  schoolId: string
+  schoolId: domain.SchoolId
 }
 
 export class RoleSummary implements protocol.RoleSummary {
   @ApiProperty({ example: 'id' })
-  id: string
+  id: domain.RoleId
 
   @ApiProperty({ example: 'name' })
   name: string
@@ -57,7 +57,7 @@ export class GetRoleSummariesListQuery implements protocol.GetRoleSummariesListQ
   @ApiPropertyOptional()
   @IsUUID()
   @IsOptional()
-  schoolId?: string
+  schoolId?: domain.SchoolId
 }
 
 export class GetRolesResponse implements protocol.GetRolesResponse {
@@ -103,12 +103,12 @@ export class CreateRoleRequest implements protocol.CreateRoleRequest {
 
   @ApiProperty({ example: 'schoolId' })
   @IsUUID()
-  schoolId: string
+  schoolId: domain.SchoolId
 }
 
 export class CreateRoleResponse implements protocol.CreateRoleResponse {
   @ApiProperty({ example: 'd66c9ffa-1d94-4d52-8399-0df211d578f6' })
-  id: string
+  id: domain.RoleId
 }
 
 /* -------------------------------------------------------------------------- */

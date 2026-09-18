@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import * as domain from '@vidya/domain'
 import { Role, School, User } from '@vidya/entities'
 import { In, Repository } from 'typeorm'
 
@@ -16,7 +17,7 @@ export class UserSchoolsService {
    * @param userId User ID to get schools for
    * @returns List of school IDs the user is associated with
    */
-  async getUserSchools(userId: string): Promise<string[]> {
+  async getUserSchools(userId: domain.UserId): Promise<domain.SchoolId[]> {
     // get user by id with all roles
     const user = await this.users.findOneOrFail({
       where: { id: userId },
@@ -36,7 +37,7 @@ export class UserSchoolsService {
    * @param userId User to add to school to
    * @param schoolId School to add user to
    */
-  async addUser(userId: string, schoolId: string): Promise<void> {
+  async addUser(userId: domain.UserId, schoolId: domain.SchoolId): Promise<void> {
     await this.schools.manager.transaction(async (transactionalEntityManager) => {
       const school = await transactionalEntityManager.findOneByOrFail(School, { id: schoolId })
       const user = await transactionalEntityManager.findOneOrFail(User, {

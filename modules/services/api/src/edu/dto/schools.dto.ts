@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import { IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator'
 
@@ -8,7 +9,7 @@ import { IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 
 
 export class SchoolDetails implements protocol.SchoolDetails {
   @ApiProperty({ example: 'id' })
-  id: string
+  id: domain.SchoolId
 
   @ApiProperty({ example: 'name' })
   name: string
@@ -16,7 +17,7 @@ export class SchoolDetails implements protocol.SchoolDetails {
 
 export class SchoolSummary implements protocol.SchoolSummary {
   @ApiProperty({ example: 'id' })
-  id: string
+  id: domain.SchoolId
 
   @ApiProperty({ example: 'name' })
   name: string
@@ -63,7 +64,7 @@ export class CreateSchoolRequest implements protocol.CreateSchoolRequest {
 
 export class CreateSchoolResponse implements protocol.CreateSchoolResponse {
   @ApiProperty({ example: 'd66c9ffa-1d94-4d52-8399-0df211d578f6' })
-  id: string
+  id: domain.SchoolId
 }
 
 /* -------------------------------------------------------------------------- */

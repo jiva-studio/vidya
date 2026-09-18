@@ -15,6 +15,7 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { CoursesService, GroupsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
+import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
 
 import { toCreatedId, toGroupDetails, toGroupSummaries } from '../../mappers/education.mapper'
@@ -44,7 +45,7 @@ export class GroupsController {
 
   @Crud.GetOne(Routes().edu.groups.get(':id'))
   async getOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.GroupId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetGroupResponse> {
     if (!auth.permissions.has(['groups:read'])) {
@@ -120,7 +121,7 @@ export class GroupsController {
 
   @Crud.UpdateOne(Routes().edu.groups.update(':id'))
   async updateOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.GroupId,
     @Body() request: dto.UpdateGroupRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateGroupResponse> {
@@ -146,7 +147,7 @@ export class GroupsController {
 
   @Crud.DeleteOne(Routes().edu.groups.delete(':id'))
   async deleteOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.GroupId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.DeleteGroupResponse> {
     if (!auth.permissions.has(['groups:delete'])) {

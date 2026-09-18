@@ -35,7 +35,7 @@ export interface GetOtpResponse {
 /* -------------------------------------------------------------------------- */
 
 export interface JwtToken {
-  sub: string
+  sub: domain.UserId
   exp: number
   iat: number
   jti: string
@@ -107,14 +107,16 @@ export interface SignOutResponse {}
 /* -------------------------------------------------------------------------- */
 
 /**
- * Permission object. Contains the school ID and the permissions.
- * @remarks Used short names for the properties to reduce the size of a JWT token.
+ * What a user may do in one school.
+ *
+ * The property names are one letter because this rides inside every JWT, and
+ * a user with a role in a dozen schools carries a dozen of these.
  */
 export type UserPermission = {
-  /* School ID */
-  sid: string
+  /** School id. */
+  sid: domain.SchoolId
 
-  /* Permissions */
+  /** Permissions held in that school. */
   p: domain.PermissionKey[]
 }
 
@@ -124,7 +126,7 @@ export type UserPermission = {
 
 export interface GetProfileResponse {
   /** User's ID */
-  userId: string
+  userId: domain.UserId
 
   /** User's email */
   email: string

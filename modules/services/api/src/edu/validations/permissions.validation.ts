@@ -8,6 +8,8 @@ import {
   ValidatorConstraintInterface,
 } from 'class-validator'
 
+import { DecoratedTarget } from './target'
+
 @ValidatorConstraint({ async: true, name: 'is-permissions-prohibited' })
 @Injectable()
 export class IsPermissionsProhibitedConstraint implements ValidatorConstraintInterface {
@@ -26,9 +28,9 @@ export function IsPermissionsProhibited(
   constraints: string[], // list of prohibitted permissions
   validationOptions?: ValidationOptions,
 ) {
-  return function (object: object, propertyName: string) {
+  return function (target: DecoratedTarget, propertyName: string) {
     registerDecorator({
-      target: object.constructor,
+      target: target.constructor,
       propertyName: propertyName,
       options: validationOptions,
       constraints: constraints || [],

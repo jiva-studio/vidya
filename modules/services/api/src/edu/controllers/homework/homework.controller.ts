@@ -20,6 +20,7 @@ import {
   LessonVersionsService,
 } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
+import * as domain from '@vidya/domain'
 import * as entities from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
 
@@ -107,7 +108,7 @@ export class HomeworkController {
 
   @Crud.GetOne(Routes().edu.homework.get(':id'))
   async getOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.HomeworkId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetHomeworkResponse> {
     const work = await this.homework.findOneBy({ id })
@@ -127,7 +128,7 @@ export class HomeworkController {
 
   @Crud.UpdateOne(Routes().edu.homework.review(':id'))
   async review(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.HomeworkId,
     @Body() request: dto.ReviewHomeworkRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.ReviewHomeworkResponse> {

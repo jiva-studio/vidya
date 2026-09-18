@@ -63,7 +63,7 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
   const student = await users.create({ email: faker.internet.email() })
   const otherStudent = await users.create({ email: faker.internet.email() })
 
-  const token = async (userId: string, p: domain.PermissionKey[]) =>
+  const token = async (userId: domain.UserId, p: domain.PermissionKey[]) =>
     (await auth.generateTokens(userId, p.length ? [{ sid: school.id, p }] : [])).accessToken
 
   return {

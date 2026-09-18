@@ -7,8 +7,8 @@ import * as crud from './crud'
 /* -------------------------------------------------------------------------- */
 
 export type CourseDetails = {
-  id: string
-  schoolId: string
+  id: domain.CourseId
+  schoolId: domain.SchoolId
   name: string
   description?: string
   learningType: domain.CourseLearningType

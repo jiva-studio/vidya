@@ -1,4 +1,5 @@
 import * as dto from '@vidya/api/edu/dto'
+import * as domain from '@vidya/domain'
 import * as entities from '@vidya/entities'
 
 import { project, projectAll } from './project'
@@ -65,8 +66,6 @@ const BLOCK_STATE = [
   'updatedAt',
 ] as const
 
-const ID = ['id'] as const
-
 /* -------------------------------------------------------------------------- */
 /*                                   Courses                                  */
 /* -------------------------------------------------------------------------- */
@@ -74,7 +73,7 @@ const ID = ['id'] as const
 export const toCourseDetails = (c: entities.Course) => project<dto.CourseDetails>(c, COURSE)
 export const toCourseSummaries = (c: entities.Course[]) =>
   projectAll<dto.CourseSummary>(c, COURSE_SUMMARY)
-export const toCreatedId = (e: object) => project<{ id: string }>(e, ID)
+export const toCreatedId = <TId extends domain.Id<string>>(e: { id: TId }) => ({ id: e.id })
 
 /* -------------------------------------------------------------------------- */
 /*                                   Groups                                   */

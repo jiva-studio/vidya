@@ -1,4 +1,5 @@
 import * as dto from '@vidya/api/edu/dto'
+import * as domain from '@vidya/domain'
 import * as entities from '@vidya/entities'
 
 import { project, projectAll } from './project'
@@ -12,7 +13,6 @@ const ROLE_SUMMARY = ['id', 'name', 'description'] as const
 const SCHOOL = ['id', 'name'] as const
 const USER = ['id', 'name', 'email', 'phone'] as const
 const USER_SUMMARY = ['id', 'name'] as const
-const ID = ['id'] as const
 
 /* -------------------------------------------------------------------------- */
 /*                                    Roles                                   */
@@ -43,4 +43,4 @@ export const toUserSummaries = (u: entities.User[]) => projectAll<dto.UserSummar
 /*                                   Shared                                   */
 /* -------------------------------------------------------------------------- */
 
-export const toId = (e: object) => project<{ id: string }>(e, ID)
+export const toId = <TId extends domain.Id<string>>(e: { id: TId }) => ({ id: e.id })

@@ -14,6 +14,7 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { LessonsService, LessonVersionsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
+import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
 
 import { toVersionDetails, toVersionSummary } from '../../mappers/education.mapper'
@@ -41,7 +42,7 @@ export class LessonVersionsController {
    * Resolves the lesson the caller is allowed to see, so every route below is
    * scoped by the lesson's school rather than trusting the version id alone.
    */
-  private async lessonOr404(lessonId: string, auth: UserAuthentication) {
+  private async lessonOr404(lessonId: domain.LessonId, auth: UserAuthentication) {
     const lesson = await this.lessons
       .scopedBy({ permissions: auth.permissions })
       .findOne({ where: { id: lessonId } })
@@ -59,7 +60,7 @@ export class LessonVersionsController {
 
   @Crud.GetMany(Routes().edu.lessons.versions.all(':lessonId'))
   async getMany(
-    @Param('lessonId', new ParseUUIDPipe()) lessonId: string,
+    @Param('lessonId', new ParseUUIDPipe()) lessonId: domain.LessonId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetLessonVersionsResponse> {
     if (!auth.permissions.has(['lessons:read'])) {
@@ -80,8 +81,8 @@ export class LessonVersionsController {
 
   @Crud.GetOne(Routes().edu.lessons.versions.get(':lessonId', ':versionId'))
   async getOne(
-    @Param('lessonId', new ParseUUIDPipe()) lessonId: string,
-    @Param('versionId', new ParseUUIDPipe()) versionId: string,
+    @Param('lessonId', new ParseUUIDPipe()) lessonId: domain.LessonId,
+    @Param('versionId', new ParseUUIDPipe()) versionId: domain.LessonVersionId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetLessonVersionResponse> {
     if (!auth.permissions.has(['lessons:read'])) {
@@ -100,7 +101,7 @@ export class LessonVersionsController {
 
   @Crud.CreateOne(Routes().edu.lessons.versions.create(':lessonId'))
   async createOne(
-    @Param('lessonId', new ParseUUIDPipe()) lessonId: string,
+    @Param('lessonId', new ParseUUIDPipe()) lessonId: domain.LessonId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.LessonVersionSummary> {
     if (!auth.permissions.has(['lessons:update'])) {
@@ -119,8 +120,8 @@ export class LessonVersionsController {
 
   @Crud.UpdateOne(Routes().edu.lessons.versions.update(':lessonId', ':versionId'))
   async updateOne(
-    @Param('lessonId', new ParseUUIDPipe()) lessonId: string,
-    @Param('versionId', new ParseUUIDPipe()) versionId: string,
+    @Param('lessonId', new ParseUUIDPipe()) lessonId: domain.LessonId,
+    @Param('versionId', new ParseUUIDPipe()) versionId: domain.LessonVersionId,
     @Body() request: dto.UpdateLessonVersionRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateLessonVersionResponse> {
@@ -140,8 +141,8 @@ export class LessonVersionsController {
 
   @Crud.CreateOne(Routes().edu.lessons.versions.publish(':lessonId', ':versionId'))
   async publish(
-    @Param('lessonId', new ParseUUIDPipe()) lessonId: string,
-    @Param('versionId', new ParseUUIDPipe()) versionId: string,
+    @Param('lessonId', new ParseUUIDPipe()) lessonId: domain.LessonId,
+    @Param('versionId', new ParseUUIDPipe()) versionId: domain.LessonVersionId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.PublishLessonVersionResponse> {
     // Publishing freezes what students work against, so it is its own permission.

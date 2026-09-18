@@ -1,4 +1,12 @@
-import { HomeworkStatus } from '@vidya/domain'
+import {
+  EnrollmentId,
+  HomeworkId,
+  HomeworkStatus,
+  LessonVersionId,
+  SchoolId,
+  SectionId,
+  UserId,
+} from '@vidya/domain'
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 import { Enrollment } from './enrollment'
@@ -15,27 +23,27 @@ import { School } from './school'
 @Entity({ name: 'homework' })
 export class Homework {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: HomeworkId
 
   @Column({ nullable: false })
-  enrollmentId: string
+  enrollmentId: EnrollmentId
 
   @ManyToOne(() => Enrollment)
   @JoinColumn()
   enrollment: Enrollment
 
   @Column({ nullable: false })
-  lessonVersionId: string
+  lessonVersionId: LessonVersionId
 
   @ManyToOne(() => LessonVersion)
   @JoinColumn()
   lessonVersion: LessonVersion
 
   @Column({ nullable: false })
-  sectionId: string
+  sectionId: SectionId
 
   @Column({ nullable: false })
-  schoolId: string
+  schoolId: SchoolId
 
   @ManyToOne(() => School)
   @JoinColumn()
@@ -55,7 +63,7 @@ export class Homework {
   answeredSupersededVersion: boolean
 
   @Column({ nullable: true })
-  reviewedById: string
+  reviewedById: UserId
 
   @Column({ type: 'timestamptz', nullable: true })
   submittedAt: Date

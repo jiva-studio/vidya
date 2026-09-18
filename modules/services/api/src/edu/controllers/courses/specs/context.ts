@@ -2,6 +2,8 @@ import { faker } from '@faker-js/faker'
 import { INestApplication } from '@nestjs/common'
 import { AuthService } from '@vidya/api/auth/services'
 import { CoursesService, SchoolsService } from '@vidya/api/edu/services'
+import { newId } from '@vidya/api/edu/shared'
+import * as domain from '@vidya/domain'
 import { School } from '@vidya/entities'
 
 /**
@@ -53,10 +55,10 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
       courseId: courseOne.id,
       tokens: {
         admin: (
-          await auth.generateTokens(faker.string.uuid(), [{ sid: schoolOne.id, p: [...all] }])
+          await auth.generateTokens(newId<domain.UserId>(), [{ sid: schoolOne.id, p: [...all] }])
         ).accessToken,
         readonly: (
-          await auth.generateTokens(faker.string.uuid(), [
+          await auth.generateTokens(newId<domain.UserId>(), [
             { sid: schoolOne.id, p: ['courses:read'] },
           ])
         ).accessToken,
@@ -67,12 +69,12 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
       courseId: courseTwo.id,
       tokens: {
         admin: (
-          await auth.generateTokens(faker.string.uuid(), [{ sid: schoolTwo.id, p: [...all] }])
+          await auth.generateTokens(newId<domain.UserId>(), [{ sid: schoolTwo.id, p: [...all] }])
         ).accessToken,
       },
     },
     tokens: {
-      noPermissions: (await auth.generateTokens(faker.string.uuid(), [])).accessToken,
+      noPermissions: (await auth.generateTokens(newId<domain.UserId>(), [])).accessToken,
     },
   }
 }

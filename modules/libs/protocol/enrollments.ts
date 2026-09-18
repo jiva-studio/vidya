@@ -7,18 +7,18 @@ import * as crud from './crud'
 /* -------------------------------------------------------------------------- */
 
 export type EnrollmentDetails = {
-  id: string
-  courseId: string
+  id: domain.EnrollmentId
+  courseId: domain.CourseId
 
   /** Empty until a group is assigned; an accepted student waits in the queue. */
-  groupId?: string
+  groupId?: domain.GroupId
 
-  studentId: string
-  schoolId: string
+  studentId: domain.UserId
+  schoolId: domain.SchoolId
   status: domain.EnrollmentStatus
-  decidedById?: string
-  decidedAt?: string
-  createdAt: string
+  decidedById?: domain.UserId
+  decidedAt?: domain.IsoDateTime
+  createdAt: domain.IsoDateTime
 }
 
 export type EnrollmentSummary = Pick<
@@ -39,9 +39,9 @@ export type CreateEnrollmentResponse = crud.CreateItemResponse<EnrollmentDetails
 /* -------------------------------------------------------------------------- */
 
 export type GetEnrollmentsQuery = {
-  courseId?: string
-  groupId?: string
-  studentId?: string
+  courseId?: domain.CourseId
+  groupId?: domain.GroupId
+  studentId?: domain.UserId
   status?: domain.EnrollmentStatus
 }
 
@@ -55,13 +55,13 @@ export type GetEnrollmentResponse = crud.GetItemResponse<EnrollmentDetails>
 /** Accept or decline a request, optionally placing the student in a group. */
 export type ModerateEnrollmentRequest = {
   status: Extract<domain.EnrollmentStatus, 'accepted' | 'declined'>
-  groupId?: string
+  groupId?: domain.GroupId
 }
 
 export type ModerateEnrollmentResponse = crud.UpdateItemResponse<EnrollmentDetails>
 
 /** Move an already accepted student between groups, or out of the queue. */
-export type AssignEnrollmentGroupRequest = { groupId: string | null }
+export type AssignEnrollmentGroupRequest = { groupId: domain.GroupId | null }
 export type AssignEnrollmentGroupResponse = crud.UpdateItemResponse<EnrollmentDetails>
 
 export type DeleteEnrollmentResponse = crud.DeleteItemResponse

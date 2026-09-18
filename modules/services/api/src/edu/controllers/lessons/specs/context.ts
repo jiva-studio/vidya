@@ -7,6 +7,7 @@ import {
   LessonVersionsService,
   SchoolsService,
 } from '@vidya/api/edu/services'
+import { newId } from '@vidya/api/edu/shared'
 import * as domain from '@vidya/domain'
 
 export type Context = {
@@ -54,8 +55,8 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
     content: { sections: [] },
   })
 
-  const token = async (schoolId: string, p: domain.PermissionKey[]) =>
-    (await auth.generateTokens(faker.string.uuid(), [{ sid: schoolId, p }])).accessToken
+  const token = async (schoolId: domain.SchoolId, p: domain.PermissionKey[]) =>
+    (await auth.generateTokens(newId<domain.UserId>(), [{ sid: schoolId, p }])).accessToken
 
   return {
     schoolId: school.id,

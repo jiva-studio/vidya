@@ -15,6 +15,7 @@ import * as dto from '@vidya/api/edu/dto'
 import { SchoolExistsPipe } from '@vidya/api/edu/pipes'
 import { SchoolCreationService, SchoolsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
+import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
 
 import { toId, toSchoolDetails, toSchoolSummaries } from '../../mappers/org.mapper'
@@ -43,7 +44,7 @@ export class SchoolsController {
 
   @Crud.GetOne(Routes().edu.schools.get(':id'))
   async getOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.SchoolId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetSchoolResponse> {
     // Check if user has permission to read schools
@@ -116,7 +117,7 @@ export class SchoolsController {
 
   @Crud.UpdateOne(Routes().edu.schools.update(':id'))
   async updateOne(
-    @Param('id', new ParseUUIDPipe(), SchoolExistsPipe) id: string,
+    @Param('id', new ParseUUIDPipe(), SchoolExistsPipe) id: domain.SchoolId,
     @Body() request: dto.UpdateSchoolRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateSchoolResponse> {
@@ -148,7 +149,7 @@ export class SchoolsController {
 
   @Crud.DeleteOne(Routes().edu.schools.delete(':id'))
   async deleteOne(
-    @Param('id', new ParseUUIDPipe(), SchoolExistsPipe) id: string,
+    @Param('id', new ParseUUIDPipe(), SchoolExistsPipe) id: domain.SchoolId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.DeleteSchoolResponse> {
     // Check if user has permission to delete school

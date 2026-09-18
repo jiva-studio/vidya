@@ -11,12 +11,12 @@ import {
 } from '@vidya/api/edu/services'
 import * as domain from '@vidya/domain'
 
-const SECTION_ID = '11111111-1111-4111-8111-111111111111'
+const SECTION_ID = domain.asId<domain.SectionId>('11111111-1111-4111-8111-111111111111')
 
 export type Context = {
   schoolId: string
   sectionId: string
-  publishedVersionId: string
+  publishedVersionId: domain.LessonVersionId
   enrollmentId: string
   tokens: {
     /** Accepted on the course. */
@@ -82,7 +82,7 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
     status: 'pending',
   })
 
-  const token = async (userId: string, p: domain.PermissionKey[]) =>
+  const token = async (userId: domain.UserId, p: domain.PermissionKey[]) =>
     (await auth.generateTokens(userId, p.length ? [{ sid: school.id, p }] : [])).accessToken
 
   return {

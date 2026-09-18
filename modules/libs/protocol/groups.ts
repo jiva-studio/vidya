@@ -1,3 +1,5 @@
+import * as domain from '@vidya/domain'
+
 import * as crud from './crud'
 
 /* -------------------------------------------------------------------------- */
@@ -5,8 +7,8 @@ import * as crud from './crud'
 /* -------------------------------------------------------------------------- */
 
 export type GroupDetails = {
-  id: string
-  courseId: string
+  id: domain.GroupId
+  courseId: domain.CourseId
   name: string
   description?: string
 }

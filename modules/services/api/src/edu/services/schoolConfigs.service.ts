@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
+import * as domain from '@vidya/domain'
 import { SchoolConfig } from '@vidya/entities'
 import { In } from 'typeorm'
 
@@ -19,7 +20,7 @@ export class SchoolConfigsService {
     private readonly roles: RolesService,
   ) {}
 
-  async update(schoolId: string, changes: Partial<SchoolConfig>): Promise<void> {
+  async update(schoolId: domain.SchoolId, changes: Partial<SchoolConfig>): Promise<void> {
     await this.assertRolesAssignable(schoolId, changes)
 
     const school = await this.schools.findOneBy({ id: schoolId })
@@ -36,7 +37,7 @@ export class SchoolConfigsService {
    * what is checked here is whether the role may be used this way.
    */
   private async assertRolesAssignable(
-    schoolId: string,
+    schoolId: domain.SchoolId,
     changes: Partial<SchoolConfig>,
   ): Promise<void> {
     const ids = [

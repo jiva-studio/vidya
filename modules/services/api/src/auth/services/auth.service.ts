@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
 import { JwtConfig } from '@vidya/api/configs'
+import * as domain from '@vidya/domain'
 import { RefreshToken, UserPermission } from '@vidya/protocol'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -24,7 +25,7 @@ export class AuthService {
    * @param permissions Permissions to save in the token (optional)
    * @returns Access and refresh tokens
    */
-  async generateTokens(userId: string, permissions?: UserPermission[]): Promise<Tokens> {
+  async generateTokens(userId: domain.UserId, permissions?: UserPermission[]): Promise<Tokens> {
     const accessToken = await this.jwtService.signAsync(
       {
         jti: uuidv4(),

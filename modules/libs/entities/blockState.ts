@@ -1,3 +1,11 @@
+import {
+  BlockId,
+  BlockStateId,
+  EnrollmentId,
+  LessonBlockState,
+  LessonVersionId,
+  SchoolId,
+} from '@vidya/domain'
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 import { Enrollment } from './enrollment'
@@ -8,34 +16,34 @@ import { School } from './school'
 @Entity({ name: 'block_states' })
 export class BlockState {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: BlockStateId
 
   @Column({ nullable: false })
-  enrollmentId: string
+  enrollmentId: EnrollmentId
 
   @ManyToOne(() => Enrollment)
   @JoinColumn()
   enrollment: Enrollment
 
   @Column({ nullable: false })
-  lessonVersionId: string
+  lessonVersionId: LessonVersionId
 
   @ManyToOne(() => LessonVersion)
   @JoinColumn()
   lessonVersion: LessonVersion
 
   @Column({ nullable: false })
-  blockId: string
+  blockId: BlockId
 
   @Column({ nullable: false })
-  schoolId: string
+  schoolId: SchoolId
 
   @ManyToOne(() => School)
   @JoinColumn()
   school: School
 
   @Column('json')
-  state: object
+  state: LessonBlockState
 
   @Column({ type: 'timestamptz', nullable: false, default: () => 'now()' })
   updatedAt: Date

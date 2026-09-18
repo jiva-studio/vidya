@@ -1,3 +1,5 @@
+import * as domain from '@vidya/domain'
+
 import * as crud from './crud'
 
 /* -------------------------------------------------------------------------- */
@@ -5,7 +7,7 @@ import * as crud from './crud'
 /* -------------------------------------------------------------------------- */
 
 export type SchoolDetails = {
-  id: string
+  id: domain.SchoolId
   name: string
 }
 

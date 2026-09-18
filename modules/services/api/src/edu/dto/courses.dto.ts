@@ -9,11 +9,11 @@ import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'cla
 
 export class CourseDetails implements protocol.CourseDetails {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.CourseId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
-  schoolId: string
+  schoolId: domain.SchoolId
 
   @ApiProperty({ example: 'Bhakti-shastri' })
   name: string
@@ -27,7 +27,7 @@ export class CourseDetails implements protocol.CourseDetails {
 
 export class CourseSummary implements protocol.CourseSummary {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.CourseId
 
   @ApiProperty({ example: 'Bhakti-shastri' })
   name: string
@@ -43,7 +43,7 @@ export class CourseSummary implements protocol.CourseSummary {
 export class CreateCourseRequest implements protocol.CreateCourseRequest {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
-  schoolId: string
+  schoolId: domain.SchoolId
 
   @ApiProperty({ example: 'Bhakti-shastri' })
   @IsString()
@@ -64,7 +64,7 @@ export class CreateCourseRequest implements protocol.CreateCourseRequest {
 
 export class CreateCourseResponse implements protocol.CreateCourseResponse {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.CourseId
 }
 
 /* -------------------------------------------------------------------------- */
@@ -75,7 +75,7 @@ export class GetCoursesQuery implements protocol.GetCoursesQuery {
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
-  schoolId?: string
+  schoolId?: domain.SchoolId
 }
 
 export class GetCoursesResponse implements protocol.GetCoursesResponse {

@@ -1,14 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import { IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator'
 
 export class GroupDetails implements protocol.GroupDetails {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.GroupId
 
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
-  courseId: string
+  courseId: domain.CourseId
 
   @ApiProperty({ example: 'Morning group' })
   name: string
@@ -19,7 +20,7 @@ export class GroupDetails implements protocol.GroupDetails {
 
 export class GroupSummary implements protocol.GroupSummary {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.GroupId
 
   @ApiProperty({ example: 'Morning group' })
   name: string
@@ -28,7 +29,7 @@ export class GroupSummary implements protocol.GroupSummary {
 export class CreateGroupRequest implements protocol.CreateGroupRequest {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
-  courseId: string
+  courseId: domain.CourseId
 
   @ApiProperty({ example: 'Morning group' })
   @IsString()
@@ -45,14 +46,14 @@ export class CreateGroupRequest implements protocol.CreateGroupRequest {
 
 export class CreateGroupResponse implements protocol.CreateGroupResponse {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
-  id: string
+  id: domain.GroupId
 }
 
 export class GetGroupsQuery implements protocol.GetGroupsQuery {
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
-  courseId?: string
+  courseId?: domain.CourseId
 }
 
 export class GetGroupsResponse implements protocol.GetGroupsResponse {

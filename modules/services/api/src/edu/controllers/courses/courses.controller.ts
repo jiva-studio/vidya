@@ -15,6 +15,7 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { CoursesService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
+import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
 
 import { toCourseDetails, toCourseSummaries, toCreatedId } from '../../mappers/education.mapper'
@@ -41,7 +42,7 @@ export class CoursesController {
 
   @Crud.GetOne(Routes().edu.courses.get(':id'))
   async getOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.CourseId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetCourseResponse> {
     if (!auth.permissions.has(['courses:read'])) {
@@ -109,7 +110,7 @@ export class CoursesController {
 
   @Crud.UpdateOne(Routes().edu.courses.update(':id'))
   async updateOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.CourseId,
     @Body() request: dto.UpdateCourseRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateCourseResponse> {
@@ -135,7 +136,7 @@ export class CoursesController {
 
   @Crud.DeleteOne(Routes().edu.courses.delete(':id'))
   async deleteOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.CourseId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.DeleteCourseResponse> {
     if (!auth.permissions.has(['courses:delete'])) {

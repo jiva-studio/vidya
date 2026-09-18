@@ -17,6 +17,7 @@ import * as dto from '@vidya/api/edu/dto'
 import { RoleExistsPipe } from '@vidya/api/edu/pipes'
 import { RolesService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
+import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
 
 import { toId, toRoleDetails, toRoleSummaries } from '../../mappers/org.mapper'
@@ -42,7 +43,7 @@ export class RolesController {
 
   @Crud.GetOne(Routes().edu.roles.get(':id'))
   async getOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.RoleId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetRoleResponse> {
     // Check if user has permission to read roles
@@ -127,7 +128,7 @@ export class RolesController {
 
   @Crud.UpdateOne(Routes().edu.roles.update(':id'))
   async updateOne(
-    @Param('id', new ParseUUIDPipe(), RoleExistsPipe) id: string,
+    @Param('id', new ParseUUIDPipe(), RoleExistsPipe) id: domain.RoleId,
     @Body() request: dto.UpdateRoleRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateRoleResponse> {
@@ -161,7 +162,7 @@ export class RolesController {
 
   @Crud.DeleteOne(Routes().edu.roles.delete(':id'))
   async deleteOne(
-    @Param('id', new ParseUUIDPipe(), RoleExistsPipe) id: string,
+    @Param('id', new ParseUUIDPipe(), RoleExistsPipe) id: domain.RoleId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.DeleteRoleResponse> {
     // Check if user has permission to delete role

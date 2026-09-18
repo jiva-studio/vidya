@@ -1,5 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import * as domain from '@vidya/domain'
 import { LessonVersion } from '@vidya/entities'
 import { LessonContent } from '@vidya/protocol'
 import { Repository } from 'typeorm'
@@ -24,7 +25,10 @@ export class LessonVersionsService extends EntitiesService<LessonVersion> {
     super(repository)
   }
 
-  async getOrFail(lessonId: string, versionId: string): Promise<LessonVersion> {
+  async getOrFail(
+    lessonId: domain.LessonId,
+    versionId: domain.LessonVersionId,
+  ): Promise<LessonVersion> {
     const version = await this.findOneBy({ id: versionId, lessonId })
 
     if (!version) {
@@ -35,7 +39,7 @@ export class LessonVersionsService extends EntitiesService<LessonVersion> {
   }
 
   /** The version students are working against right now, if the lesson has one. */
-  async latestPublished(lessonId: string): Promise<LessonVersion | undefined> {
+  async latestPublished(lessonId: domain.LessonId): Promise<LessonVersion | undefined> {
     const published = await this.findAll({ where: { lessonId, status: 'published' } })
 
     return published.sort((a, b) => b.version - a.version)[0]
@@ -55,7 +59,7 @@ export class LessonVersionsService extends EntitiesService<LessonVersion> {
   }
 
   /** Every lesson starts with somewhere to write, so the editor never has to create one. */
-  async createInitialDraft(lessonId: string): Promise<LessonVersion> {
+  async createInitialDraft(lessonId: domain.LessonId): Promise<LessonVersion> {
     return this.create({ lessonId, version: 1, status: 'draft', content: { sections: [] } })
   }
 
@@ -67,7 +71,7 @@ export class LessonVersionsService extends EntitiesService<LessonVersion> {
    * time; a second would make "the draft" ambiguous for both the editor and
    * publishing.
    */
-  async openDraft(lessonId: string): Promise<LessonVersion> {
+  async openDraft(lessonId: domain.LessonId): Promise<LessonVersion> {
     const existing = await this.findAll({ where: { lessonId } })
 
     if (existing.some((v) => v.status === 'draft')) {
@@ -88,8 +92,8 @@ export class LessonVersionsService extends EntitiesService<LessonVersion> {
 
   /** Published content is what submitted homework points at, so only drafts change. */
   async saveDraft(
-    lessonId: string,
-    versionId: string,
+    lessonId: domain.LessonId,
+    versionId: domain.LessonVersionId,
     content: LessonContent,
   ): Promise<LessonVersion> {
     const version = await this.getOrFail(lessonId, versionId)
@@ -104,7 +108,10 @@ export class LessonVersionsService extends EntitiesService<LessonVersion> {
   }
 
   /** Freezes the version. From here it is a stable target for homework. */
-  async publish(lessonId: string, versionId: string): Promise<LessonVersion> {
+  async publish(
+    lessonId: domain.LessonId,
+    versionId: domain.LessonVersionId,
+  ): Promise<LessonVersion> {
     const version = await this.getOrFail(lessonId, versionId)
 
     if (version.status === 'published') {
