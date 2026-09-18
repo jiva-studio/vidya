@@ -13,13 +13,12 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { UserSchoolsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
+import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
 
 import { UserExistsPipe } from '../../pipes'
 
-// TODO Add documentation configurations, to change doc:
-//      Get many UserSchools    -> Get all schools of a user
-//      Create a new UserSchool -> Set schools for a user
+// TODO: relabel the generated Swagger operations for this resource.
 const Crud = CrudDecorators({
   entityName: 'UserSchools',
   getManyResponseDto: dto.GetUserSchoolsListResponse,
@@ -39,7 +38,7 @@ export class UserSchoolsController {
 
   @Crud.GetMany(Routes().edu.user(':userId').schools.all())
   async getAll(
-    @Param('userId') userId: string,
+    @Param('userId', new ParseUUIDPipe()) userId: domain.UserId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetUserSchoolsListResponse> {
     // Check if the user has permission to read the schools
@@ -59,7 +58,7 @@ export class UserSchoolsController {
 
   @Crud.UpdateOne(Routes().edu.user(':userId').schools.create())
   async set(
-    @Param('userId', new ParseUUIDPipe(), UserExistsPipe) userId: string,
+    @Param('userId', new ParseUUIDPipe(), UserExistsPipe) userId: domain.UserId,
     @Body() request: dto.AddUserSchoolsRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.AddUserSchoolsResponse> {

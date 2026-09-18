@@ -20,7 +20,7 @@ import { IsPermissionsProhibited } from '../validations'
 
 export class RoleDetails implements protocol.RoleDetails {
   @ApiProperty({ example: 'id' })
-  id: string
+  id: domain.RoleId
 
   @ApiProperty({ example: 'name' })
   name: string
@@ -29,16 +29,16 @@ export class RoleDetails implements protocol.RoleDetails {
   description: string
 
   @ApiProperty({ example: ['permissions'] })
-  permissions: string[]
+  permissions: domain.PermissionKey[]
 
   @ApiProperty({ example: 'schoolId' })
   @IsUUID()
-  schoolId: string
+  schoolId: domain.SchoolId
 }
 
 export class RoleSummary implements protocol.RoleSummary {
   @ApiProperty({ example: 'id' })
-  id: string
+  id: domain.RoleId
 
   @ApiProperty({ example: 'name' })
   name: string
@@ -57,7 +57,7 @@ export class GetRoleSummariesListQuery implements protocol.GetRoleSummariesListQ
   @ApiPropertyOptional()
   @IsUUID()
   @IsOptional()
-  schoolId?: string
+  schoolId?: domain.SchoolId
 }
 
 export class GetRolesResponse implements protocol.GetRolesResponse {
@@ -99,16 +99,16 @@ export class CreateRoleRequest implements protocol.CreateRoleRequest {
   @IsString({ each: true })
   @IsEnum(domain.PermissionEnum, { each: true })
   @IsPermissionsProhibited(['*'])
-  permissions: string[]
+  permissions: domain.PermissionKey[]
 
   @ApiProperty({ example: 'schoolId' })
   @IsUUID()
-  schoolId: string
+  schoolId: domain.SchoolId
 }
 
 export class CreateRoleResponse implements protocol.CreateRoleResponse {
   @ApiProperty({ example: 'd66c9ffa-1d94-4d52-8399-0df211d578f6' })
-  id: string
+  id: domain.RoleId
 }
 
 /* -------------------------------------------------------------------------- */
@@ -139,7 +139,7 @@ export class UpdateRoleRequest implements protocol.UpdateRoleRequest {
   @IsEnum(domain.PermissionEnum, { each: true })
   @IsOptional()
   @IsPermissionsProhibited(['*'])
-  permissions?: string[]
+  permissions?: domain.PermissionKey[]
 }
 
 export class UpdateRoleResponse extends RoleDetails implements protocol.UpdateRoleResponse {}

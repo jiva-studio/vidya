@@ -1,10 +1,8 @@
-import { Mapper } from '@automapper/core'
-import { DEFAULT_MAPPER_TOKEN } from '@automapper/nestjs'
 import { faker } from '@faker-js/faker'
 import { INestApplication } from '@nestjs/common'
-import * as dto from '@vidya/api/edu/dto'
+import { toUserDetails, toUserSummaries } from '@vidya/api/edu/mappers/org.mapper'
 import { createTestingApp } from '@vidya/api/edu/shared'
-import * as entities from '@vidya/entities'
+import { onTheWire } from '@vidya/api/edu/shared'
 import { Routes } from '@vidya/protocol'
 import { instanceToPlain } from 'class-transformer'
 import * as request from 'supertest'
@@ -14,12 +12,10 @@ import { Context, createContext } from './context'
 describe('/edu/users', () => {
   let app: INestApplication
   let ctx: Context
-  let mapper: Mapper
 
   beforeEach(async () => {
     app = await createTestingApp()
     ctx = await createContext(app)
-    mapper = app.get(DEFAULT_MAPPER_TOKEN)
   })
 
   afterAll(async () => {
@@ -58,9 +54,7 @@ describe('/edu/users', () => {
       .get(Routes().edu.user(ctx.one.users.oneAdmin.id).get())
       .set('Authorization', `Bearer ${ctx.one.tokens.oneAdmin}`)
       .expect(200)
-      .expect({
-        ...instanceToPlain(mapper.map(ctx.one.users.oneAdmin, entities.User, dto.GetUserResponse)),
-      })
+      .expect(onTheWire(instanceToPlain(toUserDetails(ctx.one.users.oneAdmin))))
   })
 
   it(`GET /edu/users returns permitted users`, async () => {
@@ -70,11 +64,7 @@ describe('/edu/users', () => {
       .expect(200)
       .expect({
         items: instanceToPlain(
-          mapper.mapArray(
-            [ctx.one.users.oneAdmin, ctx.misc.users.adminOfOneAndTwo],
-            entities.User,
-            dto.UserSummary,
-          ),
+          toUserSummaries([ctx.one.users.oneAdmin, ctx.misc.users.adminOfOneAndTwo]),
         ),
       })
   })

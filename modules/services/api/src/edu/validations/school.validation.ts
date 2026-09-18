@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { SchoolsService } from '@vidya/api/edu/services'
+import * as domain from '@vidya/domain'
 import {
   isUUID,
   registerDecorator,
@@ -8,6 +9,8 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator'
+
+import { DecoratedTarget } from './target'
 
 @ValidatorConstraint({ async: true, name: 'school-exists' })
 @Injectable()
@@ -18,7 +21,7 @@ export class IsSchoolExistConstraint implements ValidatorConstraintInterface {
     if (!isUUID(value)) {
       return false
     }
-    return await this.schools.existsBy({ id: value })
+    return await this.schools.existsBy({ id: domain.asId<domain.SchoolId>(value) })
   }
 
   defaultMessage(validationArguments?: ValidationArguments): string {
@@ -27,9 +30,9 @@ export class IsSchoolExistConstraint implements ValidatorConstraintInterface {
 }
 
 export function IsSchoolExist(validationOptions?: ValidationOptions) {
-  return function (object: object, propertyName: string) {
+  return function (target: DecoratedTarget, propertyName: string) {
     registerDecorator({
-      target: object.constructor,
+      target: target.constructor,
       propertyName: propertyName,
       options: validationOptions,
       constraints: [],

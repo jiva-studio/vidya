@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import * as domain from '@vidya/domain'
 import { Role, School, User } from '@vidya/entities'
 import { Repository } from 'typeorm'
 
@@ -7,7 +8,7 @@ import { Repository } from 'typeorm'
 export class SchoolCreationService {
   constructor(@InjectRepository(School) private readonly schools: Repository<School>) {}
 
-  async createNewSchool(userId: string, params: Partial<School>): Promise<School> {
+  async createNewSchool(userId: domain.UserId, params: Partial<School>): Promise<School> {
     return await this.schools.manager.transaction(async (transaction) => {
       // Create a new school
       const school = await transaction.save(School, params)

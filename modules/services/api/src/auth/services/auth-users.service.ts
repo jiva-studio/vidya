@@ -1,15 +1,14 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import { Inject, Injectable, Logger } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
-import * as dto from '@vidya/api/auth/dto'
 import { AuthConfig } from '@vidya/api/configs'
 import { RedisService } from '@vidya/api/shared/services'
+import * as domain from '@vidya/domain'
 import { Role, User } from '@vidya/entities'
-import * as entities from '@vidya/entities'
 import { UserPermission, UserPermissionsStorageKey } from '@vidya/protocol'
 import { Repository } from 'typeorm'
+
+import { toUserPermissions } from '../mappers/permissions.mapper'
 
 export type LoginField = 'email' | 'phone'
 
@@ -21,13 +20,11 @@ export class AuthUsersService {
    * Creates an instance of AuthUsersService.
    * @param users Users repository
    * @param roles Rples repository
-   * @param mapper Mapper instance
    */
   constructor(
     private readonly redis: RedisService,
     @InjectRepository(User) private readonly users: Repository<User>,
     @InjectRepository(Role) private readonly roles: Repository<Role>,
-    @InjectMapper() private readonly mapper: Mapper,
     @Inject(AuthConfig.KEY)
     private readonly authConfig: ConfigType<typeof AuthConfig>,
   ) {}
@@ -37,7 +34,7 @@ export class AuthUsersService {
    * @param id Id of the user
    * @returns User with the given id or null if not found
    */
-  async findById(id: string): Promise<User | null> {
+  async findById(id: domain.UserId): Promise<User | null> {
     return await this.users.findOne({ where: { id }, relations: ['roles'] })
   }
 
@@ -68,7 +65,7 @@ export class AuthUsersService {
    * @param userId Id of the user
    * @returns Roles of the user
    */
-  async getRolesOfUser(userId: string): Promise<Role[]> {
+  async getRolesOfUser(userId: domain.UserId): Promise<Role[]> {
     return await this.roles
       .createQueryBuilder('role')
       .innerJoin('role.userRoles', 'userRole')
@@ -81,7 +78,7 @@ export class AuthUsersService {
    * @param userId User id
    * @returns User permissions
    */
-  async getUserPermissions(userId: string): Promise<UserPermission[]> {
+  async getUserPermissions(userId: domain.UserId): Promise<UserPermission[]> {
     // Get permissions from cache if available
     const permissions = await this.redis.get(UserPermissionsStorageKey(userId))
 
@@ -93,11 +90,9 @@ export class AuthUsersService {
 
       // Permissions are not cached. Fetch them from the database.
       const userRoles = await this.getRolesOfUser(userId)
-      const permissions = this.mapper.mapArray(userRoles, entities.Role, dto.UserPermission)
+      const permissions = toUserPermissions(userRoles)
 
-      // Cache the permissions if cache TTL is set to a positive value
-      // otherwise, users permissions will be fetched from the database
-      // on every request (which is good for development only)
+      // A non-positive TTL disables the cache, which is a development convenience.
       if (this.authConfig.userPermissionsCacheTtl > 0) {
         await this.redis.set(
           UserPermissionsStorageKey(userId),

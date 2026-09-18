@@ -65,14 +65,11 @@ export class OtpService {
     const stored: Otp = JSON.parse(await this.redis.get(key))
     if (!stored) return undefined
 
-    // if code is correct, expire it immediately
-    // to prevent replay attacks and multiple logins
     if (code === stored.code) {
       await this.redis.del(key)
       return stored
     }
 
-    // if code is incorrect, return undefined
     return undefined
   }
 
@@ -87,9 +84,7 @@ export class OtpService {
     const length = this.otpConfig.length
     let result = ''
     for (let i = 0; i < length; i++) {
-      // randomInt is CSPRNG-backed and rejection-samples, so the alphabet stays
-      // uniformly distributed. Math.random() is neither, and an OTP that an
-      // attacker can predict is not a second factor.
+      // randomInt is CSPRNG-backed; a predictable OTP is not a second factor.
       result += characters.charAt(randomInt(characters.length))
     }
     return result

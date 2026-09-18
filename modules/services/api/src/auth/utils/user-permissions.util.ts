@@ -37,7 +37,7 @@ export class AuthenticatedUserPermissions {
    * @param requiredPermissions Permissions required to perform an action
    * @returns List of scopes that user has permission for
    */
-  public getScopes(requiredPermissions: domain.PermissionKey[]): { schoolId: string }[] {
+  public getScopes(requiredPermissions: domain.PermissionKey[]): { schoolId: domain.SchoolId }[] {
     return this._userPermissions
       .filter((p) =>
         requiredPermissions.every((permission) => p.p.includes(permission) || p.p.includes('*')),
@@ -53,7 +53,7 @@ export class AuthenticatedUserPermissions {
    */
   public has(
     permissions: domain.PermissionKey[],
-    scope?: { schoolId?: string } | { schoolId?: string }[],
+    scope?: { schoolId?: domain.SchoolId } | { schoolId?: domain.SchoolId }[],
   ): boolean {
     // get user and resource scopes
     const resourceScopes = Array.isArray(scope) ? scope : [scope]

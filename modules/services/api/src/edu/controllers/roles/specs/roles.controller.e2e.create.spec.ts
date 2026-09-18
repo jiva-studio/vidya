@@ -94,8 +94,8 @@ describe('/edu/roles', () => {
         'schoolId must be a UUID',
       ],
     },
-    // Missing schoolId.
-    // Role must be associated with an school.
+
+    // A role must belong to a school.
     {
       payload: {
         name: 'New Role',

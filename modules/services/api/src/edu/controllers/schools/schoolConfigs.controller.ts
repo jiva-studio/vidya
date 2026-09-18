@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   ForbiddenException,
@@ -13,11 +12,11 @@ import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
+import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
-import { In } from 'typeorm'
 
 import { SchoolExistsPipe } from '../../pipes'
-import { RolesService, SchoolsService } from '../../services'
+import { SchoolConfigsService, SchoolsService } from '../../services'
 
 const Crud = CrudDecorators({
   entityName: 'School Config',
@@ -31,13 +30,13 @@ const Crud = CrudDecorators({
 @UseGuards(AuthenticatedUserGuard)
 export class SchoolConfigsController {
   constructor(
+    private readonly schoolConfigs: SchoolConfigsService,
     private readonly schoolsService: SchoolsService,
-    private readonly rolesService: RolesService,
   ) {}
 
   @Crud.GetMany(Routes().edu.schools.configs.getAll(':schoolId'))
   async getAll(
-    @Param('schoolId', new ParseUUIDPipe(), SchoolExistsPipe) schoolId: string,
+    @Param('schoolId', new ParseUUIDPipe(), SchoolExistsPipe) schoolId: domain.SchoolId,
     @Authentication() auth: UserAuthentication,
   ) {
     // Check if user has permission to read`
@@ -51,7 +50,7 @@ export class SchoolConfigsController {
 
   @Crud.UpdateOne(Routes().edu.schools.configs.update(':schoolId'))
   async updateOne(
-    @Param('schoolId', new ParseUUIDPipe(), SchoolExistsPipe) schoolId: string,
+    @Param('schoolId', new ParseUUIDPipe(), SchoolExistsPipe) schoolId: domain.SchoolId,
     @Body() request: dto.UpdateSchoolConfigsRequest,
     @Authentication() auth: UserAuthentication,
   ) {
@@ -60,38 +59,7 @@ export class SchoolConfigsController {
       throw new ForbiddenException('User does not have permission')
     }
 
-    // Load all roles to check
-    // NOTE: we've already cheked of role exists in IsRoleExist validation
-    const roleIdsToCheck = [
-      ...(request.defaultStudentRoleId ? [request.defaultStudentRoleId] : []),
-      ...(request.studentRoleIds ?? []),
-    ]
-    const roles = await this.rolesService.findAll({
-      where: {
-        id: In(roleIdsToCheck),
-      },
-    })
-
-    // Check roles:
-    // - Cannot assign owner role
-    // - Role should belong to the same school
-    for (const role of roles) {
-      if (role && role.permissions.includes('*')) {
-        throw new BadRequestException('Cannot assign owner role')
-      }
-      if (role && role.schoolId !== schoolId) {
-        throw new BadRequestException('Role does not belong to this school')
-      }
-    }
-
-    // Update school config
-    const school = await this.schoolsService.findOneBy({ id: schoolId })
-    for (const key in request) {
-      school.config[key] = request[key]
-    }
-
-    // Save school
-    await this.schoolsService.save(school)
+    await this.schoolConfigs.update(schoolId, request)
 
     // Send response
     return new dto.UpdateSchoolConfigResponse({ success: true })

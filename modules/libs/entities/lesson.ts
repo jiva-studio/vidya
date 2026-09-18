@@ -1,31 +1,31 @@
+import { CourseId, LessonId, SchoolId } from '@vidya/domain'
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 import { Course } from './course'
-
-/**
- * Shape of the `content` JSON column. The lesson content schema is not settled
- * yet, so this stays deliberately open rather than pretending to be empty.
- */
-export type LessonContent = Record<string, unknown>
+import { School } from './school'
 
 @Entity({ name: 'lessons' })
 export class Lesson {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: LessonId
 
   @Column({ nullable: false })
-  courseId: string
+  courseId: CourseId
 
   @ManyToOne(() => Course)
   @JoinColumn()
   course: Course
 
-  @Column({ unique: true })
+  @Column({ nullable: false })
+  schoolId: SchoolId
+
+  @ManyToOne(() => School)
+  @JoinColumn()
+  school: School
+
+  @Column()
   lessonNumber: number
 
-  @Column({ unique: true })
+  @Column()
   title: string
-
-  @Column('json')
-  content: LessonContent
 }

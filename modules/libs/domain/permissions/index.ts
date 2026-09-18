@@ -18,6 +18,37 @@ export const PermissionKeys = [
   'users:read',
   'users:update',
   'users:delete',
+
+  // Courses
+  'courses:create',
+  'courses:read',
+  'courses:update',
+  'courses:delete',
+
+  // Lessons
+  'lessons:create',
+  'lessons:read',
+  'lessons:update',
+  'lessons:delete',
+
+  // Publishing freezes what students work against, so it is its own permission.
+  'lessons:publish',
+
+  // Groups
+  'groups:create',
+  'groups:read',
+  'groups:update',
+  'groups:delete',
+
+  // Enrollments
+  'enrollments:read',
+
+  // Accepting or declining a request, and moving a student between groups.
+  'enrollments:moderate',
+
+  // Homework
+  'homework:read',
+  'homework:grade',
 ] as const
 
 export type PermissionKey = (typeof PermissionKeys)[number]

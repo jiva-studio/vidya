@@ -1,17 +1,25 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
-import { Body, Controller, Query, UseGuards } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Param,
+  ParseUUIDPipe,
+  UseGuards,
+} from '@nestjs/common'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
+import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
+import { UserExistsPipe } from '@vidya/api/edu/pipes'
 import { RolesService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import * as entities from '@vidya/entities'
+import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
 
-// TODO Add documentation configurations, to change doc:
-//      Get many UserRoles    -> Get all roles of a user
-//      Create a new UserRole -> Set roles for a user
+import { toUserRoles } from '../../mappers/org.mapper'
+
+// TODO: relabel the generated Swagger operations for this resource.
 const Crud = CrudDecorators({
   entityName: 'UserRole',
   getManyResponseDto: dto.GetUserRolesListResponse,
@@ -20,12 +28,10 @@ const Crud = CrudDecorators({
 
 @Controller()
 @ApiTags('🧝 Education :: Users')
+@ApiBearerAuth()
 @UseGuards(AuthenticatedUserGuard)
 export class UserRolesController {
-  constructor(
-    private readonly rolesService: RolesService,
-    @InjectMapper() private readonly mapper: Mapper,
-  ) {}
+  constructor(private readonly rolesService: RolesService) {}
 
   /* -------------------------------------------------------------------------- */
   /*                        GET /edu/users/:userId/roles                        */
@@ -33,11 +39,17 @@ export class UserRolesController {
 
   @Crud.GetMany(Routes().edu.user(':userId').roles.all())
   async getAll(
-    @Query() request: dto.GetUserRolesListRequest,
+    @Param('userId', new ParseUUIDPipe(), UserExistsPipe) userId: domain.UserId,
+    @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetUserRolesListResponse> {
-    const roles = await this.rolesService.getRolesOfUser(request.userId)
-    const userRoles = this.mapper.mapArray(roles, entities.Role, dto.UserRole)
-    return new dto.GetUserRolesListResponse(userRoles)
+    const schoolIds = auth.permissions.getScopes(['users:read']).map((s) => s.schoolId)
+
+    if (schoolIds.length === 0) {
+      throw new ForbiddenException('User does not have permission')
+    }
+
+    const roles = await this.rolesService.getRolesOfUserWithin(userId, schoolIds)
+    return new dto.GetUserRolesListResponse(toUserRoles(roles))
   }
 
   /* -------------------------------------------------------------------------- */
@@ -46,10 +58,13 @@ export class UserRolesController {
 
   @Crud.CreateOne(Routes().edu.user(':userId').roles.create())
   async set(
-    @Query() query: dto.SetUserRolesQuery,
+    @Param('userId', new ParseUUIDPipe(), UserExistsPipe) userId: domain.UserId,
     @Body() request: dto.SetUserRolesRequest,
+    @Authentication() auth: UserAuthentication,
   ): Promise<dto.SetUserRolesResponse> {
-    await this.rolesService.setRolesForUser(query.userId, request.roleIds)
+    const schoolIds = auth.permissions.getScopes(['users:update']).map((s) => s.schoolId)
+
+    await this.rolesService.setRolesForUserWithin(userId, request.roleIds, schoolIds)
     return new dto.SetUserRolesResponse()
   }
 }

@@ -29,3 +29,44 @@ jobs:
       # Keeping CI on `make check` means the two can never drift apart.
       - name: Run quality gate
         run: make check
+
+  postgres:
+    name: Quality Gate (Postgres)
+    runs-on: ubuntu-latest
+
+    # The default gate runs against pg-mem, which is fast but is not Postgres:
+    # its advisory locks are stubs and parts of its dialect differ. This job is
+    # what proves the migrations and the concurrency guarantees actually hold.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: modules/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: modules
+
+      - name: Run the suite against Postgres
+        run: make test-postgres
+        env:
+          VIDYA_TEST_DB_HOST: localhost
+          VIDYA_TEST_DB_PORT: 5432

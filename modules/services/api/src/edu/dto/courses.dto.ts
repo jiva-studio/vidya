@@ -1,0 +1,121 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import * as domain from '@vidya/domain'
+import * as protocol from '@vidya/protocol'
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator'
+
+/* -------------------------------------------------------------------------- */
+/*                                   Models                                   */
+/* -------------------------------------------------------------------------- */
+
+export class CourseDetails implements protocol.CourseDetails {
+  @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  id: domain.CourseId
+
+  @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  @IsUUID()
+  schoolId: domain.SchoolId
+
+  @ApiProperty({ example: 'Bhakti-shastri' })
+  name: string
+
+  @ApiPropertyOptional({ example: 'A one year course' })
+  description?: string
+
+  @ApiProperty({ enum: domain.CourseLearningTypes, example: 'group' })
+  learningType: domain.CourseLearningType
+}
+
+export class CourseSummary implements protocol.CourseSummary {
+  @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  id: domain.CourseId
+
+  @ApiProperty({ example: 'Bhakti-shastri' })
+  name: string
+
+  @ApiPropertyOptional({ example: 'A one year course' })
+  description?: string
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   Create                                   */
+/* -------------------------------------------------------------------------- */
+
+export class CreateCourseRequest implements protocol.CreateCourseRequest {
+  @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  @IsUUID()
+  schoolId: domain.SchoolId
+
+  @ApiProperty({ example: 'Bhakti-shastri' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  name: string
+
+  @ApiPropertyOptional({ example: 'A one year course' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  description?: string
+
+  @ApiProperty({ enum: domain.CourseLearningTypes, example: 'group' })
+  @IsEnum(domain.CourseLearningTypes)
+  learningType: domain.CourseLearningType
+}
+
+export class CreateCourseResponse implements protocol.CreateCourseResponse {
+  @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  id: domain.CourseId
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                    Read                                    */
+/* -------------------------------------------------------------------------- */
+
+export class GetCoursesQuery implements protocol.GetCoursesQuery {
+  @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  @IsOptional()
+  @IsUUID()
+  schoolId?: domain.SchoolId
+}
+
+export class GetCoursesResponse implements protocol.GetCoursesResponse {
+  @ApiProperty({ type: [CourseSummary] })
+  items: CourseSummary[]
+}
+
+export class GetCourseResponse extends CourseDetails {}
+
+/* -------------------------------------------------------------------------- */
+/*                                   Update                                   */
+/* -------------------------------------------------------------------------- */
+
+export class UpdateCourseRequest implements protocol.UpdateCourseRequest {
+  @ApiPropertyOptional({ example: 'Bhakti-shastri' })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  name?: string
+
+  @ApiPropertyOptional({ example: 'A one year course' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  description?: string
+
+  @ApiPropertyOptional({ enum: domain.CourseLearningTypes, example: 'group' })
+  @IsOptional()
+  @IsEnum(domain.CourseLearningTypes)
+  learningType?: domain.CourseLearningType
+}
+
+export class UpdateCourseResponse extends CourseDetails {}
+
+/* -------------------------------------------------------------------------- */
+/*                                   Delete                                   */
+/* -------------------------------------------------------------------------- */
+
+export class DeleteCourseResponse implements protocol.DeleteCourseResponse {
+  @ApiProperty({ example: true })
+  success: boolean
+}

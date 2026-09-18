@@ -1,3 +1,4 @@
+import { UserId } from '@vidya/domain'
 import {
   Check,
   Column,
@@ -17,7 +18,7 @@ import { UserRole } from './userRole'
 @Index('unique_lower_email_idx', ['email'], { unique: true }) // Case-insensitive unique index
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: UserId
 
   @Column({ nullable: true })
   name: string

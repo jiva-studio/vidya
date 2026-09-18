@@ -1,14 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
-# npm workspace commands below resolve against modules/package.json, so the
-# script works from any cwd rather than only from modules/.
+# The API applies migrations itself on startup. This script is for applying them
+# without starting the service — a fresh developer database, or a deploy step
+# that wants the schema in place first.
 MODULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../modules" && pwd)"
-cd "$MODULES_DIR"
-
-# ---------------------------------------------------------------------------- #
-#                                     Doc                                      #
-# ---------------------------------------------------------------------------- #
+cd "$MODULES_DIR/services/api"
 
 echo "
 # ---------------------------------------------- #
@@ -16,15 +13,23 @@ echo "
 # ---------------------------------------------- #
 "
 
-# ---------------------------------------------------------------------------- #
-#                                     Task                                     #
-# ---------------------------------------------------------------------------- #
-
-echo "Starting Postgres..."
-sudo service postgresql start >> /dev/null
-
-echo "Compiling migrations..."
-npm run --workspace @vidya/database build
-
-echo "Applying migrations..."
-npx --workspace @vidya/database typeorm migration:run -d ./dist/services/database/main.js
+npx ts-node -e '
+  import { Client } from "pg"
+  import { runMigrations } from "./src/shared/migrations/runner"
+  ;(async () => {
+    const client = new Client({
+      host: process.env.VIDYA_DB_HOST || "localhost",
+      port: Number(process.env.VIDYA_DB_PORT || 5432),
+      user: process.env.VIDYA_DB_USERNAME || "postgres",
+      password: process.env.VIDYA_DB_PASSWORD || "postgres",
+      database: process.env.VIDYA_DB_DATABASE || "postgres",
+    })
+    await client.connect()
+    try {
+      const applied = await runMigrations(client, process.env.VIDYA_MIGRATIONS_DIR || "./migrations")
+      console.log(applied.length ? `Applied: ${applied.join(", ")}` : "Nothing to apply")
+    } finally {
+      await client.end()
+    }
+  })().catch((e) => { console.error(e.message); process.exit(1) })
+'

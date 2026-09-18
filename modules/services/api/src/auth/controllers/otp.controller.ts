@@ -1,4 +1,13 @@
-import { Body, Controller, HttpCode, HttpException, HttpStatus, Inject, Post } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Inject,
+  NotImplementedException,
+  Post,
+} from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import {
   ApiBody,
@@ -47,6 +56,12 @@ export class OtpController {
     description: 'An OTP has already been generated and is still valid.',
   })
   async generateOtpCode(@Body() request: dto.GetOtpRequest): Promise<dto.GetOtpResponse> {
+    // Refused before a code is minted: generating one first would rate-limit the
+    // caller for five minutes over a message this service cannot send.
+    if (request.type !== 'email') {
+      throw new NotImplementedException(`Cannot send an OTP over ${request.type} yet`)
+    }
+
     // check if an OTP has already been generated and is still valid
     const isExpired = await this.otpService.isExpired(request.destination)
     if (!isExpired) {
@@ -62,28 +77,20 @@ export class OtpController {
     // generate a new OTP
     const otp = await this.otpService.generate(request.destination, request.type)
 
-    // send the OTP to the user
-    if (request.type === 'email') {
-      // TODO: select template based on the users preferred language
-      // TODO: inject or save images from template somwhere
-      const lang = 'en'
-      this.mailService.sendMail({
-        from: {
-          name: this.mailerConfig.from.name,
-          address: this.mailerConfig.from.address,
-        },
-        to: request.destination,
-        subject: 'Your OTP', // TODO: get from shcool config
-        template: `${lang}/otp`,
-        context: {
-          code: otp.code,
-        },
-      })
-    } else if (request.type === 'sms') {
-      // send the OTP to the phone number
-    }
+    // TODO: pick the template by the user's language, and resolve its images.
+    const lang = 'en'
 
-    // return success message
+    await this.mailService.sendMail({
+      from: {
+        name: this.mailerConfig.from.name,
+        address: this.mailerConfig.from.address,
+      },
+      to: request.destination,
+      subject: 'Your OTP', // TODO: get from school config
+      template: `${lang}/otp`,
+      context: { code: otp.code },
+    })
+
     return new dto.GetOtpResponse()
   }
 }

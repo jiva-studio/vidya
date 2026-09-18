@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common'
+import { ForbiddenException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import * as domain from '@vidya/domain'
 import { Role, UserRole } from '@vidya/entities'
 import { In, Repository } from 'typeorm'
 
@@ -12,19 +13,14 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
     @InjectRepository(UserRole) private userRolesRepo: Repository<UserRole>,
   ) {
     super(repository, (query, scope) => {
-      // HACK: For some reason FindOptionsWhere<Role> doesn't
-      //       work here, so we have to cast it to any. It doesn't contain
-      //       any fields like id, name, etc. But it should.
+      // FindOptionsWhere<Role> does not surface the entity's own fields, hence the cast.
       const { schoolId } = query?.where as any
 
-      // Get all scopes that have the required permission
-      // and match the school ids in the query if they are provided
       const scopes = scope.permissions
         .getScopes(['roles:read'])
         .filter((s) => !schoolId || s.schoolId === schoolId)
 
-      // Return the query with the scopes applied or an empty query
-      // if no scopes were found for the user permissions
+      // No scope means no access, so the empty list is a deliberate fail-closed result.
       return scopes.length > 0
         ? {
             where: scopes.map((s) => ({
@@ -36,7 +32,7 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
     })
   }
 
-  async getRolesOfUser(userId: string): Promise<Role[]> {
+  async getRolesOfUser(userId: domain.UserId): Promise<Role[]> {
     return await this.repository
       .createQueryBuilder('role')
       .innerJoin('role.userRoles', 'userRole')
@@ -44,7 +40,57 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
       .getMany()
   }
 
-  async setRolesForUser(userId: string, roleIds: string[]): Promise<void> {
+  /**
+   * The user's roles, limited to schools the caller may look into.
+   *
+   * A user can hold roles in several schools, and an administrator of one is
+   * not entitled to learn where else that person works.
+   */
+  async getRolesOfUserWithin(userId: domain.UserId, schoolIds: domain.SchoolId[]): Promise<Role[]> {
+    const roles = await this.getRolesOfUser(userId)
+    return roles.filter((role) => schoolIds.includes(role.schoolId))
+  }
+
+  /**
+   * Refuses unless every role named belongs to one of the given schools.
+   *
+   * The rule lives here rather than in the controller so that the next caller
+   * in — the offline sync endpoints do not go through one — gets it too.
+   */
+  async assertRolesWithin(roleIds: domain.RoleId[], schoolIds: domain.SchoolId[]): Promise<void> {
+    if (roleIds.length === 0) return
+
+    const roles = await this.repository.find({ where: { id: In(roleIds) } })
+    const allFound = roles.length === new Set(roleIds).size
+    const allInScope = roles.every((role) => schoolIds.includes(role.schoolId))
+
+    if (!allFound || !allInScope) {
+      throw new ForbiddenException('User does not have permission')
+    }
+  }
+
+  /**
+   * Replaces the user's roles inside the given schools, leaving every other
+   * school alone.
+   *
+   * Replacing the whole set would let an administrator of one school strip a
+   * person of the roles they hold somewhere else, simply by saving a form.
+   */
+  async setRolesForUserWithin(
+    userId: domain.UserId,
+    roleIds: domain.RoleId[],
+    schoolIds: domain.SchoolId[],
+  ): Promise<void> {
+    await this.assertRolesWithin(roleIds, schoolIds)
+
+    const elsewhere = (await this.getRolesOfUser(userId))
+      .filter((role) => !schoolIds.includes(role.schoolId))
+      .map((role) => role.id)
+
+    await this.setRolesForUser(userId, [...elsewhere, ...roleIds])
+  }
+
+  async setRolesForUser(userId: domain.UserId, roleIds: domain.RoleId[]): Promise<void> {
     const existing = await this.userRolesRepo.findBy({ userId })
 
     // find roles to add or remove

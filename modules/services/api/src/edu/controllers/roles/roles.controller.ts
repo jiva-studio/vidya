@@ -1,5 +1,3 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import {
   BadRequestException,
   Body,
@@ -19,8 +17,10 @@ import * as dto from '@vidya/api/edu/dto'
 import { RoleExistsPipe } from '@vidya/api/edu/pipes'
 import { RolesService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import * as entities from '@vidya/entities'
+import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
+
+import { toId, toRoleDetails, toRoleSummaries } from '../../mappers/org.mapper'
 
 const Crud = CrudDecorators({
   entityName: 'Role',
@@ -36,17 +36,14 @@ const Crud = CrudDecorators({
 @ApiBearerAuth()
 @UseGuards(AuthenticatedUserGuard)
 export class RolesController {
-  constructor(
-    private readonly rolesService: RolesService,
-    @InjectMapper() private readonly mapper: Mapper,
-  ) {}
+  constructor(private readonly rolesService: RolesService) {}
   /* -------------------------------------------------------------------------- */
   /*                             GET /edu/roles/:id                             */
   /* -------------------------------------------------------------------------- */
 
   @Crud.GetOne(Routes().edu.roles.get(':id'))
   async getOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.RoleId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetRoleResponse> {
     // Check if user has permission to read roles
@@ -65,7 +62,7 @@ export class RolesController {
     }
 
     // Return role details
-    return this.mapper.map(role, entities.Role, dto.RoleDetails)
+    return toRoleDetails(role)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -91,7 +88,7 @@ export class RolesController {
 
     // Return role summaries
     return new dto.GetRolesResponse({
-      items: this.mapper.mapArray(roles, entities.Role, dto.RoleSummary),
+      items: toRoleSummaries(roles),
     })
   }
 
@@ -114,12 +111,15 @@ export class RolesController {
     }
 
     // Create role
-    const entity = await this.rolesService.create(
-      this.mapper.map(request, dto.CreateRoleRequest, entities.Role),
-    )
+    const entity = await this.rolesService.create({
+      name: request.name,
+      description: request.description,
+      permissions: request.permissions,
+      schoolId: request.schoolId,
+    })
 
     // Return created role details
-    return this.mapper.map(entity, entities.Role, dto.CreateRoleResponse)
+    return toId(entity)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -128,7 +128,7 @@ export class RolesController {
 
   @Crud.UpdateOne(Routes().edu.roles.update(':id'))
   async updateOne(
-    @Param('id', new ParseUUIDPipe(), RoleExistsPipe) id: string,
+    @Param('id', new ParseUUIDPipe(), RoleExistsPipe) id: domain.RoleId,
     @Body() request: dto.UpdateRoleRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateRoleResponse> {
@@ -145,11 +145,15 @@ export class RolesController {
     // Update role
     role = await this.rolesService.updateOneBy(
       { id },
-      this.mapper.map(request, dto.UpdateRoleRequest, entities.Role),
+      {
+        name: request.name,
+        description: request.description,
+        permissions: request.permissions,
+      },
     )
 
     // Return updated role details
-    return this.mapper.map(role, entities.Role, dto.UpdateRoleResponse)
+    return toRoleDetails(role)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -158,7 +162,7 @@ export class RolesController {
 
   @Crud.DeleteOne(Routes().edu.roles.delete(':id'))
   async deleteOne(
-    @Param('id', new ParseUUIDPipe(), RoleExistsPipe) id: string,
+    @Param('id', new ParseUUIDPipe(), RoleExistsPipe) id: domain.RoleId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.DeleteRoleResponse> {
     // Check if user has permission to delete role

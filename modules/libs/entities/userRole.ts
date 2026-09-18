@@ -1,3 +1,4 @@
+import { RoleId, UserId, UserRoleId } from '@vidya/domain'
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 import { Role } from './role'
@@ -6,13 +7,13 @@ import { User } from './user'
 @Entity({ name: 'userRoles' })
 export class UserRole {
   @PrimaryGeneratedColumn('uuid')
-  public id: string
+  public id: UserRoleId
 
   @Column()
-  public userId: string
+  public userId: UserId
 
   @Column()
-  public roleId: string
+  public roleId: RoleId
 
   @ManyToOne(() => User, (user) => user.userRoles)
   public user: User

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
+import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import { IsArray, IsUUID } from 'class-validator'
 
@@ -10,7 +11,7 @@ import { IsRoleExist, IsUserExist } from '../validations'
 
 export class UserRole implements protocol.UserRole {
   @ApiProperty({ example: 'id' })
-  roleId: string
+  roleId: domain.RoleId
 }
 
 /* -------------------------------------------------------------------------- */
@@ -21,7 +22,7 @@ export class GetUserRolesListRequest implements protocol.GetUserRolesListRequest
   @ApiProperty({ example: 'id' })
   @IsUserExist()
   @IsUUID()
-  userId: string
+  userId: domain.UserId
 }
 
 export class GetUserRolesListResponse implements protocol.GetUserRolesListResponse {
@@ -42,7 +43,7 @@ export class SetUserRolesQuery implements protocol.SetUserRolesQuery {
   @ApiProperty({ example: 'id' })
   @IsUserExist()
   @IsUUID()
-  userId: string
+  userId: domain.UserId
 }
 
 export class SetUserRolesRequest implements protocol.SetUserRolesRequest {
@@ -50,7 +51,7 @@ export class SetUserRolesRequest implements protocol.SetUserRolesRequest {
   @IsRoleExist({ each: true })
   @IsUUID('4', { each: true })
   @IsArray()
-  roleIds: string[]
+  roleIds: domain.RoleId[]
 }
 
 export class SetUserRolesResponse implements protocol.SetUserRolesResponse {}

@@ -1,14 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import * as domain from '@vidya/domain'
 import { IsOptional, IsUUID } from 'class-validator'
 
 import { IsRoleExist } from '../validations'
 
 export class GetSchoolConfigResponse {
   @ApiProperty({ example: 'id' })
-  defaultStudentRoleId: string
+  defaultStudentRoleId: domain.RoleId
 
   @ApiProperty({ example: ['studentRoleIds'] })
-  studentRoleIds: string[]
+  studentRoleIds: domain.RoleId[]
 }
 
 export class UpdateSchoolConfigsRequest {
@@ -16,12 +17,12 @@ export class UpdateSchoolConfigsRequest {
   @IsOptional()
   @IsUUID()
   @IsRoleExist()
-  defaultStudentRoleId?: string
+  defaultStudentRoleId?: domain.RoleId
 
   @ApiPropertyOptional({ example: ['studentRoleIds'] })
   @IsOptional()
   @IsUUID(4, { each: true })
-  studentRoleIds?: string[]
+  studentRoleIds?: domain.RoleId[]
 }
 
 export class UpdateSchoolConfigResponse {

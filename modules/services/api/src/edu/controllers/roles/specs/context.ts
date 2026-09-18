@@ -2,6 +2,8 @@ import { faker } from '@faker-js/faker'
 import { INestApplication } from '@nestjs/common'
 import { AuthService } from '@vidya/api/auth/services'
 import { RolesService, SchoolsService } from '@vidya/api/edu/services'
+import { newId } from '@vidya/api/edu/shared'
+import * as domain from '@vidya/domain'
 import { Role, School } from '@vidya/entities'
 
 export type Context = {
@@ -90,28 +92,28 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
   /*                                   Tokens                                   */
   /* -------------------------------------------------------------------------- */
 
-  const oneOwnerAdmin = await authService.generateTokens(faker.string.uuid(), [
+  const oneOwnerAdmin = await authService.generateTokens(newId<domain.UserId>(), [
     { sid: schoolOne.id, p: oneOwnerRole.permissions },
   ])
 
-  const oneTokenReadonly = await authService.generateTokens(faker.string.uuid(), [
+  const oneTokenReadonly = await authService.generateTokens(newId<domain.UserId>(), [
     { sid: schoolOne.id, p: oneReadonlyRole.permissions },
   ])
 
   const twoTokenAdmin = await app
     .get(AuthService)
-    .generateTokens(faker.string.uuid(), [{ sid: schoolTwo.id, p: twoAdminRole.permissions }])
+    .generateTokens(newId<domain.UserId>(), [{ sid: schoolTwo.id, p: twoAdminRole.permissions }])
 
-  const threeTokenAdmin = await authService.generateTokens(faker.string.uuid(), [
+  const threeTokenAdmin = await authService.generateTokens(newId<domain.UserId>(), [
     { sid: schoolThree.id, p: ['roles:create', 'roles:read'] },
   ])
 
-  const oneAndTwoAdmin = await authService.generateTokens(faker.string.uuid(), [
+  const oneAndTwoAdmin = await authService.generateTokens(newId<domain.UserId>(), [
     { sid: schoolOne.id, p: oneOwnerRole.permissions },
     { sid: schoolTwo.id, p: twoAdminRole.permissions },
   ])
 
-  const emptyTokenNoPermissions = await authService.generateTokens(faker.string.uuid(), [])
+  const emptyTokenNoPermissions = await authService.generateTokens(newId<domain.UserId>(), [])
 
   /* -------------------------------------------------------------------------- */
   /*                                   Result                                   */

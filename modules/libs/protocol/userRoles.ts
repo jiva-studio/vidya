@@ -1,9 +1,11 @@
+import * as domain from '@vidya/domain'
+
 export type UserRole = {
-  roleId: string
+  roleId: domain.RoleId
 }
 
 export type GetUserRolesListRequest = {
-  userId: string
+  userId: domain.UserId
 }
 
 export type GetUserRolesListResponse = {
@@ -11,11 +13,11 @@ export type GetUserRolesListResponse = {
 }
 
 export type SetUserRolesQuery = {
-  userId: string
+  userId: domain.UserId
 }
 
 export type SetUserRolesRequest = {
-  roleIds: string[]
+  roleIds: domain.RoleId[]
 }
 
 /** Role assignment returns no payload; the meaningful result is the HTTP status. */

@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker'
-import { MainDataSource } from '@vidya/database'
 import { Role, School, User } from '@vidya/entities'
 
-MainDataSource.initialize().then(async (connection) => {
+import { SeedDataSource } from './datasource'
+
+SeedDataSource.initialize().then(async (connection) => {
   const schools = connection.getRepository(School)
   const roles = connection.getRepository(Role)
   const users = connection.getRepository(User)

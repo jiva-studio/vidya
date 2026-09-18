@@ -1,13 +1,18 @@
 import { ValidationPipe } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { AppName } from '@vidya/domain'
 import { useContainer } from 'class-validator'
 
 import { AppModule } from './app.module'
+import { bootstrapMigrations } from './shared/migrations'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+
+  // Before anything is served: a half-migrated schema is worse than a slow start.
+  await bootstrapMigrations(app.get(ConfigService))
 
   // TODO Use on development environment only
   const config = new DocumentBuilder()
@@ -24,6 +29,13 @@ async function bootstrap() {
     .addTag('🕵️‍♂️ Education :: Roles', 'Roles management')
     .addTag('🧝 Education :: Users', 'Users management')
     .addTag('🏫 Education :: Schools', 'Schools management')
+    .addTag('🎓 Education :: Courses', 'Courses management')
+    .addTag('🎓 Education :: Groups', 'Groups within a course')
+    .addTag('🎓 Education :: Lessons', 'Lessons management')
+    .addTag('🎓 Education :: Lesson Versions', 'Draft and published lesson content')
+    .addTag('🎓 Education :: Enrollments', 'Joining a course, and moderating who joins')
+    .addTag('🎓 Education :: Homework', 'Submitting and reviewing work')
+    .addTag('🎓 Education :: Progress', 'Per-block progress through a lesson')
     .addServer('http://localhost:8001', 'Development server')
     .addServer('https://api.vidya.com', 'Production server')
     .build()

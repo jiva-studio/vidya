@@ -68,6 +68,23 @@ export default tseslint.config(
 
       // An empty catch silently swallows a failure; say why or handle it.
       'no-empty': ['error', { allowEmptyCatch: false }],
+
+
+      // Cross-package imports go through the package's public entry point.
+      // A relative path that climbs out of a package bypasses it, and with it
+      // the dependency rules in .agents/rules/architecture.md.
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/../libs/*', '**/../../libs/*', '**/../../../libs/*'],
+              message:
+                'Reach other packages through their @vidya/* entry point, not a relative path out of this one.',
+            },
+          ],
+        },
+      ],
     },
   },
 
@@ -86,6 +103,63 @@ export default tseslint.config(
   {
     files: ['libs/**/*.ts'],
     rules: { 'no-restricted-syntax': ['error', ...nonDeterministicEnvironment] },
+  },
+
+  /* ------------------------------ Controllers ------------------------------ */
+
+  {
+    // Transport stays thin. A controller reads the request, proves the caller
+    // may act, delegates, and shapes the reply — so it has little to branch on.
+    //
+    // This is enforced rather than merely documented because the rules drift
+    // back the moment one "small" condition looks easier to write here than in
+    // the service, and the next caller in — the offline sync endpoints — does
+    // not come through a controller at all.
+    files: ['**/*.controller.ts'],
+    rules: {
+      complexity: ['error', 4],
+      'max-depth': ['error', 1],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "NewExpression[callee.name='ConflictException']",
+          message:
+            'A conflict is a domain rule. Throw it from the service that owns the rule, so every caller gets it — not only this endpoint.',
+        },
+        {
+          selector: 'ForStatement, ForOfStatement, ForInStatement, WhileStatement',
+          message: 'Loops belong in a service, not in transport.',
+        },
+      ],
+    },
+  },
+
+  /* ------------------------------ Shared types ----------------------------- */
+
+  {
+    // `object` and `{}` say "some fields, unspecified", which is what a JSON
+    // column degenerates to when nobody names its shape. That is how
+    // `LessonVersion.content` and `BlockState.state` sat as `object` while the
+    // DTOs promised `LessonContent` and `LessonBlockState`: the mapper cast
+    // between them, so neither the compiler nor a test ever disagreed.
+    //
+    // Name the domain type. If it does not exist yet, that is the finding.
+    files: ['libs/**/*.ts', 'services/**/*.ts', 'apps/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-empty-object-type': 'error',
+      '@typescript-eslint/no-restricted-types': [
+        'error',
+        {
+          types: {
+            object: {
+              message:
+                'Name the shape. A domain type belongs in @vidya/domain, not an anonymous object.',
+            },
+            Object: { message: 'Use a named type, or Record<string, unknown> for a bag.' },
+          },
+        },
+      ],
+    },
   },
 
   /* ------------------------------- Wire types ------------------------------ */

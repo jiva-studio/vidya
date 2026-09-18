@@ -294,3 +294,12 @@ In pure computational layers (`model/`, `lib/`, `@vidya/domain`):
 Empty catch blocks (`try { ... } catch (err) {}`) are forbidden by AST linter:
 - Every catch clause must either handle the error, rethrow it, log it, or contain an explicit statement with a comment explaining why it is safely ignored.
 
+
+---
+
+## 14. Comments
+
+Comments follow the same rule as the backend — see
+[Comments](./coding-style-backend.md#6-comments). One line, a blank line above,
+consistent within a group, and no commented-out code. The rule is written down
+once so the two sides of the codebase cannot drift apart.

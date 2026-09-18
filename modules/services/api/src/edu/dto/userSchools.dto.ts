@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
+import * as domain from '@vidya/domain'
 import { IsArray, IsBoolean, IsString, IsUUID } from 'class-validator'
 
 import { IsSchoolExist } from '../validations'
@@ -26,7 +27,7 @@ export class AddUserSchoolsRequest {
   @ApiProperty({ example: 'id' })
   @IsSchoolExist()
   @IsUUID('4')
-  schoolId: string
+  schoolId: domain.SchoolId
 }
 
 export class AddUserSchoolsResponse {

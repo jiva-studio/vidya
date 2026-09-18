@@ -34,11 +34,24 @@ export interface GetOtpResponse {
 /*                                   Tokens                                   */
 /* -------------------------------------------------------------------------- */
 
+export const TokenKinds = ['access', 'refresh'] as const
+export type TokenKind = (typeof TokenKinds)[number]
+
 export interface JwtToken {
-  sub: string
+  sub: domain.UserId
   exp: number
   iat: number
   jti: string
+
+  /**
+   * Which of the two this is.
+   *
+   * Both are signed with the same secret and carry the same claims otherwise,
+   * so without this an access token is a valid refresh token: whoever holds one
+   * can trade it at /auth/refresh for a fresh 90-day session, which is exactly
+   * what the access token's one-hour lifetime is meant to prevent.
+   */
+  typ: TokenKind
 }
 
 export interface AccessToken extends JwtToken {
@@ -107,14 +120,16 @@ export interface SignOutResponse {}
 /* -------------------------------------------------------------------------- */
 
 /**
- * Permission object. Contains the school ID and the permissions.
- * @remarks Used short names for the properties to reduce the size of a JWT token.
+ * What a user may do in one school.
+ *
+ * The property names are one letter because this rides inside every JWT, and
+ * a user with a role in a dozen schools carries a dozen of these.
  */
 export type UserPermission = {
-  /* School ID */
-  sid: string
+  /** School id. */
+  sid: domain.SchoolId
 
-  /* Permissions */
+  /** Permissions held in that school. */
   p: domain.PermissionKey[]
 }
 
@@ -124,7 +139,7 @@ export type UserPermission = {
 
 export interface GetProfileResponse {
   /** User's ID */
-  userId: string
+  userId: domain.UserId
 
   /** User's email */
   email: string

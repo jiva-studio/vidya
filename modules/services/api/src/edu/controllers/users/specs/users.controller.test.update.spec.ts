@@ -1,11 +1,9 @@
-import { Mapper } from '@automapper/core'
-import { DEFAULT_MAPPER_TOKEN } from '@automapper/nestjs'
 import { INestApplication } from '@nestjs/common'
 import { UsersController } from '@vidya/api/edu/controllers'
 import * as dto from '@vidya/api/edu/dto'
+import { toUserDetails } from '@vidya/api/edu/mappers/org.mapper'
 import { UsersService } from '@vidya/api/edu/services'
 import { createTestingApp } from '@vidya/api/edu/shared'
-import * as entities from '@vidya/entities'
 
 import { Context, createContext } from './context'
 
@@ -13,13 +11,11 @@ describe('UsersController', () => {
   let app: INestApplication
   let ctx: Context
   let ctr: UsersController
-  let mapper: Mapper
 
   beforeEach(async () => {
     app = await createTestingApp()
     ctx = await createContext(app)
     ctr = app.get(UsersController)
-    mapper = app.get(DEFAULT_MAPPER_TOKEN)
   })
 
   /* -------------------------------------------------------------------------- */
@@ -35,11 +31,7 @@ describe('UsersController', () => {
       )
 
       expect(res).toEqual(
-        mapper.map(
-          await app.get(UsersService).findOneBy({ id: ctx.one.users.oneAdmin.id }),
-          entities.User,
-          dto.UpdateUserResponse,
-        ),
+        toUserDetails(await app.get(UsersService).findOneBy({ id: ctx.one.users.oneAdmin.id })),
       )
     })
 

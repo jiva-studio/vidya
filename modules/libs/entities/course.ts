@@ -1,7 +1,10 @@
+import { CourseId, SchoolId } from '@vidya/domain'
+import * as domain from '@vidya/domain'
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 import { School } from './school'
 
+/** @deprecated Use {@link domain.CourseLearningType}; kept as the TypeORM enum name. */
 export enum LearningType {
   Individual = 'individual',
   Group = 'group',
@@ -10,9 +13,9 @@ export enum LearningType {
 @Entity({ name: 'courses' })
 export class Course {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: CourseId
 
-  @Column({ unique: true, nullable: false })
+  @Column({ nullable: false })
   name: string
 
   @Column({ nullable: true })
@@ -24,10 +27,10 @@ export class Course {
     enumName: 'courseLearningType',
     default: LearningType.Individual,
   })
-  learningType: LearningType
+  learningType: domain.CourseLearningType
 
   @Column({ nullable: false })
-  schoolId: string
+  schoolId: SchoolId
 
   @ManyToOne(() => School)
   @JoinColumn()

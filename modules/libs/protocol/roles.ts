@@ -1,3 +1,5 @@
+import * as domain from '@vidya/domain'
+
 import * as crud from './crud'
 
 /* -------------------------------------------------------------------------- */
@@ -5,11 +7,11 @@ import * as crud from './crud'
 /* -------------------------------------------------------------------------- */
 
 export type RoleDetails = {
-  id: string
+  id: domain.RoleId
   name: string
-  schoolId: string
+  schoolId: domain.SchoolId
   description: string
-  permissions: string[]
+  permissions: domain.PermissionKey[]
 }
 
 export type RoleSummary = Pick<RoleDetails, 'id' | 'name' | 'description'>
@@ -26,7 +28,7 @@ export type CreateRoleResponse = crud.CreateItemResponse<RoleDetails['id']>
 /* -------------------------------------------------------------------------- */
 
 export type GetRoleSummariesListQuery = {
-  schoolId?: string
+  schoolId?: domain.SchoolId
 }
 
 export type GetRolesResponse = crud.GetItemsListResponse<RoleSummary>

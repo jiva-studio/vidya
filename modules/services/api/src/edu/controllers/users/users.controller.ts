@@ -1,5 +1,3 @@
-import { Mapper } from '@automapper/core'
-import { InjectMapper } from '@automapper/nestjs'
 import {
   Body,
   Controller,
@@ -19,8 +17,10 @@ import { GetUsersResponse } from '@vidya/api/edu/dto'
 import { UserExistsPipe } from '@vidya/api/edu/pipes'
 import { RolesService, UsersService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
-import * as entities from '@vidya/entities'
+import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
+
+import { toUserDetails, toUserSummaries } from '../../mappers/org.mapper'
 
 const Crud = CrudDecorators({
   entityName: 'User',
@@ -37,7 +37,6 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly rolesService: RolesService,
-    @InjectMapper() private readonly mapper: Mapper,
   ) {}
 
   /* -------------------------------------------------------------------------- */
@@ -46,7 +45,7 @@ export class UsersController {
 
   @Crud.GetOne(Routes().edu.user(':id').get())
   async getOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) id: domain.UserId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetUserResponse> {
     // Check if user has permission to read users
@@ -65,7 +64,7 @@ export class UsersController {
     }
 
     // Return user response
-    return this.mapper.map(foundUser, entities.User, dto.GetUserResponse)
+    return toUserDetails(foundUser)
   }
 
   /* -------------------------------------------------------------------------- */
@@ -93,7 +92,7 @@ export class UsersController {
 
     // Return users response
     return new dto.GetUsersResponse({
-      items: this.mapper.mapArray(users, entities.User, dto.UserSummary),
+      items: toUserSummaries(users),
     })
   }
 
@@ -104,7 +103,7 @@ export class UsersController {
   @Crud.UpdateOne(Routes().edu.user(':id').update())
   async updateOne(
     @Body() request: dto.UpdateUserRequest,
-    @Param('id', new ParseUUIDPipe(), UserExistsPipe) id: string,
+    @Param('id', new ParseUUIDPipe(), UserExistsPipe) id: domain.UserId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateUserResponse> {
     // TODO user can update himself without any permission
@@ -122,6 +121,6 @@ export class UsersController {
     const updatedUser = await this.usersService.updateOneBy({ id }, request)
 
     // Return updated user response
-    return this.mapper.map(updatedUser, entities.User, dto.UpdateUserResponse)
+    return toUserDetails(updatedUser)
   }
 }

@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { IsSchoolExist } from '@vidya/api/edu/validations'
+import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import {
   IsEmail,
@@ -17,7 +18,7 @@ import {
 
 export class UserSummary implements protocol.UserSummary {
   @ApiProperty({ example: 'id' })
-  id: string
+  id: domain.UserId
 
   @ApiProperty({ example: 'name' })
   name: string
@@ -25,7 +26,7 @@ export class UserSummary implements protocol.UserSummary {
 
 export class UserDetailsRole implements protocol.UserDetailsRole {
   @ApiProperty({ example: 'id' })
-  id: string
+  id: domain.RoleId
 
   @ApiProperty({ example: 'name' })
   name?: string
@@ -33,7 +34,7 @@ export class UserDetailsRole implements protocol.UserDetailsRole {
 
 export class UserDetails implements protocol.UserDetails {
   @ApiProperty({ example: 'id' })
-  id: string
+  id: domain.UserId
 
   @ApiProperty({ example: 'name' })
   name: string
@@ -53,7 +54,7 @@ export class UserDetails implements protocol.UserDetails {
 /* -------------------------------------------------------------------------- */
 
 export class GetUsersQuery implements protocol.GetUsersQuery {
-  constructor(options?: { schoolId?: string }) {
+  constructor(options?: { schoolId?: domain.SchoolId }) {
     this.schoolId = options?.schoolId
   }
 
@@ -61,7 +62,7 @@ export class GetUsersQuery implements protocol.GetUsersQuery {
   @IsUUID()
   @IsOptional()
   @IsSchoolExist()
-  schoolId?: string
+  schoolId?: domain.SchoolId
 }
 
 export class GetUserResponse extends UserDetails implements protocol.GetUserResponse {}
