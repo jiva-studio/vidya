@@ -14,6 +14,7 @@ import { Entities } from '@vidya/entities'
 
 import { AuthModule } from './auth/auth.module'
 import { EduModule } from './edu/edu.module'
+import { SyncModule } from './sync/sync.module'
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { EduModule } from './edu/edu.module'
     TypeOrmModule.forFeature([]),
     AuthModule,
     EduModule,
+    SyncModule,
   ],
   controllers: [],
   providers: [],
