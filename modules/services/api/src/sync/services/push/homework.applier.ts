@@ -31,7 +31,9 @@ const isInstant = (value: unknown): boolean =>
   value === null || value === undefined || !Number.isNaN(Date.parse(String(value)))
 
 const find = async (manager: EntityManager, change: PushChange): Promise<Homework | null> =>
-  isUuid(change.docId) ? manager.findOneBy(Homework, { id: change.docId as domain.HomeworkId }) : null
+  isUuid(change.docId)
+    ? manager.findOneBy(Homework, { id: change.docId as domain.HomeworkId })
+    : null
 
 /**
  * A student's answer, arriving from a device.
@@ -147,7 +149,10 @@ const locate = async (
 }
 
 /** The body a device may send: its own two fields, and an identity when the row is new. */
-const validate = (data: domain.SyncPayload | null, exists: boolean): domain.SyncPayload | Rejection => {
+const validate = (
+  data: domain.SyncPayload | null,
+  exists: boolean,
+): domain.SyncPayload | Rejection => {
   if (!data) return reject('malformed', 'an answer carries a body')
 
   if (typeof data.text !== 'string' && !(exists && data.text === undefined)) {

@@ -99,8 +99,7 @@ export const createSyncContext = async (app: INestApplication): Promise<SyncCont
     status: 'pending',
   })
 
-  const token = async (userId: domain.UserId) =>
-    (await auth.generateTokens(userId, [])).accessToken
+  const token = async (userId: domain.UserId) => (await auth.generateTokens(userId, [])).accessToken
 
   return {
     schoolId: school.id,

@@ -127,7 +127,10 @@ export class SyncPullService {
     if (positions.length === 0) return []
 
     const values = positions
-      .map((_, index) => `($${index * 3 + 1}::text, $${index * 3 + 2}::uuid, $${index * 3 + 3}::bigint)`)
+      .map(
+        (_, index) =>
+          `($${index * 3 + 1}::text, $${index * 3 + 2}::uuid, $${index * 3 + 3}::bigint)`,
+      )
       .join(', ')
 
     const device = `$${positions.length * 3 + 1}`

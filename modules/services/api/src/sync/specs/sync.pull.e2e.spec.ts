@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common'
-import { createTestingApp } from '@vidya/api/edu/shared'
 import { EnrollmentsService } from '@vidya/api/edu/services'
+import { createTestingApp } from '@vidya/api/edu/shared'
 import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
@@ -207,7 +207,10 @@ describe('POST /sync/pull', () => {
   /* ------------------------------- T-S-18 ------------------------------- */
 
   it('T-S-18: refuses a caller with no token', () =>
-    request(app.getHttpServer()).post(routes.pull()).send({ deviceId: DEVICE, cursors: {} }).expect(401))
+    request(app.getHttpServer())
+      .post(routes.pull())
+      .send({ deviceId: DEVICE, cursors: {} })
+      .expect(401))
 
   /* ------------------------------- T-S-32 ------------------------------- */
 
@@ -235,10 +238,14 @@ describe('POST /sync/pull', () => {
   /* ------------------------------- T-S-33 ------------------------------- */
 
   it('T-S-33: a scope outside the caller rights is ignored even when asked for', async () => {
-    await seedJournal(ds, { kind: 'course', id: ctx.theirs.course.id }, {
-      schoolId: ctx.schoolId,
-      count: 4,
-    })
+    await seedJournal(
+      ds,
+      { kind: 'course', id: ctx.theirs.course.id },
+      {
+        schoolId: ctx.schoolId,
+        count: 4,
+      },
+    )
 
     const response = await pull(ctx.tokens.student, {
       cursors: { [`course:${ctx.theirs.course.id}`]: 0, [domain.syncScopeKey(own())]: 0 },
@@ -284,8 +291,10 @@ describe('POST /sync/pull', () => {
       status: 'accepted',
     })
 
-    const second = await pull(ctx.tokens.student, { cursors: firstBody.cursors, limit: 100 })
-      .expect(200)
+    const second = await pull(ctx.tokens.student, {
+      cursors: firstBody.cursors,
+      limit: 100,
+    }).expect(200)
     const secondBody = second.body as protocol.PullResponse
 
     // Nothing from the first page comes back, and the new course is a scope at 0.
@@ -308,6 +317,8 @@ describe('POST /sync/pull', () => {
     const response = await pull(ctx.tokens.student, { cursors }).expect(400)
 
     expect(response.body.code).toBe('tooManyScopes')
-    expect(response.body.message).toEqual([`at most ${protocol.SYNC_MAX_SCOPES} scopes per request`])
+    expect(response.body.message).toEqual([
+      `at most ${protocol.SYNC_MAX_SCOPES} scopes per request`,
+    ])
   })
 })

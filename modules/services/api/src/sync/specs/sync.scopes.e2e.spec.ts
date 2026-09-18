@@ -70,7 +70,7 @@ describe('sync scopes, checksums and the acknowledged position', () => {
 
   describe('T-S-34: the acknowledged position is kept', () => {
     it('stores what the device says it has applied, and answers 204', async () => {
-      await cursor({ ackedSeq: 1302 }).expect(204).expect('');
+      await cursor({ ackedSeq: 1302 }).expect(204).expect('')
 
       expect(await app.get(SyncCursorsService).acknowledged(ctx.student.id, DEVICE)).toBe(1302)
     })
@@ -98,7 +98,10 @@ describe('sync scopes, checksums and the acknowledged position', () => {
     })
 
     it('refuses a caller with no token', () =>
-      request(app.getHttpServer()).post(routes.cursor()).send({ deviceId: DEVICE, ackedSeq: 1 }).expect(401))
+      request(app.getHttpServer())
+        .post(routes.cursor())
+        .send({ deviceId: DEVICE, ackedSeq: 1 })
+        .expect(401))
   })
 
   /* ------------------------------ T-S-34b ------------------------------- */

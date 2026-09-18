@@ -112,8 +112,7 @@ describe('POST /sync/push', () => {
       progress({ outboxId: 12 }),
     ]
 
-    const body = (await push(ctx.tokens.student, changes).expect(200))
-      .body as protocol.PushResponse
+    const body = (await push(ctx.tokens.student, changes).expect(200)).body as protocol.PushResponse
 
     expect(body.results).toHaveLength(3)
     expect(body.results.map((r) => r.outboxId)).toEqual([10, 11, 12])
@@ -172,8 +171,7 @@ describe('POST /sync/push', () => {
       { ...answer({ outboxId: 3 }), collection: 'lesson_versions' as const },
     ]
 
-    const body = (await push(ctx.tokens.student, changes).expect(200))
-      .body as protocol.PushResponse
+    const body = (await push(ctx.tokens.student, changes).expect(200)).body as protocol.PushResponse
 
     expect(body.results.map((r) => (r as protocol.PushRejected).reason)).toEqual([
       'readOnlyCollection',
@@ -259,9 +257,7 @@ describe('POST /sync/push', () => {
       .body as protocol.PushResponse
 
     expect((body.results[0] as protocol.PushRejected).reason).toBe('alreadyAccepted')
-    expect((await storedAnswer(submitted.id)).text).toBe(
-      'The answer as handed in',
-    )
+    expect((await storedAnswer(submitted.id)).text).toBe('The answer as handed in')
   })
 
   /* --------------------------- T-S-28, AC-10p --------------------------- */
@@ -291,8 +287,7 @@ describe('POST /sync/push', () => {
       answer({ outboxId: 2, docId, hlc: hlc(NOW - 50_000), data: bodyOf(ctx, 'Second') }),
     ]
 
-    const body = (await push(ctx.tokens.student, changes).expect(200))
-      .body as protocol.PushResponse
+    const body = (await push(ctx.tokens.student, changes).expect(200)).body as protocol.PushResponse
 
     expect(body.results.map((r) => r.status)).toEqual(['accepted', 'accepted'])
     expect((await storedAnswer(docId)).text).toBe('Second')
@@ -393,9 +388,7 @@ describe('POST /sync/push', () => {
       const rows = await journalFor(change.docId)
 
       expect(rows).toHaveLength(2)
-      expect((await storedAnswer(change.docId)).text).toBe(
-        'Written on the other phone',
-      )
+      expect((await storedAnswer(change.docId)).text).toBe('Written on the other phone')
     })
   })
 

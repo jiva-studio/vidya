@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import * as domain from '@vidya/domain'
-import { SyncScopeGrant } from '@vidya/protocol'
 import { Enrollment } from '@vidya/entities'
+import { SyncScopeGrant } from '@vidya/protocol'
 import { DataSource, Repository } from 'typeorm'
 
 /** A scope with the highest position the journal currently holds for it. */
