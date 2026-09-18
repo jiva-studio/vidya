@@ -7,3 +7,9 @@ coverage
 .env.local
 .claude/
 plan.md
+
+# Specs are per-branch working documents, written by /spec and finished when the
+# branch merges. The template is the shared part and stays; the specs themselves
+# would otherwise leave a permanent trail of transient planning in history.
+.agents/specs/*
+!.agents/specs/TEMPLATE.md
