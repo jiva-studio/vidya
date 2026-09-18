@@ -67,7 +67,6 @@ async function load() {
   <Dialog
     :open="props.open"
     :title="$t('enrollments-group-title')"
-    :description="$t('enrollments-group-description')"
     :close-label="$t('action-close')"
     @update:open="onOpenChange"
   >

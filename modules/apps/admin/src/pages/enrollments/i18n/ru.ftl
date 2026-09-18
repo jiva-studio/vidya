@@ -1,24 +1,23 @@
-# Тексты раздела «enrollments». Владелец — T4.
+# Тексты раздела заявок. Владелец — T4.
 
 nav-group-process = Учебный процесс
 nav-enrollments = Заявки
 
 action-close = Закрыть
-action-undo = Отменить
-filter-any = Любой
+action-undo = Вернуть как было
+filter-any = Все
 
-enrollments-title = Заявки на курсы
+enrollments-title = Заявки
+# TODO(copy): удалить вместе с привязкой в EnrollmentsPage.vue — владелец файла её убирает.
 enrollments-description = Студент подаёт заявку из приложения, школа решает здесь.
 enrollments-column-student = Студент
 enrollments-column-course = Курс
 enrollments-column-group = Группа
 enrollments-column-status = Статус
-enrollments-column-requested = Подана
-enrollments-column-decided = Решение
 enrollments-column-actions = Действия
 
 enrollments-empty-title = Заявок нет
-enrollments-empty-body = Пока никто не попросился на курсы этой школы. Заявку подаёт студент из приложения.
+enrollments-empty-body = Заявки появятся здесь, когда студенты подадут их из приложения.
 
 enrollments-filter-status = Статус
 enrollments-filter-course = Курс
@@ -27,15 +26,15 @@ enrollments-filter-group = Группа
 enrollments-accept = Принять
 enrollments-decline = Отклонить
 enrollments-decline-title = Отклонить заявку?
-enrollments-decline-consequence = Студент останется без места на курсе и сможет только подать заявку заново. Решение потом не изменить.
+enrollments-decline-consequence = Решение не изменить. Студенту придётся подать заявку заново.
 enrollments-assign-group = Группа
 enrollments-group-title = Определить в группу
-enrollments-group-description = Группы того курса, на который подана заявка.
 enrollments-group-label = Группа
 enrollments-group-hint = Оставьте пустым — студент останется в очереди.
 enrollments-group-queue = В очереди
 enrollments-group-save = Определить
 enrollments-group-done = Группа изменена
+enrollments-requested-at = Подана { $at }
 enrollments-decided-by = { $who }, { $at }
 enrollments-student-unknown = Студент
 

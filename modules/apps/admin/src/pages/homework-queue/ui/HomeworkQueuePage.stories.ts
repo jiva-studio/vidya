@@ -7,42 +7,17 @@ import { fakeHttpClient, pending, refusal, signInAs } from '@/shared/testing'
 
 import HomeworkQueuePage from './HomeworkQueuePage.vue'
 
+/** The list and nothing else: a row leads to the work, where it is decided on. */
 const HOMEWORK = '/edu/homework'
 
-const FULL = [
-  'homework:read',
-  'homework:grade',
-  'enrollments:read',
-  'users:read',
-] as PermissionKey[]
+const FULL = ['homework:read', 'enrollments:read', 'users:read'] as PermissionKey[]
 
-const queue = [
-  {
-    id: 'h1',
-    enrollmentId: 'e1',
-    sectionId: 's1',
-    status: 'pending',
-    submittedAt: '2026-09-10T08:00:00.000Z',
-  },
-  {
-    id: 'h2',
-    enrollmentId: 'e2',
-    sectionId: 's1',
-    status: 'pending',
-    submittedAt: '2026-09-11T08:00:00.000Z',
-  },
-]
-
-const work = (id: string, over: Record<string, unknown> = {}) => ({
+const summary = (id: string, enrollmentId: string, submittedAt: string) => ({
   id,
-  enrollmentId: id === 'h1' ? 'e1' : 'e2',
-  lessonVersionId: 'v7',
+  enrollmentId,
   sectionId: 's1',
-  schoolId: 'school-1',
   status: 'pending',
-  text: 'Три года практики научили меня прежде всего слушать, а уже потом отвечать.',
-  submittedAt: '2026-09-10T08:00:00.000Z',
-  ...over,
+  submittedAt,
 })
 
 const enrollment = (id: string, studentId: string) => ({
@@ -56,15 +31,18 @@ const enrollment = (id: string, studentId: string) => ({
 })
 
 const world: FakeAnswers = {
-  '/edu/courses': { items: [{ id: 'c1', name: 'Основы традиции' }] },
-  '/edu/groups': { items: [{ id: 'g1', name: 'Утренняя группа' }] },
-  [HOMEWORK]: { items: queue },
-  [`${HOMEWORK}/h1`]: work('h1'),
-  [`${HOMEWORK}/h2`]: work('h2'),
+  '/edu/courses': { items: [{ id: 'c1', name: 'Foundations of the tradition' }] },
+  '/edu/groups': { items: [{ id: 'g1', name: 'Morning group' }] },
+  [HOMEWORK]: {
+    items: [
+      summary('h1', 'e1', '2026-09-10T08:00:00.000Z'),
+      summary('h2', 'e2', '2026-09-11T08:00:00.000Z'),
+    ],
+  },
   '/edu/enrollments/e1': enrollment('e1', 'u1'),
   '/edu/enrollments/e2': enrollment('e2', 'u2'),
-  '/edu/users/u1': { id: 'u1', name: 'Аня Иванова', email: 'a@example.com' },
-  '/edu/users/u2': { id: 'u2', name: 'Борис Петров', email: 'b@example.com' },
+  '/edu/users/u1': { id: 'u1', name: 'Anya Ivanova', email: 'a@example.com' },
+  '/edu/users/u2': { id: 'u2', name: 'Boris Petrov', email: 'b@example.com' },
 }
 
 const over =
@@ -76,7 +54,7 @@ const over =
       return {}
     },
     provide: { [httpClientKey as symbol]: fakeHttpClient(answers).client },
-    template: '<div class="p-[--space-6]"><HomeworkQueuePage /></div>',
+    template: '<HomeworkQueuePage />',
   })
 
 const meta: Meta<typeof HomeworkQueuePage> = {
@@ -87,30 +65,19 @@ const meta: Meta<typeof HomeworkQueuePage> = {
 export default meta
 type Story = StoryObj<typeof HomeworkQueuePage>
 
-export const WithData: Story = { name: 'Данные', render: over(world) }
+export const WithData: Story = { name: 'Data', render: over(world) }
 
-export const Empty: Story = { name: 'Пусто', render: over({ ...world, [HOMEWORK]: { items: [] } }) }
+export const Empty: Story = { name: 'Empty', render: over({ ...world, [HOMEWORK]: { items: [] } }) }
 
-export const Loading: Story = {
-  name: 'Загрузка',
-  render: over({ ...world, [HOMEWORK]: pending() }),
-}
+export const Loading: Story = { name: 'Loading', render: over({ ...world, [HOMEWORK]: pending() }) }
 
 export const Failed: Story = {
-  name: 'Ошибка',
-  render: over({ ...world, [HOMEWORK]: refusal(503, 'Очередь сейчас не читается') }),
+  name: 'Error',
+  render: over({ ...world, [HOMEWORK]: refusal(503, 'The queue cannot be read right now') }),
 }
 
+/** Work may be read without the right to read people: the rows keep their places. */
 export const WithoutRights: Story = {
-  name: 'Без прав',
-  render: over(world, ['homework:read', 'enrollments:read', 'users:read'] as PermissionKey[]),
-}
-
-/** Press j to open the work: it was answered against a version since replaced. */
-export const Superseded: Story = {
-  name: 'Устаревшая версия',
-  render: over({
-    ...world,
-    [`${HOMEWORK}/h1`]: work('h1', { answeredSupersededVersion: true }),
-  }),
+  name: 'No permission',
+  render: over(world, ['homework:read'] as PermissionKey[]),
 }

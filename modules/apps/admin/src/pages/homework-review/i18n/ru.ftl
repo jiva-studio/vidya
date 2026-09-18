@@ -1,8 +1,31 @@
-# Тексты раздела «homework-review». Владелец — T4.
+# Тексты экрана проверки домашней работы. Владелец — T4.
 #
-# Экран — это та же очередь с уже открытой работой, поэтому слова про саму
-# работу принадлежат разделу очереди и здесь не повторяются.
+# Слова про список работ — его статусы, колонки и фильтры — принадлежат разделу
+# очереди и здесь не повторяются.
 
 homework-one = Работа
-homework-review-title = Проверка работы
-homework-review-description = Открыта по ссылке. Рядом — остальная очередь.
+homework-review-title = Домашняя работа
+
+homework-lesson = Урок: { $title }
+homework-submitted = Сдана { $at }
+homework-reviewed-by = Проверил { $who }, { $at }
+homework-pick-work = Выберите работу в списке слева.
+
+homework-superseded = Ответ написан по версии урока, которая больше не опубликована.
+homework-superseded-open = Открыть эту версию
+
+homework-grade = Оценка
+homework-grade-range = От 0 до 100.
+homework-accept = Принять
+homework-return = Вернуть на доработку
+homework-return-title = Вернуть работу?
+homework-return-consequence = Возврат не отменить. Студент будет сдавать работу заново.
+
+homework-key-accept = Клавиша a
+homework-key-return = Клавиша r
+homework-key-next = Клавиша j
+
+homework-next = Следующая работа
+homework-remaining = Осталось { $count }
+homework-queue-empty = Больше работ нет
+homework-back-to-list = Все работы

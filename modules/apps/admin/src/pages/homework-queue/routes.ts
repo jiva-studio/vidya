@@ -1,10 +1,10 @@
 import type { RouteRecordRaw } from 'vue-router'
 
 /**
- * Routes for the homework queue. Owned by T4.
+ * Routes for the homework list. Owned by T4.
  *
- * One address for the whole of reviewing: the list and the work sit on the same
- * screen, so deciding on one work does not navigate anywhere.
+ * The list and nothing else: a row leads to `/homework/:id`, where one work is
+ * read and decided on with room to do it.
  */
 export const routes: RouteRecordRaw[] = [
   {
