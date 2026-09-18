@@ -1,5 +1,10 @@
 import type { OutboxAcknowledgement, OutboxEntry } from '@vidya/domain'
-import { type PushChange, type PushResult, SYNC_MAX_PUSH_CHANGES } from '@vidya/protocol'
+import {
+  type PushAccepted,
+  type PushChange,
+  type PushResult,
+  SYNC_MAX_PUSH_CHANGES,
+} from '@vidya/protocol'
 
 import { isSyncPausedError, type SyncEngineDeps } from './ports'
 
@@ -171,7 +176,8 @@ async function record(
       for (const [index, entry] of pending.entries()) {
         const result = results[index]!
         if (result.status === 'accepted') {
-          await deps.apply.recordServerHlc(entry.collection, entry.docId, result.serverHlc)
+          const docId = await adoptServerDocId(deps, entry, result)
+          await deps.apply.recordServerHlc(entry.collection, docId, result.serverHlc)
           accepted += 1
           acknowledgements.push({ id: entry.id, status: 'pushed' })
         } else {
@@ -188,6 +194,41 @@ async function record(
     if (isSyncPausedError(error)) return null
     throw error
   }
+}
+
+/**
+ * Take on the id the server wrote the row under, and answer with it.
+ *
+ * Collections keyed naturally — a section of homework, a block of a lesson —
+ * land on the row that key already holds, so a row this device named itself can
+ * come back under the name another device gave it first. `serverDocId` says so,
+ * and everything that holds the local name has to follow it in this
+ * transaction: the row itself, whatever references it, and every journaled edit
+ * still waiting behind this one. What is left otherwise is a local row no pull
+ * carries and no tombstone removes, sitting beside the row that won.
+ *
+ * Absent `serverDocId` means the server wrote under the name it was sent, which
+ * is the ordinary case and costs nothing.
+ *
+ * @returns the id the document now goes by here — where the server pointer goes.
+ */
+async function adoptServerDocId(
+  deps: SyncEngineDeps,
+  entry: OutboxEntry,
+  result: PushAccepted,
+): Promise<string> {
+  const serverDocId = result.serverDocId
+  if (serverDocId === undefined || serverDocId === entry.docId) return entry.docId
+
+  await deps.apply.renameDoc(entry.collection, entry.docId, serverDocId)
+  await deps.outbox.renameDoc({
+    ownerId: deps.ownerId,
+    collection: entry.collection,
+    docId: entry.docId,
+    serverDocId,
+  })
+
+  return serverDocId
 }
 
 /** Move the watermark, never backwards. Re-reads inside the transaction. */
