@@ -158,6 +158,42 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
       )
     })
 
+    it('names the row it wrote, with the fields push-natural-key declares', async () => {
+      const expected = fixture<{ response: protocol.PushResponse }>('push-natural-key').response
+      const renamed = expected.results[0] as protocol.PushAccepted
+
+      const body = (sectionId: string, docId: string) => ({
+        outboxId: 81,
+        collection: 'homework',
+        docId,
+        op: 'upsert',
+        hlc: `001789729700000:00000:${sectionId}`,
+        baseHlc: null,
+        data: {
+          enrollmentId: ctx.enrollment.id,
+          lessonVersionId: ctx.mine.published.id,
+          sectionId: SECTION_ID,
+          text: 'Handed in twice, from two devices of one student.',
+        },
+      })
+
+      const first = uuid()
+
+      await send(routes.push(), pushBody([body('device-8f2a6c14', first)])).expect(200)
+
+      const second = (
+        await send(routes.push(), {
+          deviceId: 'device-b21e7f05',
+          changes: [body('device-b21e7f05', uuid())],
+        }).expect(200)
+      ).body as protocol.PushResponse
+
+      expect(keysOf(second.results[0] as unknown as Record<string, unknown>)).toEqual(
+        keysOf(renamed as unknown as Record<string, unknown>),
+      )
+      expect((second.results[0] as protocol.PushAccepted).serverDocId).toBe(first)
+    })
+
     it('T-C-3: every rejection reason the fixtures name is one the domain knows', () => {
       const rejections = fixture<{ response: { results: { reason?: string }[] } }>(
         'push-rejections',

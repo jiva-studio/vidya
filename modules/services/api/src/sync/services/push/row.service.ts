@@ -37,13 +37,30 @@ const READ_ONLY: Partial<Record<domain.SyncCollection, string>> = {
   lesson_versions: 'lesson versions replicate downward only',
 }
 
-const accepted = (change: PushChange, hlc: string, restamped: boolean): PushResult => ({
+/**
+ * An accepted row, answered under the id the device sent.
+ *
+ * `serverDocId` is added only when the server wrote somewhere else. A
+ * collection with a natural key — a section of homework, a block of a lesson —
+ * writes onto the row that key already holds, so two devices of one student
+ * handing in one section under two local ids end up as one row. Answering both
+ * with the id they sent left the loser holding a local row the server had never
+ * heard of: no pull carries it, no tombstone removes it, and the winning row
+ * arrives beside it as a second answer to the same section.
+ */
+const accepted = (
+  change: PushChange,
+  hlc: string,
+  restamped: boolean,
+  docId: string = change.docId,
+): PushResult => ({
   outboxId: change.outboxId,
   collection: change.collection,
   docId: change.docId,
   status: 'accepted',
   serverHlc: hlc,
   restamped,
+  ...(docId === change.docId ? {} : { serverDocId: docId }),
 })
 
 const rejected = (change: PushChange, refusal: Rejection): PushResult => ({
@@ -154,10 +171,11 @@ export class SyncPushRowService {
     // The subscriber is the only writer of the journal (D-2), so the device's
     // stamp reaches the row through the context rather than through a second
     // insert of our own.
-    await withSyncWriteContext({ hlc: stamped.hlc, deviceId, authorId: context.userId }, () =>
-      applier.apply(manager, change, prepared, context),
+    const written = await withSyncWriteContext(
+      { hlc: stamped.hlc, deviceId, authorId: context.userId },
+      () => applier.apply(manager, change, prepared, context),
     )
 
-    return accepted(change, stamped.hlc, stamped.restamped)
+    return accepted(change, stamped.hlc, stamped.restamped, written)
   }
 }

@@ -435,6 +435,50 @@ describe('POST /sync/push', () => {
     })
   })
 
+  /* ------------------------------- T-S-46 ------------------------------- */
+
+  /**
+   * D-1: a row is answered under the id the server actually wrote it to.
+   *
+   * The table's key is `(enrolment, version, section)`, so the second device
+   * writes onto the row the first created — which is right, and is how the HLC
+   * gets to decide the text. What was wrong was the answer: both devices were
+   * told `accepted` on the id *they* had sent, so the second kept a local row
+   * the server never stored, carried by no pull and removed by no tombstone,
+   * while the winning row arrived beside it as a second answer to one section.
+   */
+  describe('T-S-46: one section handed in from two devices under two local ids', () => {
+    it('answers the second with the id of the row it landed in', async () => {
+      const first = answer({ outboxId: 1, data: bodyOf(ctx, 'From the phone') })
+      const second = answer({
+        outboxId: 2,
+        hlc: hlc(NOW - 50_000, 0, 'device-b21e7f05'),
+        data: bodyOf(ctx, 'From the tablet'),
+      })
+
+      const one = (await push(ctx.tokens.student, [first]).expect(200))
+        .body as protocol.PushResponse
+      const two = (await push(ctx.tokens.student, [second], 'device-b21e7f05').expect(200))
+        .body as protocol.PushResponse
+
+      const winner = one.results[0] as protocol.PushAccepted
+      const loser = two.results[0] as protocol.PushAccepted
+
+      expect(loser.status).toBe('accepted')
+
+      // The answer still names the row that was sent, so the device can match
+      // it to its outbox — and now also names the row the server holds.
+      expect(loser.docId).toBe(second.docId)
+      expect(loser.serverDocId).toBe(first.docId)
+
+      // The id the first device sent is the one the table kept, and it was
+      // answered without a rename because none happened.
+      expect(winner.serverDocId).toBeUndefined()
+      expect(await storedAnswer(second.docId)).toBeNull()
+      expect((await storedAnswer(first.docId)).text).toBe('From the tablet')
+    })
+  })
+
   /* --------------------------- progress upward --------------------------- */
 
   it('stores the block state a device reports', async () => {

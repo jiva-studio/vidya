@@ -70,13 +70,21 @@ export interface PushApplier {
   /** Whether the stored row may still be written by its student. */
   editable(manager: EntityManager, change: PushChange): Promise<Rejection | null>
 
-  /** Writes the row through the ORM, so the journal subscriber sees it. */
+  /**
+   * Writes the row through the ORM, so the journal subscriber sees it, and
+   * answers with the id it wrote under.
+   *
+   * That id is not always `change.docId`. A collection with a natural key
+   * writes onto the row the key already holds, whatever the device chose to
+   * call it, and the answer has to say so or the device is left holding a row
+   * the server never stored.
+   */
   apply(
     manager: EntityManager,
     change: PushChange,
     prepared: PreparedRow,
     context: PushRowContext,
-  ): Promise<void>
+  ): Promise<string>
 }
 
 /** A field the client sent that this collection lets it write, and nothing else. */

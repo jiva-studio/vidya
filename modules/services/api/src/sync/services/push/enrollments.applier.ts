@@ -83,13 +83,14 @@ export const enrollmentsApplier: PushApplier = {
     change: PushChange,
     prepared: PreparedRow,
     context: PushRowContext,
-  ): Promise<void> {
+  ): Promise<string> {
     const existing = await locate(manager, change, prepared, context)
 
     // Already asked, or already decided. Either way the row stands as it is and
     // the push has nothing to add — writing would only restate `pending` over
-    // an answer the school gave.
-    if (existing) return
+    // an answer the school gave. Its id is the answer: a student who asked from
+    // two devices has one place, under the name the first of them gave it.
+    if (existing) return existing.id
 
     await manager.save(
       Enrollment,
@@ -107,6 +108,8 @@ export const enrollmentsApplier: PushApplier = {
         createdAt: new Date(context.now),
       }),
     )
+
+    return change.docId
   },
 }
 

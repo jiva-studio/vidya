@@ -87,7 +87,7 @@ export const homeworkApplier: PushApplier = {
     change: PushChange,
     prepared: PreparedRow,
     context: PushRowContext,
-  ): Promise<void> {
+  ): Promise<string> {
     const entity = await locate(manager, change, prepared)
 
     // Handed in, so `pending` — the only status a client may bring about — and
@@ -102,6 +102,9 @@ export const homeworkApplier: PushApplier = {
         : (entity.submittedAt ?? new Date(context.now))
 
     await manager.save(Homework, entity)
+
+    // The row the natural key held, when that is not the one the device named.
+    return entity.id
   },
 }
 

@@ -81,13 +81,16 @@ export const blockStatesApplier: PushApplier = {
     change: PushChange,
     prepared: PreparedRow,
     context: PushRowContext,
-  ): Promise<void> {
+  ): Promise<string> {
     const entity = await locate(manager, change, prepared)
 
     entity.state = prepared.body.state as domain.LessonBlockState
     entity.updatedAt = new Date(context.now)
 
     await manager.save(BlockState, entity)
+
+    // The row the natural key held, when that is not the one the device named.
+    return entity.id
   },
 }
 
