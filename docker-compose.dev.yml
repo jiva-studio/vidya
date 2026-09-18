@@ -1,0 +1,52 @@
+# Local development stand.
+#
+# Ports follow one scheme, so nothing has to be remembered twice:
+#
+#   780x  infrastructure      7800 postgres · 7801 redis · 7802 smtp · 7803 mail ui
+#   781x  applications        7810 api      · 7811 admin
+#
+# Nothing here is reachable on a default port, so a system Postgres or Redis
+# already running on this machine cannot be hit by accident.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: vidya-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - '7800:5432'
+    volumes:
+      - vidya-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: vidya-redis
+    ports:
+      - '7801:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Catches every email the API sends; nothing leaves the machine.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: vidya-mailpit
+    ports:
+      - '7802:1025' # smtp
+      - '7803:8025' # web ui and http api
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+volumes:
+  vidya-postgres:
