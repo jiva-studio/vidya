@@ -3,7 +3,12 @@ import type { MenuGroup } from '@/shared/navigation'
 /**
  * Sidebar entries for courses. Owned by T3.
  *
- * Each entry names the permission it needs; the sidebar hides what the current
- * school does not grant.
+ * Lessons are reached through their course rather than from the sidebar: a
+ * lessons list with no course chosen has nothing to show.
  */
-export const menu: MenuGroup[] = []
+export const menu: MenuGroup[] = [
+  {
+    label: 'nav-group-edu',
+    items: [{ route: 'courses', label: 'nav-courses', icon: 'book', permission: 'courses:read' }],
+  },
+]

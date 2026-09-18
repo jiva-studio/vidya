@@ -1,2 +1,2 @@
 // Requests for the course entity. Owned by T3.
-export {}
+export { createCourse, getCourse, getCourses, updateCourse } from './courses'
