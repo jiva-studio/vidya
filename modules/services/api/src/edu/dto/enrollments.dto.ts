@@ -82,6 +82,18 @@ export class GetEnrollmentsQuery implements protocol.GetEnrollmentsQuery {
   status?: domain.EnrollmentStatus
 }
 
+export class GetMyEnrollmentsQuery implements protocol.GetMyEnrollmentsQuery {
+  @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  @IsOptional()
+  @IsUUID()
+  courseId?: domain.CourseId
+
+  @ApiPropertyOptional({ enum: domain.EnrollmentStatuses })
+  @IsOptional()
+  @IsEnum(domain.EnrollmentStatuses)
+  status?: domain.EnrollmentStatus
+}
+
 export class GetEnrollmentsResponse implements protocol.GetEnrollmentsResponse {
   @ApiProperty({ type: [EnrollmentSummary] })
   items: EnrollmentSummary[]

@@ -45,6 +45,9 @@ export type GetEnrollmentsQuery = {
   status?: domain.EnrollmentStatus
 }
 
+/** The caller is the student, so naming one would only let them ask about someone else. */
+export type GetMyEnrollmentsQuery = Omit<GetEnrollmentsQuery, 'studentId' | 'groupId'>
+
 export type GetEnrollmentsResponse = crud.GetItemsListResponse<EnrollmentSummary>
 export type GetEnrollmentResponse = crud.GetItemResponse<EnrollmentDetails>
 
