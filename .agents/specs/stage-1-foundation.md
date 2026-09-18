@@ -1,7 +1,7 @@
 # 📋 Task Specification: Stage 1 — Teaching API
 
 **Branch / Worktree**: `stage-1-foundation`
-**Status**: `IN_PROGRESS`
+**Status**: `COMPLETED`
 **Target Modules**: `modules/libs/domain`, `modules/libs/entities`, `modules/libs/protocol`, `modules/services/api`
 
 ---
@@ -75,42 +75,49 @@ applies schema changes.
 - **No media storage.** Video is embed-only in v1, so the `source` discriminator
   is declared but no upload, signed URL or download queue is built.
 - **No seed data** for the new tables.
+- **NestJS 11 is not delivered.** It was in scope and is not done.
+  `@automapper/nestjs@8` depends on `@nestjs/common@10` outright rather than
+  as a peer, so two incompatible copies land in the tree; `overrides` does not
+  dislodge it. Version 9 supports Nest 11 but requires TypeScript 6, which
+  conflicts with the pinned `typescript-eslint`. The upgrade is a chain —
+  automapper, TypeScript, then Nest — and belongs in its own change rather than
+  riding along with the schema.
 
 ---
 
 ## 3. Observable Acceptance Criteria (AC)
 
-- [ ] **AC-1**: Starting the API against an empty Postgres creates every v1 table
+- [x] **AC-1**: Starting the API against an empty Postgres creates every v1 table
       and records each applied file in `schema_migrations`. Starting it a second
       time applies nothing and logs nothing new.
-- [ ] **AC-2**: The migration runner acquires a **session-scoped** Postgres
+- [x] **AC-2**: The migration runner acquires a **session-scoped** Postgres
       advisory lock on a dedicated non-pooled connection, and releases it even
       when a migration throws.
-- [ ] **AC-3**: A migrations directory that resolves to zero files fails
+- [x] **AC-3**: A migrations directory that resolves to zero files fails
       startup with a named error. It never reports success.
-- [ ] **AC-4**: Each `.sql` file applies inside its own transaction: a file that
+- [x] **AC-4**: Each `.sql` file applies inside its own transaction: a file that
       fails midway leaves no partial objects, and previously applied files stay
       applied.
-- [ ] **AC-5**: Migrations run to completion before `app.listen()` — the process
+- [x] **AC-5**: Migrations run to completion before `app.listen()` — the process
       never serves a request against an unmigrated schema.
-- [ ] **AC-6**: `@vidya/protocol` exports the lesson content model: a section
+- [x] **AC-6**: `@vidya/protocol` exports the lesson content model: a section
       carries a stable id and an ordered list of blocks; a block is a discriminated
       union of `text`, `video`, `audio`, `quiz`; a video block carries a `source`
       discriminator distinguishing embedded from downloadable.
-- [ ] **AC-7**: `lesson_versions` holds the content; `lessons` no longer has a
+- [x] **AC-7**: `lesson_versions` holds the content; `lessons` no longer has a
       `content` column. A version is `draft` or `published`, and a published
       version is never updated in place.
-- [ ] **AC-8**: `homework` references the `lesson_version` it was answered
+- [x] **AC-8**: `homework` references the `lesson_version` it was answered
       against, not the lesson, and carries the section id it answers.
-- [ ] **AC-9**: `enrollments` allows a null `groupId`, so a student can be
+- [x] **AC-9**: `enrollments` allows a null `groupId`, so a student can be
       enrolled on a course before any group exists.
-- [ ] **AC-10**: `PermissionKeys` includes create/read/update/delete for courses,
+- [x] **AC-10**: `PermissionKeys` includes create/read/update/delete for courses,
       lessons and groups, plus `enrollments:moderate` and `homework:grade`.
-- [ ] **AC-11**: The refresh token's lifetime is strictly greater than the access
+- [x] **AC-11**: The refresh token's lifetime is strictly greater than the access
       token's, and a unit test asserts that ordering rather than the literal values.
-- [ ] **AC-12**: `services/database` no longer exists as a workspace, and no
+- [x] **AC-12**: `services/database` no longer exists as a workspace, and no
       database connection string is hardcoded anywhere.
-- [ ] **AC-13**: `make check` exits 0, and the 78 existing tests still pass.
+- [x] **AC-13**: `make check` exits 0, and the 78 existing tests still pass.
 
 ---
 
@@ -169,38 +176,38 @@ applies schema changes.
 
 ### Phase 1: Test-Driven Red Phase (Failing Test First)
 
-- [ ] **Step 1.1**: Author `runner.spec.ts` asserting idempotency, fatal-on-empty,
+- [x] **Step 1.1**: Author `runner.spec.ts` asserting idempotency, fatal-on-empty,
       transaction rollback and concurrent-runner safety.
-- [ ] **Step 1.2**: Author `jwt.config.spec.ts` asserting refresh outlives access.
-- [ ] **Step 1.3**: Run the suite and verify a non-zero exit code.
+- [x] **Step 1.2**: Author `jwt.config.spec.ts` asserting refresh outlives access.
+- [x] **Step 1.3**: Run the suite and verify a non-zero exit code.
 
 ### Phase 2: Implementation (Green Phase)
 
-- [ ] **Step 2.1**: Implement the runner: dedicated client, session advisory lock,
+- [x] **Step 2.1**: Implement the runner: dedicated client, session advisory lock,
       `schema_migrations`, transaction per file, fatal on zero files.
-- [ ] **Step 2.2**: Invert the token lifetimes.
-- [ ] **Step 2.3**: Convert the eight TypeORM migrations to `.sql`, lifting the SQL
+- [x] **Step 2.2**: Invert the token lifetimes.
+- [x] **Step 2.3**: Convert the eight TypeORM migrations to `.sql`, lifting the SQL
       out of `queryRunner.query()` unchanged.
-- [ ] **Step 2.4**: Write migrations 009–012.
-- [ ] **Step 2.5**: Declare the protocol models and the shared status enums.
-- [ ] **Step 2.6**: Add the entities; drop `content` from `Lesson`.
-- [ ] **Step 2.7**: Run the suite and verify a zero exit code.
+- [x] **Step 2.4**: Write migrations 009–012.
+- [x] **Step 2.5**: Declare the protocol models and the shared status enums.
+- [x] **Step 2.6**: Add the entities; drop `content` from `Lesson`.
+- [x] **Step 2.7**: Run the suite and verify a zero exit code.
 
 ### Phase 3: Wiring & Integration (Anti-Orphan Phase)
 
-- [ ] **Step 3.1**: Re-export new protocol modules from `libs/protocol/index.ts`
+- [x] **Step 3.1**: Re-export new protocol modules from `libs/protocol/index.ts`
       and new entities from `libs/entities/index.ts`.
-- [ ] **Step 3.2**: Call the runner from `main.ts` before `app.listen()`.
-- [ ] **Step 3.3**: Copy `migrations/` in the Dockerfile; resolve the path from config.
-- [ ] **Step 3.4**: Delete `services/database`, update `modules/package.json` and
+- [x] **Step 3.2**: Call the runner from `main.ts` before `app.listen()`.
+- [x] **Step 3.3**: Copy `migrations/` in the Dockerfile; resolve the path from config.
+- [x] **Step 3.4**: Delete `services/database`, update `modules/package.json` and
       the Makefile targets.
-- [ ] **Step 3.5**: Start the API against an empty database and confirm the full
+- [x] **Step 3.5**: Start the API against an empty database and confirm the full
       schema appears, then restart and confirm nothing is reapplied.
 
 ### Phase 4: Cleanliness & Gatekeeper
 
-- [ ] **Step 4.1**: No `TODO`, no stub returns, no hardcoded connection strings.
-- [ ] **Step 4.2**: Run the gate.
+- [x] **Step 4.1**: No `TODO`, no stub returns, no hardcoded connection strings.
+- [x] **Step 4.2**: Run the gate.
 
 ---
 
