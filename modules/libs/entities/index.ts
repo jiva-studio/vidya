@@ -7,10 +7,12 @@ import { Lesson } from './lesson'
 import { LessonVersion } from './lessonVersion'
 import { Role } from './role'
 import { School } from './school'
+import { SyncJournal } from './syncJournal'
 import { User } from './user'
 import { UserRole } from './userRole'
 
 export type { SchoolConfig } from './school'
+export type { SyncOp, SyncScopeKind } from './syncJournal'
 
 export {
   BlockState,
@@ -24,6 +26,7 @@ export {
   LessonVersion,
   Role,
   School,
+  SyncJournal,
   User,
   UserRole,
 }
@@ -37,6 +40,7 @@ export const Entities = [
   Lesson,
   LessonVersion,
   School,
+  SyncJournal,
   User,
   Role,
   UserRole,
