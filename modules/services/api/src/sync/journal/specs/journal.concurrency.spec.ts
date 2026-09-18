@@ -1,8 +1,10 @@
 import { pgClientConfig, testDatabase } from '@vidya/api/shared/datasources'
-import { JOURNAL_LOCK_KEY } from '@vidya/api/sync'
+import { appendJournalRow } from '@vidya/api/sync'
+import { SchoolId } from '@vidya/domain'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { Client } from 'pg'
+import { EntityManager } from 'typeorm'
 import { v4 as uuid } from 'uuid'
 
 /**
@@ -18,12 +20,19 @@ const describeOnPostgres = testDatabase() === 'postgres' ? describe : describe.s
 
 const JOURNAL_SQL = join(__dirname, '..', '..', '..', '..', 'migrations', '019_sync_journal.sql')
 
-const INSERT = `
-  INSERT INTO sync_journal
-    (collection, doc_id, op, data, hlc, scope_kind, scope_id, school_id, device_id, author_id)
-  VALUES ('homework', $1, 'upsert', '{}'::jsonb, $2, 'user', $3, $3, NULL, NULL)
-  RETURNING global_seq
-`
+/**
+ * A `pg.Client` dressed as the `EntityManager` the writer takes.
+ *
+ * `appendJournalRow` uses exactly one thing from a manager — `query` — and
+ * these cases need a session per transaction, which a shared TypeORM data
+ * source will not give. Going through the real function rather than a copy of
+ * it is the whole point: a test that took the lock itself would prove what
+ * Postgres does, not what Vidya does (D-1).
+ */
+const managerFor = (client: Client): EntityManager =>
+  ({
+    query: async (sql: string, params?: unknown[]) => (await client.query(sql, params)).rows,
+  }) as unknown as EntityManager
 
 describeOnPostgres('sync journal under concurrency', () => {
   const database = `vidya_journal_${process.env.JEST_WORKER_ID ?? '0'}`
@@ -36,11 +45,29 @@ describeOnPostgres('sync journal under concurrency', () => {
     return client
   }
 
-  /** Takes the lock and appends, exactly as `appendJournalRow` does. */
+  /** Appends through the production writer and reports the number it was given. */
   const append = async (client: Client, scopeId: string, hlc: string): Promise<string> => {
-    await client.query(`SELECT pg_advisory_xact_lock(${JOURNAL_LOCK_KEY})`)
-    const { rows } = await client.query(INSERT, [uuid(), hlc, scopeId])
-    return rows[0].global_seq
+    const docId = uuid()
+
+    await appendJournalRow(managerFor(client), {
+      collection: 'homework',
+      docId,
+      op: 'upsert',
+      data: {},
+      hlc,
+      scopeKind: 'user',
+      scopeId,
+      schoolId: scopeId as SchoolId,
+      deviceId: null,
+      authorId: null,
+    })
+
+    const { rows } = await client.query(
+      'SELECT global_seq FROM sync_journal WHERE collection = $1 AND doc_id = $2 AND hlc = $3',
+      ['homework', docId, hlc],
+    )
+
+    return String(rows[0].global_seq)
   }
 
   /** What a device sees when it pulls: committed rows only, in cursor order. */
@@ -240,18 +267,37 @@ describeOnPostgres('sync journal under concurrency', () => {
     await hog.query('ROLLBACK')
   })
 
-  it('T-S-41: the journal read carries no transaction-snapshot ceiling', async () => {
-    const source = readFileSync(join(__dirname, '..', 'writer.ts'), 'utf8')
+  it('T-S-41: the horizon the rejected cure reads below would hide a delivered row', async () => {
+    const scope = uuid()
+    const [writer, hog, reader] = await Promise.all([connect(), connect(), connect()])
 
-    // Comments strip out, because the rejection is *documented* in this very
-    // file and a naive search would trip over the explanation.
-    const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
+    await hog.query('CREATE TABLE reports (id int)')
 
-    // A guard against a future "optimisation" that drops the advisory lock in
-    // favour of the snapshot horizon (И-1). It is not a style rule: the horizon
-    // makes sync unavailable for the length of any long query anywhere in the
-    // database, which is far worse than the serialised tail it would replace.
-    expect(code).not.toMatch(/pg_snapshot_xmin|pg_current_snapshot/)
-    expect(code).toMatch(/pg_advisory_xact_lock/)
+    // The admin report again, but this time we measure what it costs. While it
+    // is open the snapshot horizon sits below every transaction started since,
+    // so a journal read gated on that horizon returns nothing at all.
+    await hog.query('BEGIN')
+    await hog.query('INSERT INTO reports (id) VALUES (1)')
+
+    await writer.query('BEGIN')
+    const seq = await append(writer, scope, '000001700000003000-000000-w')
+    await writer.query('COMMIT')
+
+    // What И-1 would have delivered: committed rows whose writing transaction
+    // is already below the horizon of every session still running.
+    const { rows: gated } = await reader.query(
+      `SELECT global_seq FROM sync_journal
+        WHERE xmin::text::bigint < pg_snapshot_xmin(pg_current_snapshot())::text::bigint
+        ORDER BY global_seq`,
+    )
+
+    // Nothing. The row is committed, correct and addressed to a waiting device,
+    // and the horizon holds it back for as long as an unrelated report runs.
+    expect(gated).toHaveLength(0)
+
+    // What the journal actually delivers, at the same moment, same session.
+    expect((await pull(reader, '0')).map((row) => row.seq)).toEqual([seq])
+
+    await hog.query('ROLLBACK')
   })
 })
