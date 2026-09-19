@@ -126,9 +126,9 @@ describe('what a quiz row carries', () => {
 
     await type(options(wrapper)[1], 'Arjuna and nobody else')
 
-    const marks = wrapper.element.querySelectorAll<HTMLInputElement>(
-      '[data-block-id="q1"] input[type="radio"]',
-    )
+    const marks = [
+      ...wrapper.element.querySelectorAll('[data-block-id="q1"] input[type="radio"]'),
+    ] as HTMLInputElement[]
     expect(marks[0].checked).toBe(true)
   })
 })

@@ -24,6 +24,11 @@ const settle = async <TResult>(
     done = true
   })
 
+  // A refusal settles while the loop below is between ticks, and a rejection
+  // nobody is holding at that moment is reported as an unhandled error. The
+  // caller still gets `finished`, and still sees the reason.
+  finished.catch(() => undefined)
+
   for (let tick = 0; tick < 200 && !done; tick += 1) {
     clock.advance(50)
     await flushPromises()

@@ -7,8 +7,9 @@ import type { RouteRecordRaw } from 'vue-router'
 import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 
 import type { MediaGateway } from '@/entities/media'
-import { mediaGatewayKey } from '@/entities/media'
+import { FakeMediaGateway, mediaGatewayKey } from '@/entities/media'
 import { httpClientKey, resetApi } from '@/shared/api'
+import { manualClock } from '@/shared/lib'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
 
@@ -83,6 +84,11 @@ export const openEditor = async (
   await router.push(EDITOR_PATH)
   await router.isReady()
 
+  // Every editor test can reach a media block now that one can be inserted from
+  // the menu, and an unprovided gateway throws by design. A test that cares what
+  // storage does brings its own; the rest get one that does nothing on its own.
+  const media = gateway ?? new FakeMediaGateway({ clock: manualClock() })
+
   const wrapper = mountWithApp(Root, {
     // jsdom only moves focus inside a document, and Vue Test Utils only puts its
     // container there when it is told where to. Without this every assertion
@@ -90,11 +96,7 @@ export const openEditor = async (
     attachTo: document.body,
     global: {
       plugins: [router],
-      // The key is only provided when a test brought a gateway: providing it as
-      // undefined would register the key and hand the editor nothing.
-      provide: gateway
-        ? { [httpClientKey]: http.client, [mediaGatewayKey]: gateway }
-        : { [httpClientKey]: http.client },
+      provide: { [httpClientKey]: http.client, [mediaGatewayKey]: media },
     },
   })
   mounted.push(wrapper)
