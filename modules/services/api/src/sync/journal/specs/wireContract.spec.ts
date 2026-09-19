@@ -3,8 +3,8 @@ import { SyncCollections } from '@vidya/domain'
 import { diffAgainstWire, SYNC_WIRE_FIELDS } from '@vidya/protocol'
 
 /**
- *, server half: what this service puts on the wire is what the contract
- * says the wire carries.
+ * The server half of the wire contract: what this service puts on the wire is
+ * what the contract says the wire carries.
  *
  * The device half lives in `@vidya/mobile` and holds its projection table to
  * the same `SYNC_WIRE_FIELDS`. Two halves rather than one test on purpose: a

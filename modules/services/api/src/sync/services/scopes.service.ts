@@ -66,7 +66,7 @@ export class SyncScopesService {
    *
    * One grouped query for every scope rather than one query per scope: a
    * student on a dozen courses would otherwise pay a round trip each, on every
-   * pull, for a number that is only ever used to say "you are up to date".
+   * pull, for a number whose only job is to say "you are up to date".
    */
   private async heads(scopes: readonly domain.SyncScopeRef[]): Promise<Map<string, number>> {
     if (scopes.length === 0) return new Map()

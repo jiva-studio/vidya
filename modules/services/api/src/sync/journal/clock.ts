@@ -6,8 +6,8 @@
  * global with a lifetime no test controls, so it lives behind this one seam and
  * nowhere else in the sync module.
  *
- * The unit is milliseconds since the Unix epoch, which is UTC by definition
- * (Д-17): no local time, no offsets, nothing that a timezone change can shift.
+ * The unit is milliseconds since the Unix epoch, which is UTC by definition: no
+ * local time, no offsets, nothing that a timezone change can shift.
  */
 export interface Clock {
   nowMs(): number

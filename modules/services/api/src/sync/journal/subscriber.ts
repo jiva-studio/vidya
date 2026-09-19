@@ -24,7 +24,7 @@ interface JournalEvent {
 }
 
 /**
- * The only writer of `sync_journal` (Д-2).
+ * The only writer of `sync_journal`.
  *
  * Journalling from the domain services instead would mean two places that must
  * both remember, and on a push it would mean two rows for one change — the

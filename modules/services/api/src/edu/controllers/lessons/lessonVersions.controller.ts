@@ -92,9 +92,9 @@ export class LessonVersionsController {
    * It is declared above the `:versionId` route because Express matches in
    * declaration order and `published` is not a uuid.
    *
-   * Reading a lesson used to cost two requests — list the versions, then fetch
-   * one — and that list also handed drafts to whoever asked. This route answers
-   * the only question a student has, and answers it with the quiz keys withheld.
+   * It answers the only question a student has, in one request and with the
+   * quiz keys withheld, rather than listing every version and fetching one of
+   * them.
    */
   @Get(Routes().edu.lessons.versions.published(':lessonId'))
   @ApiOperation({

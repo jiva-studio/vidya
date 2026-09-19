@@ -31,7 +31,7 @@ describe('/edu/progress without an enrollment', () => {
   })
 
   it('answers across every place the caller holds when none is named', async () => {
-    // The id used to be required, which a client on its first run cannot supply.
+    // The id is optional: a client on its first run has no place id to name.
     const response = await find(ctx.tokens.student).expect(200)
 
     expect(

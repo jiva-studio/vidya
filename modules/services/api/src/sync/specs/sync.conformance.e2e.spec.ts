@@ -16,9 +16,7 @@ import { createSyncContext, SECTION_ID, SyncContext } from './context'
  *
  * One set of fixtures, two sides: the server runs them through the real
  * endpoints and the device through its fake client. Neither side can drift from
- * the contract without this suite, or the other lane's, going red — which is
- * the only cheap moment to find out, since the two are written at the same time
- * and are first put together much later.
+ * the contract without this suite, or the device's, going red.
  *
  * The fixtures are read from disk rather than imported: they are data shared
  * with another package, not a module of this one.

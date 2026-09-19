@@ -84,12 +84,10 @@ describe('POST /sync/pull', () => {
   })
 
   /**
-   * The echo filter used to stop the cursor as well as the delivery: the
-   * page advanced by the highest `serverSeq` it *returned*, and a scope whose
-   * tail is the caller's own work returns nothing from that tail. The device's
-   * own rows carry a `serverSeq` it is told nowhere else — `PushResult` names
-   * the stamp, not the sequence — so the gap to `headSeq` never closed, no
-   * matter how many times it pulled.
+   * The echo filter stops the delivery, not the cursor. A page advancing by the
+   * highest `serverSeq` it *returned* would never close the gap to `headSeq` on
+   * a scope whose tail is the caller's own work: a device is told the sequence
+   * of its own rows nowhere — `PushResult` names the stamp, not the sequence.
    */
   it('reaches headSeq even when the tail of the scope is its own work', async () => {
     await seedJournal(ds, own(), { schoolId: ctx.schoolId, count: 4 })

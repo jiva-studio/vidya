@@ -33,28 +33,23 @@ const INSERT = `
 /**
  * Appends one row to the journal, inside the caller's transaction.
  *
- * **Why the lock (Д-1).** `BIGSERIAL` hands out a number at `INSERT` but the
- * row only becomes visible at `COMMIT`, and the two orders differ. A device
- * that pulls between a lower-numbered transaction's insert and its commit sees
- * only the higher number, advances its cursor past it, and never receives the
- * lower row — a lost homework with no error anywhere. `pg_advisory_xact_lock`
- * is held until commit, so the next writer cannot take a number until the
- * previous one is visible: number order becomes commit order.
+ * `BIGSERIAL` hands out a number at `INSERT` but the row only becomes visible
+ * at `COMMIT`, and the two orders differ. A device that pulls between a
+ * lower-numbered transaction's insert and its commit sees only the higher
+ * number, advances its cursor past it, and never receives the lower row — a
+ * lost homework with no error anywhere. `pg_advisory_xact_lock` is held until
+ * commit, so the next writer cannot take a number until the previous one is
+ * visible: number order becomes commit order.
  *
- * **Why so late.** The lock serialises every journal write for as long as it is
- * held, so it is taken here, at the last possible moment — this function is
- * called from the subscriber's after-flush hooks, a statement or two before
- * commit — rather than at the start of the transaction. The serialised window
- * is the tail of the transaction, not all of it.
- *
- * **What was rejected (И-1).** The other known cure is to read only rows below
- * `pg_snapshot_xmin(pg_current_snapshot())`. It does not serialise writes, and
- * it is a trap: the horizon is held down by *any* long transaction anywhere in
- * the database, so one two-minute report in the admin console stops sync for
- * every device. `` fails if anyone reintroduces it.
+ * The lock serialises every journal write for as long as it is held, so it is
+ * taken at the last possible moment — a statement or two before commit —
+ * rather than at the start of the transaction. Reading only rows below
+ * `pg_snapshot_xmin(pg_current_snapshot())` would serialise nothing, but the
+ * horizon is held down by any long transaction anywhere in the database, so a
+ * two-minute report in the admin console would stop sync for every device.
  *
  * The insert is idempotent by `(collection, doc_id, hlc)`: a retried push finds
- * its row already there and does nothing rather than raising (Д-3).
+ * its row already there and does nothing rather than raising.
  */
 export const appendJournalRow = async (manager: EntityManager, row: JournalRow): Promise<void> => {
   await manager.query(`SELECT pg_advisory_xact_lock(${JOURNAL_LOCK_KEY})`)

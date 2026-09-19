@@ -7,14 +7,11 @@ import { DataSource } from 'typeorm'
 import { createSyncContext, journalRows, QUIZ_BLOCK_ID, RIGHT_ANSWER, SyncContext } from './context'
 
 /**
- * -sync: the quiz key does not travel down the sync path.
+ * The quiz key does not travel down the sync path.
  *
- * has guarded the REST reply since the student projection was written.
- * The journal path had no such guard and sent `version.content` verbatim, so a
- * published quiz put its answer key into `sync_journal` and from there into the
- * SQLite file on the student's phone — where no later server change can recall
- * it. Nothing failed, because the sync fixtures carried a `text` block and no
- * quiz at all.
+ * A key that reaches the journal reaches the SQLite file on a student's phone,
+ * where no later server change can recall it, so the journal must carry the
+ * student projection and never `version.content` verbatim.
  *
  * Two places are checked, not one. The response is what a device receives now;
  * the table is what every device that pulls later will receive, and a key that

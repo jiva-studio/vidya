@@ -136,7 +136,7 @@ describe('sync journal', () => {
       const rows = (await journalFor(ds, 'block_states')).filter((r) => r.doc_id === state.id)
 
       // Two rows here would mean a second writer — a push that journals on its
-      // own as well as saving the row the subscriber then journals (Д-2).
+      // own as well as saving the row the subscriber then journals.
       expect(rows).toHaveLength(1)
       expect(rows[0].hlc).toBe(hlc)
       expect(rows[0].device_id).toBe('device-a')

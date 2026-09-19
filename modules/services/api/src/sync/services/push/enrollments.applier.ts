@@ -26,8 +26,8 @@ const find = async (manager: EntityManager, change: PushChange): Promise<Enrollm
  * A student asking to join a course, from a device that was offline.
  *
  * `enrollments` replicates both ways — up goes the request, down comes the
- * decision (`SYNC_DIRECTION`, and the "what goes where" table of `docs/PLAN.md`)
- * — so a request written on a train is a row the server has to be able to take.
+ * decision (`SYNC_DIRECTION`) — so a request written on a train is a row the
+ * server has to be able to take.
  * Refusing it would strand an outbox row that is never deleted and never
  * accepted, which is a permanent, and false, refusal sitting in the app.
  *

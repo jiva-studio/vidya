@@ -23,10 +23,9 @@ const hlc = (physical: number, counter = 0, device = DEVICE): string =>
 /**
  * A place asked for from a device that was offline.
  *
- * The plan sends this collection both ways — up goes the request, down comes
- * the decision — and the mobile client already journals `enrollments.request`,
- * so the server has to take the row rather than strand it in an outbox that is
- * never emptied.
+ * This collection travels both ways: up goes the request, down comes the
+ * decision. The device journals `enrollments.request`, so the server has to
+ * take the row rather than strand it in an outbox that is never emptied.
  */
 describe('POST /sync/push: a request for a place on a course', () => {
   let app: INestApplication

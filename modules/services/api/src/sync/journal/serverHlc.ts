@@ -20,51 +20,19 @@ export const isServerDeviceId = (deviceId: string): boolean =>
   deviceId === SERVER_DEVICE_ID || deviceId.startsWith(`${SERVER_DEVICE_ID}:`)
 
 /**
- * The server's own hybrid logical clock.
+ * The server's own hybrid logical clock: every row a REST write puts in the
+ * journal is stamped here. The value object lives in `@vidya/domain` so that
+ * both sides of the wire parse and compare stamps with one implementation.
  *
- * Every row a REST write puts in the journal is stamped here. The value object
- * itself lives in `@vidya/domain` so that both sides of the wire read and
- * compare stamps with one implementation: a server that formatted its own
- * would emit strings the device cannot parse, and the mismatch would surface
- * as silently wrong ordering rather than as an error.
- *
- * Two rules make the stamps usable as an ordering, both of them `hlcNow`'s:
- *
- * 1. **Never go backwards.** The physical half is `max(wall clock, last seen)`,
- *    so an NTP correction that moves the clock back cannot make a later write
- *    sort before an earlier one.
- * 2. **Start where the journal left off.** On first use the clock is seeded
- *    from `max(hlc)` in the journal, so a restart does not re-issue stamps the
- *    journal already contains.
- *
- * **Why the device id is not the bare `server`.** `lastSeen` and `seeded`
- * are fields of one object in one process, so they order the writes of that
- * process and of nothing else. Two API instances stamping the same document in
- * the same millisecond therefore produced the *same string*, and the journal's
- * `(collection, doc_id, hlc)` index swallowed the second row through
- * `ON CONFLICT DO NOTHING` — a lost write answered with `200`, invisible to
- * every device because no later event for that document would ever follow.
- *
- * So each instance appends a discriminator of its own: the third HLC component
- * is `server:<uuid>`, drawn once when the service is constructed. An HLC's
- * device id is its final tiebreak and may itself contain `:` (`parseHlc` reads
- * everything past the second separator as the id), so nothing about the wire
- * format changes: the physical and counter halves keep their fixed widths and
- * text order stays causal order.
- *
- * Alternatives weighed. *Hostname or pid* reads better in a log but is not a
- * guarantee — containers share hostnames, and a pid is reused — and a stamp
- * that is nearly unique is a lost write that happens rarely instead of often.
- * *Seeding the counter from the journal on collision* costs a read on the write
- * path and still leaves the window between the read and the insert. Restarting
- * with a fresh id is harmless: monotonicity is carried by the physical half and
- * by seeding from `max(hlc)`, not by the id.
- *
- * @remarks Extension point. A *client's* HLC arriving above
- * `now() + SYNC_CLOCK_SKEW_TOLERANCE_MS` must be restamped by the server
- * rather than rejected, and a collision on `(collection, doc_id, hlc)` with a
- * different body must be restamped too. Both belong to the push path;
- * `next()` is the stamp they call.
+ * Two invariants come from `hlcNow`: the physical half is `max(wall clock, last
+ * seen)`, so a clock correction cannot sort a later write before an earlier
+ * one, and the clock is seeded from `max(hlc)` in the journal, so a restart
+ * does not re-issue stamps the journal already holds. The third is local — the
+ * device id carries a per-instance discriminator, `server:<uuid>`, because
+ * `lastSeen` orders the writes of one process only. Without it, two instances
+ * stamping the same document in the same millisecond emit the same string, and
+ * the journal's unique `(collection, doc_id, hlc)` index drops the second row
+ * through `ON CONFLICT DO NOTHING`.
  */
 @Injectable()
 export class ServerHlcService {

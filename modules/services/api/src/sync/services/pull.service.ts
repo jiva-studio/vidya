@@ -161,12 +161,12 @@ export class SyncPullService {
  * The position each scope reached on this page — and no entry for the rest.
  *
  * It counts every row the page *read*, not every row it hands back, and the
- * difference is the whole of the fix. A device's own rows are filtered out of the
- * answer, and their `serverSeq` is reported nowhere else — `PushResult` names
- * the stamp, not the sequence. Advancing by the returned rows therefore left
- * the cursor stuck below `headSeq` whenever a scope's tail was the caller's
- * own work: "behind" never cleared, and `ackedSeq` never reached the rows the
- * device demonstrably holds, so a compaction could not drop them.
+ * difference matters. A device's own rows are filtered out of the answer, and
+ * their `serverSeq` is reported nowhere else — `PushResult` names the stamp,
+ * not the sequence. Advancing by the returned rows would leave the cursor stuck
+ * below `headSeq` whenever a scope's tail is the caller's own work: "behind"
+ * would never clear, and `ackedSeq` would never reach rows the device
+ * demonstrably holds.
  *
  * The two filters are not alike and are not treated alike. A scope the caller
  * has no claim to is never read at all — `pull` intersects the asked positions

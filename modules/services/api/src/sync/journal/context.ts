@@ -5,7 +5,7 @@ import { UserId } from '@vidya/domain'
 /**
  * What a sync push knows about a write that a REST request does not.
  *
- * The journal has exactly one writer — the subscriber (Д-2). A push therefore
+ * The journal has exactly one writer — the subscriber. A push therefore
  * cannot write its own journal row to carry the device's HLC; it leaves the
  * three facts here instead, and the subscriber picks them up while running
  * inside the same transaction.

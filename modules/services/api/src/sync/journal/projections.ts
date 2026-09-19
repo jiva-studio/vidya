@@ -26,8 +26,8 @@ export interface JournalTarget {
  * goes over the wire.
  *
  * Instants are projected as `Date`, which JSON serialises as ISO-8601 with a
- * trailing `Z` — UTC, never a local offset (Д-17). A timezone must not be able
- * to change the order two devices agree on, or the day a deadline falls on.
+ * trailing `Z` — UTC, never a local offset. A timezone must not be able to
+ * change the order two devices agree on, or the day a deadline falls on.
  */
 export interface CollectionProjection<TEntity> {
   /**
@@ -80,8 +80,7 @@ const lessons: CollectionProjection<Lesson> = {
   target: async (lesson) => ({ scopeId: lesson.courseId, schoolId: lesson.schoolId }),
   // No `schoolId`: a lesson's school is a fact about where the row sits, which
   // is what the envelope states and what the device files it under. Repeating
-  // it in the body would put it on the wire without `LessonDetails` having it
-  //, the same way a lesson version used to repeat one it never had.
+  // it in the body would put it on the wire without `LessonDetails` having it.
   project: (lesson) => ({
     id: lesson.id,
     courseId: lesson.courseId,
@@ -100,28 +99,14 @@ const lessons: CollectionProjection<Lesson> = {
  * The scope comes from the lesson, which is what carries the course — a version
  * knows only its lesson.
  *
- * **The content is the student projection, never the raw document**.
- * The journal has exactly one reader — a student's device — and what reaches
- * that device reaches a SQLite file no later server change can recall, so a
- * quiz key journalled once is a quiz key given away for good. The REST path
- * has withheld it since `toStudentContent` was written; this path sent
- * `version.content` verbatim and nothing noticed, because the sync fixtures
- * carried a `text` block and no quiz. It is the same function on both paths on
- * purpose: two implementations of "what a student may be handed" is one
- * implementation and one hole.
- *
- * Staff are not a reason to loosen this. A reviewer needs the key at review
- * time, and `GET versions/:versionId` hands it over against a permission —
- * which is where an answer key belongs, behind a check, and not in a log that
- * is replicated to phones by construction.
- *
- * Rows journalled before this fix keep whatever they were written with: the
- * journal is append-only, and rewriting `data` in place would reach no device
- * anyway, because a device applies a row by its HLC and an edited row issues no
- * new one. The repair is to republish the affected versions, which journals
- * them again — stripped — with a fresh stamp that does overwrite the copy on
- * the device. No migration ships for it: the schema is not deployed anywhere
- * yet, and one that scrubbed the table would buy nothing a republish does not.
+ * The content is the student projection, never the raw document. The journal's
+ * one reader is a student's device, and what reaches that device reaches a
+ * SQLite file no later server change can recall, so a quiz key journalled once
+ * is a quiz key given away for good. `toStudentContent` is the same function
+ * the REST path uses, on purpose: two implementations of "what a student may be
+ * handed" is one implementation and one hole. Staff are not a reason to loosen
+ * it — a reviewer gets the key from `GET versions/:versionId`, behind a
+ * permission check.
  */
 const lessonVersions: CollectionProjection<LessonVersion> = {
   collection: 'lesson_versions',
@@ -204,7 +189,8 @@ const blockStates: CollectionProjection<BlockState> = {
 
 /**
  * Entity name to projection. An entity absent from this table does not sync —
- * silently, which is why `` reconciles the keys against `SYNCED_ENTITIES`.
+ * silently, which is why a test reconciles these keys against
+ * `SYNCED_ENTITIES`.
  */
 export const COLLECTION_PROJECTIONS: Record<string, CollectionProjection<any>> = {
   Course: courses,

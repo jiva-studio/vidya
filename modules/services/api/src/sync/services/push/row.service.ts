@@ -25,8 +25,8 @@ const APPLIERS: Partial<Record<domain.SyncCollection, PushApplier>> = {
  *
  * `enrollments` is deliberately not one of them, though its `status` is a field
  * the server wins on. Up goes the request, down comes the decision — that is
- * the collection's direction in the plan's "what goes where" table, and the two
- * sides are kept apart by the field split, not by a ban on the collection. A
+ * the collection's direction, and the two sides are kept apart by the field
+ * split rather than by a ban on the collection. A
  * device must be able to ask for a place while it is offline, which is the case
  * offline mode exists for; refusing it would leave an outbox row that is never
  * deleted and never accepted, refused for a reason the model itself denies.
@@ -44,9 +44,9 @@ const READ_ONLY: Partial<Record<domain.SyncCollection, string>> = {
  * collection with a natural key — a section of homework, a block of a lesson —
  * writes onto the row that key already holds, so two devices of one student
  * handing in one section under two local ids end up as one row. Answering both
- * with the id they sent left the loser holding a local row the server had never
- * heard of: no pull carries it, no tombstone removes it, and the winning row
- * arrives beside it as a second answer to the same section.
+ * with the id they sent would leave the loser holding a local row the server
+ * never heard of: no pull carries it, no tombstone removes it, and the winning
+ * row arrives beside it as a second answer to the same section.
  */
 const accepted = (
   change: PushChange,

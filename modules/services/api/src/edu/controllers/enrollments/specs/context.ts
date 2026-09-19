@@ -15,7 +15,7 @@ export type Context = {
   /** A second course in the same school: a student holds more than one place. */
   otherCourseId: string
   groupId: string
-  /** A group on a different course, used to check the assignment guard. */
+  /** A group on a different course, for exercising the assignment guard. */
   foreignGroupId: string
   studentId: string
   tokens: {

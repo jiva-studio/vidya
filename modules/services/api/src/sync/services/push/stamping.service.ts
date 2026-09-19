@@ -42,8 +42,8 @@ const isInstant = (value: unknown): boolean =>
  * Which HLC a pushed row is stored under.
  *
  * Two different accidents lead to the same cure, and a refusal is not available
- * for either of them — refusing here would mean losing work a student has
- * already done, which the plan does not allow under any circumstances.
+ * for either of them: refusing here would throw away work a student has already
+ * done.
  *
  * - **A device whose clock is fast.** Its stamps would otherwise be
  *   adopted by every other device, because each seeds its clock from the highest
