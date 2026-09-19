@@ -134,6 +134,11 @@ describe('the school scope', () => {
   const collected = (body: protocol.PullResponse, collection: domain.SyncCollection) =>
     body.changes.filter((change) => change.collection === collection)
 
+  // A pull hands down history, not a snapshot: a document written twice arrives
+  // twice, oldest first, and only the last row says where it stands.
+  const latest = (changes: readonly protocol.SyncChange[], docId: string): protocol.SyncChange =>
+    changes.filter((change) => change.docId === docId).pop()
+
   /* ------------------------------- ------------------------------- */
 
   describe('what a student is entitled to read', () => {
@@ -343,17 +348,15 @@ describe('the school scope', () => {
   describe('a place taken back and a request refused', () => {
     it('reach the student as two different statuses', async () => {
       await grantRole(ctx.student.id, ctx.schoolId)
-      await placeOn(catalogue.id, ctx.student.id, 'declined')
+      const refused = await placeOn(catalogue.id, ctx.student.id, 'declined')
 
       await leaveSchool(ctx.student.id)
 
       const body = (await pull(ctx.tokens.student).expect(200)).body as protocol.PullResponse
       const places = collected(body, 'enrollments')
 
-      expect(places.find((change) => change.docId === ctx.enrollment.id).data.status).toBe(
-        'revoked',
-      )
-      expect(places.map((change) => change.data.status)).toContain('declined')
+      expect(latest(places, ctx.enrollment.id).data.status).toBe('revoked')
+      expect(latest(places, refused.id).data.status).toBe('declined')
     })
   })
 

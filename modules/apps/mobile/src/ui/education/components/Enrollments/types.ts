@@ -1,14 +1,21 @@
 import type { EnrollmentId, EnrollmentStatus } from '@vidya/domain'
-import type { CourseSummary, EnrollmentSummary, GroupSummary } from '@vidya/protocol'
 
+/**
+ * One row of the student's own list.
+ *
+ * The course name is joined in rather than read from the enrolment, which
+ * carries only an id. A course whose row has not arrived yet leaves it empty;
+ * the row is still the student's place and is still listed.
+ */
 export interface EnrollmentViewModel {
-  enrollment: EnrollmentSummary
-  group?: GroupSummary
-  course: CourseSummary
+  id: EnrollmentId
+  courseName: string
+  groupName?: string
+  status: EnrollmentStatus
 }
 
 export interface EnrollmentsListProps {
-  items: EnrollmentViewModel[]
+  items: readonly EnrollmentViewModel[]
 }
 
 export interface EnrollmentsListEmits {

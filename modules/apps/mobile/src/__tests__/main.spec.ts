@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
 /**
@@ -68,6 +68,28 @@ vi.mock('../App.vue', () => ({
 const root = () => document.querySelector('#app')!
 
 describe('starting the app', () => {
+  /**
+   * Loads the app's module graph once, on its own budget.
+   *
+   * Bringing it up costs about a second here and several under the contention
+   * of a full run — Vue, the Ionic stylesheets, the persistence layer and
+   * sql.js, none of which the assertions below are about. Charged to the first
+   * test it crowds out that test's own budget and the file fails on load
+   * rather than on behaviour; paid here, the tests keep the default timeout,
+   * so a bootstrap that genuinely never finishes still fails quickly.
+   *
+   * A throwaway root is put up first, because the import starts the app, and
+   * the warm-up is held until that start has finished: `main` launches its
+   * bootstrap without awaiting it, so an unfinished one would otherwise record
+   * its steps in the middle of the first test.
+   */
+  beforeAll(async () => {
+    document.body.innerHTML = '<div id="app"></div>'
+    await import('../main')
+    await vi.waitFor(() => expect(events).toContain('mount'))
+    document.body.innerHTML = ''
+  }, 60_000)
+
   beforeEach(() => {
     events.length = 0
     state.migrationFails = false

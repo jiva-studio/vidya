@@ -79,12 +79,16 @@ async function load(): Promise<void> {
 }
 
 async function send(): Promise<void> {
-  const body = { name: name.value.trim() }
+  const trimmed = name.value.trim()
+
+  // A patch carries only the name: this form has no editor for the logo or the
+  // description, and naming them here would blank whatever is already set.
   if (props.id) {
-    await api.update(props.id, body)
+    await api.update(props.id, { name: trimmed })
     return
   }
-  await api.create(body)
+
+  await api.create({ name: trimmed, logoUrl: null, description: null })
 }
 </script>
 

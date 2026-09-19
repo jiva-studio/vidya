@@ -3,7 +3,6 @@
     :title="course?.name ?? ''"
     :busy="busy"
     :has-data="loaded"
-    :error="errorMessage"
     :has-padding="true"
   >
     <p v-if="course?.description">{{ course.description }}</p>
@@ -17,10 +16,10 @@
 <script setup lang="ts">
 import { IonButton, useIonRouter } from '@ionic/vue'
 
-import { useApi } from '@/app'
+import { useRepositories } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
-import { useFailureMessage, useRemoteData } from '@/shared'
-import { education } from '@/usecases'
+import { useLocalData } from '@/shared'
+
 import type { CourseDetailsPageProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -29,19 +28,14 @@ const props = defineProps<CourseDetailsPageProps>()
 
 /* --------------------------------- State ---------------------------------- */
 
-const api = useApi()
+const repositories = useRepositories()
 const router = useIonRouter()
 
 const {
   data: course,
   busy,
   loaded,
-  failure,
-} = useRemoteData(() => education.getCourse(api, props.id), undefined, {
-  watching: [() => props.id],
-})
-
-const errorMessage = useFailureMessage(failure)
+} = useLocalData(() => repositories.courses.getById(props.id), null, { watching: [() => props.id] })
 
 /* -------------------------------- Handlers -------------------------------- */
 

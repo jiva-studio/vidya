@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { UserSchoolsService } from '@vidya/api/edu/services'
 import * as domain from '@vidya/domain'
 import { Enrollment } from '@vidya/entities'
 import { SyncScopeGrant } from '@vidya/protocol'
@@ -22,26 +23,37 @@ interface ScopeHead {
  * row was written — which is exactly why the caller's rights have to be decided
  * before the first row is read.
  *
- * A student's world is two kinds of scope: their own rows, and the courses they
- * hold an accepted place on. A place that is still pending, or was declined,
- * grants nothing: it is a request, not a seat.
+ * A student's world is three kinds of scope: their own rows, the schools they
+ * belong to, and the courses they hold an accepted place on. A place that is
+ * still pending, or was declined, grants nothing: it is a request, not a seat.
+ *
+ * A school is reached two ways — by a role in it, or by an accepted place on
+ * one of its courses — because either alone leaves a hole: a student accepted
+ * onto a course of a school that gave them no role would receive its lessons
+ * with no course to hang them on.
  */
 @Injectable()
 export class SyncScopesService {
   constructor(
     @InjectRepository(Enrollment) private readonly enrollments: Repository<Enrollment>,
+    private readonly userSchools: UserSchoolsService,
     private readonly dataSource: DataSource,
   ) {}
 
   /** The scopes the caller may read, without their positions. */
   async scopesFor(userId: domain.UserId): Promise<domain.SyncScopeRef[]> {
     const accepted = await this.enrollments.findBy({ studentId: userId, status: 'accepted' })
+    const byRole = await this.userSchools.getUserSchools(userId)
+
+    const schools = [...new Set([...byRole, ...accepted.map((place) => place.schoolId)])].map(
+      (id): domain.SyncScopeRef => ({ kind: 'school', id }),
+    )
 
     const courses = accepted.map((enrollment): domain.SyncScopeRef => {
       return { kind: 'course', id: enrollment.courseId }
     })
 
-    return [{ kind: 'user', id: userId }, ...courses]
+    return [{ kind: 'user', id: userId }, ...schools, ...courses]
   }
 
   /**

@@ -45,13 +45,13 @@ import { IonCheckbox, IonInput, IonList, IonNote, IonPage, useIonRouter } from '
 import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
 
-import { useApi } from '@/app'
 import { AsyncButton } from '@/design'
+import { useAuthClient } from '@/ui/auth/composables/useAuthClient'
 import { auth } from '@/usecases'
 
 /* --------------------------------- State ---------------------------------- */
 
-const api = useApi()
+const { client } = useAuthClient()
 const router = useIonRouter()
 const fluent = useFluent()
 
@@ -71,8 +71,8 @@ async function onSignUpButtonClicked() {
   try {
     // The profile the token belongs to is the one being filled in, so its id
     // comes from the server rather than from anything the form holds.
-    const profile = await auth.getProfile(api)
-    await auth.updateProfile(api, profile.userId, {
+    const profile = await auth.getProfile(client)
+    await auth.updateProfile(client, profile.userId, {
       name: name.value,
       phone: phoneNumber.value || undefined,
     })

@@ -35,6 +35,7 @@ describe('POST /sync/pull', () => {
 
   const mine = (): domain.SyncScopeRef => ({ kind: 'course', id: ctx.mine.course.id })
   const own = (): domain.SyncScopeRef => ({ kind: 'user', id: ctx.student.id })
+  const school = (): domain.SyncScopeRef => ({ kind: 'school', id: ctx.schoolId })
 
   /* ------------------------------- -------------------------------- */
 
@@ -57,7 +58,7 @@ describe('POST /sync/pull', () => {
 
   /* ------------------------------- ------------------------------- */
 
-  it('does not hand over a course the caller has no place on', async () => {
+  it('does not hand over the content of a course the caller has no place on', async () => {
     const response = await pull(ctx.tokens.student, {
       cursors: { [`course:${ctx.theirs.course.id}`]: 0 },
     }).expect(200)
@@ -138,8 +139,9 @@ describe('POST /sync/pull', () => {
     const body = response.body as protocol.PullResponse
     const course = body.changes.filter((c) => c.scope.id === ctx.mine.course.id)
 
-    // The course, its lesson and the published version — and not the draft.
-    expect(course.map((c) => c.collection)).toEqual(['courses', 'lessons', 'lesson_versions'])
+    // The lesson and the published version — and not the draft. The card of the
+    // course itself belongs to the school scope.
+    expect(course.map((c) => c.collection)).toEqual(['lessons', 'lesson_versions'])
   })
 
   /* ------------------------------- -------------------------------- */
@@ -190,7 +192,7 @@ describe('POST /sync/pull', () => {
     const before = await pull(ctx.tokens.student, {}).expect(200)
 
     expect((before.body as protocol.PullResponse).scopes.map((g) => g.scope.id).sort()).toEqual(
-      [ctx.mine.course.id, ctx.student.id].sort(),
+      [ctx.mine.course.id, ctx.schoolId, ctx.student.id].sort(),
     )
 
     await app.get(EnrollmentsService).create({
@@ -211,7 +213,11 @@ describe('POST /sync/pull', () => {
 
   it('a position past the end is an empty page, not an error', async () => {
     const response = await pull(ctx.tokens.student, {
-      cursors: { [domain.syncScopeKey(mine())]: 999_999, [domain.syncScopeKey(own())]: 999_999 },
+      cursors: {
+        [domain.syncScopeKey(mine())]: 999_999,
+        [domain.syncScopeKey(own())]: 999_999,
+        [domain.syncScopeKey(school())]: 999_999,
+      },
     }).expect(200)
 
     const body = response.body as protocol.PullResponse
@@ -275,9 +281,10 @@ describe('POST /sync/pull', () => {
       if (!body.hasMore) break
     }
 
-    // Three rows of course content, the enrolment, seven seeded ones, once each.
-    expect(collected).toHaveLength(11)
-    expect(new Set(collected.map((c) => c.serverSeq)).size).toBe(11)
+    // The school, both of its course cards, two rows of course content, the
+    // enrolment and seven seeded ones, once each.
+    expect(collected).toHaveLength(13)
+    expect(new Set(collected.map((c) => c.serverSeq)).size).toBe(13)
   })
 
   /* ------------------------------- ------------------------------- */
@@ -310,9 +317,12 @@ describe('POST /sync/pull', () => {
     const first = await pull(ctx.tokens.student, { limit: 100 }).expect(200)
     const cursors = (first.body as protocol.PullResponse).cursors
 
-    // Move only the user scope forward; the course scope keeps its place.
+    // Move the user and school scopes forward; the course scope keeps its place.
     const second = await pull(ctx.tokens.student, {
-      cursors: { [domain.syncScopeKey(own())]: cursors[domain.syncScopeKey(own())] },
+      cursors: {
+        [domain.syncScopeKey(own())]: cursors[domain.syncScopeKey(own())],
+        [domain.syncScopeKey(school())]: cursors[domain.syncScopeKey(school())],
+      },
     }).expect(200)
 
     const body = second.body as protocol.PullResponse

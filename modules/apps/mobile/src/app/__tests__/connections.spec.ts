@@ -2,7 +2,6 @@ import type { EnrollmentId, HomeworkId, LessonVersionId, SchoolId, SectionId } f
 import { asId } from '@vidya/domain'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { DatabaseSuspendedError } from '@/ports'
 import {
   ENROLLMENT_ID,
   HOMEWORK_ID,
@@ -181,7 +180,11 @@ describe('the connection registry', () => {
   it('signing out stops the triggers, gives the lock back and keeps every queued row', async () => {
     const connections = await signIn(SCHOOL_A)
 
+    // Imported here rather than at the top of the file: a relaunch is staged
+    // by resetting the module registry, and a class held from before the reset
+    // is a different class from the one the reopened database throws.
     const { openTestDatabase } = await import('@/infra/persistence/testing')
+    const { DatabaseSuspendedError } = await import('@/ports')
     const { startSync } = await import('../sync')
     const { db } = await openTestDatabase()
 

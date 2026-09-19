@@ -180,7 +180,9 @@ export interface NewEnrollmentRequest {
   readonly id: EnrollmentId
   readonly schoolId: SchoolId
   readonly courseId: CourseId
-  readonly studentId: UserId
+
+  /** Defaults to the identity the device writes under, which on a phone is the student. */
+  readonly studentId?: UserId
 }
 
 export interface IEnrollmentRepository {

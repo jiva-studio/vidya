@@ -270,8 +270,15 @@ describe('two connections on one handset', () => {
     expect(switches).toHaveLength(1)
   })
 
-  it('going into the background drops the queued run and gives the lock back', async () => {
-    const { db, a, b } = await wired()
+  /**
+   * A handset put away while a page is in flight, with a second page to come
+   * and a second connection waiting its turn.
+   *
+   * `atPause` is what had already left the device when the system took it
+   * back; everything after is measured against that line.
+   */
+  const putAwayMidPull = async () => {
+    const wiring = await wired()
 
     const serverA = network.server(SCHOOL_A)
     serverA.sync.pageSize = 1
@@ -289,25 +296,40 @@ describe('two connections on one handset', () => {
       },
     })
 
-    // The handset is put away while the first page is still being applied.
+    let atPause = 0
     serverA.sync.onPull = async () => {
       serverA.sync.onPull = null
+      atPause = network.requests.length
       await listeners.get('pause')!(undefined)
     }
 
-    const runs = Promise.all([a.triggers.now(), b.triggers.now()])
+    const results = await Promise.all([wiring.a.triggers.now(), wiring.b.triggers.now()])
 
-    // The lock is back before the queue has drained, which is the whole point.
-    await ticks(10)
-    await expect(db.transaction(async () => undefined)).rejects.toThrow(DatabaseSuspendedError)
+    return { ...wiring, results, atPause: () => atPause }
+  }
 
-    await runs
+  it('going into the background drops the queued run and gives the lock back', async () => {
+    const { db, a, results } = await putAwayMidPull()
 
-    // The page in flight reached its commit.
+    // The page already fetched was carried to its commit — dropping it would
+    // only mean downloading it again.
     expect(await a.engine.courses.getById(asId(COURSE_ID))).not.toBeNull()
 
-    // The waiting run was cancelled rather than queued behind the suspension.
-    expect(network.requestsTo(SCHOOL_B)).toHaveLength(0)
+    // The run that was waiting was cancelled rather than started behind the
+    // suspension, so there was nothing for the lock to wait on.
+    expect(results[1]!.outcome).toBe('paused')
+    expect(network.requestsTo(SCHOOL_B)).toEqual([])
+
+    await expect(db.transaction(async () => undefined)).rejects.toThrow(DatabaseSuspendedError)
+  })
+
+  it('nothing new leaves the device once it has gone into the background', async () => {
+    const { atPause } = await putAwayMidPull()
+
+    // The scope had a second page to give. Asking for it costs a request made
+    // by an app the system is in the middle of suspending, and the answer
+    // cannot be written anyway — the lock has been handed back by then.
+    expect(network.requests).toHaveLength(atPause())
   })
 
   it('coming back resumes from the positions already committed', async () => {

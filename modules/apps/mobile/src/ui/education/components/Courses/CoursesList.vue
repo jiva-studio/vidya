@@ -4,6 +4,8 @@
     :key="item.id"
     :name="item.name"
     :description="item.description"
+    :school-name="item.schoolName"
+    :school-logo-url="item.schoolLogoUrl"
     @click="() => onCourseCardClicked(item.id)"
   />
 </template>

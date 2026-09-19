@@ -1,10 +1,5 @@
 <template>
-  <PageWithHeaderLayout
-    :title="$t('my-enrollment-title')"
-    :busy="busy"
-    :has-data="loaded"
-    :error="errorMessage"
-  >
+  <PageWithHeaderLayout :title="$t('my-enrollment-title')" :busy="busy" :has-data="loaded">
     <EnrollmentReviewStatus
       v-if="enrollment && enrollment.status !== 'accepted'"
       :image="`enrollment/${enrollment.status}.webp`"
@@ -23,11 +18,11 @@ import type { LessonId } from '@vidya/domain'
 import { useIonRouter } from '@ionic/vue'
 import { computed } from 'vue'
 
-import { useApi } from '@/app'
+import { useRepositories } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
-import { useFailureMessage, useRemoteData } from '@/shared'
+import { useLocalData } from '@/shared'
 import { EnrollmentReviewStatus, LessonsList } from '@/ui/education'
-import { education } from '@/usecases'
+
 import type { MyEnrollmentPageProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -36,28 +31,27 @@ const props = defineProps<MyEnrollmentPageProps>()
 
 /* --------------------------------- State ---------------------------------- */
 
-const api = useApi()
+const repositories = useRepositories()
 const router = useIonRouter()
 
 // Lessons belong to the course, not to the group: an accepted student reads
 // them while still waiting to be placed.
-const { data, busy, loaded, failure } = useRemoteData(
+const { data, busy, loaded } = useLocalData(
   async () => {
-    const enrollment = await education.getEnrollment(api, props.enrollmentId)
+    const enrollment = await repositories.enrollments.getById(props.enrollmentId)
     const lessons =
-      enrollment.status === 'accepted'
-        ? await education.listLessonsOfCourse(api, enrollment.courseId)
+      enrollment?.status === 'accepted'
+        ? await repositories.lessons.listByCourse(enrollment.courseId)
         : []
+
     return { enrollment, lessons }
   },
-  undefined,
+  { enrollment: null, lessons: [] },
   { watching: [() => props.enrollmentId] },
 )
 
-const errorMessage = useFailureMessage(failure)
-
-const enrollment = computed(() => data.value?.enrollment)
-const lessons = computed(() => data.value?.lessons ?? [])
+const enrollment = computed(() => data.value.enrollment)
+const lessons = computed(() => data.value.lessons)
 
 /* -------------------------------- Handlers -------------------------------- */
 

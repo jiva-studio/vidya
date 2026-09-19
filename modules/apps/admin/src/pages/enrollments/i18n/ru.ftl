@@ -41,4 +41,5 @@ enrollments-student-unknown = Студент
 enrollment-status-pending = Ждёт решения
 enrollment-status-accepted = Принята
 enrollment-status-declined = Отклонена
+enrollment-status-revoked = Отозвана
 enrollment-status-in-queue = В очереди

@@ -64,7 +64,7 @@ describe('SchoolFormPage', () => {
     signIn(['schools:create', 'schools:update'] as PermissionKey[])
   })
 
-  it('creates a school with the only field the schema holds', async () => {
+  it('creates a school, leaving the fields the form does not collect empty', async () => {
     const { transport, page, router } = await mountForm({ 'POST /edu/schools': { id: 'school-2' } })
 
     await page.find('input[name="name"]').setValue('Second')
@@ -73,7 +73,7 @@ describe('SchoolFormPage', () => {
     expect(transport.calls[0]).toEqual({
       method: 'POST',
       path: SCHOOLS,
-      body: { name: 'Second' },
+      body: { name: 'Second', logoUrl: null, description: null },
     })
     expect(router.currentRoute.value.name).toBe('schools')
   })

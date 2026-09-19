@@ -37,10 +37,11 @@ export interface IConnectionStore {
  */
 export const normaliseBaseUrl = (value: string): string => {
   const url = new URL(value)
-  const port = (url.protocol === 'https:' && url.port === '443') ||
+  const port =
+    (url.protocol === 'https:' && url.port === '443') ||
     (url.protocol === 'http:' && url.port === '80')
-    ? ''
-    : url.port
+      ? ''
+      : url.port
 
   return `${url.protocol}//${url.hostname.toLowerCase()}${port ? `:${port}` : ''}`
 }

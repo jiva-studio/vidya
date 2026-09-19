@@ -41,4 +41,5 @@ enrollments-student-unknown = Student
 enrollment-status-pending = Waiting
 enrollment-status-accepted = Accepted
 enrollment-status-declined = Declined
+enrollment-status-revoked = Revoked
 enrollment-status-in-queue = In the queue

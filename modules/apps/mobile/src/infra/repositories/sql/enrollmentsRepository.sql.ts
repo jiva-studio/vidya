@@ -96,7 +96,9 @@ export function createSqlEnrollmentRepository(
         id: input.id,
         schoolId: input.schoolId,
         courseId: input.courseId,
-        studentId: input.studentId,
+        // The device is signed in as one student and writes every row under
+        // that identity, so a request that names nobody is the owner's own.
+        studentId: input.studentId ?? ownerId(),
         status: 'pending',
         groupId: null,
         decidedById: null,

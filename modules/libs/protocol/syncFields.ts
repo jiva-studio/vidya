@@ -1,10 +1,10 @@
 import type * as domain from '@vidya/domain'
 
 import type { CourseDetails } from './courses'
-import type { SchoolDetails } from './schools'
 import type { EnrollmentDetails } from './enrollments'
 import type { BlockStateDetails, HomeworkDetails } from './homework'
 import type { LessonDetails, LessonVersionDetails } from './lessons'
+import type { SchoolDetails } from './schools'
 
 /**
  * The fields each collection carries in a sync payload.

@@ -10,7 +10,8 @@ import { project, projectAll } from './project'
 
 const ROLE = ['id', 'name', 'description', 'permissions'] as const
 const ROLE_SUMMARY = ['id', 'name', 'description'] as const
-const SCHOOL = ['id', 'name'] as const
+const SCHOOL = ['id', 'name', 'logoUrl', 'description'] as const
+const SCHOOL_SUMMARY = ['id', 'name', 'logoUrl'] as const
 const USER = ['id', 'name', 'email', 'phone'] as const
 const USER_SUMMARY = ['id', 'name'] as const
 
@@ -30,7 +31,8 @@ export const toUserRoles = (roles: entities.Role[]): dto.UserRole[] =>
 /* -------------------------------------------------------------------------- */
 
 export const toSchoolDetails = (s: entities.School) => project<dto.SchoolDetails>(s, SCHOOL)
-export const toSchoolSummaries = (s: entities.School[]) => projectAll<dto.SchoolSummary>(s, SCHOOL)
+export const toSchoolSummaries = (s: entities.School[]) =>
+  projectAll<dto.SchoolSummary>(s, SCHOOL_SUMMARY)
 
 /* -------------------------------------------------------------------------- */
 /*                                    Users                                   */

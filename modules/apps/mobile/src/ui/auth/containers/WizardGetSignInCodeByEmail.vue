@@ -20,10 +20,10 @@ import { IonNote } from '@ionic/vue'
 import { useFluent } from 'fluent-vue'
 import { ref } from 'vue'
 
-import { useApi } from '@/app'
 import { AsyncButton } from '@/design'
 import { useConfig } from '@/shared'
 import { EmailInput, HelpMessage } from '@/ui/auth'
+import { useAuthClient } from '@/ui/auth/composables/useAuthClient'
 import { auth } from '@/usecases'
 import type { WizardGetSignInCodeByEmailEmits } from './types'
 
@@ -33,7 +33,7 @@ const emit = defineEmits<WizardGetSignInCodeByEmailEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
-const api = useApi()
+const { client } = useAuthClient()
 const config = useConfig()
 const fluent = useFluent()
 const email = ref(config.email.value)
@@ -46,7 +46,7 @@ async function onSignInClicked() {
   busy.value = true
   error.value = undefined
   try {
-    await auth.requestSignInCode(api, email.value)
+    await auth.requestSignInCode(client, email.value)
     config.email.value = email.value
     emit('complete')
   } catch {

@@ -1,4 +1,10 @@
-import type { GetProfileResponse, RefreshTokensResponse } from '@vidya/protocol'
+import type {
+  AckCursorRequest,
+  GetProfileResponse,
+  PullRequest,
+  PushRequest,
+  RefreshTokensResponse,
+} from '@vidya/protocol'
 
 import { FakeSyncServer } from '@/usecases/sync/__tests__/fakeSyncServer'
 
@@ -151,7 +157,7 @@ async function answer(
   token: string | null,
   init?: RequestInit,
 ): Promise<Response> {
-  const body = init?.body === undefined ? undefined : JSON.parse(String(init.body))
+  const body: unknown = init?.body === undefined ? undefined : JSON.parse(String(init.body))
 
   if (path === '/auth/refresh') {
     if (server.refreshRefused) return reply(401, {})
@@ -174,11 +180,18 @@ async function answer(
   return syncCall(server, path, body)
 }
 
-async function syncCall(server: ServerStub, path: string, body: never): Promise<Response> {
-  if (path === '/sync/pull') return reply(200, await server.sync.pull(body))
-  if (path === '/sync/push') return reply(200, await server.sync.push(body))
+/**
+ * The wire carries JSON, so the shape is asserted at this one boundary.
+ *
+ * The device's own request types are what the engine already builds; the cast
+ * is what a real server would do when it parses a body, and keeping it here
+ * means nothing above has to pretend the wire is typed.
+ */
+async function syncCall(server: ServerStub, path: string, body: unknown): Promise<Response> {
+  if (path === '/sync/pull') return reply(200, await server.sync.pull(body as PullRequest))
+  if (path === '/sync/push') return reply(200, await server.sync.push(body as PushRequest))
   if (path === '/sync/cursor') {
-    await server.sync.ackCursor(body)
+    await server.sync.ackCursor(body as AckCursorRequest)
     return reply(204, {})
   }
 

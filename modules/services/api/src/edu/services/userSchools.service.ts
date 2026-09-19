@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import * as domain from '@vidya/domain'
-import { Role, School, User } from '@vidya/entities'
-import { In, Repository } from 'typeorm'
+import { Enrollment, Role, School, User } from '@vidya/entities'
+import { EntityManager, In, Repository } from 'typeorm'
+
+/** The places a revocation takes back; a refusal was never a place to begin with. */
+const REVOCABLE: domain.EnrollmentStatus[] = ['pending', 'accepted']
 
 @Injectable()
 export class UserSchoolsService {
@@ -50,5 +53,53 @@ export class UserSchoolsService {
       user.roles.push(studentDefaultRole)
       await transactionalEntityManager.save(user)
     })
+  }
+
+  /**
+   * Take a user's membership of a school back, and everything it carried.
+   *
+   * A place on a course of the school outlives the role that granted it only on
+   * paper: the student would keep receiving its lessons with no school to hold
+   * them. So the roles and the enrolments go together, in one transaction —
+   * either the person is out of the school or nothing moved.
+   */
+  async removeUser(userId: domain.UserId, schoolId: domain.SchoolId): Promise<void> {
+    await this.schools.manager.transaction(async (manager) => {
+      await this.revokeRoles(manager, userId, schoolId)
+      await this.revokePlaces(manager, userId, schoolId)
+    })
+  }
+
+  private async revokeRoles(
+    manager: EntityManager,
+    userId: domain.UserId,
+    schoolId: domain.SchoolId,
+  ): Promise<void> {
+    const user = await manager.findOneOrFail(User, { where: { id: userId }, relations: ['roles'] })
+
+    user.roles = user.roles.filter((role) => role.schoolId !== schoolId)
+    await manager.save(user)
+  }
+
+  /**
+   * Saved one entity at a time on purpose: a bulk `UPDATE` moves the rows and
+   * reaches no device, because the journal is written by an entity subscriber
+   * and SQL that goes round it leaves the scope cursor walking past nothing.
+   */
+  private async revokePlaces(
+    manager: EntityManager,
+    userId: domain.UserId,
+    schoolId: domain.SchoolId,
+  ): Promise<void> {
+    const places = await manager.findBy(Enrollment, {
+      studentId: userId,
+      schoolId,
+      status: In(REVOCABLE),
+    })
+
+    for (const place of places) {
+      place.status = 'revoked'
+      await manager.save(place)
+    }
   }
 }

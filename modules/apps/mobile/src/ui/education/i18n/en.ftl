@@ -32,11 +32,14 @@ enrollment-pending = Request pending
 enrollment-pending-summary = The school will look at it shortly.
 enrollment-declined = Request declined
 enrollment-declined-summary = No reason was given.
+enrollment-revoked = Place withdrawn
+enrollment-revoked-summary = The school has ended your enrolment on this course. Everything already downloaded stays readable.
 
 # Enrolment status in a list
 enrollment-status-pending = Pending
 enrollment-status-accepted = Accepted
 enrollment-status-declined = Declined
+enrollment-status-revoked = Withdrawn
 enrollment-no-group-yet = Waiting for a group
 
 # Lesson

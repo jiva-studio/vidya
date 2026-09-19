@@ -18,21 +18,49 @@ import './lottie.css'
 import { IonicVue } from '@ionic/vue'
 import { createApp } from 'vue'
 
-import { useSession } from '@/app'
+import { openDevice, showStartupFailure, startDeviceSync, useConnections, useSession } from '@/app'
+import type { IDatabase } from '@/ports'
 
 import App from './App.vue'
 import { fluent } from './i18n'
 import router from './router'
 
-async function createAndRunApp() {
-  // The router sends an unauthenticated visitor to sign-in, so the stored
-  // session has to be in hand before the first route is resolved.
+const ROOT = '#app'
+
+async function createAndRunApp(db: IDatabase) {
+  // The router sends an unauthenticated visitor to sign-in, and the engines
+  // are started per connection, so both have to be in hand before routing.
   await useSession().restore()
+  await useConnections().restore()
 
   const app = createApp(App).use(IonicVue).use(router).use(fluent)
 
   await router.isReady()
-  app.mount('#app')
+  app.mount(ROOT)
+
+  // After the mount, deliberately: what is already on the device must not wait
+  // behind a network call.
+  await startDeviceSync(db)
 }
 
-createAndRunApp()
+/**
+ * The schema comes before the first screen: every screen reads from the device,
+ * and one rendered against a half-created database shows an empty list that a
+ * student cannot tell from having no courses. A database that cannot be opened
+ * at all is the one case with nothing to show, and it gets a screen saying so.
+ */
+async function start() {
+  let db: IDatabase
+
+  try {
+    db = await openDevice()
+  } catch (error) {
+    console.error('the device database could not be opened', error)
+    showStartupFailure(ROOT)
+    return
+  }
+
+  await createAndRunApp(db)
+}
+
+void start()

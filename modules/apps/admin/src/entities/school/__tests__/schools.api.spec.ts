@@ -34,15 +34,15 @@ describe('schoolApi', () => {
     expect(transport.calls[0]).toMatchObject({ method: 'GET', path: '/edu/schools/school-1' })
   })
 
-  it('creates a school with the only field the schema holds', async () => {
+  it('creates a school, leaving the fields the form does not collect empty', async () => {
     const { transport, api } = build()
 
-    await api.create({ name: 'Second' })
+    await api.create({ name: 'Second', logoUrl: null, description: null })
 
     expect(transport.calls[0]).toEqual({
       method: 'POST',
       path: '/edu/schools',
-      body: { name: 'Second' },
+      body: { name: 'Second', logoUrl: null, description: null },
     })
   })
 

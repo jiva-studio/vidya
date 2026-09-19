@@ -4,7 +4,7 @@ import type { IDatabase } from '@/ports'
 
 import { listTables, openTestDatabase } from '../testing'
 
-/** Every table the first migration declares, plus the bookkeeping one. */
+/** Every table the device migrations declare, plus the bookkeeping one. */
 const ALL_TABLES = [
   'block_states',
   'courses',
@@ -14,6 +14,7 @@ const ALL_TABLES = [
   'lessons',
   'migrations',
   'outbox',
+  'schools',
   'sync_doc_hlc',
   'sync_scopes',
   'sync_state',
@@ -27,6 +28,7 @@ const SYNCED_TABLES = [
   'homework',
   'lesson_versions',
   'lessons',
+  'schools',
 ]
 
 interface ColumnRow {

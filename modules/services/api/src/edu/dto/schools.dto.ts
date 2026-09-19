@@ -1,7 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
-import { IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator'
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Models                                   */
@@ -13,6 +21,12 @@ export class SchoolDetails implements protocol.SchoolDetails {
 
   @ApiProperty({ example: 'name' })
   name: string
+
+  @ApiPropertyOptional({ example: 'https://cdn.example.org/logo.png' })
+  logoUrl: string | null
+
+  @ApiPropertyOptional({ example: 'Scripture, kirtan and practice.' })
+  description: string | null
 }
 
 export class SchoolSummary implements protocol.SchoolSummary {
@@ -21,6 +35,9 @@ export class SchoolSummary implements protocol.SchoolSummary {
 
   @ApiProperty({ example: 'name' })
   name: string
+
+  @ApiPropertyOptional({ example: 'https://cdn.example.org/logo.png' })
+  logoUrl: string | null
 }
 
 /* -------------------------------------------------------------------------- */
@@ -50,8 +67,10 @@ export class GetSchoolsResponse implements protocol.GetSchoolsResponse {
 /* -------------------------------------------------------------------------- */
 
 export class CreateSchoolRequest implements protocol.CreateSchoolRequest {
-  constructor(options?: { name?: string }) {
+  constructor(options?: { name?: string; logoUrl?: string; description?: string }) {
     this.name = options?.name
+    this.logoUrl = options?.logoUrl ?? null
+    this.description = options?.description ?? null
   }
 
   @ApiProperty({ example: 'name' })
@@ -60,6 +79,17 @@ export class CreateSchoolRequest implements protocol.CreateSchoolRequest {
   @MinLength(1)
   @MaxLength(32)
   name: string
+
+  @ApiPropertyOptional({ example: 'https://cdn.example.org/logo.png' })
+  @IsUrl()
+  @IsOptional()
+  logoUrl: string | null
+
+  @ApiPropertyOptional({ example: 'Scripture, kirtan and practice.' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(1024)
+  description: string | null
 }
 
 export class CreateSchoolResponse implements protocol.CreateSchoolResponse {
@@ -72,8 +102,10 @@ export class CreateSchoolResponse implements protocol.CreateSchoolResponse {
 /* -------------------------------------------------------------------------- */
 
 export class UpdateSchoolRequest implements protocol.UpdateSchoolRequest {
-  constructor(options?: { name?: string }) {
+  constructor(options?: { name?: string; logoUrl?: string; description?: string }) {
     this.name = options?.name
+    this.logoUrl = options?.logoUrl
+    this.description = options?.description
   }
 
   @ApiPropertyOptional({ example: 'name' })
@@ -84,6 +116,17 @@ export class UpdateSchoolRequest implements protocol.UpdateSchoolRequest {
   })
   @MaxLength(32)
   name?: string
+
+  @ApiPropertyOptional({ example: 'https://cdn.example.org/logo.png' })
+  @IsUrl()
+  @IsOptional()
+  logoUrl?: string | null
+
+  @ApiPropertyOptional({ example: 'Scripture, kirtan and practice.' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(1024)
+  description?: string | null
 }
 
 export class UpdateSchoolResponse extends SchoolDetails implements protocol.UpdateSchoolResponse {}

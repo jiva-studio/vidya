@@ -32,6 +32,12 @@
       "description": "A pull page mixing two scopes: the course content going down and the student own rows. hasMore is true, so cursors carry the position each scope reached."
     },
     {
+      "file": "pull-school-scope.json",
+      "name": "pull-school-scope",
+      "endpoint": "POST /sync/pull",
+      "description": "A student who holds a role in a school but is enrolled on nothing. The school scope carries the school itself and its courses; no lesson, version or section rides it, because content belongs to the course scope and the student has no course scope at all."
+    },
+    {
       "file": "push-mixed.json",
       "name": "push-mixed",
       "endpoint": "POST /sync/push",
