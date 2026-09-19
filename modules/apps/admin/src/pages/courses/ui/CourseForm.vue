@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { CourseLearningType } from '@vidya/domain'
-import { FormActions, FormField, Input, RadioGroup, Textarea } from '@vidya/ui'
+import { FormField, FormFooter, Input, RadioGroup, Textarea } from '@vidya/ui'
 import type { RadioOption } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
@@ -113,7 +113,7 @@ function nameErrorText(): string | undefined {
       />
     </FormField>
 
-    <FormActions
+    <FormFooter
       :submit-label="props.submitLabel ?? $t('course-form-submit')"
       :cancel-label="$t('course-form-cancel')"
       :busy="props.busy"

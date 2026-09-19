@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { GroupId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
-import { ErrorState, PageHeader, Skeleton } from '@vidya/ui'
+import { FailureState, PageHeader, Skeleton } from '@vidya/ui'
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -64,7 +64,7 @@ function idFromRoute(): GroupId | undefined {
       <Skeleton shape="text" :lines="2" />
       <Skeleton shape="block" :lines="4" />
     </div>
-    <ErrorState
+    <FailureState
       v-else-if="loadFailed"
       :title="$t('state-error-title')"
       :description="$t(form.error.value ?? 'group-load-failed')"

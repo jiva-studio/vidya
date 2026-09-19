@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { HomeworkId } from '@vidya/domain'
 import type { HomeworkDetails } from '@vidya/protocol'
-import { Breadcrumbs, Button, ErrorState, PageHeader, Skeleton } from '@vidya/ui'
+import { Breadcrumbs, Button, FailureState, PageHeader, Skeleton } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -135,7 +135,7 @@ function advance(id: HomeworkId, updated: HomeworkDetails) {
       </template>
     </PageHeader>
     <Skeleton v-if="details.loading.value" shape="block" :lines="6" />
-    <ErrorState
+    <FailureState
       v-else-if="errorText"
       :title="$t('state-error-title')"
       :description="errorText"

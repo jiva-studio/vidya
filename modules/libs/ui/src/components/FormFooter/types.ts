@@ -1,17 +1,17 @@
-export type FormActionsAlign = 'start' | 'end' | 'between'
+export type FormFooterAlign = 'start' | 'end' | 'between'
 
-export interface FormActionsProps {
+export interface FormFooterProps {
   submitLabel?: string
   cancelLabel?: string
   busy?: boolean
   disabled?: boolean
   destructive?: boolean
-  align?: FormActionsAlign
+  align?: FormFooterAlign
   error?: string
   class?: string
 }
 
-export interface FormActionsEmits {
+export interface FormFooterEmits {
   submit: []
   cancel: []
 }

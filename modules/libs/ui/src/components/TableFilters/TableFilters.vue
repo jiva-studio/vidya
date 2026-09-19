@@ -12,13 +12,13 @@ import {
   searchIconClasses,
   searchInputClasses,
   searchWrapClasses,
-  toolbarClasses,
+  wrapperClasses,
 } from './styles'
-import type { TableToolbarEmits, TableToolbarProps } from './types'
+import type { TableFiltersEmits, TableFiltersProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<TableToolbarProps>(), {
+const props = withDefaults(defineProps<TableFiltersProps>(), {
   search: '',
   searchPlaceholder: 'Поиск...',
   searchLabel: 'Поиск по списку',
@@ -30,7 +30,7 @@ const props = withDefaults(defineProps<TableToolbarProps>(), {
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<TableToolbarEmits>()
+const emit = defineEmits<TableFiltersEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -65,7 +65,7 @@ function onClear() {
 </script>
 
 <template>
-  <div :class="cn(toolbarClasses, props.class)">
+  <div :class="cn(wrapperClasses, props.class)">
     <div :class="searchWrapClasses">
       <Search :class="searchIconClasses" />
       <Input

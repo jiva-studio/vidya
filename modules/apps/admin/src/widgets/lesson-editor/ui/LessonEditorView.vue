@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { LessonContent } from '@vidya/domain'
-import { ErrorState, Skeleton } from '@vidya/ui'
+import { FailureState, Skeleton } from '@vidya/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { contentProblems, useLessonContentEditor } from '@/features/edit-lesson-content'
@@ -138,7 +138,7 @@ async function store(): Promise<boolean> {
     />
     <ContentProblemsNotice v-if="blocked" :problems="problems" />
     <Skeleton v-if="versionDoc.loading.value" shape="block" />
-    <ErrorState
+    <FailureState
       v-else-if="versionDoc.error.value"
       :title="$t('state-error-title')"
       :description="$t(versionDoc.error.value)"

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { RoleId } from '@vidya/domain'
 import type { TableColumn, TableRowData } from '@vidya/ui'
-import { Button, PageHeader, Table, TableToolbar } from '@vidya/ui'
+import { Button, PageHeader, Table, TableFilters } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -80,7 +80,7 @@ function asRole(row: TableRowData): RoleRow {
         <Button v-if="canCreate" @click="onCreate">{{ $t('roles-create') }}</Button>
       </template>
     </PageHeader>
-    <TableToolbar
+    <TableFilters
       v-if="roles.rows.value.length >= 10 || search"
       v-model:search="search"
       :search-label="$t('roles-title')"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Combobox, FormActions, FormField, Input, Textarea } from '@vidya/ui'
+import { Combobox, FormField, FormFooter, Input, Textarea } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
 
@@ -115,7 +115,7 @@ function errorFor(field: 'name' | 'courseId', key: string): string | undefined {
       </template>
     </FormField>
 
-    <FormActions
+    <FormFooter
       :submit-label="$t('group-form-submit')"
       :cancel-label="$t('group-form-cancel')"
       :busy="props.busy"

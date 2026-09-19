@@ -1,4 +1,4 @@
-export const sectionClasses = ['flex flex-col gap-[var(--space-4)]']
+export const groupClasses = ['flex flex-col gap-[var(--space-4)]']
 
 export const headerClasses = ['flex flex-col gap-[var(--space-1)]']
 

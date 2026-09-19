@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PermissionKey } from '@vidya/domain'
-import { FormActions, PageHeader } from '@vidya/ui'
+import { FormFooter, PageHeader } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -125,7 +125,7 @@ async function send(): Promise<void> {
         :busy="busy"
         :readonly="!canEdit"
       />
-      <FormActions
+      <FormFooter
         :submit-label="$t('action-save')"
         :cancel-label="$t('action-cancel')"
         :busy="busy"

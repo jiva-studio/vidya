@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { RoleId } from '@vidya/domain'
-import { Badge, Checkbox, EmptyState, ErrorState, Skeleton } from '@vidya/ui'
+import { Badge, Checkbox, EmptyState, FailureState, Skeleton } from '@vidya/ui'
 import { computed, onMounted } from 'vue'
 
 import type { RoleRow } from '@/entities/role'
@@ -54,7 +54,7 @@ function onToggle(roleId: RoleId, checked: boolean) {
 <template>
   <section :class="sectionClasses">
     <Skeleton v-if="roles.loading.value" shape="block" :lines="3" />
-    <ErrorState
+    <FailureState
       v-else-if="loadFailed"
       :title="$t('state-error-title')"
       :description="$t(roles.error.value ?? 'state-error')"

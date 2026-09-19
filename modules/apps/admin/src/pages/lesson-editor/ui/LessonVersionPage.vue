@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { LessonId, LessonVersionId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
-import { Breadcrumbs, Button, ErrorState, PageHeader, Skeleton } from '@vidya/ui'
+import { Breadcrumbs, Button, FailureState, PageHeader, Skeleton } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -62,7 +62,7 @@ function onRetry() {
       </template>
     </PageHeader>
     <Skeleton v-if="document.loading.value" shape="block" :lines="6" />
-    <ErrorState
+    <FailureState
       v-else-if="document.error.value"
       :title="$t('state-error-title')"
       :description="$t(document.error.value)"

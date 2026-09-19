@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PermissionKey } from '@vidya/domain'
-import { FormField, FormSection, Input, Textarea } from '@vidya/ui'
+import { FieldGroup, FormField, Input, Textarea } from '@vidya/ui'
 
 import { PermissionsPicker } from '@/entities/role'
 
@@ -59,12 +59,12 @@ function onPermissions(value: PermissionKey[]) {
       />
     </template>
   </FormField>
-  <FormSection :title="$t('roles-form-permissions')">
+  <FieldGroup :title="$t('roles-form-permissions')">
     <PermissionsPicker
       :model-value="props.permissions"
       :disabled="props.busy"
       :readonly="props.readonly"
       @update:model-value="onPermissions"
     />
-  </FormSection>
+  </FieldGroup>
 </template>

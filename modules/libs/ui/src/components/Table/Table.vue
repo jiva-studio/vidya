@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import EmptyState from '../EmptyState'
-import ErrorState from '../ErrorState'
+import FailureState from '../FailureState'
 
 import TableHead from './TableHead.vue'
 import TableSkeleton from './TableSkeleton.vue'
@@ -52,7 +52,7 @@ function keyOf(row: TableRowData, index: number): string {
 </script>
 
 <template>
-  <ErrorState
+  <FailureState
     v-if="props.error"
     :title="props.errorTitle ?? props.error"
     :description="props.errorTitle ? props.error : undefined"

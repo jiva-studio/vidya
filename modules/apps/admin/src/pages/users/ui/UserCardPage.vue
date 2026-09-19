@@ -3,8 +3,8 @@ import type { UserDetails } from '@vidya/protocol'
 import {
   Avatar,
   Breadcrumbs,
-  ErrorState,
-  FormSection,
+  FailureState,
+  FieldGroup,
   PageHeader,
   Separator,
   Skeleton,
@@ -90,7 +90,7 @@ async function load(): Promise<void> {
       </template>
     </PageHeader>
     <Skeleton v-if="loading" shape="block" :lines="4" />
-    <ErrorState
+    <FailureState
       v-else-if="error"
       :title="$t('state-error-title')"
       :description="errorText ?? $t('state-error')"
@@ -101,9 +101,9 @@ async function load(): Promise<void> {
       <UserDetailsForm v-if="canUpdate" :user="user" />
       <UserFacts v-else :user="user" />
       <Separator />
-      <FormSection :title="$t('users-roles-title')">
+      <FieldGroup :title="$t('users-roles-title')">
         <UserRolesSelector :user-id="user.id" />
-      </FormSection>
+      </FieldGroup>
     </div>
   </section>
 </template>

@@ -1,4 +1,4 @@
-export interface TableToolbarProps {
+export interface TableFiltersProps {
   search?: string
   searchPlaceholder?: string
   searchLabel?: string
@@ -9,7 +9,7 @@ export interface TableToolbarProps {
   class?: string
 }
 
-export interface TableToolbarEmits {
+export interface TableFiltersEmits {
   'update:search': [value: string]
   clear: []
 }

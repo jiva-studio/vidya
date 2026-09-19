@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FormActions, FormField, Input } from '@vidya/ui'
+import { FormField, FormFooter, Input } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
 
@@ -68,7 +68,7 @@ function onCancel() {
         <Input :id="field.id" v-model="email" name="email" type="email" :disabled="busy" />
       </template>
     </FormField>
-    <FormActions
+    <FormFooter
       :submit-label="$t('action-save')"
       :cancel-label="$t('action-cancel')"
       :busy="busy"

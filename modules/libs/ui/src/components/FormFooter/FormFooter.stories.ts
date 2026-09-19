@@ -1,6 +1,6 @@
-import FormActions from './FormActions.vue'
+import FormFooter from './FormFooter.vue'
 
-export default { title: 'Input/FormActions', component: FormActions }
+export default { title: 'Input/FormFooter', component: FormFooter }
 
 export const Default = { args: {} }
 export const Busy = { args: { busy: true } }

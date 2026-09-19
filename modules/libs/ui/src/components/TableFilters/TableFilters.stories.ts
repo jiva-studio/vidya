@@ -1,17 +1,17 @@
 import Button from '../Button'
-import TableToolbar from './TableToolbar.vue'
+import TableFilters from './TableFilters.vue'
 
 const render = (args: Record<string, unknown>) => ({
-  components: { TableToolbar, Button },
+  components: { TableFilters, Button },
   setup: () => ({ args }),
   template: `
-    <TableToolbar v-bind="args">
+    <TableFilters v-bind="args">
       <template #actions><Button size="sm">New course</Button></template>
-    </TableToolbar>
+    </TableFilters>
   `,
 })
 
-export default { title: 'Data/TableToolbar', component: TableToolbar }
+export default { title: 'Data/TableFilters', component: TableFilters }
 
 export const Default = { render, args: {} }
 export const Searching = { render, args: { search: 'sanskrit' } }

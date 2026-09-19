@@ -4,17 +4,17 @@ import { TriangleAlert } from 'lucide-vue-next'
 import Button from '../Button'
 import { cn } from '../../lib/utils'
 import { descriptionClasses, iconClasses, titleClasses, wrapperClasses } from './styles'
-import type { ErrorStateEmits, ErrorStateProps } from './types'
+import type { FailureStateEmits, FailureStateProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<ErrorStateProps>(), {
+const props = withDefaults(defineProps<FailureStateProps>(), {
   class: undefined,
 })
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<ErrorStateEmits>()
+const emit = defineEmits<FailureStateEmits>()
 
 /* -------------------------------- Handlers -------------------------------- */
 

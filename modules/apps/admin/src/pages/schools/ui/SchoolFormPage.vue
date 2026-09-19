@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FormActions, PageHeader } from '@vidya/ui'
+import { FormFooter, PageHeader } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -93,7 +93,7 @@ async function send(): Promise<void> {
     <PageHeader :title="title" />
     <form :class="formClasses" @submit.prevent="onSubmit">
       <SchoolNameField v-model="name" :error="nameError" :disabled="busy" />
-      <FormActions
+      <FormFooter
         :submit-label="$t('action-save')"
         :cancel-label="$t('action-cancel')"
         :busy="busy"

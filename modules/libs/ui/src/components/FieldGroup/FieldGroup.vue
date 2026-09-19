@@ -3,15 +3,15 @@ import { cn } from '../../lib/utils'
 import {
   bodyClasses,
   descriptionClasses,
+  groupClasses,
   headerClasses,
-  sectionClasses,
   titleClasses,
 } from './styles'
-import type { FormSectionProps } from './types'
+import type { FieldGroupProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<FormSectionProps>(), {
+const props = withDefaults(defineProps<FieldGroupProps>(), {
   title: undefined,
   description: undefined,
   class: undefined,
@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<FormSectionProps>(), {
 </script>
 
 <template>
-  <section :class="cn(sectionClasses, props.class)">
+  <section :class="cn(groupClasses, props.class)">
     <header v-if="props.title || props.description" :class="headerClasses">
       <h3 v-if="props.title" :class="titleClasses">{{ props.title }}</h3>
       <p v-if="props.description" :class="descriptionClasses">{{ props.description }}</p>

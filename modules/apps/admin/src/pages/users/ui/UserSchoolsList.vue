@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { SchoolId } from '@vidya/domain'
-import { Badge, EmptyState, ErrorState, Skeleton } from '@vidya/ui'
+import { Badge, EmptyState, FailureState, Skeleton } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 
@@ -67,7 +67,7 @@ function nameOf(id: SchoolId): string {
 
 <template>
   <Skeleton v-if="loading" shape="text" :lines="2" />
-  <ErrorState
+  <FailureState
     v-else-if="error"
     :title="$t('state-error-title')"
     :description="errorText ?? $t('state-error')"

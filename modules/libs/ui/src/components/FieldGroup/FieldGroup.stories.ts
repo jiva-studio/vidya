@@ -1,20 +1,20 @@
 import FormField from '../FormField'
 import Input from '../Input'
-import FormSection from './FormSection.vue'
+import FieldGroup from './FieldGroup.vue'
 
 const render = (args: Record<string, unknown>) => ({
-  components: { FormSection, FormField, Input },
+  components: { FieldGroup, FormField, Input },
   setup: () => ({ args }),
   template: `
-    <FormSection v-bind="args">
+    <FieldGroup v-bind="args">
       <FormField label="Course name" v-slot="field">
         <Input :id="field.id" />
       </FormField>
-    </FormSection>
+    </FieldGroup>
   `,
 })
 
-export default { title: 'Input/FormSection', component: FormSection }
+export default { title: 'Input/FieldGroup', component: FieldGroup }
 
 export const Default = { render, args: { title: 'General' } }
 export const WithDescription = {

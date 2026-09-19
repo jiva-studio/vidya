@@ -1,6 +1,6 @@
 import { cva } from 'class-variance-authority'
 
-export const actionsVariants = cva(
+export const footerVariants = cva(
   [
     'flex flex-wrap items-center gap-[var(--space-2)]',
     'pt-[var(--space-4)] border-t border-[var(--color-border)]',

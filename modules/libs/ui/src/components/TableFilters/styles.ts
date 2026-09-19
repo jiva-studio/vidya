@@ -1,4 +1,4 @@
-export const toolbarClasses = [
+export const wrapperClasses = [
   'w-full flex flex-wrap items-center gap-[var(--space-2)]',
   'pb-[var(--space-3)]',
 ]

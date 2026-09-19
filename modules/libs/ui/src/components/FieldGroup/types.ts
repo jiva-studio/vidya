@@ -1,4 +1,4 @@
-export interface FormSectionProps {
+export interface FieldGroupProps {
   title?: string
   description?: string
   class?: string

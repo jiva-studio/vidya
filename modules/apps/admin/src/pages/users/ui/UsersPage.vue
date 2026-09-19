@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { UserId } from '@vidya/domain'
 import type { TableColumn, TableRowData } from '@vidya/ui'
-import { PageHeader, Table, TableToolbar } from '@vidya/ui'
+import { PageHeader, Table, TableFilters } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -62,7 +62,7 @@ function asUser(row: TableRowData): UserRow {
 <template>
   <section :class="sectionClasses">
     <PageHeader :title="$t('users-title')" :description="$t('users-description')" />
-    <TableToolbar
+    <TableFilters
       v-if="users.rows.value.length >= 10 || search"
       v-model:search="search"
       :search-label="$t('users-title')"

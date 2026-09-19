@@ -4,9 +4,9 @@ import { asId } from '@vidya/domain'
 import type { SelectOption } from '@vidya/ui'
 import {
   EmptyState,
-  ErrorState,
-  FormActions,
-  FormSection,
+  FailureState,
+  FieldGroup,
+  FormFooter,
   PageHeader,
   Separator,
   Skeleton,
@@ -122,7 +122,7 @@ async function load(): Promise<void> {
   <section :class="pageClasses">
     <PageHeader :title="$t('schools-settings-title')" />
     <Skeleton v-if="loading" shape="block" :lines="4" />
-    <ErrorState
+    <FailureState
       v-else-if="loadFailed"
       :title="$t('state-error-title')"
       :description="errorText ?? $t('state-error')"
@@ -137,15 +137,15 @@ async function load(): Promise<void> {
     <form v-else :class="formClasses" @submit.prevent="onSubmit">
       <DefaultRoleField v-model="defaultStudentRoleId" :options="options" />
       <Separator />
-      <FormSection :title="$t('schools-settings-student-roles')">
+      <FieldGroup :title="$t('schools-settings-student-roles')">
         <StudentRolesList
           :roles="available"
           :chosen="[...chosen]"
           :disabled="busy"
           @toggle="onToggle"
         />
-      </FormSection>
-      <FormActions
+      </FieldGroup>
+      <FormFooter
         :submit-label="$t('action-save')"
         :cancel-label="$t('action-cancel')"
         :busy="busy"

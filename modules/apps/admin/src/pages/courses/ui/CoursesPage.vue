@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, PageHeader, TableToolbar } from '@vidya/ui'
+import { Button, PageHeader, TableFilters } from '@vidya/ui'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -56,7 +56,7 @@ function onClear() {
         <Button v-if="canCreate" @click="onCreate">{{ $t('courses-create') }}</Button>
       </template>
     </PageHeader>
-    <TableToolbar
+    <TableFilters
       v-if="courses.items.value.length >= 10 || search"
       v-model:search="search"
       :search-label="$t('courses-title')"
