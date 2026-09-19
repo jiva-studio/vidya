@@ -70,8 +70,13 @@ case "$MODE" in
     # `.vue` is absent on purpose. Stryker instruments a component with local
     # counters, and Vue refuses a `defineProps` that reads a local, so a
     # component written the way this project writes them cannot be compiled once
-    # it is instrumented. Components are defended by their tests and by the
-    # hand-mutation the process asks for, not by a score.
+    # it is instrumented.
+    #
+    # The front-end packages carry no config at all for a second reason: the
+    # vitest runner does not drive vitest 5 — it reports a fraction of a test
+    # per mutant and every mutant survives. A score from it would be a lie, so
+    # `@vidya/admin` and `@vidya/ui` are measured by the hand-mutation the
+    # process asks for until the runner catches up.
     CHANGED="$(
       {
         git -C "$REPO_ROOT" diff --name-only --diff-filter=d "$BASE...HEAD" -- "modules/$LOCATION/src"
