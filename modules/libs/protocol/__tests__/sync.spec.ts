@@ -1,11 +1,11 @@
 /**
- * Conformance over the wire fixtures — ….
+ * Conformance over the wire fixtures.
  *
  * The fixtures in `__fixtures__/sync/` are the contract in worked examples.
- * This suite proves they match the types in `sync.ts`; the server lane replays
- * the same files through HTTP and the device lane through its fake client, so a
- * contract that drifts on one side is caught here rather than when the parts
- * are first put together.
+ * This suite proves they match the types in `sync.ts`; the server replays the
+ * same files through HTTP and the device through its fake client, so a contract
+ * that drifts on one side is caught here rather than when the two are first put
+ * together.
  */
 
 import { compareHlcString, isIsoDateTime, parseHlc } from '@vidya/domain'
@@ -344,7 +344,7 @@ describe('the HLC on the wire is the HLC in the domain', () => {
     expect(parseHlc(withColons?.hlc ?? '').deviceId).toBe('a:b:c')
   })
 
-  // Д-17: every instant is UTC, milliseconds, always `Z`.
+  // Every instant is UTC, milliseconds, always `Z`.
   it('carries every instant as a UTC ISO timestamp', () => {
     const instants = fixtures.flatMap(({ body }) => collectInstants(body))
 

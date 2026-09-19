@@ -1,7 +1,7 @@
 {
   "name": "request-errors",
   "endpoint": "POST /sync/pull",
-  "description": "The failures that are not per-row. Too many scopes is refused with a code rather than answered with a silently truncated list (Д-20).",
+  "description": "The failures that are not per-row. Too many scopes is refused with a code rather than answered with a silently truncated list.",
   "cases": [
     {
       "code": "tooManyScopes",

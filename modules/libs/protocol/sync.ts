@@ -1,19 +1,12 @@
 /**
  * The sync wire contract: `pull`, `push` and `cursor`.
  *
- * Frozen before the work split into lanes, because the server and the device
- * are written at the same time and nothing else keeps them speaking the same
- * protocol. It is not Lectorium's contract: that one is snake_case, mirrors Go
- * structs, and answers a stale push with `conflicts` and a `master` row. Ours
- * is camelCase like the rest of this API, and answers per row — the writing
- * sides are split, so there is nothing to merge and nothing to hand back.
- *
  * Three things a reader should not have to discover by experiment:
  *
  * - **The read position is a map, not a number.** A client keeps one position
  *   per scope. A course they have just been enrolled on is simply a scope
- *   standing at `0`, and its history arrives through an ordinary pull. **There
- *   is no backfill endpoint** and no plan for one.
+ *   standing at `0`, and its history arrives through an ordinary pull; there is
+ *   no backfill endpoint.
  * - **A push is answered row by row.** `results` has the length of `changes`
  *   and the same order, and every element is either accepted with the HLC the
  *   server stored, or refused with a reason. A refusal never rolls back its
@@ -23,8 +16,8 @@
  *   always `Z`. HLCs carry unix milliseconds, which are UTC by construction. A
  *   local time anywhere here would reorder rows for a traveller.
  *
- * Changing this file is not a one-lane decision: the fixtures under
- * `__fixtures__/sync/` are part of the contract and move with it.
+ * The fixtures under `__fixtures__/sync/` are part of this contract and move
+ * with it.
  */
 
 import * as domain from '@vidya/domain'
@@ -249,18 +242,15 @@ export type PushAccepted = {
    * The id the server actually wrote under, present only when it differs from
    * `docId`.
    *
-   * A device generates the id for work it writes offline, so two devices of one
-   * student can hand in the same section — or the same block — under two ids.
-   * The table's key is the natural one (`enrolment`, `version`, `section`), so
-   * the second push is written onto the row the first created, and the HLC
-   * decides the text as it is meant to. Without this field the answer named the
-   * id that was *sent*: the second device kept a local row the server has never
-   * heard of, which no pull can ever carry and no tombstone can ever remove,
-   * while the winning row arrived beside it as a second answer to one section.
+   * A device names the work it writes offline, so two devices of one student can
+   * hand in the same section under two ids. The table's key is the natural one
+   * (`enrolment`, `version`, `section`), so the second push lands on the row the
+   * first created.
    *
    * Absent means "written under the id you sent". Present means "your row and
    * mine are the same row, and this is its name": the device renames its local
-   * row and its outbox entries to this id.
+   * row and its outbox entries to this id, instead of keeping one no pull
+   * carries and no tombstone removes.
    */
   serverDocId?: string
 }

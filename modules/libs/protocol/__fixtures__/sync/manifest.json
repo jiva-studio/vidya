@@ -11,7 +11,7 @@
       "file": "hlc-format.json",
       "name": "hlc-format",
       "endpoint": "n/a",
-      "description": "The HLC as it travels: physical unix milliseconds zero-padded to 15 digits, counter to 5, then the device id, which may itself contain colons. The padding is the point — the server compares the column as text, and that order has to be the domain order. Times beside them are UTC ISO 8601 with milliseconds (Д-17)."
+      "description": "The HLC as it travels: physical unix milliseconds zero-padded to 15 digits, counter to 5, then the device id, which may itself contain colons. The padding is the point — the server compares the column as text, and that order has to be the domain order. Times beside them are UTC ISO 8601 with milliseconds."
     },
     {
       "file": "optional-fields.json",
@@ -59,7 +59,7 @@
       "file": "request-errors.json",
       "name": "request-errors",
       "endpoint": "POST /sync/pull",
-      "description": "The failures that are not per-row. Too many scopes is refused with a code rather than answered with a silently truncated list (Д-20)."
+      "description": "The failures that are not per-row. Too many scopes is refused with a code rather than answered with a silently truncated list."
     }
   ]
 }
