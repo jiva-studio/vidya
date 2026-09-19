@@ -31,11 +31,7 @@ describe('an answer arriving after the editor moved on', () => {
     expect(editor.dirty.value).toBe(true)
   })
 
-  // DEFECT (reviewer): `markSaved` assigns the snapshot's revision without
-  // comparing it to the one already recorded, so an answer that outlived the
-  // document it belonged to drags `savedRevision` backwards and reports a
-  // freshly opened version as carrying unsaved work.
-  it.fails('leaves a version opened mid-flight clean when the old answer lands', () => {
+  it('leaves a version opened mid-flight clean when the old answer lands', () => {
     const editor = useLessonContentEditor()
 
     editor.load(doc('First'))

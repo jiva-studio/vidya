@@ -35,18 +35,12 @@ describe('an authority smuggled into a relative path', () => {
     expect(checkBlockUrl('upload', '//evil.example/x')).toBe('url-malformed')
   })
 
-  // DEFECT (reviewer): `isSameOriginPath` guards `//` alone. The URL parser
-  // treats a backslash as a slash for http(s), so `/\host/x` resolves to
-  // `https://host/x` — another origin, stored as an upload.
-  it.fails('refuses a backslash where the second slash of an authority would be', () => {
+  it('refuses a backslash where the second slash of an authority would be', () => {
     expect(resolved('/\\evil.example/x')).toBe('https://evil.example')
     expect(checkBlockUrl('upload', '/\\evil.example/x')).toBe('url-malformed')
   })
 
-  // DEFECT (reviewer): the URL parser strips tabs and newlines before parsing,
-  // so `/<TAB>/host/x` is `//host/x` by the time anything loads it, while the
-  // string the check reads does not start with `//`.
-  it.fails('refuses an authority split apart by a stripped control character', () => {
+  it('refuses an authority split apart by a stripped control character', () => {
     expect(resolved('/\t/evil.example/x')).toBe('https://evil.example')
     expect(checkBlockUrl('upload', '/\t/evil.example/x')).toBe('url-malformed')
   })

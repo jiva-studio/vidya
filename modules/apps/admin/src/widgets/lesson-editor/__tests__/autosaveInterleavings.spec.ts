@@ -28,10 +28,7 @@ const controllable = () => {
 }
 
 describe('what publishing is told after a save has already failed', () => {
-  // DEFECT (reviewer): `flush` answers `true` whenever nothing is waiting,
-  // without looking at how the last attempt ended. The refused document is
-  // still only in the tab, and the publish that awaited this answer proceeds.
-  it.fails('refuses to report success once the document was refused', async () => {
+  it('refuses to report success once the document was refused', async () => {
     const clock = manualClock()
     const server = controllable()
     const autosave = useAutosave(server.save, { clock })

@@ -1,5 +1,15 @@
-import type { AudioBlock, LessonBlock, QuizBlock, TextBlock, VideoBlock } from '@vidya/domain'
+import type {
+  AudioBlock,
+  BlockSource,
+  ImageBlock,
+  LessonBlock,
+  QuizBlock,
+  TextBlock,
+  VideoBlock,
+} from '@vidya/domain'
 import type { Ref } from 'vue'
+
+import type { MediaKind } from '@/entities/media'
 
 import type { BlockType, MoveDirection } from '../types'
 
@@ -114,6 +124,76 @@ export interface TextBlockEditorEmits {
   update: [block: TextBlock]
   slash: []
   escape: []
+}
+
+/**
+ * The three blocks that hold a file. They differ in what they accept and in
+ * what plays them, and in nothing else, so one editor serves all three.
+ */
+export type MediaBlock = ImageBlock | VideoBlock | AudioBlock
+
+export interface MediaBlockEditorProps extends Frozen {
+  block: MediaBlock
+  kind: MediaKind
+}
+
+export interface MediaBlockEditorEmits {
+  update: [block: MediaBlock]
+}
+
+export interface MediaBlockEditorEmptyProps extends Frozen {
+  kind: MediaKind
+  accept: string
+
+  /** The link being typed into the block, and what the model makes of it. */
+  link: string
+  source?: BlockSource
+}
+
+export interface MediaBlockEditorEmptyEmits {
+  files: [files: File[]]
+  refused: []
+  library: []
+  'update:link': [link: string]
+  submit: []
+}
+
+export interface MediaBlockEditorFilledProps extends Frozen {
+  block: MediaBlock
+  kind: MediaKind
+
+  /** What a player may load, or nothing when the file did not outlive its session. */
+  src?: string
+}
+
+export interface MediaBlockEditorFilledEmits {
+  caption: [caption: string]
+  replace: []
+}
+
+export interface MediaBlockEditorProgressProps {
+  percent: number
+}
+
+export interface MediaBlockEditorProgressEmits {
+  cancel: []
+}
+
+export interface MediaBlockEditorNoticeProps {
+  message: string
+  retryLabel?: string
+}
+
+export interface MediaBlockEditorNoticeEmits {
+  retry: []
+}
+
+export interface ImageBlockEditorProps extends Frozen {
+  block: ImageBlock
+}
+
+export interface ImageBlockEditorEmits {
+  update: [block: ImageBlock]
 }
 
 export interface VideoBlockEditorProps extends Frozen {

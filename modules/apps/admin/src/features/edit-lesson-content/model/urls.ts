@@ -25,13 +25,26 @@ const parsed = (url: string): URL | undefined => {
   }
 }
 
+/** Stands in for wherever the lesson is served from; only staying on it matters. */
+const PathBase = 'https://lesson.invalid'
+
 /**
  * The path an uploaded file is stored under: relative, and on this origin.
  *
- * A leading `//` is not a path but another origin's authority, so it is refused
- * here rather than after `new URL()` has quietly accepted it.
+ * Resolving the candidate rather than reading its first characters is what makes
+ * the check track the parser: it treats a backslash as a slash and strips tabs
+ * and newlines, so `/\host/x` and `/<TAB>/host/x` both name another authority
+ * while neither of them begins with `//`.
  */
-const isSameOriginPath = (url: string): boolean => url.startsWith('/') && !url.startsWith('//')
+const isSameOriginPath = (url: string): boolean => {
+  if (!url.startsWith('/')) return false
+
+  try {
+    return new URL(url, PathBase).origin === PathBase
+  } catch {
+    return false
+  }
+}
 
 /**
  * Whether a media link may be stored, and why not when it may not.

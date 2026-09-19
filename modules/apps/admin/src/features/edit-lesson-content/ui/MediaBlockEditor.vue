@@ -13,7 +13,7 @@ import MediaBlockEditorEmpty from './MediaBlockEditorEmpty.vue'
 import MediaBlockEditorFilled from './MediaBlockEditorFilled.vue'
 import MediaBlockEditorNotice from './MediaBlockEditorNotice.vue'
 import MediaBlockEditorProgress from './MediaBlockEditorProgress.vue'
-import type { MediaBlockEditorEmits, MediaBlockEditorProps } from './MediaBlockEditor.types'
+import type { MediaBlockEditorEmits, MediaBlockEditorProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 

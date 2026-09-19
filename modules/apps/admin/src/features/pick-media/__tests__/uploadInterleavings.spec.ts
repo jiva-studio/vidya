@@ -89,11 +89,7 @@ describe('one upload at a time', () => {
 })
 
 describe('a cancelled upload meeting the next one', () => {
-  // DEFECT (reviewer): `controller` and `pending` are single slots. The
-  // cancelled upload's rejection is read against whichever controller is
-  // current, so a cancel followed by a second file in the same turn reports the
-  // live upload as refused.
-  it.fails('does not report the upload that replaced it as refused', async () => {
+  it('does not report the upload that replaced it as refused', async () => {
     const { upload, clock } = mounted()
 
     void upload.start(file('First.png'))

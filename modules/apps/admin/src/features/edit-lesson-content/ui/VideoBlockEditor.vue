@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import MediaBlockEditor from './MediaBlockEditor.vue'
-import type { MediaBlock } from './MediaBlockEditor.types'
-import type { VideoBlockEditorEmits, VideoBlockEditorProps } from './types'
+import type { MediaBlock, VideoBlockEditorEmits, VideoBlockEditorProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 

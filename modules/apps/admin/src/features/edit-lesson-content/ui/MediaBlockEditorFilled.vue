@@ -10,10 +10,7 @@ import {
   mediaPlayerClasses,
   mediaRowClasses,
 } from './MediaBlockEditor.styles'
-import type {
-  MediaBlockEditorFilledEmits,
-  MediaBlockEditorFilledProps,
-} from './MediaBlockEditor.types'
+import type { MediaBlockEditorFilledEmits, MediaBlockEditorFilledProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 

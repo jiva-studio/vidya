@@ -86,19 +86,13 @@ describe('publishing a version the server never received', () => {
     expect(plain(wrapper.text())).toContain('Not saved')
   })
 
-  // DEFECT (reviewer): the publish awaits `flush`, which answers `true` because
-  // nothing is queued any more — the refused document is only in the tab. The
-  // version is frozen without the edit the author last made.
-  it.fails('does not freeze a version while the last edit is still unsaved', async () => {
+  it('does not freeze a version while the last edit is still unsaved', async () => {
     const { http } = await refusedThenPublished()
 
     expect(http.calls.filter((call) => call.path.endsWith('/publish'))).toHaveLength(0)
   })
 
-  // DEFECT (reviewer): publishing reopens the version, and the reopened server
-  // copy replaces the document on screen. The refused edit is gone from the one
-  // place it existed.
-  it.fails('does not throw away the refused edit when it reopens the version', async () => {
+  it('does not throw away the refused edit when it reopens the version', async () => {
     const { wrapper } = await refusedThenPublished()
 
     expect(titleField(wrapper).value).toBe(Revised)

@@ -4,10 +4,7 @@ import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
 
 import { mediaRowClasses } from './MediaBlockEditor.styles'
-import type {
-  MediaBlockEditorEmptyEmits,
-  MediaBlockEditorEmptyProps,
-} from './MediaBlockEditor.types'
+import type { MediaBlockEditorEmptyEmits, MediaBlockEditorEmptyProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 

@@ -2,10 +2,7 @@
 import { Button } from '@vidya/ui'
 
 import { mediaAlertClasses, mediaRowClasses } from './MediaBlockEditor.styles'
-import type {
-  MediaBlockEditorNoticeEmits,
-  MediaBlockEditorNoticeProps,
-} from './MediaBlockEditor.types'
+import type { MediaBlockEditorNoticeEmits, MediaBlockEditorNoticeProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 

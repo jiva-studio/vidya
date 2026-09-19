@@ -3,10 +3,7 @@ import { Button, Progress } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 
 import { mediaRowClasses } from './MediaBlockEditor.styles'
-import type {
-  MediaBlockEditorProgressEmits,
-  MediaBlockEditorProgressProps,
-} from './MediaBlockEditor.types'
+import type { MediaBlockEditorProgressEmits, MediaBlockEditorProgressProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 

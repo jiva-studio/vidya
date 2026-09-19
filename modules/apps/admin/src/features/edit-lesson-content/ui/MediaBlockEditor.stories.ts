@@ -7,8 +7,8 @@ import type { MediaKind } from '@/entities/media'
 import { FakeMediaGateway, mediaGatewayKey } from '@/entities/media'
 import { systemClock } from '@/shared/lib'
 
-import type { MediaBlock } from './MediaBlockEditor.types'
 import MediaBlockEditor from './MediaBlockEditor.vue'
+import type { MediaBlock } from './types'
 
 const image = (source: BlockSource, url: string, caption?: string): ImageBlock => ({
   id: asId<BlockId>('b1'),

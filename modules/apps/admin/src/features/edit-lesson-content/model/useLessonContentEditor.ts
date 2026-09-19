@@ -53,10 +53,15 @@ export const useLessonContentEditor = () => {
     show(next)
   }
 
-  /** Clears the dirty flag only if the snapshot that reached the server is still current. */
+  /**
+   * Clears the dirty flag only if the snapshot that reached the server is still current.
+   *
+   * The mark only ever moves forwards: an answer that outlived the document it
+   * belonged to would otherwise report a freshly loaded version as unsaved.
+   */
   const markSaved = (sent: LessonContent): void => {
     const at = revisions.get(sent)
-    if (at !== undefined) savedRevision.value = at
+    if (at !== undefined && at > savedRevision.value) savedRevision.value = at
   }
 
   const undo = (): void => {

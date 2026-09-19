@@ -59,7 +59,9 @@ export const useAutosave = (
     timer?.cancel()
     timer = undefined
 
-    if (pending === undefined && running === undefined) return true
+    // Nothing waiting is not the same as everything landed: a refused document
+    // sits in `lastSent` and reaches the server only when `retry` offers it.
+    if (pending === undefined && running === undefined) return status.value !== 'failed'
 
     await run()
     return status.value !== 'failed'

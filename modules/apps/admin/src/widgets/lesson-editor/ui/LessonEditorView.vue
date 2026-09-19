@@ -61,8 +61,10 @@ const sections = computed(() => editor.content.value.sections)
 
 /* --------------------------------- Hooks ---------------------------------- */
 
+// A reopened version replaces what is on screen only when nothing is unsaved:
+// an edit the server refused exists nowhere else.
 watch(versionDoc.version, (version) => {
-  if (version) editor.load(version.content)
+  if (version && !editor.dirty.value) editor.load(version.content)
 })
 
 // A version nobody can change opens as what it is: something to read.
