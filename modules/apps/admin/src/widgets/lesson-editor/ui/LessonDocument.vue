@@ -37,10 +37,11 @@ const emit = defineEmits<LessonDocumentEmits>()
 
 const list = ref<HTMLElement | null>(null)
 
-// A lesson with nothing in it still needs a line to type into. This section is
-// never emitted on its own: it reaches the server only once an edit is made
-// through it, so a lesson opened and closed again is still an empty lesson.
-const seed = ref<LessonContent>(addSection({ ...props.content, sections: [] }, ''))
+// A lesson with nothing in it still needs a line to type into, so the section
+// comes with one. Neither is emitted on its own: they reach the server only
+// once an edit is made through them, so a lesson opened and closed again is
+// still an empty lesson.
+const seed = ref<LessonContent>(seeded())
 
 const caretBlock = ref<BlockId | undefined>(undefined)
 const caretSection = ref<SectionId | undefined>(undefined)
@@ -50,6 +51,14 @@ const shown = computed(() => (props.content.sections.length > 0 ? props.content 
 /* --------------------------------- Hooks ---------------------------------- */
 
 useBlockSorting(list, onSectionReorder, '[data-section-handle]')
+
+/* -------------------------------- Helpers --------------------------------- */
+
+function seeded(): LessonContent {
+  const withSection = addSection({ ...props.content, sections: [] }, '')
+  const section = withSection.sections[0]
+  return insertBlockAfter(withSection, section.id, undefined, 'text')
+}
 
 /* -------------------------------- Handlers -------------------------------- */
 
