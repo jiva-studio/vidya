@@ -104,7 +104,7 @@ describe('SchoolFormPage', () => {
     expect(transport.calls[1]).toEqual({
       method: 'PATCH',
       path: '/edu/schools/school-1',
-      body: { name: 'Renamed' },
+      body: { name: 'Renamed', logoUrl: null, description: null },
     })
   })
 

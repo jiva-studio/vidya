@@ -28,6 +28,9 @@ export interface OutboxView {
 
   /** Reads this identity's journal, and keeps reading it after every run. */
   track(ownerId: string, outbox: IOutboxRepository): void
+
+  /** Reads it again now — after a local write, which no run has seen yet. */
+  refresh(): void
 }
 
 const keyOf = (collection: SyncCollection, docId: string) => `${collection}:${docId}`
@@ -73,5 +76,5 @@ export const useOutboxView = createGlobalState((): OutboxView => {
   const reason = (collection: SyncCollection, docId: string): SyncRejectionReason | undefined =>
     rows.value.get(keyOf(collection, docId))?.reason ?? undefined
 
-  return { state, reason, track }
+  return { state, reason, track, refresh: () => void reload() }
 })

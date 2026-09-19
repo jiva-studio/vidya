@@ -1,12 +1,12 @@
 import { createGlobalState } from '@vueuse/core'
 import { ref } from 'vue'
 
-import { PreferencesConnectionStore } from '@/infra'
-import type { Connection, IConnectionStore, Session } from '@/ports'
+import { ownerIdAt, PreferencesConnectionStore } from '@/infra'
+import type { Connection, HttpClient, IConnectionStore, Session } from '@/ports'
 import { normaliseBaseUrl } from '@/ports'
-import { identityAt } from '@/usecases/auth'
 
-import { stopSync } from './sync'
+import { endSessionOn401 } from './endSessionOn401'
+import { connectionClient, stopSync } from './sync'
 
 /**
  * The servers this handset is signed in to.
@@ -46,7 +46,7 @@ export const useConnections = createGlobalState(() => {
 
     await store.add({
       baseUrl,
-      ownerId: await identityAt(baseUrl, session),
+      ownerId: await ownerIdAt(baseUrl, session),
       session,
       needsSignIn: false,
     })
@@ -69,6 +69,30 @@ export const useConnections = createGlobalState(() => {
 
   return { connections, restore, signIn, signOut, markNeedsSignIn }
 })
+
+/**
+ * The transport for signing in to a server, including one nothing is connected
+ * to yet.
+ *
+ * Sign-in is the one exchange that happens before a connection exists, so the
+ * address comes as an argument: which server a student is joining is the
+ * screen's business, and the next school they add will be at another one.
+ *
+ * The token, once there is one, is read from the registry rather than held
+ * here — a copy would go on being sent after the engine renewed it. A refusal
+ * marks this one connection as needing a new sign-in and stops there: ending
+ * every session would sign the student out of schools that are still
+ * perfectly reachable.
+ */
+export function clientForSignIn(baseUrl: string): HttpClient {
+  const address = normaliseBaseUrl(baseUrl)
+  const { connections, markNeedsSignIn } = useConnections()
+
+  const sessionAt = () =>
+    connections.value.find((connection) => connection.baseUrl === address)?.session
+
+  return endSessionOn401(connectionClient(address, sessionAt), () => markNeedsSignIn(address))
+}
 
 /** The persisted registry, for the parts of the app that write to it directly. */
 export const connectionStore: IConnectionStore = store

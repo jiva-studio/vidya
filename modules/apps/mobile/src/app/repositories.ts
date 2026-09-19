@@ -8,15 +8,22 @@ import type {
   ISchoolRepository,
 } from '@/ports'
 
-import { runningSyncs } from './sync'
+import { useOutboxView } from './outboxView'
+import { runningSyncs, type SyncTriggers } from './sync'
 
 /**
  * The device, as the screens read and write it.
  *
- * They come from the running engine rather than being built here, because the
- * three writable ones are journaled: a write that skipped the journal would
- * never be sent, and the student would watch their answer sit on the phone
- * forever.
+ * The ports come from the running engine rather than being built here, because
+ * the three writable ones are journaled: a write that skipped the journal
+ * would never be sent, and the student would watch their answer sit on the
+ * phone forever.
+ *
+ * A write is also one of the four things that ask for a sync run, so the
+ * writable ports are wrapped here to say so. The ask is debounced — a lesson
+ * answered block by block is one run, not six — and the outbox snapshot the
+ * screens read is refreshed at once, so a saved answer shows as waiting rather
+ * than as accepted until the run comes round.
  *
  * Every port is resolved at the moment it is used, not when a screen asks for
  * the set. A screen mounted before the engines are up — or while the last
@@ -24,8 +31,8 @@ import { runningSyncs } from './sync'
  * in `setup()`, which takes the whole screen down and leaves nothing to show.
  * Writing has no such answer: there is no identity to write for, so it refuses.
  *
- * One connection is served. Screens that show several schools at once are the
- * next step, and they need readers that merge across identities rather than a
+ * One connection is served: screens showing several schools at once need
+ * readers that merge across identities, which is the next step and not a
  * different composition root.
  */
 export interface DeviceRepositories {
@@ -47,30 +54,70 @@ export class NoConnectionError extends Error {
 }
 
 export function useRepositories(): DeviceRepositories {
-  const engine = () => runningSyncs()[0]?.engine
+  const started = () => runningSyncs()[0]
 
   return {
     get schools() {
-      return engine()?.schools ?? emptyDevice.schools
+      return started()?.engine.schools ?? emptyDevice.schools
     },
     get courses() {
-      return engine()?.courses ?? emptyDevice.courses
+      return started()?.engine.courses ?? emptyDevice.courses
     },
     get lessons() {
-      return engine()?.lessons ?? emptyDevice.lessons
+      return started()?.engine.lessons ?? emptyDevice.lessons
     },
     get lessonVersions() {
-      return engine()?.lessonVersions ?? emptyDevice.lessonVersions
+      return started()?.engine.lessonVersions ?? emptyDevice.lessonVersions
     },
     get enrollments() {
-      return engine()?.enrollments ?? emptyDevice.enrollments
+      const running = started()
+      if (running === undefined) return emptyDevice.enrollments
+
+      return {
+        ...running.engine.enrollments,
+        request: announcing(running.engine.enrollments.request, running.triggers),
+        withdraw: announcing(running.engine.enrollments.withdraw, running.triggers),
+      }
     },
     get homework() {
-      return engine()?.homework ?? emptyDevice.homework
+      const running = started()
+      if (running === undefined) return emptyDevice.homework
+
+      return {
+        ...running.engine.homework,
+        saveAnswer: announcing(running.engine.homework.saveAnswer, running.triggers),
+        submit: announcing(running.engine.homework.submit, running.triggers),
+      }
     },
     get blockStates() {
-      return engine()?.blockStates ?? emptyDevice.blockStates
+      const running = started()
+      if (running === undefined) return emptyDevice.blockStates
+
+      return {
+        ...running.engine.blockStates,
+        save: announcing(running.engine.blockStates.save, running.triggers),
+      }
     },
+  }
+}
+
+/**
+ * Runs the write, then says a row is waiting.
+ *
+ * After the write and only if it succeeded: a refused one journaled nothing,
+ * and asking for a run over it would be a network call made for no row.
+ */
+function announcing<TArgs extends unknown[], TResult>(
+  write: (...args: TArgs) => Promise<TResult>,
+  triggers: SyncTriggers,
+): (...args: TArgs) => Promise<TResult> {
+  return async (...args: TArgs) => {
+    const written = await write(...args)
+
+    useOutboxView().refresh()
+    triggers.soon()
+
+    return written
   }
 }
 

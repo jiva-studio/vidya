@@ -24,11 +24,11 @@ import { IonNote } from '@ionic/vue'
 import { useFluent } from 'fluent-vue'
 import { ref } from 'vue'
 
-import { startDeviceSync, useConnections, useDevice, useSession } from '@/app'
+import { clientForSignIn, startDeviceSync, useConnections, useDevice } from '@/app'
+import { config as environment } from '@/config'
 import { AsyncButton } from '@/design'
 import { useConfig } from '@/shared'
 import { CodeInput, HelpMessage } from '@/ui/auth'
-import { useAuthClient } from '@/ui/auth/composables/useAuthClient'
 import { auth } from '@/usecases'
 import type { WizardSignInWithCodeEmits } from './types'
 
@@ -38,8 +38,10 @@ const emit = defineEmits<WizardSignInWithCodeEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
-const { baseUrl, client } = useAuthClient()
-const session = useSession()
+// The server this build signs in to by default. Which server a student joins
+// is the screen's business, and the next school they add will be at another.
+const baseUrl = environment.apiBaseUrl
+const client = clientForSignIn(baseUrl)
 const connections = useConnections()
 const config = useConfig()
 const fluent = useFluent()
@@ -57,11 +59,10 @@ async function onValidateCodeClicked() {
       email: config.email.value,
       code: code.value,
     })
-    await session.start(started)
 
-    // The connection is what the device files its rows under, so it is
-    // recorded before anything is read: it asks the server who the bearer is
-    // and keeps that identity. The engine is started from here because the
+    // The connection is where the session lives and what the device files its
+    // rows under, so it is recorded first: it asks the server who the bearer
+    // is and keeps that identity. The engine is started from here because the
     // screens behind this wizard read the device and nothing else.
     await connections.signIn({ baseUrl, session: started })
     await startDeviceSync(useDevice())

@@ -70,8 +70,32 @@ case "$MODE" in
     ;;
   postgres-required)
     require_server
+
     # Only @vidya/api talks to a database, so only its suites can need one.
-    VIDYA_TEST_DB=postgres npm run test -w @vidya/api -- --testPathPattern '\.postgres\.spec\.ts$'
+    #
+    # The set is found, not maintained. A suite needs a real database either by
+    # being named for one or by holding a block behind `describeOnPostgres` —
+    # and the second kind lives inside ordinary `*.e2e.spec.ts` files, which a
+    # fixed name pattern walks straight past. It walked past the atomicity of
+    # the enrolment cascade for exactly that reason. Grepping for the marker
+    # means a new gated block joins the gate by existing rather than by someone
+    # remembering to widen a pattern here.
+    GATED="$(
+      cd "$MODULES_DIR/services/api" \
+        && grep -rlE '(describe|it)OnPostgres' src \
+        | sort -u \
+        | sed 's/\./\\./g' \
+        | paste -sd'|' -
+    )"
+
+    if [ -z "$GATED" ]; then
+      echo "No postgres-gated suite found. Either the marker was renamed or the" >&2
+      echo "grep above is wrong; refusing to report a pass for suites never run." >&2
+      exit 1
+    fi
+
+    VIDYA_TEST_DB=postgres npm run test -w @vidya/api -- \
+      --testPathPattern "\.postgres\.spec\.ts$|($GATED)$"
     ;;
   *)
     usage

@@ -18,8 +18,10 @@ import './lottie.css'
 import { IonicVue } from '@ionic/vue'
 import { createApp } from 'vue'
 
-import { openDevice, showStartupFailure, startDeviceSync, useConnections, useSession } from '@/app'
+import { openDevice, showStartupFailure, startDeviceSync, useConnections } from '@/app'
+import { cryptoUuids } from '@/infra'
 import type { IDatabase } from '@/ports'
+import { education } from '@/usecases'
 
 import App from './App.vue'
 import { fluent } from './i18n'
@@ -28,9 +30,13 @@ import router from './router'
 const ROOT = '#app'
 
 async function createAndRunApp(db: IDatabase) {
-  // The router sends an unauthenticated visitor to sign-in, and the engines
-  // are started per connection, so both have to be in hand before routing.
-  await useSession().restore()
+  // The device names the rows it creates, and the platform's CSPRNG is what
+  // names them outside a test.
+  education.useUuidSource(cryptoUuids)
+
+  // The router sends a visitor with no connection to sign-in, and the engines
+  // are started per connection, so the registry has to be in hand before the
+  // first route is resolved.
   await useConnections().restore()
 
   // Before the mount: the first screen reads through the running engine, and

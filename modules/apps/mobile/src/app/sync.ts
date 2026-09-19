@@ -9,7 +9,7 @@ import type { SyncRunResult } from '@vidya/usecases'
 import { httpClientFor } from '@/infra'
 import { PreferencesDeviceId } from '@/infra/storage/preferencesDeviceId'
 import { createHttpSyncClient } from '@/infra/sync/http/syncClient'
-import type { Connection, IConnectionStore, IDatabase, Session } from '@/ports'
+import type { Connection, HttpClient, IConnectionStore, IDatabase, Session } from '@/ports'
 import { normaliseBaseUrl } from '@/ports'
 import { createSyncEngine, type SyncEngine } from '@/usecases/sync'
 
@@ -77,6 +77,18 @@ interface RunningSync extends StartedSync {
   readonly ownerId: UserId
 }
 
+/**
+ * The transport bound to one server, and the only place in `app/` that builds
+ * one.
+ *
+ * The address is closed over rather than passed per call, so a token held for
+ * one school has nowhere else to travel. The session is read per request
+ * because it is replaced whole whenever it is renewed, and a client built
+ * around a captured token would go on sending the expired one.
+ */
+export const connectionClient = (baseUrl: string, session: () => Session | undefined): HttpClient =>
+  httpClientFor({ baseUrl, session })
+
 const running = new Map<string, RunningSync>()
 
 /**
@@ -112,7 +124,7 @@ export async function startSync(options: SyncSetupOptions): Promise<StartedSync>
   // request rather than capturing the token it was built with.
   let session: Session = options.connection.session
 
-  const http = httpClientFor({ baseUrl, session: () => session })
+  const http = connectionClient(baseUrl, () => session)
 
   const renew = async (): Promise<boolean> => {
     const renewed = await renewSession(http, session)
@@ -177,10 +189,7 @@ export async function stopSync(baseUrl: string): Promise<void> {
  * It does not end anything. The student keeps reading what is on the device;
  * only the network half of this one connection waits for a new sign-in.
  */
-async function renewSession(
-  http: ReturnType<typeof httpClientFor>,
-  session: Session,
-): Promise<Session | null> {
+async function renewSession(http: HttpClient, session: Session): Promise<Session | null> {
   try {
     const renewed = await http.post<RefreshTokensResponse>(Routes().auth.tokens.refresh(), {
       refreshToken: session.refreshToken,

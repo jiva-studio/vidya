@@ -72,6 +72,45 @@ describe('a course card draws what is there', () => {
     expect(wrapper.find(LOGO).text()).toBe('B')
   })
 
+  it('raises the initial to a capital, whatever case the school writes its name in', () => {
+    // A badge is a capital in a circle. A school that spells itself in lower
+    // case gets one anyway, rather than a card that looks like a typing error.
+    const wrapper = render({ schoolName: 'bhakti yoga school', schoolLogoUrl: null })
+
+    expect(wrapper.find(LOGO).text()).toBe('B')
+  })
+
+  it('tries again when the school sends a different logo', async () => {
+    // A failure belongs to the address that failed. A run that brings a new one
+    // has to be given its chance, or one bad link fixed upstream stays a letter
+    // on the device until the app is restarted.
+    const wrapper = render({
+      schoolName: 'School of Devotion',
+      schoolLogoUrl: 'https://cdn.example.org/logos/gone.png',
+    })
+    await wrapper.find(`${LOGO} img`).trigger('error')
+    expect(wrapper.find(LOGO).attributes('data-state')).toBe('initial')
+
+    await wrapper.setProps({ schoolLogoUrl: 'https://cdn.example.org/logos/devotion.png' })
+
+    expect(wrapper.find(LOGO).attributes('data-state')).toBe('image')
+    expect(wrapper.find(`${LOGO} img`).attributes('src')).toBe(
+      'https://cdn.example.org/logos/devotion.png',
+    )
+  })
+
+  it('keeps the letter while the same logo stays broken', async () => {
+    const wrapper = render({
+      schoolName: 'School of Devotion',
+      schoolLogoUrl: 'https://cdn.example.org/logos/gone.png',
+    })
+    await wrapper.find(`${LOGO} img`).trigger('error')
+
+    await wrapper.setProps({ schoolName: 'School of Devotion (renamed)' })
+
+    expect(wrapper.find(LOGO).attributes('data-state')).toBe('initial')
+  })
+
   it('keeps the same box either way, so nothing moves when the logo fails', async () => {
     const wrapper = render({
       schoolName: 'School of Devotion',

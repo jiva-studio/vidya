@@ -20,10 +20,11 @@ import { IonNote } from '@ionic/vue'
 import { useFluent } from 'fluent-vue'
 import { ref } from 'vue'
 
+import { clientForSignIn } from '@/app'
+import { config as environment } from '@/config'
 import { AsyncButton } from '@/design'
 import { useConfig } from '@/shared'
 import { EmailInput, HelpMessage } from '@/ui/auth'
-import { useAuthClient } from '@/ui/auth/composables/useAuthClient'
 import { auth } from '@/usecases'
 import type { WizardGetSignInCodeByEmailEmits } from './types'
 
@@ -33,7 +34,7 @@ const emit = defineEmits<WizardGetSignInCodeByEmailEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
-const { client } = useAuthClient()
+const client = clientForSignIn(environment.apiBaseUrl)
 const config = useConfig()
 const fluent = useFluent()
 const email = ref(config.email.value)

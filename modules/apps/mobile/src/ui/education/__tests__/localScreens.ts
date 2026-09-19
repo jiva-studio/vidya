@@ -40,6 +40,7 @@ import sharedResources from '@/shared/i18n'
 import educationResources from '@/ui/education/i18n'
 import type { SubmissionState } from '@/ui/sync'
 import syncResources from '@/ui/sync/i18n'
+import { education } from '@/usecases'
 
 import { routes } from '../routes'
 
@@ -118,6 +119,31 @@ export const outboxView = {
 /** Where a screen asked to navigate, newest last. */
 export const navigations: RouteLocationRaw[] = []
 
+/* -------------------------------------------------------------------------- */
+/*                                Minted ids                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The ids the screens minted, in the order they were handed out.
+ *
+ * The app names its own rows, and the source of the names is installed by the
+ * composition root — which these tests mount without. Installing a counted one
+ * here does more than stop the throw: a row a tap produced can be named in an
+ * assertion instead of being described as whichever one is new.
+ */
+export const mintedIds: string[] = []
+
+const nextUuid = (): string => {
+  const id = `00000000-0000-4000-8000-${String(mintedIds.length + 1).padStart(12, '0')}`
+  mintedIds.push(id)
+
+  return id
+}
+
+/** The id the next write will carry, before it is written. */
+export const upcomingId = (): string =>
+  `00000000-0000-4000-8000-${String(mintedIds.length + 1).padStart(12, '0')}`
+
 /**
  * The double for `@/app`, and the whole of what a screen may ask it for.
  *
@@ -170,6 +196,16 @@ function fluentPlugin() {
   return createFluentVue({ bundles: [bundle] })
 }
 
+/**
+ * Screens mounted and not yet taken down.
+ *
+ * A page left mounted is still listening. It watches the same `syncing` ref and
+ * reads through the same repositories object as the page under test, so the run
+ * one test stages starts reads inside the pages of every test before it — and
+ * those reads answer late, into assertions about something else.
+ */
+const mounted: VueWrapper[] = []
+
 export async function mountPage(
   component: Component,
   props: Record<string, unknown> = {},
@@ -178,10 +214,13 @@ export async function mountPage(
   await router.push('/education/courses')
   await router.isReady()
 
-  return mount(component, {
+  const wrapper = mount(component, {
     props,
     global: { plugins: [fluentPlugin(), router], provide: { navManager } },
   })
+  mounted.push(wrapper)
+
+  return wrapper
 }
 
 /** Lets the reads a screen starts on mount settle before it is inspected. */
@@ -293,9 +332,12 @@ function emptySeed(): LocalSeed {
 
 /** Puts the device back to empty and rebuilds the ports over it. */
 export function resetLocalScreens(): void {
+  mounted.splice(0).forEach((wrapper) => wrapper.unmount())
   Object.assign(seed, emptySeed())
   outboxRows.clear()
   navigations.length = 0
+  mintedIds.length = 0
+  education.useUuidSource(nextUuid)
   setOnline(true)
   syncStatus.syncing.value = false
   syncStatus.firstRunCompleted.value = true
@@ -310,29 +352,41 @@ const notWritten = (): never => {
 }
 
 /**
- * Enrolments as the SQL repository hands them over: tombstones skipped, newest
- * first.
+ * Enrolments the way the SQL repository hands them over, method by method.
  *
- * A double that is more forgiving than the thing it stands in for tests the
- * double. A withdrawn request is invisible here for the same reason it is
- * invisible there, and `getByCourse` answers with the newest row for the same
- * reason too — which is precisely the ordering a second request would exploit.
+ * A double is worth having only where it answers what the real one answers, and
+ * the three readers here do not agree with each other. `list` and `getByCourse`
+ * go through `readSyncRows`, which drops tombstones — but they order opposite
+ * ways, `created_at ASC` for the list the student reads and `DESC` for the
+ * lookup, and the newest-first lookup is exactly what a second request would
+ * have exploited. `getById` goes through `readSyncRow`, which has no tombstone
+ * clause at all: a withdrawn place asked for by name is a live row carrying
+ * `deletedAt`, and a double that answered `null` there would hide from the
+ * screens the one case they exist to explain.
  */
-const liveEnrollments = (): LocalEnrollment[] =>
-  seed.enrollments
-    .filter((item) => item.deletedAt === null)
+const undeleted = (): LocalEnrollment[] =>
+  seed.enrollments.filter((item) => item.deletedAt === null)
+
+const byCreatedAt = (rows: LocalEnrollment[], direction: 'asc' | 'desc'): LocalEnrollment[] =>
+  rows
     .slice()
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .sort((a, b) =>
+      direction === 'asc'
+        ? a.createdAt.localeCompare(b.createdAt)
+        : b.createdAt.localeCompare(a.createdAt),
+    )
 
 function buildRepositories(): LocalRepositories {
   return {
     schools: {
-      list: async () => seed.schools,
+      // A fresh array per call, as a query is. Handing out the seed itself
+      // would let a row pushed later appear inside an answer already given.
+      list: async () => seed.schools.slice(),
       getById: async (id) => seed.schools.find((item) => item.id === id) ?? null,
     },
 
     courses: {
-      list: async () => seed.courses,
+      list: async () => seed.courses.slice(),
       getById: async (id) => seed.courses.find((item) => item.id === id) ?? null,
     },
 
@@ -350,10 +404,10 @@ function buildRepositories(): LocalRepositories {
     },
 
     enrollments: {
-      list: async () => liveEnrollments(),
-      getById: async (id) => liveEnrollments().find((item) => item.id === id) ?? null,
+      list: async () => byCreatedAt(undeleted(), 'asc'),
+      getById: async (id) => seed.enrollments.find((item) => item.id === id) ?? null,
       getByCourse: async (courseId) =>
-        liveEnrollments().find((item) => item.courseId === courseId) ?? null,
+        byCreatedAt(undeleted(), 'desc').find((item) => item.courseId === courseId) ?? null,
       request: notWritten,
       withdraw: notWritten,
     },

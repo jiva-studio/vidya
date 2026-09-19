@@ -6,6 +6,7 @@ import {
   EnrollmentsService,
   LessonsService,
   LessonVersionsService,
+  ModerationStatus,
   RolesService,
   SchoolsService,
   UserSchoolsService,
@@ -506,6 +507,27 @@ describe('the school scope', () => {
         id: ctx.schoolId,
       })
     })
+
+    it('leaves them standing when the deleted role was not the last one either', async () => {
+      const deleted = await grantRole(ctx.student.id, ctx.schoolId)
+      await grantRole(ctx.student.id, ctx.schoolId)
+
+      const before = (await journalledEnrollments()).length
+
+      await app.get(RolesService).deleteOneBy({ id: deleted })
+
+      expect(await placeNow(ctx.enrollment.id)).toBe('accepted')
+      expect(await app.get(SyncScopesService).scopesFor(ctx.student.id)).toContainEqual({
+        kind: 'school',
+        id: ctx.schoolId,
+      })
+
+      const written = (await journalledEnrollments()).slice(before)
+
+      expect(
+        written.filter((row) => (row.data as { status?: string })?.status === 'revoked'),
+      ).toEqual([])
+    })
   })
 
   /* ------------------------------- ------------------------------- */
@@ -562,6 +584,57 @@ describe('the school scope', () => {
       const refused = await placeOn(catalogue.id, ctx.student.id, 'declined')
 
       await expect(moderate(refused, 'accepted')).rejects.toThrow(ConflictException)
+    })
+  })
+
+  /* ------------------------------- ------------------------------- */
+
+  /**
+   * Every square of the decision table, the refusals as much as the moves.
+   *
+   * Written out here rather than read off the table the service keeps: a test
+   * that iterates the thing it is checking agrees with whatever that thing
+   * says, including a square somebody widened by mistake.
+   */
+  describe('what a school may decide about a place', () => {
+    const DECISIONS: readonly [domain.EnrollmentStatus, ModerationStatus, boolean][] = [
+      ['pending', 'accepted', true],
+      ['pending', 'declined', true],
+      ['accepted', 'accepted', false],
+      ['accepted', 'declined', false],
+      ['declined', 'accepted', false],
+      ['declined', 'declined', false],
+      ['revoked', 'accepted', true],
+      ['revoked', 'declined', false],
+    ]
+
+    const freshCourse = async (name: string): Promise<domain.CourseId> =>
+      (
+        await app.get(CoursesService).create({
+          name,
+          learningType: 'individual',
+          schoolId: ctx.schoolId,
+        })
+      ).id
+
+    it.each(DECISIONS)('%s to %s: %s', async (from, to, permitted) => {
+      const courseId = await freshCourse(`A course to decide about, ${from} to ${to}`)
+      const place = await placeOn(courseId, ctx.student.id, from)
+
+      const decision = app
+        .get(EnrollmentsService)
+        .moderate(place, { status: to, decidedById: ctx.student.id })
+
+      if (!permitted) {
+        await expect(decision).rejects.toThrow(ConflictException)
+        expect(await placeNow(place.id)).toBe(from)
+
+        return
+      }
+
+      await decision
+
+      expect(await placeNow(place.id)).toBe(to)
     })
   })
 

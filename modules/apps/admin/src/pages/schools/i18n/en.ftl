@@ -17,6 +17,11 @@ schools-form-edit-title = School
 schools-form-name = Name
 schools-form-name-hint = Up to 32 characters. For example: Bhakti Shastra School
 schools-form-name-required = Enter a name.
+schools-form-logo = Logo
+schools-form-logo-hint = https://example.org/logo.png
+schools-form-logo-invalid = Needs a link beginning with http:// or https://
+schools-form-description = Description
+schools-form-description-hint = A line or two about the school — students see it in the catalogue
 
 schools-settings-title = School settings
 schools-settings-default-role = New student's role

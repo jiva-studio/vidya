@@ -7,6 +7,8 @@ import { useRouter } from 'vue-router'
 import { reasonOf } from '@/shared/lib'
 import { useSchoolApi } from '@/entities/school'
 
+import SchoolAboutField from './SchoolAboutField.vue'
+import SchoolLogoField from './SchoolLogoField.vue'
 import SchoolNameField from './SchoolNameField.vue'
 import type { SchoolFormPageProps } from './types'
 import { formClasses, pageClasses } from './styles'
@@ -22,14 +24,18 @@ const router = useRouter()
 const api = useSchoolApi()
 
 const name = ref('')
+const logoUrl = ref('')
+const description = ref('')
 const busy = ref(false)
 const error = ref<string | undefined>(undefined)
 const invalid = ref(false)
+const badLogo = ref(false)
 
 const title = computed(() =>
   props.id ? $t('schools-form-edit-title') : $t('schools-form-create-title'),
 )
 const nameError = computed(() => (invalid.value ? $t('schools-form-name-required') : undefined))
+const logoError = computed(() => (badLogo.value ? $t('schools-form-logo-invalid') : undefined))
 const errorText = computed(() => (error.value ? $t(error.value) : undefined))
 
 /* ---------------------------------- Hooks --------------------------------- */
@@ -42,7 +48,8 @@ onMounted(() => {
 
 async function onSubmit() {
   invalid.value = name.value.trim().length === 0
-  if (invalid.value) return
+  badLogo.value = !isAddressable(logoUrl.value)
+  if (invalid.value || badLogo.value) return
 
   busy.value = true
   error.value = undefined
@@ -71,6 +78,8 @@ async function load(): Promise<void> {
   try {
     const school = await api.get(id)
     name.value = school.name
+    logoUrl.value = school.logoUrl ?? ''
+    description.value = school.description ?? ''
   } catch (failure) {
     error.value = reasonOf(failure)
   } finally {
@@ -78,17 +87,37 @@ async function load(): Promise<void> {
   }
 }
 
-async function send(): Promise<void> {
-  const trimmed = name.value.trim()
+/**
+ * An empty box means the school has no logo, which the wire spells `null`; an
+ * empty string would be a logo whose address is nothing.
+ */
+function filled(value: string): string | null {
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
 
-  // A patch carries only the name: this form has no editor for the logo or the
-  // description, and naming them here would blank whatever is already set.
+// Caught here so a mistyped address comes back as a field error rather than as
+// a 400 whose message names a validator.
+function isAddressable(value: string): boolean {
+  const trimmed = value.trim()
+  if (trimmed.length === 0) return true
+
+  return URL.canParse(trimmed) && /^https?:$/.test(new URL(trimmed).protocol)
+}
+
+async function send(): Promise<void> {
+  const body = {
+    name: name.value.trim(),
+    logoUrl: filled(logoUrl.value),
+    description: filled(description.value),
+  }
+
   if (props.id) {
-    await api.update(props.id, { name: trimmed })
+    await api.update(props.id, body)
     return
   }
 
-  await api.create({ name: trimmed, logoUrl: null, description: null })
+  await api.create(body)
 }
 </script>
 
@@ -97,6 +126,8 @@ async function send(): Promise<void> {
     <PageHeader :title="title" />
     <form :class="formClasses" @submit.prevent="onSubmit">
       <SchoolNameField v-model="name" :error="nameError" :disabled="busy" />
+      <SchoolLogoField v-model="logoUrl" :error="logoError" :disabled="busy" />
+      <SchoolAboutField v-model="description" :disabled="busy" />
       <FormFooter
         :submit-label="$t('action-save')"
         :cancel-label="$t('action-cancel')"

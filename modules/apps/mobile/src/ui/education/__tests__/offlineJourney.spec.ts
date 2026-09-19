@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { parseIsoDateTime } from '@vidya/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/app', async () => (await import('./localScreens')).appDouble)
@@ -72,17 +73,47 @@ describe('the path from catalogue to lesson with no connection', () => {
     expect(wrapper.text()).toContain('The alphabet')
   })
 
-  it('opens an enrolment the school has taken back, in words rather than in a message id', async () => {
-    // A place withdrawn after it was given is its own outcome, told apart from
-    // a request that was never granted. An unwritten message shows as its id,
-    // which is the shape a forgotten status takes on screen.
+  it.each([
+    ['revoked', 'Place withdrawn', 'Request declined'],
+    ['declined', 'Request declined', 'Place withdrawn'],
+  ] as const)(
+    'tells a %s enrolment apart and says which one it is',
+    async (status, said, notSaid) => {
+      // A place taken back after it was given is not a request that was never
+      // granted, and the student is owed the difference: one of them means the
+      // course was theirs and the downloads stay, the other never started.
+      seed.enrollments[0] = anEnrollment({ status })
+
+      const wrapper = await mountPage(MyEnrollmentPage, { enrollmentId: ENROLLMENT_ID })
+      await settle()
+
+      expect(wrapper.text()).toContain(said)
+      expect(wrapper.text()).not.toContain(notSaid)
+    },
+  )
+
+  it('opens a request the student withdrew, which is a row and not a gap', async () => {
+    // Asked for by name, a withdrawn row comes back: `getById` carries no
+    // tombstone clause, because the screen that was sent to it has to explain
+    // the row rather than find nothing and show a blank page.
+    seed.enrollments[0] = anEnrollment({
+      status: 'pending',
+      deletedAt: parseIsoDateTime('2026-09-19T10:00:00.000Z'),
+    })
+
+    const wrapper = await mountPage(MyEnrollmentPage, { enrollmentId: ENROLLMENT_ID })
+    await settle()
+
+    expect(wrapper.text()).toContain('Request pending')
+  })
+
+  it('promises a withdrawn student that the downloads stay', async () => {
     seed.enrollments[0] = anEnrollment({ status: 'revoked' })
 
     const wrapper = await mountPage(MyEnrollmentPage, { enrollmentId: ENROLLMENT_ID })
     await settle()
 
-    expect(wrapper.text()).not.toContain('enrollment-revoked')
-    expect(wrapper.text().trim()).not.toBe('')
+    expect(wrapper.text()).toContain('Everything already downloaded stays readable')
   })
 
   it('opens a lesson and draws what was downloaded', async () => {

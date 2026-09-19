@@ -27,6 +27,7 @@ import {
   aSchool,
   COURSE_ID,
   ENROLLMENT_ID,
+  mintedIds,
   mountPage,
   navigations,
   OWNER_ID,
@@ -241,6 +242,7 @@ describe('asking twice for the same course', () => {
     const live = await liveEnrollments()
     expect(live).toHaveLength(1)
     expect(live[0]!.id).not.toBe(withdrawn)
+    expect(live[0]!.id).toBe(mintedIds.at(-1))
     expect(live[0]!.status).toBe('pending')
   })
 })

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
-import { EduModule } from '@vidya/api/edu/edu.module'
+import { SchoolMembershipModule } from '@vidya/api/schoolMembership.module'
 import { RedisService } from '@vidya/api/shared/services'
 import { Enrollment, Role, User, UserRole } from '@vidya/entities'
 
@@ -32,9 +32,9 @@ import {
  */
 @Module({
   imports: [
-    // For `UserSchoolsService`: the school half of a scope grant is a role in
-    // the school, and that answer belongs where roles are kept.
-    EduModule,
+    // Answers `SCHOOL_MEMBERSHIP`, the one thing a scope grant needs and this
+    // context cannot work out on its own.
+    SchoolMembershipModule,
     TypeOrmModule.forFeature([Enrollment, User, Role, UserRole]),
   ],
   controllers: [SyncController],

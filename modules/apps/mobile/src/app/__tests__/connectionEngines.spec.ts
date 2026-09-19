@@ -1,8 +1,22 @@
-import type { EnrollmentId, UserId } from '@vidya/domain'
+import type {
+  EnrollmentId,
+  HomeworkId,
+  LessonVersionId,
+  SchoolId,
+  SectionId,
+  UserId,
+} from '@vidya/domain'
 import { asId } from '@vidya/domain'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DatabaseSuspendedError } from '@/ports'
+import {
+  ENROLLMENT_ID,
+  HOMEWORK_ID,
+  LESSON_VERSION_ID,
+  SCHOOL_ID,
+  SECTION_ID,
+} from '@/usecases/sync/__tests__/fakeSyncServer'
 
 import { connectionTo, inMemoryConnectionStore } from './connectionFixtures'
 import { fakeSyncNetwork } from './fakeSyncNetwork'
@@ -57,10 +71,11 @@ vi.mock('@capacitor/preferences', () => ({
 }))
 
 const { openTestDatabase } = await import('@/infra/persistence/testing')
-const { startSync, stopSync } = await import('../sync')
+const { startSync, stopSync, WRITE_DEBOUNCE_MS } = await import('../sync')
 const { NoConnectionError, useRepositories } = await import('../repositories')
 
 const SCHOOL_A = 'https://school-a.test'
+const SCHOOL_B = 'https://school-b.test'
 
 const network = fakeSyncNetwork()
 
@@ -126,6 +141,63 @@ describe('one engine per server', () => {
 
     await stopSync(SCHOOL_A)
     await expect(db.transaction(async () => undefined)).rejects.toThrow(DatabaseSuspendedError)
+  })
+
+  it('signing out of one school leaves the other school working', async () => {
+    const { db, connection, connections } = await wired()
+    const second = network.add(SCHOOL_B, 'owner-b')
+
+    await startSync({ db, connection, connections })
+    await startSync({ db, connection: connectionTo(SCHOOL_B, second), connections })
+
+    // One school left; the other is still syncing, and the lock is its to use.
+    await stopSync(SCHOOL_A)
+    await expect(db.transaction(async () => undefined)).resolves.toBeUndefined()
+
+    await stopSync(SCHOOL_B)
+    await expect(db.transaction(async () => undefined)).rejects.toThrow(DatabaseSuspendedError)
+  })
+
+  it('a run asked for while the app is in the background never starts', async () => {
+    const { db, connection, connections } = await wired()
+    const started = await startSync({ db, connection, connections })
+
+    await stopSync(SCHOOL_A)
+
+    // The network coming back in the background asks for a run. It must find
+    // the database already handed over rather than open a transaction on it.
+    const result = await started.triggers.now()
+
+    expect(result.outcome).toBe('paused')
+    expect(network.requestsTo(SCHOOL_A)).toEqual([])
+  })
+
+  it('a local write asks for a run of its own accord, once the typing stops', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const { db, connection, connections } = await wired()
+      await startSync({ db, connection, connections })
+
+      await useRepositories().homework.saveAnswer({
+        id: asId<HomeworkId>(HOMEWORK_ID),
+        schoolId: asId<SchoolId>(SCHOOL_ID),
+        enrollmentId: asId<EnrollmentId>(ENROLLMENT_ID),
+        lessonVersionId: asId<LessonVersionId>(LESSON_VERSION_ID),
+        sectionId: asId<SectionId>(SECTION_ID),
+        text: 'the vowels come first',
+      })
+
+      // Not at once: a lesson answered block by block would be one run per
+      // block, and the student is still typing.
+      expect(network.requestsTo(SCHOOL_A)).toEqual([])
+
+      await vi.advanceTimersByTimeAsync(WRITE_DEBOUNCE_MS)
+      expect(network.requestsTo(SCHOOL_A).length).toBeGreaterThan(0)
+    } finally {
+      vi.useRealTimers()
+      await stopSync(SCHOOL_A)
+    }
   })
 
   it('the running engine is what the screens read through', async () => {

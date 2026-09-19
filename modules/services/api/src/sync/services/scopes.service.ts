@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { UserSchoolsService } from '@vidya/api/edu/services'
 import * as domain from '@vidya/domain'
 import { Enrollment } from '@vidya/entities'
 import { SYNC_MAX_SCOPES, SyncScopeGrant } from '@vidya/protocol'
 import { DataSource, Repository } from 'typeorm'
 
 import { SyncRequestException } from '../errors'
+import { SCHOOL_MEMBERSHIP, SchoolMembership } from '../ports'
 
 /** A scope with the highest position the journal currently holds for it. */
 interface ScopeHead {
@@ -38,14 +38,14 @@ interface ScopeHead {
 export class SyncScopesService {
   constructor(
     @InjectRepository(Enrollment) private readonly enrollments: Repository<Enrollment>,
-    private readonly userSchools: UserSchoolsService,
+    @Inject(SCHOOL_MEMBERSHIP) private readonly membership: SchoolMembership,
     private readonly dataSource: DataSource,
   ) {}
 
   /** The scopes the caller may read, without their positions. */
   async scopesFor(userId: domain.UserId): Promise<domain.SyncScopeRef[]> {
     const accepted = await this.enrollments.findBy({ studentId: userId, status: 'accepted' })
-    const byRole = await this.userSchools.getUserSchools(userId)
+    const byRole = await this.membership.schoolsOf(userId)
 
     const schools = [...new Set([...byRole, ...accepted.map((place) => place.schoolId)])].map(
       (id): domain.SyncScopeRef => ({ kind: 'school', id }),

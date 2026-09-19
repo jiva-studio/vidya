@@ -45,13 +45,14 @@ import { IonCheckbox, IonInput, IonList, IonNote, IonPage, useIonRouter } from '
 import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
 
+import { clientForSignIn } from '@/app'
+import { config as environment } from '@/config'
 import { AsyncButton } from '@/design'
-import { useAuthClient } from '@/ui/auth/composables/useAuthClient'
 import { auth } from '@/usecases'
 
 /* --------------------------------- State ---------------------------------- */
 
-const { client } = useAuthClient()
+const client = clientForSignIn(environment.apiBaseUrl)
 const router = useIonRouter()
 const fluent = useFluent()
 

@@ -76,6 +76,31 @@ describe('the presentation of a school', () => {
     })
   })
 
+  it('keeps them when a patch names only the name', async () => {
+    await store()
+
+    const res = await ctr.updateOne(
+      ctx.one.school.id,
+      new dto.UpdateSchoolRequest({ name: 'Renamed' }),
+      await ctx.authenticate(ctx.one.users.owner),
+    )
+
+    expect(res).toMatchObject({ name: 'Renamed', logoUrl: LOGO_URL, description: DESCRIPTION })
+  })
+
+  it('clears one field without touching the other', async () => {
+    await store()
+
+    const res = await ctr.updateOne(
+      ctx.one.school.id,
+      Object.assign(new dto.UpdateSchoolRequest(), { logoUrl: null }),
+      await ctx.authenticate(ctx.one.users.owner),
+    )
+
+    expect(res.logoUrl).toBeUndefined()
+    expect(res.description).toBe(DESCRIPTION)
+  })
+
   it('carries them onto a school the console creates', async () => {
     const created = await ctr.createOne(
       new dto.CreateSchoolRequest({ name: 'Second', logoUrl: LOGO_URL, description: DESCRIPTION }),
