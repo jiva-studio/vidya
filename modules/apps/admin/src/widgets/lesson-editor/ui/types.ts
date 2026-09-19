@@ -33,7 +33,7 @@ export interface EditorToolbarProps {
   dirty?: boolean
   saving?: boolean
   busy?: boolean
-  canPublish?: boolean
+  publishable?: boolean
   blocked?: boolean
   error?: string
 }

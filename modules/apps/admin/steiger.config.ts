@@ -44,14 +44,20 @@ export default defineConfig([
     //   `entities/homework` is read by that one workplace because a piece of
     //   work is shown in exactly one place — a domain noun does not become part
     //   of a widget by being read from a single one.
+    //
+    // `entities/media` and `features/pick-media` are the same case: media is a
+    // domain noun with one reader today, and picking a file is an action of the
+    // operator offered by the one screen that authors lessons.
     files: [
       './src/entities/homework/**',
+      './src/entities/media/**',
       './src/features/assign-group/**',
       './src/features/edit-lesson-content/**',
       './src/features/switch-language/**',
       './src/features/grade-homework/**',
       './src/features/manage-user-roles/**',
       './src/features/moderate-enrollment/**',
+      './src/features/pick-media/**',
       './src/features/publish-lesson/**',
       './src/widgets/lesson-editor/**',
     ],

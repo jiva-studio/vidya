@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<EditorToolbarProps>(), {
   dirty: false,
   saving: false,
   busy: false,
-  canPublish: false,
+  publishable: false,
   blocked: false,
   error: undefined,
 })
@@ -100,7 +100,7 @@ function onRevision() {
           {{ $t('editor-save') }}
         </Button>
         <Button
-          v-if="!props.frozen && props.canPublish"
+          v-if="!props.frozen && props.publishable"
           variant="secondary"
           :disabled="props.blocked"
           @click="onPublish"

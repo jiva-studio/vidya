@@ -32,7 +32,7 @@ const editor = useLessonContentEditor()
 const draft = useDraftSaving(props.lessonId)
 const publishing = useLessonPublishing(props.lessonId)
 
-const canPublish = useCan('lessons:publish')
+const publishable = useCan('lessons:publish')
 const publishOpen = ref(false)
 const mode = ref<EditorMode>('write')
 
@@ -127,7 +127,7 @@ async function store(): Promise<boolean> {
       :dirty="editor.dirty.value"
       :saving="draft.saving.value"
       :busy="publishing.busy.value"
-      :can-publish="canPublish"
+      :publishable="publishable"
       :blocked="blocked"
       :error="actionError && $t(actionError)"
       @update:mode="onMode"

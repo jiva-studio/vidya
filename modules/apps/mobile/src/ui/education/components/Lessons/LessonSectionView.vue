@@ -14,7 +14,7 @@
       @change="(state) => onBlockStateChanged(block.id, state)"
     />
     <QuizSectionBlock
-      v-else
+      v-else-if="block.type === 'quiz'"
       :block="block"
       :state="quizState(block.id)"
       @change="(state) => onBlockStateChanged(block.id, state)"
