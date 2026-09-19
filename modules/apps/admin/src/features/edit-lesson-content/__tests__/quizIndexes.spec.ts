@@ -4,7 +4,13 @@ import { describe, expect, it } from 'vitest'
 import { insertAnswer, moveAnswer, removeAnswer, setRightAnswer } from '../model/quiz'
 
 const quiz = (answers: string[], rightAnswer: number): QuizBlock =>
-  ({ id: 'q1', type: 'quiz', question: 'Who speaks?', answers, rightAnswer }) as unknown as QuizBlock
+  ({
+    id: 'q1',
+    type: 'quiz',
+    question: 'Who speaks?',
+    answers,
+    rightAnswer,
+  }) as unknown as QuizBlock
 
 /** The option the block marks correct, which is what a student is graded against. */
 const correct = (block: QuizBlock): string | undefined => block.answers[block.rightAnswer]
