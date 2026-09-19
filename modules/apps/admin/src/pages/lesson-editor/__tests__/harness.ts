@@ -1,6 +1,7 @@
 import type { SchoolId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
 import { flushPromises } from '@vue/test-utils'
+import { afterEach } from 'vitest'
 import { defineComponent, h } from 'vue'
 import type { RouteRecordRaw } from 'vue-router'
 import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
@@ -37,6 +38,14 @@ export const signIn = (granted: string[]) =>
 const Away = { name: 'AwayHarness', render: () => h('div') }
 
 const Root = defineComponent({ name: 'RootHarness', setup: () => () => h(RouterView) })
+
+const mounted: { unmount: () => void }[] = []
+
+// An attached mount stays in the document until it is unmounted, and a leaked
+// one keeps answering `document.activeElement` in whatever test runs next.
+afterEach(() => {
+  while (mounted.length > 0) mounted.pop()?.unmount()
+})
 
 const editorRoutes: RouteRecordRaw[] = routes.map((route) => ({
   path: route.path,
@@ -75,6 +84,10 @@ export const openEditor = async (
   await router.isReady()
 
   const wrapper = mountWithApp(Root, {
+    // jsdom only moves focus inside a document, and Vue Test Utils only puts its
+    // container there when it is told where to. Without this every assertion
+    // about where the caret went reads `body` whatever the editor did.
+    attachTo: document.body,
     global: {
       plugins: [router],
       // The key is only provided when a test brought a gateway: providing it as
@@ -84,6 +97,7 @@ export const openEditor = async (
         : { [httpClientKey]: http.client },
     },
   })
+  mounted.push(wrapper)
   await flushPromises()
 
   return { wrapper, http, router }

@@ -97,8 +97,23 @@ describe('saving', () => {
 
     const body = writes[0].body as { content: LessonContent }
     expect(body.content.schemaVersion).toBe(1)
-    expect(body.content.sections).toHaveLength(2)
     expect(body.content.sections[0].id).toBe('s1')
+    expect(body.content.sections[0].blocks).toHaveLength(1)
+  })
+
+  it('carries nothing of a section the author added and never wrote in', async () => {
+    const { wrapper, http } = await openEditor(draftAnswers())
+
+    // An empty lesson opens with a section to type into, so a section nobody
+    // touched would otherwise reach the server every time the editor was opened.
+    await clickText(wrapper, 'Add section')
+    await clickText(wrapper, 'Save draft')
+
+    const body = http.calls.find((call) => call.method === 'PATCH')?.body as {
+      content: LessonContent
+    }
+
+    expect(body.content.sections).toHaveLength(1)
   })
 
   it('shows the reason the server gave when the save is refused', async () => {
