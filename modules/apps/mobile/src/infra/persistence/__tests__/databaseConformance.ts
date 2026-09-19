@@ -24,7 +24,7 @@ export interface DatabaseStore {
 }
 
 export interface ConformanceSubject {
-  /** Names the lane in the test output. */
+  /** Names the implementation in the test output. */
   readonly name: string
 
   /** A store nothing has written to yet. */

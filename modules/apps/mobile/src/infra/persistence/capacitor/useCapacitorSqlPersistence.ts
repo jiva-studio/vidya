@@ -105,7 +105,7 @@ export function useCapacitorSqlPersistence(): IPersistence {
  * query, and vanish on reload without a single error. The student would be
  * told nothing and would lose everything written offline.
  *
- * Refusing is the honest half of that choice. The web lane of this app runs on
+ * Refusing is the honest half of that choice. The web build of this app runs on
  * `useSqlJsPersistence`, which exports its image and is durable by design; if
  * the Capacitor adapter is ever wanted on the web, the web store is what has
  * to be implemented, not this guard that has to be removed.
