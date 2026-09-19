@@ -81,20 +81,41 @@ export const fieldStackClasses = ['flex', 'flex-col', 'gap-[var(--space-3)]']
 
 /* ----------------------------------- Quiz ---------------------------------- */
 
-export const answersGroupClasses = ['flex', 'flex-col', 'gap-[var(--space-1)]', 'items-start']
+export const quizClasses = ['flex', 'flex-col', 'gap-[var(--space-1)]']
 
-export const groupLabelClasses = [
-  'text-[length:var(--text-sm)] font-[var(--weight-medium)] text-[var(--color-text)]',
-]
+// The question and the options are text on a page, not fields in a form: the
+// chrome arrives on hover and focus, so the quiz reads the way it will be read.
+const bareInputClasses =
+  'flex-1 min-w-0 h-auto border-0 bg-transparent px-0 shadow-none ' +
+  'focus-visible:shadow-none focus-visible:outline-none'
+
+export const questionClasses =
+  `${bareInputClasses} text-[length:var(--text-md)] font-[var(--weight-semibold)] ` +
+  'text-[var(--color-text)]'
+
+export const answerTextClasses = bareInputClasses
+
+export const newAnswerClasses = `${bareInputClasses} text-[var(--color-text-muted)]`
 
 export const answerListClasses = ['flex flex-col gap-[var(--space-1)] list-none m-0 p-0']
 
 export const answerRowClasses = ['group/answer flex items-center gap-[var(--space-2)]']
 
+export const answerGripClasses = [
+  'shrink-0 cursor-grab text-[var(--color-text-muted)] opacity-0',
+  'transition-opacity duration-[var(--duration-fast)] ease-[var(--ease)]',
+  'group-hover/answer:opacity-100 group-focus-within/answer:opacity-100',
+]
+
 export const answerActionsClasses = [
   'shrink-0 w-[var(--control-sm)] grid place-items-center opacity-0 transition-opacity duration-[var(--duration-fast)] ease-[var(--ease)]',
   'group-hover/answer:opacity-100 group-focus-within/answer:opacity-100',
 ]
+
+export const explanationClasses =
+  'resize-none border-0 bg-transparent px-0 shadow-none ' +
+  'text-[length:var(--text-sm)] text-[var(--color-text-muted)] ' +
+  'focus-visible:shadow-none focus-visible:outline-none'
 
 /* --------------------------------- Unknown --------------------------------- */
 

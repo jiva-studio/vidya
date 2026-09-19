@@ -189,3 +189,7 @@ editor-move-up = Вверх
 editor-move-down = Вниз
 editor-duplicate = Дублировать
 editor-delete = Удалить
+||||||| parent of e7256b6 (feat(editor): the quiz as a list of options rather than a column of fields)
+# Вопрос
+editor-quiz-explanation-label = Пояснение
+editor-quiz-explanation-placeholder = Почему ответ именно такой? Покажем после ответа.

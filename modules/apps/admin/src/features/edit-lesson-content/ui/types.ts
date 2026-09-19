@@ -97,6 +97,9 @@ export interface BlockShellProps extends Frozen {
 
 export interface MarkdownTextProps {
   markdown: string
+
+  /** Renders one line: a heading marker stays the characters the author typed. */
+  inline?: boolean
 }
 
 export interface UnknownBlockNoticeProps {
@@ -137,16 +140,21 @@ export interface QuizBlockEditorEmits {
   update: [block: QuizBlock]
 }
 
+/** Where the caret goes when the list hands focus to a row it did not have. */
+export type AnswerCaret = 'start' | 'end'
+
 export interface QuizAnswerRowProps extends Frozen {
   name: string
   index: number
   text: string
   right?: boolean
-  autofocus?: boolean
 }
 
 export interface QuizAnswerRowEmits {
   text: [index: number, text: string]
   right: [index: number]
   remove: [index: number]
+  split: [index: number]
+  collapse: [index: number]
+  move: [index: number, delta: MoveDirection]
 }

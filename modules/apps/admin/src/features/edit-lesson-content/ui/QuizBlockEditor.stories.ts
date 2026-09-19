@@ -5,12 +5,18 @@ import { ref } from 'vue'
 
 import QuizBlockEditor from './QuizBlockEditor.vue'
 
-const block = (question: string, answers: string[], rightAnswer = 0): QuizBlock => ({
+const block = (
+  question: string,
+  answers: string[],
+  rightAnswer = 0,
+  explanation?: string,
+): QuizBlock => ({
   id: asId<BlockId>('b1'),
   type: 'quiz',
   question,
   answers,
   rightAnswer,
+  explanation,
 })
 
 const over =
@@ -40,7 +46,19 @@ export const Default: Story = {
 
 export const Empty: Story = { render: over(block('', ['', ''])) }
 
+export const WithExplanation: Story = {
+  name: 'With an explanation',
+  render: over(
+    block(
+      'Что меняется на стыке слов?',
+      ['Гласная', 'Согласная', 'Ударение'],
+      1,
+      'Сандхи касается согласной на границе слов.',
+    ),
+  ),
+}
+
 export const Frozen: Story = {
-  name: 'Frozen',
+  name: 'Read-only',
   render: over(block('Что меняется на стыке слов?', ['Гласная', 'Согласная'], 1), true),
 }

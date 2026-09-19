@@ -17,7 +17,16 @@ export {
   setSectionAssessment,
   updateBlock,
 } from './edits'
-export { addAnswer, removeAnswer, setAnswer, setQuestion, setRightAnswer } from './quiz'
+export {
+  addAnswer,
+  insertAnswer,
+  moveAnswer,
+  removeAnswer,
+  setAnswer,
+  setExplanation,
+  setQuestion,
+  setRightAnswer,
+} from './quiz'
 export { renderMarkdown } from './renderMarkdown'
 export { checkBlockUrl, EmbedHosts, embedSrc, isEmbedSource, mediaSrc } from './urls'
 export { useLessonContentEditor } from './useLessonContentEditor'

@@ -189,3 +189,7 @@ editor-move-up = Move up
 editor-move-down = Move down
 editor-duplicate = Duplicate
 editor-delete = Delete
+||||||| parent of e7256b6 (feat(editor): the quiz as a list of options rather than a column of fields)
+# Quiz
+editor-quiz-explanation-label = Explanation
+editor-quiz-explanation-placeholder = Why is that the answer? Shown after answering.
