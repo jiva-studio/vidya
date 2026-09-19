@@ -63,4 +63,20 @@ export default defineConfig([
     ],
     rules: { 'fsd/insignificant-slice': 'off' },
   },
+  {
+    // One cross-slice import, named rather than allowed in general:
+    //
+    //   the media block's empty state offers "choose from the library", and
+    //   that dialog is `features/pick-media` — the block cannot open it without
+    //   reaching the slice that is the dialog. The two ways out both cost more
+    //   than they buy: a second injection port beside `mediaGatewayKey`, whose
+    //   only job is to hand one component to another, or a dialog threaded as a
+    //   slot from the widget through the section, the block list and the block
+    //   frame, which is four levels of prop-passing for one button.
+    //
+    // The rule stays on everywhere else, so the next cross-import is still
+    // reported.
+    files: ['./src/features/edit-lesson-content/ui/MediaBlockEditor.vue'],
+    rules: { 'fsd/forbidden-imports': 'off' },
+  },
 ])

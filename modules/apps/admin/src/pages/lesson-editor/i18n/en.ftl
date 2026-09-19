@@ -132,3 +132,49 @@ publish-confirm-title = Publish this version?
 publish-confirm-body = Students start reading version { $version }. It cannot be changed afterwards — only a new version can.
 publish-confirm-submit = Publish
 publish-confirm-cancel = Cancel
+
+# Files in a media block
+
+editor-media-drop-label = Drop a file here
+editor-media-drop-hint-image = PNG, JPG, GIF or SVG
+editor-media-drop-hint-video = MP4, WebM or MOV
+editor-media-drop-hint-audio = MP3, WAV or OGG
+editor-media-browse = Choose a file
+editor-media-refused-image = Only image files can go in this block.
+editor-media-refused-video = Only video files can go in this block.
+editor-media-refused-audio = Only audio files can go in this block.
+editor-media-library = Choose from the library
+editor-media-link-label = Or paste a link
+editor-media-link-hint = YouTube, Vimeo, or a direct link to a file
+editor-media-uploading = Uploading
+editor-media-cancel = Cancel
+editor-media-retry = Try again
+editor-media-uploaded = { $name } uploaded
+editor-media-replace = Replace
+editor-media-caption-label = Caption
+editor-media-caption-hint = Shown under the file. Optional.
+editor-media-preview-alt = Uploaded file
+editor-media-unavailable = Not available yet. Files uploaded here live only until the page is reloaded.
+
+# Choosing a file
+
+media-picker-title = Choose a file
+media-picker-close = Close
+media-picker-tab-upload = Upload
+media-picker-tab-library = Library
+media-picker-tab-link = Link
+media-picker-drop-label = Drop a file here
+media-picker-search = Search by name
+media-picker-empty-title = Nothing here yet
+media-picker-empty-body = Upload a file, or search for another name.
+media-picker-failed-title = The library could not be read
+media-picker-retry = Try again
+media-picker-link-label = Link
+media-picker-link-hint = YouTube, Vimeo, or a direct link to a file
+media-picker-link-submit = Use this link
+
+# Media that could not be stored
+
+media-upload-failed = The file could not be uploaded.
+media-upload-cancelled = The upload was stopped.
+media-unavailable = Files cannot be stored yet.

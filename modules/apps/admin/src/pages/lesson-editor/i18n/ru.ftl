@@ -132,3 +132,49 @@ publish-confirm-title = Опубликовать эту версию?
 publish-confirm-body = Версию { $version } начнут читать студенты. Изменить её потом нельзя — только создать новую.
 publish-confirm-submit = Опубликовать
 publish-confirm-cancel = Отмена
+
+# Файлы в медиа-блоке
+
+editor-media-drop-label = Перетащите файл сюда
+editor-media-drop-hint-image = PNG, JPG, GIF или SVG
+editor-media-drop-hint-video = MP4, WebM или MOV
+editor-media-drop-hint-audio = MP3, WAV или OGG
+editor-media-browse = Выбрать файл
+editor-media-refused-image = В этот блок можно положить только изображение.
+editor-media-refused-video = В этот блок можно положить только видео.
+editor-media-refused-audio = В этот блок можно положить только аудио.
+editor-media-library = Выбрать из библиотеки
+editor-media-link-label = Или вставьте ссылку
+editor-media-link-hint = YouTube, Vimeo или прямая ссылка на файл
+editor-media-uploading = Загрузка
+editor-media-cancel = Отмена
+editor-media-retry = Повторить
+editor-media-uploaded = { $name } загружен
+editor-media-replace = Заменить
+editor-media-caption-label = Подпись
+editor-media-caption-hint = Показывается под файлом. Необязательно.
+editor-media-preview-alt = Загруженный файл
+editor-media-unavailable = Пока недоступно. Загруженные здесь файлы живут только до перезагрузки страницы.
+
+# Выбор файла
+
+media-picker-title = Выберите файл
+media-picker-close = Закрыть
+media-picker-tab-upload = Загрузка
+media-picker-tab-library = Библиотека
+media-picker-tab-link = Ссылка
+media-picker-drop-label = Перетащите файл сюда
+media-picker-search = Поиск по названию
+media-picker-empty-title = Здесь пока пусто
+media-picker-empty-body = Загрузите файл или поищите по другому названию.
+media-picker-failed-title = Не удалось прочитать библиотеку
+media-picker-retry = Повторить
+media-picker-link-label = Ссылка
+media-picker-link-hint = YouTube, Vimeo или прямая ссылка на файл
+media-picker-link-submit = Использовать ссылку
+
+# Медиа, которое не удалось сохранить
+
+media-upload-failed = Не удалось загрузить файл.
+media-upload-cancelled = Загрузка остановлена.
+media-unavailable = Файлы пока негде хранить.

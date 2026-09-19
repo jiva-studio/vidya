@@ -26,6 +26,14 @@ const parsed = (url: string): URL | undefined => {
 }
 
 /**
+ * The path an uploaded file is stored under: relative, and on this origin.
+ *
+ * A leading `//` is not a path but another origin's authority, so it is refused
+ * here rather than after `new URL()` has quietly accepted it.
+ */
+const isSameOriginPath = (url: string): boolean => url.startsWith('/') && !url.startsWith('//')
+
+/**
  * Whether a media link may be stored, and why not when it may not.
  *
  * `javascript:` and `data:` parse as perfectly good URLs, which is exactly why
@@ -33,10 +41,15 @@ const parsed = (url: string): URL | undefined => {
  * model, so no screen can be the one that forgot.
  */
 export const checkBlockUrl = (source: BlockSource, url: string): UrlProblem | undefined => {
-  if (!url.trim()) return 'url-required'
+  const trimmed = url.trim()
+  if (!trimmed) return 'url-required'
 
-  const target = parsed(url)
-  if (!target) return 'url-malformed'
+  const target = parsed(trimmed)
+
+  // An uploaded file is addressed by `/media/<id>`, which `new URL()` refuses
+  // without a base. The path stays relative because that is what the server
+  // will serve; an absolute dev address would be saved into the lesson.
+  if (!target) return source === 'upload' && isSameOriginPath(trimmed) ? undefined : 'url-malformed'
   if (target.protocol !== 'http:' && target.protocol !== 'https:') return 'url-scheme'
 
   const host = target.hostname.toLowerCase()
@@ -69,3 +82,20 @@ export const embedSrc = (source: BlockSource, url: string): string | undefined =
 /** The address a native player may load: validated, and never an embed page. */
 export const mediaSrc = (source: BlockSource, url: string): string | undefined =>
   isEmbedSource(source) || checkBlockUrl(source, url) ? undefined : url.trim()
+
+/**
+ * The source a pasted link implies, so the author is not asked to classify it.
+ *
+ * A host nobody recognises is a direct link and never an embed: promoting one
+ * would put a page of somebody else's choosing in a frame beside the lesson.
+ */
+export const sourceOf = (url: string): BlockSource | undefined => {
+  const target = parsed(url)
+  if (!target) return undefined
+  if (target.protocol !== 'http:' && target.protocol !== 'https:') return undefined
+
+  const host = target.hostname.toLowerCase()
+  const embed = (['youtube', 'vimeo'] as const).find((source) => EmbedHosts[source].includes(host))
+
+  return embed ?? 'url'
+}

@@ -3,6 +3,9 @@ import type { AudioBlock, BlockId, BlockSource } from '@vidya/domain'
 import { asId } from '@vidya/domain'
 import { ref } from 'vue'
 
+import { FakeMediaGateway, mediaGatewayKey } from '@/entities/media'
+import { systemClock } from '@/shared/lib'
+
 import AudioBlockEditor from './AudioBlockEditor.vue'
 
 const block = (source: BlockSource, url: string): AudioBlock => ({
@@ -20,7 +23,8 @@ const over =
       const model = ref(value)
       return { model, frozen, onUpdate: (next: AudioBlock) => (model.value = next) }
     },
-    template: `<div class="max-w-[var(--form-max)]">
+    provide: { [mediaGatewayKey as symbol]: new FakeMediaGateway({ clock: systemClock }) },
+    template: `<div class="max-w-[var(--prose-max)]">
     <AudioBlockEditor :block="model" :frozen="frozen" @update="onUpdate" />
   </div>`,
   })
@@ -36,11 +40,6 @@ type Story = StoryObj<typeof AudioBlockEditor>
 export const Default: Story = { render: over(block('url', 'https://example.org/lesson.mp3')) }
 
 export const Empty: Story = { render: over(block('url', '')) }
-
-export const Refused: Story = {
-  name: 'Link that is not an address',
-  render: over(block('url', 'javascript:alert(1)')),
-}
 
 export const Frozen: Story = {
   name: 'Frozen',

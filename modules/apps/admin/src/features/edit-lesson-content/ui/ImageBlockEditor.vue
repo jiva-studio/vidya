@@ -1,24 +1,24 @@
 <script setup lang="ts">
 import MediaBlockEditor from './MediaBlockEditor.vue'
 import type { MediaBlock } from './MediaBlockEditor.types'
-import type { AudioBlockEditorEmits, AudioBlockEditorProps } from './types'
+import type { ImageBlockEditorEmits, ImageBlockEditorProps } from './MediaBlockEditor.types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<AudioBlockEditorProps>(), { frozen: false })
+const props = withDefaults(defineProps<ImageBlockEditorProps>(), { frozen: false })
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<AudioBlockEditorEmits>()
+const emit = defineEmits<ImageBlockEditorEmits>()
 
 /* -------------------------------- Handlers -------------------------------- */
 
 // The shell speaks the union; only this block's own kind can come back out of it.
 function onUpdate(block: MediaBlock) {
-  emit('update', block as AudioBlockEditorProps['block'])
+  emit('update', block as ImageBlockEditorProps['block'])
 }
 </script>
 
 <template>
-  <MediaBlockEditor :block="props.block" kind="audio" :frozen="props.frozen" @update="onUpdate" />
+  <MediaBlockEditor :block="props.block" kind="image" :frozen="props.frozen" @update="onUpdate" />
 </template>
