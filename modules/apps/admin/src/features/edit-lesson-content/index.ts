@@ -1,10 +1,12 @@
 // Public API of the edit-lesson-content feature — editing sections and blocks. Owned by T5.
 export { getLessonVersion, saveLessonVersion } from './api'
+export type { BlockFault } from './model'
 export {
   addAnswer,
   addBlock,
   addSection,
   blockBelow,
+  blockFaults,
   checkBlockUrl,
   contentProblems,
   createBlock,
@@ -12,6 +14,7 @@ export {
   EmbedHosts,
   embedSrc,
   insertBlockAfter,
+  invalidBlocks,
   isEmbedSource,
   isKnownBlockType,
   mediaSrc,
@@ -19,6 +22,7 @@ export {
   moveSection,
   newBlockId,
   newSectionId,
+  prunedForSave,
   removeAnswer,
   removeBlock,
   removeSection,

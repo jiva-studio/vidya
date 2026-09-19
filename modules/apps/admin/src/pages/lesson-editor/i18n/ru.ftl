@@ -178,7 +178,6 @@ media-picker-link-submit = Использовать ссылку
 media-upload-failed = Не удалось загрузить файл.
 media-upload-cancelled = Загрузка остановлена.
 media-unavailable = Файлы пока негде хранить.
-||||||| parent of da95f81 (feat(editor): the document surface and the markdown text block)
 editor-block-image = Изображение
 editor-block-menu = Действия с блоком
 editor-block-add-here = Добавить блок здесь
@@ -189,7 +188,17 @@ editor-move-up = Вверх
 editor-move-down = Вниз
 editor-duplicate = Дублировать
 editor-delete = Удалить
-||||||| parent of e7256b6 (feat(editor): the quiz as a list of options rather than a column of fields)
 # Вопрос
 editor-quiz-explanation-label = Пояснение
 editor-quiz-explanation-placeholder = Почему ответ именно такой? Покажем после ответа.
+# Сохранение
+
+editor-status-saving = Сохраняем…
+editor-status-saved = Сохранено
+editor-status-failed = Не сохранено
+editor-save-retry = Сохранить ещё раз
+
+# Незаполненные блоки
+
+editor-faults-title = Эту версию пока нельзя опубликовать
+editor-fault-block = Раздел { $section }, блок { $position } не заполнен.

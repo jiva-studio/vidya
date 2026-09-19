@@ -28,5 +28,7 @@ export {
   setRightAnswer,
 } from './quiz'
 export { renderMarkdown } from './renderMarkdown'
+export type { BlockFault } from './saving'
+export { blockFaults, invalidBlocks, prunedForSave } from './saving'
 export { checkBlockUrl, EmbedHosts, embedSrc, isEmbedSource, mediaSrc } from './urls'
 export { useLessonContentEditor } from './useLessonContentEditor'

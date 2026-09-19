@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<EditorToolbarProps>(), {
   mode: 'write',
   frozen: false,
   dirty: false,
-  saving: false,
+  status: 'idle',
   busy: false,
   publishable: false,
   blocked: false,
@@ -30,6 +30,11 @@ const emit = defineEmits<EditorToolbarEmits>()
 const { $t } = useFluent()
 
 const stateTone = computed(() => (props.frozen ? 'success' : 'warning'))
+const saveTone = computed(() => (props.status === 'failed' ? 'danger' : 'info'))
+const saveKey = computed(() => `editor-status-${props.status}`)
+const reporting = computed(() => props.status !== 'idle')
+const failed = computed(() => props.status === 'failed')
+const saving = computed(() => props.status === 'saving')
 const stateKey = computed(() => (props.frozen ? 'editor-state-published' : 'editor-state-draft'))
 
 const breadcrumbs = computed(() => [
@@ -63,6 +68,10 @@ function onSave() {
   emit('save')
 }
 
+function onRetry() {
+  emit('retry')
+}
+
 function onPublish() {
   emit('publish')
 }
@@ -90,14 +99,18 @@ function onRevision() {
           {{ $t(stateKey, { version: props.version }) }}
         </Badge>
         <Badge v-if="props.dirty" tone="info">{{ $t('editor-unsaved') }}</Badge>
+        <Badge v-if="reporting" :tone="saveTone">{{ $t(saveKey) }}</Badge>
       </span>
       <span :class="toolbarActionsClasses">
         <Button variant="ghost" @click="onBack">{{ $t('editor-back') }}</Button>
         <Button v-if="props.frozen" :busy="props.busy" @click="onRevision">
           {{ $t('editor-new-revision') }}
         </Button>
-        <Button v-if="!props.frozen" :busy="props.saving" :disabled="props.blocked" @click="onSave">
+        <Button v-if="!props.frozen" :busy="saving" :disabled="props.blocked" @click="onSave">
           {{ $t('editor-save') }}
+        </Button>
+        <Button v-if="failed" variant="ghost" @click="onRetry">
+          {{ $t('editor-save-retry') }}
         </Button>
         <Button
           v-if="!props.frozen && props.publishable"

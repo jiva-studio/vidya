@@ -178,7 +178,6 @@ media-picker-link-submit = Use this link
 media-upload-failed = The file could not be uploaded.
 media-upload-cancelled = The upload was stopped.
 media-unavailable = Files cannot be stored yet.
-||||||| parent of da95f81 (feat(editor): the document surface and the markdown text block)
 editor-block-image = Image
 editor-block-menu = Block options
 editor-block-add-here = Add a block here
@@ -189,7 +188,17 @@ editor-move-up = Move up
 editor-move-down = Move down
 editor-duplicate = Duplicate
 editor-delete = Delete
-||||||| parent of e7256b6 (feat(editor): the quiz as a list of options rather than a column of fields)
 # Quiz
 editor-quiz-explanation-label = Explanation
 editor-quiz-explanation-placeholder = Why is that the answer? Shown after answering.
+# Saving
+
+editor-status-saving = Saving…
+editor-status-saved = Saved
+editor-status-failed = Not saved
+editor-save-retry = Try saving again
+
+# Unfinished blocks
+
+editor-faults-title = This version cannot be published yet
+editor-fault-block = Section { $section }, block { $position } is unfinished.

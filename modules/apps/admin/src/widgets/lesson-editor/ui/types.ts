@@ -10,7 +10,14 @@ import type {
   VideoBlock,
 } from '@vidya/domain'
 
-import type { BlockType, ContentProblem, MoveDirection } from '@/features/edit-lesson-content'
+import type {
+  BlockFault,
+  BlockType,
+  ContentProblem,
+  MoveDirection,
+} from '@/features/edit-lesson-content'
+
+import type { AutosaveStatus } from '../model'
 
 /** Writing the lesson, or reading it the way a student will. */
 export type EditorMode = 'write' | 'read'
@@ -31,7 +38,7 @@ export interface EditorToolbarProps {
   mode?: EditorMode
   frozen?: boolean
   dirty?: boolean
-  saving?: boolean
+  status?: AutosaveStatus
   busy?: boolean
   publishable?: boolean
   blocked?: boolean
@@ -41,6 +48,7 @@ export interface EditorToolbarProps {
 export interface EditorToolbarEmits {
   back: []
   save: []
+  retry: []
   publish: []
   revision: []
   'update:mode': [mode: EditorMode]
@@ -115,7 +123,8 @@ export interface SectionInsertBarEmits {
 }
 
 export interface ContentProblemsNoticeProps {
-  problems: readonly ContentProblem[]
+  problems?: readonly ContentProblem[]
+  faults?: readonly BlockFault[]
 }
 
 export interface LessonPreviewProps {
