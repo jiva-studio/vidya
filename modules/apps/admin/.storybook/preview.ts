@@ -55,6 +55,19 @@ const preview: Preview = {
   parameters: {
     layout: 'fullscreen',
     controls: { expanded: true },
+
+    // Storybook sorts alphabetically, which puts Data before Forms and Daily
+    // work before Sign in. The tree is read in the order the work is done.
+    options: {
+      storySort: {
+        order: [
+          'Design system',
+          ['Forms', 'Data', 'Feedback', 'Overlays', 'Layout'],
+          'Admin',
+          ['Sign in', 'Organisation', 'Teaching', 'Daily work', 'Parts'],
+        ],
+      },
+    },
   },
 
   // A screen that reads its parameters from the address says which address with
