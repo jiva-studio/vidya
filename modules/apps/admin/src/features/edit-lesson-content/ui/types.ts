@@ -1,13 +1,5 @@
-import type {
-  AudioBlock,
-  BlockId,
-  LessonBlock,
-  LessonSection,
-  QuizBlock,
-  SectionId,
-  TextBlock,
-  VideoBlock,
-} from '@vidya/domain'
+import type { AudioBlock, LessonBlock, QuizBlock, TextBlock, VideoBlock } from '@vidya/domain'
+import type { Ref } from 'vue'
 
 import type { BlockType, MoveDirection } from '../types'
 
@@ -16,69 +8,91 @@ interface Frozen {
   frozen?: boolean
 }
 
-export interface ItemActionsProps {
-  index: number
-  count: number
-  upLabel: string
-  downLabel: string
-  removeLabel: string
-}
-
-export interface ItemActionsEmits {
-  move: [delta: MoveDirection]
-  remove: []
-}
-
-export interface AddBlockMenuProps {
-  label?: string
-}
-
-export interface AddBlockMenuEmits {
-  add: [type: BlockType]
-}
-
-export interface SectionFormProps extends Frozen {
-  section: LessonSection
-  autofocus?: boolean
-}
-
-export interface SectionFormEmits {
-  rename: [id: SectionId, title: string]
-  assessment: [id: SectionId, assessment: LessonSection['assessment']]
-}
-
 export interface SectionBlocksProps extends Frozen {
   blocks: readonly LessonBlock[]
 }
 
-export interface SectionBlocksEmits {
-  add: [type: BlockType]
-  update: [block: LessonBlock]
-  move: [id: BlockId, delta: MoveDirection]
-  remove: [id: BlockId]
-}
-
 export interface LessonBlockEditorProps extends Frozen {
   block: LessonBlock
-  index: number
-  count: number
 }
 
 export interface LessonBlockEditorEmits {
   update: [block: LessonBlock]
-  move: [id: BlockId, delta: MoveDirection]
-  remove: [id: BlockId]
+  slash: []
+  escape: []
+}
+
+/** The gutter's two controls, and where each block sits among its neighbours. */
+interface Placed {
+  first?: boolean
+  last?: boolean
+}
+
+export interface LessonBlockFrameProps extends Frozen, Placed {
+  block: LessonBlock
+  autofocus?: boolean
+}
+
+export interface LessonBlockFrameEmits {
+  update: [block: LessonBlock]
+  insert: [type: BlockType]
+  move: [delta: MoveDirection]
+  duplicate: []
+  remove: []
+}
+
+export interface BlockHandleProps extends Placed {
+  label: string
+  open?: boolean
+}
+
+export interface BlockHandleEmits {
+  'update:open': [open: boolean]
+  move: [delta: MoveDirection]
+  duplicate: []
+  remove: []
+}
+
+export interface BlockInserterProps {
+  label: string
+  open?: boolean
+}
+
+export interface BlockInserterEmits {
+  'update:open': [open: boolean]
+  pick: [type: BlockType]
+}
+
+export type BlockMenuProps = Placed
+
+export interface BlockMenuEmits {
+  move: [delta: MoveDirection]
+  duplicate: []
+  remove: []
+}
+
+export interface BlockInsertMenuEmits {
+  pick: [type: BlockType]
+  close: []
+}
+
+export interface MarkdownEditorOptions {
+  host: Ref<HTMLElement | null>
+  doc: Ref<string>
+  onChange: (text: string) => void
+  onSlash: () => void
+  onEscape: () => void
+}
+
+export interface MarkdownEditor {
+  focused: Ref<boolean>
+  focus: () => void
 }
 
 export interface BlockShellProps extends Frozen {
   label: string
   index: number
   count: number
-}
-
-export interface BlockShellEmits {
-  move: [delta: MoveDirection]
-  remove: []
 }
 
 export interface MarkdownTextProps {
@@ -95,6 +109,8 @@ export interface TextBlockEditorProps extends Frozen {
 
 export interface TextBlockEditorEmits {
   update: [block: TextBlock]
+  slash: []
+  escape: []
 }
 
 export interface VideoBlockEditorProps extends Frozen {

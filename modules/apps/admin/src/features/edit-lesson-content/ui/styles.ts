@@ -25,35 +25,47 @@ export const hintClasses = ['m-0 text-[length:var(--text-sm)] text-[var(--color-
 
 export const blocksClasses = ['flex', 'flex-col', 'gap-[var(--space-2)]']
 
-export const blockShellClasses = [
-  'group flex items-start gap-[var(--space-2)]',
-  'rounded-[var(--radius-md)] px-[var(--space-2)] py-[var(--space-1)]',
-  'transition-colors duration-[var(--duration-fast)] ease-[var(--ease)]',
-  'hover:bg-[var(--color-surface-hover)] focus-within:bg-[var(--color-surface-hover)]',
+export const blockFrameClasses = [
+  'group relative flex items-start gap-[var(--space-2)]',
+  'ps-[var(--space-8)] rounded-[var(--radius-md)] py-[var(--space-1)]',
 ]
+
+// The gutter sits outside the reading column so the text keeps the same left
+// edge whether or not the pointer is anywhere near it.
+export const gutterClasses = [
+  'absolute start-0 top-[var(--space-1)]',
+  'flex items-center gap-[var(--space-1)]',
+]
+
+export const gutterButtonClasses = [
+  'grid place-items-center size-[var(--control-sm)] shrink-0',
+  'rounded-[var(--radius-sm)] border-0 bg-transparent p-0',
+  'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]',
+  'focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]',
+]
+
+export const menuClasses = ['flex flex-col min-w-[var(--menu-min-width)]']
+
+export const menuItemClasses =
+  'w-full justify-start h-[var(--control-sm)] px-[var(--space-2)] ' +
+  'text-[length:var(--text-sm)] font-[var(--weight-regular)]'
 
 export const blockBodyClasses = ['min-w-0 flex-1 flex flex-col gap-[var(--space-2)]']
-
-export const actionsClasses = [
-  'flex items-center gap-[var(--space-1)] shrink-0',
-  'opacity-0 transition-opacity duration-[var(--duration-fast)] ease-[var(--ease)]',
-  'group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100',
-]
-
-export const addRowClasses = ['flex items-center gap-[var(--space-2)]']
-
-export const addTriggerClasses =
-  'w-auto h-[var(--control-sm)] grid-flow-col gap-[var(--space-1)] px-[var(--space-2)] ' +
-  'text-[length:var(--text-sm)]'
 
 export const iconClasses = ['size-[var(--space-4)]']
 
 /* ----------------------------------- Text ---------------------------------- */
 
-export const readableClasses = [
-  'w-full text-start rounded-[var(--radius-sm)]',
-  'focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]',
+export const textStackClasses = ['relative flex flex-col w-full']
+
+export const sourceClasses = [
+  'w-full min-h-[var(--space-6)] text-[length:var(--text-base)]',
+  'rounded-[var(--radius-sm)]',
 ]
+
+// Out of the way of the reader but still in the page: a source behind
+// `display: none` could not take the caret from a click or from a deletion.
+export const sourceTuckedClasses = ['absolute inset-0 w-full h-full overflow-hidden opacity-0']
 
 export const placeholderClasses = [
   'm-0 text-[length:var(--text-base)] text-[var(--color-text-muted)]',

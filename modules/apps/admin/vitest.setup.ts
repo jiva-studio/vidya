@@ -30,6 +30,30 @@ if (!globalThis.URL.createObjectURL) {
   globalThis.URL.revokeObjectURL = () => {}
 }
 
+// jsdom parses layout but never performs it, so a range reports neither a size
+// nor a position. The text surface measures one on every draw to place the
+// caret; without these it fails inside its own layout pass rather than on what
+// a test came to assert.
+const emptyBox = () => ({
+  top: 0,
+  left: 0,
+  bottom: 0,
+  right: 0,
+  width: 0,
+  height: 0,
+  x: 0,
+  y: 0,
+  toJSON: () => ({}),
+})
+
+if (!Range.prototype.getBoundingClientRect) {
+  Range.prototype.getBoundingClientRect = emptyBox as () => DOMRect
+  Range.prototype.getClientRects = (() => {
+    const rects: DOMRect[] = []
+    return Object.assign(rects, { item: () => null }) as unknown as DOMRectList
+  }) as () => DOMRectList
+}
+
 // The editor's text surface and its overlays observe their own box.
 if (!globalThis.ResizeObserver) {
   globalThis.ResizeObserver = class {

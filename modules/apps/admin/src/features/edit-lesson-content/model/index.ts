@@ -4,11 +4,16 @@ export { contentProblems } from './contentProblems'
 export {
   addBlock,
   addSection,
+  blockBelow,
+  duplicateBlock,
+  insertBlockAfter,
   moveBlock,
   moveSection,
   removeBlock,
   removeSection,
   renameSection,
+  reorderBlocks,
+  reorderSections,
   setSectionAssessment,
   updateBlock,
 } from './edits'

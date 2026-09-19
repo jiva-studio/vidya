@@ -2,7 +2,7 @@ import type { BlockId, LessonBlock, LessonContent, LessonSection, SectionId } fr
 import { LessonContentSchemaVersion } from '@vidya/domain'
 
 import type { BlockType, MoveDirection } from '../types'
-import { createBlock, newSectionId } from './blocks'
+import { createBlock, newBlockId, newSectionId } from './blocks'
 
 /**
  * Every edit returns a new document, stamped with the schema this build writes.
@@ -25,6 +25,28 @@ const swapped = <TItem>(items: readonly TItem[], index: number, delta: MoveDirec
   next[index] = items[target]
   next[target] = items[index]
   return next
+}
+
+/**
+ * Lifts an element out and drops it back in at `to`, or copies the list when
+ * either end of the move is outside it.
+ *
+ * A drag that ends over nothing reports a target no list position answers to,
+ * and the document has to survive that untouched rather than wrap the index.
+ */
+const moved = <TItem>(items: readonly TItem[], from: number, to: number): TItem[] => {
+  const next = [...items]
+  if (from < 0 || from >= items.length || to < 0 || to >= items.length) return next
+
+  const [carried] = next.splice(from, 1)
+  next.splice(to, 0, carried)
+  return next
+}
+
+/** Where a block inserted "below this one" lands, and the end when there is no one. */
+const below = (blocks: readonly LessonBlock[], blockId: BlockId | undefined): number => {
+  const at = blocks.findIndex((block) => block.id === blockId)
+  return at < 0 ? blocks.length : at + 1
 }
 
 const withSection = (
@@ -61,6 +83,9 @@ export const setSectionAssessment = (
 export const removeSection = (content: LessonContent, sectionId: SectionId): LessonContent =>
   stamped(content.sections.filter((section) => section.id !== sectionId))
 
+export const reorderSections = (content: LessonContent, from: number, to: number): LessonContent =>
+  stamped(moved(content.sections, from, to))
+
 export const moveSection = (
   content: LessonContent,
   sectionId: SectionId,
@@ -81,6 +106,58 @@ export const addBlock = (
   sectionId: SectionId,
   type: BlockType,
 ): LessonContent => withBlocks(content, sectionId, (blocks) => [...blocks, createBlock(type)])
+
+/**
+ * Puts a fresh block of `type` directly below `afterId`.
+ *
+ * The author's attention is on the block they were in, so a new one appears
+ * under it rather than at the end of a section they may have scrolled away from.
+ */
+export const insertBlockAfter = (
+  content: LessonContent,
+  sectionId: SectionId,
+  afterId: BlockId | undefined,
+  type: BlockType,
+): LessonContent =>
+  withBlocks(content, sectionId, (blocks) => {
+    const next = [...blocks]
+    next.splice(below(blocks, afterId), 0, createBlock(type))
+    return next
+  })
+
+/** The id the block inserted below `afterId` was given, for the caret to follow. */
+export const blockBelow = (
+  content: LessonContent,
+  sectionId: SectionId,
+  afterId: BlockId | undefined,
+): BlockId | undefined => {
+  const blocks = content.sections.find((section) => section.id === sectionId)?.blocks ?? []
+  const at = blocks.findIndex((block) => block.id === afterId)
+
+  return at < 0 ? blocks[blocks.length - 1]?.id : blocks[at + 1]?.id
+}
+
+/** A copy of the block, carrying its content but never its identity. */
+export const duplicateBlock = (
+  content: LessonContent,
+  sectionId: SectionId,
+  blockId: BlockId,
+): LessonContent =>
+  withBlocks(content, sectionId, (blocks) => {
+    const source = blocks.find((block) => block.id === blockId)
+    if (!source) return [...blocks]
+
+    const next = [...blocks]
+    next.splice(below(blocks, blockId), 0, { ...source, id: newBlockId() })
+    return next
+  })
+
+export const reorderBlocks = (
+  content: LessonContent,
+  sectionId: SectionId,
+  from: number,
+  to: number,
+): LessonContent => withBlocks(content, sectionId, (blocks) => moved(blocks, from, to))
 
 export const updateBlock = (
   content: LessonContent,

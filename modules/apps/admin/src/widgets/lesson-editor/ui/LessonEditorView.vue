@@ -145,7 +145,7 @@ async function store(): Promise<boolean> {
       :retry-label="$t('editor-retry')"
       @retry="onRetry"
     />
-    <template v-else-if="writing">
+    <template v-else-if="writing || frozen">
       <LessonOutline v-if="sections.length > 0" :sections="sections" />
       <LessonDocument
         :content="editor.content.value"

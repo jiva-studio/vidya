@@ -178,3 +178,14 @@ media-picker-link-submit = Use this link
 media-upload-failed = The file could not be uploaded.
 media-upload-cancelled = The upload was stopped.
 media-unavailable = Files cannot be stored yet.
+||||||| parent of da95f81 (feat(editor): the document surface and the markdown text block)
+editor-block-image = Image
+editor-block-menu = Block options
+editor-block-add-here = Add a block here
+editor-block-search = Search for a block
+editor-block-none = No block of that name
+editor-section-menu = Section options
+editor-move-up = Move up
+editor-move-down = Move down
+editor-duplicate = Duplicate
+editor-delete = Delete

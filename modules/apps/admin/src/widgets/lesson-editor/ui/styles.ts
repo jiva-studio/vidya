@@ -30,9 +30,52 @@ export const documentClasses = [
   'w-full max-w-[var(--form-max)] mx-auto',
 ]
 
-export const sectionClasses = ['flex flex-col gap-[var(--space-3)]', 'scroll-mt-[var(--space-8)]']
+export const sectionClasses = ['flex flex-col gap-[var(--space-2)]', 'scroll-mt-[var(--space-8)]']
+
+/* --------------------------------- Section -------------------------------- */
+
+export const sectionHeaderClasses = [
+  'group flex items-center gap-[var(--space-2)]',
+  'border-b border-transparent focus-within:border-[var(--color-border)]',
+]
+
+export const sectionTitleClasses =
+  'flex-1 min-w-0 m-0 border-0 bg-transparent px-0 shadow-none ' +
+  'text-[length:var(--text-lg)] font-[var(--weight-semibold)] text-[var(--color-text)] ' +
+  'focus-visible:outline-none'
+
+export const menuTriggerClasses = [
+  'grid place-items-center size-[var(--control-sm)] shrink-0',
+  'rounded-[var(--radius-sm)] border-0 bg-transparent p-0',
+  'text-[var(--color-text-muted)] opacity-0 hover:bg-[var(--color-surface-hover)]',
+  'group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100',
+  'focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]',
+]
+
+export const menuClasses = ['flex flex-col min-w-[var(--menu-min-width)]']
+
+export const menuItemClasses =
+  'w-full justify-start h-[var(--control-sm)] px-[var(--space-2)] ' +
+  'text-[length:var(--text-sm)] font-[var(--weight-regular)]'
+
+export const menuHeadingClasses = [
+  'm-0 px-[var(--space-2)] pt-[var(--space-2)]',
+  'text-[length:var(--text-xs)] text-[var(--color-text-muted)]',
+]
+
+export const blockListClasses = ['flex flex-col']
 
 export const addSectionClasses = ['pt-[var(--space-2)]']
+
+// A quiet line the author can reach for at the end of a section, rather than a
+// button that competes with the text above it.
+export const insertBarClasses = [
+  'w-full text-start border-0 bg-transparent',
+  'px-[var(--space-8)] py-[var(--space-2)] rounded-[var(--radius-sm)]',
+  'text-[length:var(--text-sm)] text-[var(--color-text-muted)]',
+  'opacity-0 hover:opacity-100 focus-visible:opacity-100',
+  'focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]',
+]
 
 /* -------------------------------- Problems -------------------------------- */
 
