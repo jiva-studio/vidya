@@ -27,7 +27,6 @@ export {
   removeBlock,
   removeSection,
   renameSection,
-  renderMarkdown,
   reorderBlocks,
   reorderSections,
   setAnswer,

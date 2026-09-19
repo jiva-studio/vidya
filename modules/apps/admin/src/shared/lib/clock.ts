@@ -27,11 +27,26 @@ export const manualClock = () => {
     return { cancel: () => (pending = pending.filter((held) => held !== entry)) }
   }
 
+  // Time moves to each piece of work in turn rather than to the end of the
+  // window: work that re-arms itself — a countdown asking for the next second —
+  // measures its delay from the moment it ran, as a real timer would.
   const advance = (ms: number): void => {
-    elapsed += ms
-    const due = pending.filter((entry) => entry.at <= elapsed)
-    pending = pending.filter((entry) => entry.at > elapsed)
-    for (const entry of due) entry.work()
+    const target = elapsed + ms
+
+    for (;;) {
+      const due = pending
+        .filter((entry) => entry.at <= target)
+        .sort((first, second) => first.at - second.at)
+
+      const next = due[0]
+      if (!next) break
+
+      pending = pending.filter((entry) => entry !== next)
+      elapsed = next.at
+      next.work()
+    }
+
+    elapsed = target
   }
 
   return {

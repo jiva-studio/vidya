@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { renderInlineMarkdown } from '@/shared/lib'
+import { renderInlineMarkdown, renderMarkdown } from '@/shared/lib'
 
-import { renderMarkdown } from '../model'
 import { markdownClasses } from './styles'
 import type { MarkdownTextProps } from './types'
 
