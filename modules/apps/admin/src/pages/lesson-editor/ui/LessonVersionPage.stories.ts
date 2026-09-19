@@ -48,7 +48,7 @@ const version = (over: Record<string, unknown> = {}) => ({
 })
 
 const meta: Meta<typeof LessonVersionPage> = {
-  title: 'Admin/Teaching/Lesson editor',
+  title: 'Admin/Teaching/Lesson version',
   component: LessonVersionPage,
 }
 
@@ -60,19 +60,19 @@ export const Default: Story = {
   render: over({ [VERSION]: version() }),
 }
 
-export const AnsweredVersionLoading: Story = {
+export const Loading: Story = {
   name: 'Loading',
   parameters: route,
   render: over({ [VERSION]: pending() }),
 }
 
-export const AnsweredVersionEmpty: Story = {
+export const Empty: Story = {
   name: 'Empty',
   parameters: route,
   render: over({ [VERSION]: version({ content: { schemaVersion: 1, sections: [] } }) }),
 }
 
-export const AnsweredVersionFailed: Story = {
+export const Failed: Story = {
   name: 'Failed',
   parameters: route,
   render: over({ [VERSION]: refusal(503, 'Lesson storage is unavailable') }),
