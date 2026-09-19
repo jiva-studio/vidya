@@ -21,18 +21,17 @@ import type { UtcClock } from '../../persistence/migrations'
  * SQL adapter over the local `outbox` journal, implementing
  * {@link IOutboxRepository}.
  *
- * Logic copied from Lectorium's `infra/repositories/sql/outboxRepository.sql.ts`,
- * with three departures that follow from our plan rather than from taste:
+ * Three properties are deliberate:
  *
- * - **`prune` and `clearAll` are gone.** An outbox row is never deleted here,
- *   on any path. A refusal is a state the row keeps, so the reason
- *   stays next to the student's work and the work stays on the phone. The
- *   journal therefore grows without bound; it grows by the student's own
- *   edits, which is tens of rows a week, and that price was accepted openly.
- * - **`reattribute` is gone.** Sign-in is by OTP only, so there is no
+ * - **An outbox row is never deleted**, on any path. A refusal is a state the
+ *   row keeps, so the reason stays next to the student's work and the work
+ *   stays on the phone. The journal therefore grows without bound — by the
+ *   student's own edits, which is tens of rows a week, and that price was
+ *   accepted openly.
+ * - **Rows are never re-attributed.** Sign-in is by OTP only, so there is no
  *   anonymous account whose changes would have to be adopted.
- * - **`sent` is a three-valued `status`.** `pending | pushed | rejected`, so a
- *   refused row is distinguishable from one that was never sent.
+ * - **`status` is three-valued** — `pending | pushed | rejected` — so a refused
+ *   row is distinguishable from one that was never sent.
  *
  * Every write goes through `db.execute` rather than `mutate`: the caller owns
  * the transaction, and a `save()` in the middle of one would flush a half-built

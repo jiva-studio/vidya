@@ -24,21 +24,20 @@ import type {
  * `@vidya/domain/ports` are the other half — they describe the engine's needs
  * and both sides of the wire see them.
  *
- * Reading is unconditional and offline by construction: every method
- * here answers from SQLite and never from the network. Writing is local too —
- * an answer is saved the moment the student taps save, and whether the server
- * accepts it is a later, separate question.
+ * Reading is offline by construction: every method here answers from SQLite and
+ * never from the network. Writing is local too — an answer is saved the moment
+ * the student taps save, and whether the server accepts it is a later question.
  *
  * The three writable repositories are wrapped by the journal decorator, which
  * appends the matching outbox row inside the same transaction. That is why the
  * mutating methods return the saved entity rather than `void`: the decorator
  * journals what was actually stored, not what the caller asked for.
  *
- * **Referential integrity is a property of the data here, not a constraint**
- * A lookup may legitimately find homework whose lesson version
- * has not arrived yet, because the two ride scopes that advance independently.
- * Every reader returns `null` for the missing parent and the screens show a
- * placeholder; nothing throws and nothing is repaired.
+ * **Referential integrity is a property of the data here, not a constraint.** A
+ * lookup may legitimately find homework whose lesson version has not arrived
+ * yet, because the two ride scopes that advance independently. Every reader
+ * returns `null` for the missing parent and the screens show a placeholder;
+ * nothing throws and nothing is repaired.
  */
 
 /* -------------------------------------------------------------------------- */

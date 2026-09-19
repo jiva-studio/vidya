@@ -11,10 +11,7 @@ import { isSyncPausedError, type SyncEngineDeps } from './ports'
 /**
  * Draining the local journal to the server.
  *
- * Copied in shape from Lectorium's `usecases/sync/pushLocal.ts`: the rounds,
- * the watermark re-read inside the transaction, and the contiguity rule that
- * keeps the watermark honest. What is gone is its conflict re-merge — there is
- * nothing to re-merge here, because the writing sides are split and the server
+ * There is no conflict re-merge: the writing sides are split, and the server
  * answers each row `accepted` or `rejected` rather than handing back a master.
  *
  * Two invariants this file exists to hold:

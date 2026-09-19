@@ -1,7 +1,7 @@
 import { createRetryPolicy, jitteredDelay } from '../retryPolicy'
 
 /**
- * The retry policy:.
+ * The retry policy.
  *
  * Pure, so the clock and the randomness are handed in and the assertions can be
  * exact. That is the whole reason both are ports: a test cannot state "two

@@ -3,25 +3,20 @@ import type { MillisClock, Random } from './ports'
 /**
  * How long to wait before trying again, and when to stop trying at all.
  *
- * Nothing like this exists in Lectorium: there the retry cadence is a plain
- * doubling with no jitter (`libraryPendingSchedule.ts`), which is the shape
- * names as the problem. We have four sync triggers — launch, network return,
- * local write, pull-to-refresh — and every device fires them on the same events.
- * A server hiccup therefore lines every device up on the same retry schedule,
- * and the synchronised herd finishes off the server that was only stumbling.
- *
- * So: exponential growth, **jitter**, a ceiling, and a circuit breaker on
- * sustained unavailability.
+ * Four sync triggers — launch, network return, local write, pull-to-refresh —
+ * fire on the same events on every device, so a plain doubling with no jitter
+ * lines every device up on one retry schedule and the synchronised herd
+ * finishes off a server that was only stumbling. Hence exponential growth,
+ * jitter, a ceiling, and a circuit breaker on sustained unavailability.
  *
  * The jitter is *equal* jitter — half the window fixed, half random — rather
  * than full jitter. Full jitter can return a delay of nearly zero, which loses
- * the growth exactly when the server is worst off; equal jitter keeps a
- * guaranteed floor that doubles with each attempt while still spreading two
- * devices apart.
+ * the growth exactly when the server is worst off; equal jitter keeps a floor
+ * that doubles with each attempt while still spreading two devices apart.
  *
- * Pure but for the two injected ports. `Math.random()` is forbidden in `libs/`
- * and would make unable to state what it is testing: two devices differ
- * because their random sources differ, which a test has to be able to arrange.
+ * Pure but for the two injected ports: `Math.random()` is forbidden in `libs/`,
+ * and two devices differ because their random sources differ, which a test has
+ * to be able to arrange.
  */
 
 export interface RetryPolicyOptions {

@@ -5,37 +5,24 @@ import type { QueryValue, Row } from '@/ports'
 /**
  * How each replicating collection is projected onto a local table.
  *
- * In Lectorium this knowledge is inlined in `syncJournalDecorator.ts`, which is
- * why that file is 549 lines. Here it is a table, for two reasons. The file
- * ceiling is 350 lines, and — more to the point — the same projection is needed
- * by three callers that must not disagree: the journal decorator turns a local
- * write into an outbox payload with it, the apply repository turns an incoming
- * payload into a row with it, and the reading repositories turn a row back into
- * a payload. Three hand-written mappings would drift; one table cannot.
+ * A table rather than three hand-written mappings, because three callers must
+ * not disagree: the journal decorator turns a local write into an outbox
+ * payload, the apply repository turns an incoming payload into a row, and the
+ * reading repositories turn a row back into a payload. Wire field names are the
+ * camelCase ones of `@vidya/protocol`; column names are the snake_case ones of
+ * migration `001_local_schema`. Nothing else translates between the two.
  *
- * Wire field names are the camelCase ones of `@vidya/protocol`; column names are
- * the snake_case ones of migration `001_local_schema`. Nothing else translates
- * between the two, anywhere.
+ * A column exists here only when the wire carries its field. The two exceptions
+ * are structural: `school_id` is folded in from the envelope by
+ * `validateChange`, and a tombstone column is written by the `delete` op rather
+ * than by any payload. Anything else named here and never sent arrives as its
+ * fallback — and a fallback for a time is an empty string, which sorts before
+ * every real instant and makes `ORDER BY` quietly wrong.
  *
- * **A column exists here only when the wire carries its field.** The two
- * exceptions are structural, not per-collection: `school_id` is folded in from
- * the envelope by `validateChange` for every collection, and a tombstone column
- * is written by the `delete` op rather than by any payload. Anything else that
- * is named here and never sent arrives as its fallback — and a fallback for a
- * time is an empty string, which sorts before every real instant and makes
- * `ORDER BY` quietly wrong. That is what `homework.updated_at` and
- * `lesson_versions.created_at` were; now fails the moment a third one
- * appears.
- *
- * Two properties are deliberate:
- *
- * - **An unknown field is ignored, not an error**. A newer server may
- *   send a column this build has never heard of, and dropping the row would be
- *   strictly worse than dropping the field.
- * - **A missing field is only fatal when it addresses the row**. The
- *   identity and parent keys are `required`; everything else falls back to its
- *   column default, because a partial row that can still be found is more
- *   useful than no row at all.
+ * Two properties are deliberate: an unknown field is ignored rather than
+ * refused, because dropping a row a newer server sent is worse than dropping a
+ * field; and a missing field is fatal only when it addresses the row, because a
+ * partial row that can still be found beats no row at all.
  */
 
 /** How a wire value is stored in, and read back from, a SQLite column. */

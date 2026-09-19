@@ -34,9 +34,8 @@ export class SchemaAheadOfCodeError extends Error {
  * Applies pending migrations in order, recording each in the `migrations`
  * table.
  *
- * Logic copied from `kit/src/persistence/migrations.ts` in lectorium, with two
- * additions: an empty set is an error rather than a no-op, and a database
- * carrying migrations this build does not know about is refused.
+ * An empty set is an error rather than a no-op, and a database carrying
+ * migrations this build does not know about is refused.
  *
  * Safe to call on every launch — already-applied migrations are skipped by
  * name, so the second run does nothing.

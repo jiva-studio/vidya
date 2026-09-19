@@ -11,11 +11,10 @@ import { pullAndMerge, type PullAndMergeOptions, type PullAndMergeResult } from 
  * down again; every other scope keeps its position and is not re-fetched.
  *
  * "One scope, not the database" is the point of the whole design, not a
- * refinement of it. With a single global cursor — Lectorium's shape — the only
- * repair available for a suspected gap is to re-read the entire journal, which
- * on a student's phone over a mobile connection is the difference between a
- * hiccup and an evening. Per-scope positions make the repair proportional to
- * the damage.
+ * refinement of it. With a single global cursor the only repair for a suspected
+ * gap is to re-read the entire journal, which on a student's phone over a
+ * mobile connection is the difference between a hiccup and an evening.
+ * Per-scope positions make the repair proportional to the damage.
  *
  * Applying is idempotent, so re-fetching costs bandwidth and nothing else:
  * `applyRemote` refuses anything not newer than the pointer already on record,

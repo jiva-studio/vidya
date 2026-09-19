@@ -22,24 +22,19 @@ import { runInTransaction } from '../../persistence/repository'
 /**
  * Write-interception for the collections the device writes.
  *
- * This is the mechanism the whole stage turns on. A domain repository is
- * wrapped, and every mutating call is run inside one transaction that performs
- * the domain write **and** appends the matching `outbox` row, stamped with an
- * HLC. Either both land or neither does. The student's answer
- * and the record that it needs sending cannot come apart, which is what makes
- * "write offline, sort it out later" a guarantee rather than a hope.
+ * A domain repository is wrapped, and every mutating call runs inside one
+ * transaction that performs the domain write **and** appends the matching
+ * `outbox` row, stamped with an HLC. Either both land or neither does: the
+ * student's answer and the record that it needs sending cannot come apart,
+ * which is what makes "write offline, sort it out later" a guarantee rather
+ * than a hope.
  *
- * Copied in shape from Lectorium's `infra/repositories/sql/syncJournalDecorator.ts`
- * (549 lines there). Two departures:
- *
- * - The per-collection knowledge is in `collectionProjections.ts`, so this file
- *   is the mechanism and nothing else. That is what keeps it inside the 350-line
- *   ceiling with room to spare.
- * - There is no reentrant unit of work. Every mutating method here is a
- *   complete unit: the screens call one at a time, and a sync page never calls
- *   one at all — the pull writes through {@link ISyncApplyRepository}, past
- *   this decorator, or everything the server sent would be journaled straight
- *   back to it.
+ * Per-collection knowledge lives in `collectionProjections.ts`, so this file is
+ * the mechanism and nothing else. There is no reentrant unit of work: every
+ * mutating method here is a complete unit, and a sync page never calls one at
+ * all — the pull writes through {@link ISyncApplyRepository}, past this
+ * decorator, or everything the server sent would be journaled straight back to
+ * it.
  *
  * Each decorated repository is written out **member by member**, never as a
  * spread of the base. A spread satisfies the interface structurally, so a
@@ -182,21 +177,18 @@ function createJournal(deps: SyncJournalDeps): Journal {
 /**
  * The highest stamp this device has issued **or observed**.
  *
- * Both halves are needed, and the second one is the easy one to forget. The
- * outbox tail alone is only what we wrote; a stamp pulled in from another
- * device is just as much part of this clock. Skip it and a device whose wall
- * clock trails another's stamps its edit *below* the change that edit descends
- * from — the server accepts the push, and every device that later pulls both
- * resolves the conflict in favour of the older text.
+ * Both halves are needed. The outbox tail alone is only what this device wrote;
+ * a stamp pulled in from another device is just as much part of this clock.
+ * Skip it and a device whose wall clock trails another's stamps its edit
+ * *below* the change that edit descends from — the server accepts the push, and
+ * every device that later pulls both resolves the conflict in favour of the
+ * older text.
  *
- * Neither half is read per identity, and that is the whole of. An HLC is
- * the clock of a *device*: the `device_id` it ends with is this installation's,
- * and the counter before it is what keeps two writes of the same millisecond
- * apart. Seat that counter on the signed-in account and it starts again the
- * moment the handset changes hands — the next student's first write is stamped
- * with a string the previous student's first write already carries, and the
- * stamp doubles as the idempotency key of a push. Every row on this disk was
- * written by this one device, so every row on this disk is its clock.
+ * Neither half is read per identity, because an HLC is the clock of a *device*.
+ * Seat the counter on the signed-in account instead and it starts again the
+ * moment the handset changes hands: the next student's first write is stamped
+ * with a string the previous student's first write already carries, and that
+ * stamp doubles as the idempotency key of a push.
  */
 async function lastSeen(deps: SyncJournalDeps) {
   const journaled = await deps.outbox.latestHlcOnDevice()

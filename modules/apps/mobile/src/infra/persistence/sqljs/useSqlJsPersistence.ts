@@ -28,17 +28,13 @@ export interface SqlJsPersistenceOptions {
 /**
  * A {@link IPersistence} backed by `sql.js`, for tests.
  *
- * This is the lane's main instrument: real SQLite semantics — transactions,
- * rollback, constraints, `PRAGMA foreign_key_list` — with no device, no
- * emulator and no build step. The device adapter is the one that ships; this
- * one is how we find out whether the thing we shipped is correct.
+ * It gives real SQLite semantics — transactions, rollback, constraints,
+ * `PRAGMA foreign_key_list` — with no device, no emulator and no build step.
+ * The Capacitor adapter is the one that ships; this one is how what ships is
+ * checked.
  *
  * Databases are held as in-memory images rather than files, so a test never
  * touches the filesystem and two tests can never see each other's rows.
- *
- * Logic follows `apps/mobile/infra/persistence/sqljs/useSqlJsPersistence.ts`
- * in lectorium, with the IndexedDB sink replaced by the image store and the
- * `PRAGMA foreign_keys` line dropped (the schema has no foreign keys).
  */
 export function useSqlJsPersistence(options: SqlJsPersistenceOptions = {}): IPersistence {
   const images: ImageStore = options.images ?? new Map()

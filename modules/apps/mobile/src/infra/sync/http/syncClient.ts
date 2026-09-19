@@ -16,12 +16,10 @@ import { type HttpClient, HttpError, OfflineError } from '@/ports'
  * Two things about this adapter are not incidental.
  *
  * **It must not be built on the app's default client.** `useApi()` wraps
- * `endSessionOn401`, which ends the session on any `401`. A sync run meeting an
- * expired token would then sign the student out — and take away a course that
- * is already sitting on their phone, which is the exact opposite of what the
- * offline work is for. The composition passes a bare
- * `FetchHttpClient`; the run refreshes the token itself and defers if it
- * cannot.
+ * `endSessionOn401`, which ends the session on any `401`, so a sync run meeting
+ * an expired token would sign the student out and take away a course already
+ * sitting on their phone. The composition passes a bare `FetchHttpClient`; the
+ * run refreshes the token itself and defers if it cannot.
  *
  * **It translates failures into the four things a run can do about them.** A
  * status code above this layer would be transport knowledge in a place that has

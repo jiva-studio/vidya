@@ -31,9 +31,9 @@ import { useSession } from './session'
  * committed — resumption costs nothing precisely because those positions are
  * durable.
  *
- * The four triggers are the plan's: launch, the network coming back, a local
- * write (debounced), and pull-to-refresh. They can all fire at once, which is
- * why the runner holds a lock and why the retry policy jitters.
+ * The four triggers are launch, the network coming back, a local write
+ * (debounced) and pull-to-refresh. They can all fire at once, which is why the
+ * runner holds a lock and why the retry policy jitters.
  */
 
 /** How long a local write waits for its neighbours before a run is asked for. */

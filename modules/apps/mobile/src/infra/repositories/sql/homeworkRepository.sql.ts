@@ -26,10 +26,10 @@ import { readSyncRow, readSyncRows, writeSyncRow } from './rowWriter'
 /**
  * Local reads and writes over `homework`.
  *
- * **The freeze rule lives here**. The plan says an answer stops
- * being editable once it has been handed in, and until this repository the rule
- * existed only on the server. That gap is not cosmetic: an offline edit after
- * submission would be written, journaled, pushed and then refused as
+ * **The freeze rule lives here.** An answer stops being editable once it has
+ * been handed in, and enforcing that on the server alone is not enough: an
+ * offline edit after submission would be written, journaled, pushed and refused
+ * as
  * `alreadyAccepted`, and the student would be told off for doing something the
  * app offered them. `saveAnswer` and `submit` both refuse unless the answer is
  * `open` or `returned`, so the refusal happens where the student is, instantly,

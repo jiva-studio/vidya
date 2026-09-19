@@ -21,14 +21,14 @@ import { readSyncRow, readSyncRows } from './rowWriter'
  * **Tombstones are honoured, and they do not cascade.** `readSyncRows` filters
  * `deleted_at IS NULL`, so a version withdrawn upstream stops being offered.
  * The homework written against it is in another table and is not touched — a
- * student's work does not disappear because an editor unpublished a draft
- * `getById` deliberately still returns a tombstoned row, because
- * an answer that points at it has to be able to say what it was answering.
+ * student's work does not disappear because an editor unpublished a draft. And
+ * `getById` deliberately still returns a tombstoned row, because an answer that
+ * points at it has to be able to say what it was answering.
  *
- * **Content is returned exactly as stored**, `schemaVersion` included, even
- * when this build does not know that version. Deciding what to do
- * about it belongs to the screen, which offers an update; a repository that
- * filtered here would throw away a lesson the next release can read.
+ * **Content is returned exactly as stored**, `schemaVersion` included, even when
+ * this build does not know that version. Deciding what to do about it belongs
+ * to the screen, which offers an update; a repository that filtered here would
+ * throw away a lesson the next release can read.
  */
 export interface SqlLessonVersionRepositoryDeps {
   readonly db: IDatabase

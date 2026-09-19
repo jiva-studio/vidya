@@ -23,20 +23,14 @@ import {
  * SQL adapter that writes what the pull brought in, implementing
  * {@link ISyncApplyRepository}.
  *
- * Logic copied from Lectorium's `infra/repositories/sql/syncApplyRepository.sql.ts`,
- * with two changes that matter:
- *
- * - **`applyRemote` is conditional**. Lectorium writes
- *   unconditionally. Here the write happens only when the incoming server HLC
- *   is strictly above the pointer already on record, and the method answers
- *   `false` when it skipped. That single test makes the whole pull idempotent
- *   by construction: a page redelivered after a dropped connection, or two
- *   scopes moving at their own pace, can no longer put an older version of a
- *   document on top of a newer one in silence.
- * - **There is no per-collection `switch`.** Lectorium carries three parallel
- *   seven-case switches. Ours reads the projection table
- *   (`collectionProjections.ts`), so adding a collection is a table entry
- *   rather than three edits that can disagree.
+ * `applyRemote` is conditional: the write happens only when the incoming server
+ * HLC is strictly above the pointer already on record, and the method answers
+ * `false` when it skipped. That test makes the whole pull idempotent by
+ * construction — a page redelivered after a dropped connection, or two scopes
+ * moving at their own pace, cannot put an older version of a document on top of
+ * a newer one in silence. There is no per-collection `switch`: the projection
+ * table in `collectionProjections.ts` drives it, so adding a collection is a
+ * table entry rather than several edits that can disagree.
  *
  * This adapter exists precisely so that a pulled change does **not** go through
  * the journal decorator: writing it there would put it straight back into the

@@ -12,13 +12,10 @@ import type { IDatabase } from '@/ports'
  * SQL adapter over `sync_state` and `sync_scopes`, implementing
  * {@link ISyncStateRepository}.
  *
- * Logic copied from Lectorium's `infra/repositories/sql/syncStateRepository.sql.ts`.
- * The one structural departure is the one the whole stage turns on: Lectorium
- * keeps a single `pull_cursor` column, and we keep a row per scope.
- * Positions then move independently, which is what makes a newly enrolled
- * course simply "a scope standing at 0" and removes the need for a backfill
- * path — and, in the same stroke, makes it legal for a child row to arrive
- * before its parent.
+ * There is a row per scope rather than one pull cursor, so positions move
+ * independently. That is what makes a newly enrolled course simply "a scope
+ * standing at 0", removes the need for a backfill path, and makes it legal for
+ * a child row to arrive before its parent.
  *
  * Both tables are keyed by identity as well as by device, so signing out erases
  * nothing and signing back in works offline. The device id is resolved once and

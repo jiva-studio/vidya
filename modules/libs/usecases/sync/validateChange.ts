@@ -14,16 +14,16 @@ import { SYNC_MAX_CHANGE_BYTES, type SyncChange } from '@vidya/protocol'
  * Deciding whether one incoming row can be stored, before anything is written.
  *
  * Everything checked here arrives from the server and none of it may take the
- * device down (section 11.6, … ). The rule throughout is the same:
- * **skip the row, advance the position, record the fact**. A skipped row has
- * been handled, not lost — stalling the scope position on it would replay the
- * same page forever, and refusing the whole page would let one malformed row
- * hold up every good one beside it.
+ * device down. The rule throughout is the same: **skip the row, advance the
+ * position, record the fact**. A skipped row has been handled, not lost —
+ * stalling the scope position on it would replay the same page forever, and
+ * refusing the whole page would let one malformed row hold up every good one
+ * beside it.
  *
- * What is deliberately *not* checked: unknown fields inside `data`. A newer
- * server may send a column this build has never heard of, and the projection
- * drops it on the way into the table. Dropping a field is a smaller
- * loss than dropping a lesson.
+ * Unknown fields inside `data` are deliberately not checked: a newer server may
+ * send a column this build has never heard of, and the projection drops it on
+ * the way into the table. Dropping a field is a smaller loss than dropping a
+ * lesson.
  *
  * Pure: no IO, no clock. The one piece of knowledge it cannot hold itself —
  * which fields a collection cannot do without — is injected, because that

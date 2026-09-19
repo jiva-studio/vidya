@@ -4,12 +4,12 @@ import { SYNC_MAX_CHANGE_BYTES, type SyncChange } from '@vidya/protocol'
 import { NO_REQUIRED_FIELDS, utf8Length, validateChange } from '../validateChange'
 
 /**
- * The guard on one incoming row — the unit half of ….
+ * The guard on one incoming row.
  *
- * The device-level half of the same numbers lives in the mobile lane, where a
- * skipped row also has to advance a position and land in a report. Here the
- * question is narrower and worth asking on its own: given this row, does the
- * engine agree to store it, and if not, can it say why?
+ * The device-level half lives with the mobile engine, where a skipped row also
+ * has to advance a position and land in a report. Here the question is
+ * narrower: given this row, does the engine agree to store it, and if not, can
+ * it say why?
  */
 
 const UUID = 'd7e93f41-5a0c-4b62-8e17-9c3d5f2a1b48'

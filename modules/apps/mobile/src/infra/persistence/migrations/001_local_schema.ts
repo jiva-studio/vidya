@@ -5,40 +5,23 @@ import type { Migration } from './types'
 /**
  * The local schema: the six synced collections plus the sync bookkeeping.
  *
- * Three properties are built in from the first release, because changing any
- * of them later means migrating databases that already live on students'
- * phones.
+ * Three properties are built in from the first release, because changing any of
+ * them later means migrating databases that already live on students' phones.
+ * `owner_id` sits on every synced row: there is one database per installation
+ * rather than one per account, so two identities' rows sit side by side and
+ * every read, cursor and HLC pointer filters by owner — signing out erases
+ * nothing and signing back in works offline. `school_id` sits on every synced
+ * row because a student can study at several schools at once. And there are no
+ * foreign keys: scope positions advance independently, so homework legitimately
+ * arrives before the lesson version it answers, and a foreign key would turn
+ * that legal order into a failed insert that takes the whole page down. The UI
+ * survives a missing parent instead.
  *
- * **`owner_id` on every synced row.** There is one database per installation,
- * not one per account, and two identities' rows sit side by side in it without
- * ever mixing: every read filters by owner, and so do the cursors, the scope
- * positions and the HLC pointers. Signing out erases nothing, so signing back
- * in is instant and works offline. This is a disk layout, not a permission —
- * permissions stay on the server.
- *
- * **`school_id` on every synced row.** A student can study at several schools
- * at once, so the school belongs in the row rather than in the name of a
- * database.
- *
- * **No foreign keys anywhere.** Scope positions advance independently —
- * homework rides the `user` scope, a lesson version rides its `course` scope —
- * so homework legitimately arrives before the version it answers. A foreign
- * key would turn that legal order into a failed insert and take the whole page
- * down with it. On a device, referential integrity is a property of the data,
- * not a constraint of the database, and the UI is required to survive a
- * missing parent by showing a placeholder. Every local system with partial
- * replication ends up here.
- *
- * Statuses are plain `TEXT` with no `CHECK`: a newer server may well send a
- * value this build has never heard of, and storing it is strictly better than
- * rejecting the row.
- *
- * All instants are ISO 8601 UTC strings. They sort lexicographically in
- * the same order they sort chronologically, which is why a device never has to
- * parse a date to order rows by one. A table carries a time column only when
- * the wire carries that time: a column the server never fills would hold an
- * empty string, which sorts before every real instant, and an `ORDER BY` over
- * it would be wrong without ever failing.
+ * Statuses are plain `TEXT` with no `CHECK`, so a value only a newer server
+ * knows is stored rather than rejected. All instants are ISO 8601 UTC strings,
+ * which sort lexicographically in chronological order; a table carries a time
+ * column only when the wire carries that time, because a column the server
+ * never fills holds an empty string and sorts before every real instant.
  */
 export const migration_001_local_schema: Migration = {
   name: '001_local_schema',

@@ -18,17 +18,15 @@ import { createRetryPolicy, type RetryPolicy, type RetryPolicyOptions } from './
 /**
  * One sync run: push, then pull, under one lock.
  *
- * **The order is not an optimisation.** Lectorium pulls first and says so
- * openly, because there both sides write the same fields and a fresher base
- * costs it one conflict round at worst. Here the sides are split, and pulling
+ * **The order is not an optimisation.** The writing sides are split, so pulling
  * first would land the server's review status on a document whose answer is
  * still sitting unsent in the outbox. Give ours up first, take theirs second.
  *
  * The lock is a single in-flight promise, and a second caller gets that same
  * promise rather than a second run. Four triggers can fire at once — launch,
  * network return, a local write, pull-to-refresh — and network flapping fires
- * the second of them repeatedly. Two runs draining one
- * outbox would push the same rows twice.
+ * the second of them repeatedly. Two runs draining one outbox would push the
+ * same rows twice.
  */
 
 export const SyncOutcomes = [

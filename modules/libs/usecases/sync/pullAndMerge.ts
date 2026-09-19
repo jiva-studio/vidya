@@ -10,21 +10,16 @@ import { NO_REQUIRED_FIELDS, type RequiredFields, type SkippedChange } from './v
 /**
  * Fetching the server's changes, page by page, and merging them in.
  *
- * Copied in shape from Lectorium's `usecases/sync/pullAndMerge.ts` — the paging
- * loop, the one-transaction-per-page rule and the best-effort acknowledgement
- * are all its. What is ours is the read position: Lectorium keeps one number
- * for the whole journal, and we keep one per scope.
- *
- * That single change is what removes a whole feature. A course the student has
- * just been enrolled on is a scope standing at `0`, and its history arrives
- * through this ordinary pull. **There is no backfill** — no endpoint, no
- * scenario, no second notion of freshness to keep in step with the first.
+ * The read position is one per scope, which removes a whole feature: a course
+ * the student has just been enrolled on is a scope standing at `0`, and its
+ * history arrives through this ordinary pull. There is no backfill — no
+ * endpoint, and no second notion of freshness to keep in step with the first.
  *
  * Two loop guards, and neither is optional:
  *
  * - A page that advanced no position and started no scope ends the run, even
- *   when the server says `hasMore`. Without it a server bug
- *   spins the device until the battery is flat.
+ *   when the server says `hasMore`. Without it a server bug spins the device
+ *   until the battery is flat.
  * - `maxPages` bounds a run that is making progress but has no end in sight,
  *   so one run cannot hold the app hostage.
  */
@@ -143,12 +138,11 @@ async function applyOnePage(
  *
  * The merge needs it to know whether it may take the server's version whole or
  * has to keep this device's fields on top of it — which is what stops an
- * arriving review status from wiping out an answer that has not been sent yet
- *
+ * arriving review status from wiping out an answer that has not been sent yet.
  *
  * Asked of `listUnsettled`, not of `listPending`, and the difference is a
- * student's answer. A refused row stops being pending the moment the
- * answer is recorded, but a refusal delivered nothing: the text still exists
+ * student's answer. A refused row stops being pending the moment the answer is
+ * recorded, but a refusal delivered nothing: the text still exists
  * nowhere but here. Reading the pending list alone drops the document out of
  * this set, the next pull takes the server's empty copy whole, and the answer
  * disappears from the screen while its only remaining copy sits in an outbox
@@ -191,11 +185,11 @@ async function acknowledge(deps: SyncEngineDeps, deviceId: string): Promise<bool
  * Positions of the scopes still granted. A withdrawn one is not asked about.
  *
  * A stored scope this build cannot name is not asked about either. Nothing
- * writes one any more, but a device that ran an earlier build may already
- * hold it, and one such row in the request is a `400` on every pull from then
- * on — reported as `refused`, which is "ours to fix, waiting will not help", so
- * the device would never receive another row. Leaving it out of the request is
- * the whole repair: the row stays, inert, and the pull works again.
+ * writes one, but a device may hold one already, and a single such key in the
+ * request is a `400` on every pull from then on — reported as `refused`, which
+ * means "ours to fix, waiting will not help", so the device would never receive
+ * another row. Leaving it out of the request is enough: the row stays, inert,
+ * and the pull works.
  */
 function cursorsOf(scopes: readonly SyncScopeState[]): SyncCursors {
   const cursors: Record<string, number> = {}

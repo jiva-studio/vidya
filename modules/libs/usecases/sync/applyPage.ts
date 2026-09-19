@@ -29,10 +29,10 @@ import {
  *   the response has arrived and closes before the next request goes out, so
  *   the SQLite lock is never held across a network round trip. iOS kills an app
  *   that is holding one when it is suspended, on a student's phone, silently.
- * - **The whole page applies; nothing is rolled back for one bad row** (,
- * ). Scope positions move independently, so homework legitimately
- *   arrives before the lesson version it answers. That order is legal, not an
- *   error, and the schema has no foreign keys precisely so that it stays legal.
+ * - **The whole page applies; nothing is rolled back for one bad row.** Scope
+ *   positions move independently, so homework legitimately arrives before the
+ *   lesson version it answers. That order is legal, not an error, and the
+ *   schema has no foreign keys precisely so that it stays legal.
  */
 
 /** What one page did, in the terms the caller's loop decides on. */
@@ -353,10 +353,10 @@ function storableGrants(response: PullResponse): SyncScopeRef[] {
  * that this device now holds them all. A page that stepped over a row of this
  * scope has not, so the sentinel goes down instead: the position still moves —
  * a skipped row is handled, not lost — but the next pull finds a summary that
- * cannot match, reports the scope diverged and refetches it from `0` (,
- * ). Recording the server's summary over incomplete data is what blinds
- * that detector permanently, which is exactly how a single skipped lesson
- * version becomes content the student never sees.
+ * cannot match, reports the scope diverged and refetches it from `0`. Recording
+ * the server's summary over incomplete data blinds that detector permanently,
+ * which is how a single skipped lesson version becomes content the student
+ * never sees.
  *
  * A row refused as stale is *not* missing: `applyRemote` refuses it because the
  * device already holds that version or a newer one, so the content is there and

@@ -12,7 +12,7 @@ import { type ImageStore, useSqlJsPersistence } from './sqljs'
  * and nothing in the app should be able to reach it by accident.
  *
  * Running the engine against real SQLite with no device and no emulator is how
- * this stage gets checked, so the ceremony of doing it is kept to nothing.
+ * the device code gets checked, so the ceremony of doing it is kept to nothing.
  */
 
 /** A frozen instant, so a recorded `applied_at` is something a test can assert. */

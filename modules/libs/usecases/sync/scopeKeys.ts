@@ -7,19 +7,17 @@ import { SyncScopeKinds, type SyncScopeRef } from '@vidya/domain'
  * to the server as a cursor on the next pull. That makes `sync_scopes` the one
  * table where an unchecked value from the wire becomes a *permanent* request
  * the server has to answer — and a request the server cannot answer is a `400`,
- * which the run reports as `refused`: our own doing, nothing to wait for
- * Pull then stops for good, while push carries on as if all were well.
+ * which the run reports as `refused`. Pull then stops for good, while push
+ * carries on as if all were well.
  *
  * So a scope is checked before it is stored, never after:
  *
- * - the **kind** must be one this build knows, exactly as `validateChange`
- *   checks the kind of a row's scope. A newer server may grant a kind we have
- *   never heard of; ignoring it costs the rows of that scope, and storing it
- *   costs every row of every scope, forever.
- * - the **id** must be a UUID. Every identifier in this system is one, and the
- *   server resolves a cursor key by casting the id to `uuid`: `course:7f` is
- *   not a bad cursor there but a failed cast, which is a `500` rather than a
- *   `400` — the same dead pull with a worse alarm.
+ * - the **kind** must be one this build knows. A newer server may grant a kind
+ *   we have never heard of; ignoring it costs the rows of that scope, and
+ *   storing it costs every row of every scope, forever.
+ * - the **id** must be a UUID, because the server resolves a cursor key by
+ *   casting the id to `uuid`: a malformed one is a failed cast, which is a
+ *   `500` rather than a `400` — the same dead pull with a worse alarm.
  *
  * Ignoring beats repairing: a scope we cannot name is a scope we cannot ask
  * about, and the rest of the pull is unaffected by leaving it alone.
