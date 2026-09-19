@@ -44,6 +44,16 @@ import type {
 /*                                  Entities                                  */
 /* -------------------------------------------------------------------------- */
 
+export interface LocalSchool {
+  readonly id: SchoolId
+  readonly name: string
+
+  /** External link; the bytes are never stored, so offline a card shows the initial. */
+  readonly logoUrl: string | null
+
+  readonly description: string | null
+}
+
 export interface LocalCourse {
   readonly id: CourseId
   readonly schoolId: SchoolId
@@ -139,6 +149,11 @@ export interface BlockStateKey {
 /* -------------------------------------------------------------------------- */
 /*                              Read-only content                             */
 /* -------------------------------------------------------------------------- */
+
+export interface ISchoolRepository {
+  list(): Promise<readonly LocalSchool[]>
+  getById(id: SchoolId): Promise<LocalSchool | null>
+}
 
 export interface ICourseRepository {
   list(): Promise<readonly LocalCourse[]>

@@ -1,0 +1,76 @@
+{
+  "name": "pull-school-scope",
+  "endpoint": "POST /sync/pull",
+  "description": "A student who holds a role in a school but is enrolled on nothing. The school scope carries the school itself and its courses; no lesson, version or section rides it, because content belongs to the course scope and the student has no course scope at all.",
+  "request": {
+    "deviceId": "device-8f2a6c14",
+    "cursors": {
+      "school:5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915": 0
+    }
+  },
+  "response": {
+    "changes": [
+      {
+        "serverSeq": 310,
+        "collection": "schools",
+        "docId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+        "op": "upsert",
+        "data": {
+          "id": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+          "name": "School of Devotion",
+          "logoUrl": "https://cdn.example.org/logos/devotion.png",
+          "description": "Scripture, kirtan and practice."
+        },
+        "hlc": "001789689200000:00000:server",
+        "scope": {
+          "kind": "school",
+          "id": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915"
+        },
+        "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+        "createdAt": "2026-09-18T07:20:00.000Z"
+      },
+      {
+        "serverSeq": 311,
+        "collection": "courses",
+        "docId": "b6d40e27-8c31-4a95-b7f2-0e5a1d38c624",
+        "op": "upsert",
+        "data": {
+          "id": "b6d40e27-8c31-4a95-b7f2-0e5a1d38c624",
+          "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+          "learningType": "individual",
+          "name": "Sanskrit for beginners",
+          "description": "The alphabet, sandhi and the first verses."
+        },
+        "hlc": "001789689210000:00000:server",
+        "scope": {
+          "kind": "school",
+          "id": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915"
+        },
+        "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+        "createdAt": "2026-09-18T07:20:10.000Z"
+      }
+    ],
+    "cursors": {
+      "school:5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915": 311
+    },
+    "scopes": [
+      {
+        "scope": {
+          "kind": "school",
+          "id": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915"
+        },
+        "headSeq": 311
+      },
+      {
+        "scope": {
+          "kind": "user",
+          "id": "7b3d5e90-1c44-4a2b-8f61-2d9e0c4a5b73"
+        },
+        "headSeq": 0
+      }
+    ],
+    "checksums": {
+      "school:5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915": "0f1c7a4d8e2b5936"
+    }
+  }
+}
