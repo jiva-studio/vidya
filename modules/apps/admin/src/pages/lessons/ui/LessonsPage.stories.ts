@@ -61,28 +61,24 @@ const meta: Meta<typeof LessonsPage> = { title: 'Admin/Teaching/Lessons', compon
 export default meta
 type Story = StoryObj<typeof LessonsPage>
 
-export const WithData: Story = { name: 'Data', parameters: route, render: over(world) }
-
-export const Empty: Story = {
-  name: 'Empty',
-  parameters: route,
-  render: over({ ...world, [LESSONS]: { items: [] } }),
-}
+export const Default: Story = { parameters: route, render: over(world) }
 
 export const Loading: Story = {
-  name: 'Loading',
   parameters: route,
   render: over({ ...world, [LESSONS]: pending() }),
 }
 
+export const Empty: Story = {
+  parameters: route,
+  render: over({ ...world, [LESSONS]: { items: [] } }),
+}
+
 export const Failed: Story = {
-  name: 'Error',
   parameters: route,
   render: over({ ...world, [LESSONS]: refusal(503, 'Уроки сейчас не читаются') }),
 }
 
-export const WithoutRights: Story = {
-  name: 'No permission',
+export const Denied: Story = {
   parameters: route,
   render: over(world, ['lessons:read'] as PermissionKey[]),
 }

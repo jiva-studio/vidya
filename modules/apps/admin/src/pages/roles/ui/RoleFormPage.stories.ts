@@ -39,25 +39,17 @@ const meta: Meta<typeof RoleFormPage> = {
 export default meta
 type Story = StoryObj<typeof RoleFormPage>
 
-export const WithData: Story = {
-  name: 'Data',
-  render: over({ [ROLE]: role }, { id: 'role-1' }),
-}
+export const Default: Story = { render: over({ [ROLE]: role }, { id: 'role-1' }) }
 
-export const Empty: Story = { name: 'Empty', render: over({ 'POST /edu/roles': { id: 'role-2' } }) }
+export const Loading: Story = { render: over({ [ROLE]: pending() }, { id: 'role-1' }) }
 
-export const Loading: Story = {
-  name: 'Loading',
-  render: over({ [ROLE]: pending() }, { id: 'role-1' }),
-}
+export const Empty: Story = { render: over({ 'POST /edu/roles': { id: 'role-2' } }) }
 
 export const Failed: Story = {
-  name: 'Error',
   render: over({ [ROLE]: refusal(404, 'Такой роли нет') }, { id: 'role-1' }),
 }
 
-export const WithoutRights: Story = {
-  name: 'No permission',
+export const Denied: Story = {
   render: over(
     { 'POST /edu/roles': refusal(403, 'Недостаточно прав, чтобы создать роль') },
     {},

@@ -44,26 +44,13 @@ const meta: Meta<typeof CourseFormPage> = {
 export default meta
 type Story = StoryObj<typeof CourseFormPage>
 
-export const WithData: Story = {
-  name: 'Data',
-  parameters: edit,
-  render: over({ [COURSE]: course }),
-}
+export const Default: Story = { parameters: edit, render: over({ [COURSE]: course }) }
 
-export const Empty: Story = {
-  name: 'Empty',
-  parameters: { route: { name: 'course-create' } },
-  render: over({}),
-}
+export const Loading: Story = { parameters: edit, render: over({ [COURSE]: pending() }) }
 
-export const Loading: Story = {
-  name: 'Loading',
-  parameters: edit,
-  render: over({ [COURSE]: pending() }),
-}
+export const Empty: Story = { parameters: { route: { name: 'course-create' } }, render: over({}) }
 
 export const Failed: Story = {
-  name: 'Error',
   parameters: edit,
   render: over({ [COURSE]: refusal(503, 'Курс сейчас не читается') }),
 }

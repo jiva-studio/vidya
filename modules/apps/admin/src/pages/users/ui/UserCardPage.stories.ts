@@ -54,10 +54,11 @@ const meta: Meta<typeof UserCardPage> = {
 export default meta
 type Story = StoryObj<typeof UserCardPage>
 
-export const WithData: Story = { name: 'Data', render: over(card) }
+export const Default: Story = { render: over(card) }
+
+export const Loading: Story = { render: over({ ...card, [USER]: pending() }) }
 
 export const Empty: Story = {
-  name: 'Empty',
   render: over({
     ...card,
     [USER_ROLES]: { userRoles: [] },
@@ -66,11 +67,8 @@ export const Empty: Story = {
   }),
 }
 
-export const Loading: Story = { name: 'Loading', render: over({ ...card, [USER]: pending() }) }
-
 export const Failed: Story = {
-  name: 'Error',
   render: over({ ...card, [USER]: refusal(404, 'Такого человека нет') }),
 }
 
-export const WithoutRights: Story = { name: 'No permission', render: over(card, READER) }
+export const Denied: Story = { render: over(card, READER) }

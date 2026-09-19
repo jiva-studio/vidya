@@ -40,18 +40,16 @@ const meta: Meta<typeof CoursesPage> = { title: 'Admin/Teaching/Courses', compon
 export default meta
 type Story = StoryObj<typeof CoursesPage>
 
-export const WithData: Story = { name: 'Data', render: over({ [COURSES]: { items } }) }
+export const Default: Story = { render: over({ [COURSES]: { items } }) }
 
-export const Empty: Story = { name: 'Empty', render: over({ [COURSES]: { items: [] } }) }
+export const Loading: Story = { render: over({ [COURSES]: pending() }) }
 
-export const Loading: Story = { name: 'Loading', render: over({ [COURSES]: pending() }) }
+export const Empty: Story = { render: over({ [COURSES]: { items: [] } }) }
 
 export const Failed: Story = {
-  name: 'Error',
   render: over({ [COURSES]: refusal(503, 'Курсы сейчас не читаются') }),
 }
 
-export const WithoutRights: Story = {
-  name: 'No permission',
+export const Denied: Story = {
   render: over({ [COURSES]: { items } }, ['courses:read'] as PermissionKey[]),
 }

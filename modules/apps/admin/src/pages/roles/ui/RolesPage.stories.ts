@@ -33,18 +33,14 @@ const meta: Meta<typeof RolesPage> = { title: 'Admin/Organisation/Roles', compon
 export default meta
 type Story = StoryObj<typeof RolesPage>
 
-export const WithData: Story = { name: 'Data', render: over({ [ROLES]: { items } }) }
+export const Default: Story = { render: over({ [ROLES]: { items } }) }
 
-export const Empty: Story = { name: 'Empty', render: over({ [ROLES]: { items: [] } }) }
+export const Loading: Story = { render: over({ [ROLES]: pending() }) }
 
-export const Loading: Story = { name: 'Loading', render: over({ [ROLES]: pending() }) }
+export const Empty: Story = { render: over({ [ROLES]: { items: [] } }) }
 
-export const Failed: Story = {
-  name: 'Error',
-  render: over({ [ROLES]: refusal(500, 'Роли не читаются') }),
-}
+export const Failed: Story = { render: over({ [ROLES]: refusal(500, 'Роли не читаются') }) }
 
-export const WithoutRights: Story = {
-  name: 'No permission',
+export const Denied: Story = {
   render: over({ [ROLES]: { items } }, ['roles:read'] as PermissionKey[]),
 }

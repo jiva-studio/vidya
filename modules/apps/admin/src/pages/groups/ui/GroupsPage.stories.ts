@@ -39,18 +39,14 @@ const meta: Meta<typeof GroupsPage> = { title: 'Admin/Teaching/Groups', componen
 export default meta
 type Story = StoryObj<typeof GroupsPage>
 
-export const WithData: Story = { name: 'Data', render: over(world) }
+export const Default: Story = { render: over(world) }
 
-export const Empty: Story = { name: 'Empty', render: over({ ...world, [GROUPS]: { items: [] } }) }
+export const Loading: Story = { render: over({ ...world, [GROUPS]: pending() }) }
 
-export const Loading: Story = { name: 'Loading', render: over({ ...world, [GROUPS]: pending() }) }
+export const Empty: Story = { render: over({ ...world, [GROUPS]: { items: [] } }) }
 
 export const Failed: Story = {
-  name: 'Error',
   render: over({ ...world, [GROUPS]: refusal(503, 'Группы сейчас не читаются') }),
 }
 
-export const WithoutRights: Story = {
-  name: 'No permission',
-  render: over(world, ['groups:read'] as PermissionKey[]),
-}
+export const Denied: Story = { render: over(world, ['groups:read'] as PermissionKey[]) }

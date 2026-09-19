@@ -55,16 +55,9 @@ const meta: Meta<typeof LessonVersionPage> = {
 export default meta
 type Story = StoryObj<typeof LessonVersionPage>
 
-export const WithData: Story = {
-  name: 'Data',
+export const Default: Story = {
   parameters: route,
   render: over({ [VERSION]: version() }),
-}
-
-export const AnsweredVersionEmpty: Story = {
-  name: 'Empty',
-  parameters: route,
-  render: over({ [VERSION]: version({ content: { schemaVersion: 1, sections: [] } }) }),
 }
 
 export const AnsweredVersionLoading: Story = {
@@ -73,8 +66,14 @@ export const AnsweredVersionLoading: Story = {
   render: over({ [VERSION]: pending() }),
 }
 
+export const AnsweredVersionEmpty: Story = {
+  name: 'Empty',
+  parameters: route,
+  render: over({ [VERSION]: version({ content: { schemaVersion: 1, sections: [] } }) }),
+}
+
 export const AnsweredVersionFailed: Story = {
-  name: 'Error',
+  name: 'Failed',
   parameters: route,
   render: over({ [VERSION]: refusal(503, 'Lesson storage is unavailable') }),
 }

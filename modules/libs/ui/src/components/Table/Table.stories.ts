@@ -34,7 +34,7 @@ const render = (args: Record<string, unknown>) => ({
 
 export default { title: 'Design system/Data/Table', component: Table }
 
-export const Data = { render, args: { columns, rows, caption: 'Courses' } }
+export const Default = { render, args: { columns, rows, caption: 'Courses' } }
 export const Loading = { render, args: { columns, rows: [], loading: true } }
 export const Empty = {
   render,
@@ -46,7 +46,7 @@ export const Empty = {
     emptyActionLabel: 'Create course',
   },
 }
-export const Error = {
+export const Failed = {
   render,
   args: { columns, rows: [], error: 'The server did not answer. The list may be out of date.' },
 }

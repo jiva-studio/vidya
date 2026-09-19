@@ -39,31 +39,24 @@ const meta: Meta<typeof SchoolSettingsPage> = {
 export default meta
 type Story = StoryObj<typeof SchoolSettingsPage>
 
-export const WithData: Story = {
-  name: 'Data',
+export const Default: Story = {
   render: over({
     [CONFIGS]: { defaultStudentRoleId: 'role-1', studentRoleIds: ['role-1'] },
     [ROLES]: roles,
   }),
 }
 
+export const Loading: Story = { render: over({ [CONFIGS]: pending(), [ROLES]: pending() }) }
+
 export const Empty: Story = {
-  name: 'Empty',
   render: over({ [CONFIGS]: { studentRoleIds: [] }, [ROLES]: { items: [] } }),
 }
 
-export const Loading: Story = {
-  name: 'Loading',
-  render: over({ [CONFIGS]: pending(), [ROLES]: pending() }),
-}
-
 export const Failed: Story = {
-  name: 'Error',
   render: over({ [CONFIGS]: refusal(500, 'Настройки не читаются'), [ROLES]: roles }),
 }
 
-export const WithoutRights: Story = {
-  name: 'No permission',
+export const Denied: Story = {
   render: over(
     {
       [CONFIGS]: { studentRoleIds: [] },

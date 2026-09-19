@@ -41,8 +41,8 @@ const meta: Meta<typeof TextBlockEditor> = {
 export default meta
 type Story = StoryObj<typeof TextBlockEditor>
 
-export const Written: Story = { name: 'Written', render: over(block(written)) }
+export const Default: Story = { render: over(block(written)) }
 
-export const Empty: Story = { name: 'Empty', render: over(block('')) }
+export const Empty: Story = { render: over(block('')) }
 
 export const Frozen: Story = { name: 'Frozen', render: over(block(written), true) }

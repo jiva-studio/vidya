@@ -65,19 +65,15 @@ const meta: Meta<typeof HomeworkQueuePage> = {
 export default meta
 type Story = StoryObj<typeof HomeworkQueuePage>
 
-export const WithData: Story = { name: 'Data', render: over(world) }
+export const Default: Story = { render: over(world) }
 
-export const Empty: Story = { name: 'Empty', render: over({ ...world, [HOMEWORK]: { items: [] } }) }
+export const Loading: Story = { render: over({ ...world, [HOMEWORK]: pending() }) }
 
-export const Loading: Story = { name: 'Loading', render: over({ ...world, [HOMEWORK]: pending() }) }
+export const Empty: Story = { render: over({ ...world, [HOMEWORK]: { items: [] } }) }
 
 export const Failed: Story = {
-  name: 'Error',
   render: over({ ...world, [HOMEWORK]: refusal(503, 'The queue cannot be read right now') }),
 }
 
 /** Work may be read without the right to read people: the rows keep their places. */
-export const WithoutRights: Story = {
-  name: 'No permission',
-  render: over(world, ['homework:read'] as PermissionKey[]),
-}
+export const Denied: Story = { render: over(world, ['homework:read'] as PermissionKey[]) }

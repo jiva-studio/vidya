@@ -38,18 +38,12 @@ const meta: Meta<typeof SchoolsPage> = {
 export default meta
 type Story = StoryObj<typeof SchoolsPage>
 
-export const WithData: Story = { name: 'Data', render: over({ [SCHOOLS]: { items } }) }
+export const Default: Story = { render: over({ [SCHOOLS]: { items } }) }
 
-export const Empty: Story = { name: 'Empty', render: over({ [SCHOOLS]: { items: [] } }) }
+export const Loading: Story = { render: over({ [SCHOOLS]: pending() }) }
 
-export const Loading: Story = { name: 'Loading', render: over({ [SCHOOLS]: pending() }) }
+export const Empty: Story = { render: over({ [SCHOOLS]: { items: [] } }) }
 
-export const Failed: Story = {
-  name: 'Error',
-  render: over({ [SCHOOLS]: refusal(503, 'Хранилище недоступно') }),
-}
+export const Failed: Story = { render: over({ [SCHOOLS]: refusal(503, 'Хранилище недоступно') }) }
 
-export const WithoutRights: Story = {
-  name: 'No permission',
-  render: over({ [SCHOOLS]: { items } }, READER),
-}
+export const Denied: Story = { render: over({ [SCHOOLS]: { items } }, READER) }

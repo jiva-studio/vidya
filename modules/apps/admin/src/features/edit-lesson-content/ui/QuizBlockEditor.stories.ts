@@ -34,12 +34,11 @@ const meta: Meta<typeof QuizBlockEditor> = {
 export default meta
 type Story = StoryObj<typeof QuizBlockEditor>
 
-export const Fresh: Story = { name: 'Nothing written yet', render: over(block('', ['', ''])) }
-
-export const Written: Story = {
-  name: 'Written',
+export const Default: Story = {
   render: over(block('Что меняется на стыке слов?', ['Гласная', 'Согласная', 'Ударение'], 1)),
 }
+
+export const Empty: Story = { render: over(block('', ['', ''])) }
 
 export const Frozen: Story = {
   name: 'Frozen',

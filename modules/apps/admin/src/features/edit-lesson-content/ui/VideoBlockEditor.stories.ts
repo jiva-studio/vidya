@@ -33,12 +33,11 @@ const meta: Meta<typeof VideoBlockEditor> = {
 export default meta
 type Story = StoryObj<typeof VideoBlockEditor>
 
-export const Embedded: Story = {
-  name: 'YouTube embed',
+export const Default: Story = {
   render: over(block('youtube', 'https://www.youtube.com/watch?v=abc')),
 }
 
-export const Empty: Story = { name: 'Empty', render: over(block('url', '')) }
+export const Empty: Story = { render: over(block('url', '')) }
 
 export const Refused: Story = {
   name: 'Link from the wrong host',

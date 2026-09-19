@@ -59,28 +59,24 @@ const meta: Meta<typeof GroupMembersPage> = {
 export default meta
 type Story = StoryObj<typeof GroupMembersPage>
 
-export const WithData: Story = { name: 'Data', parameters: route, render: over(world) }
-
-export const Empty: Story = {
-  name: 'Empty',
-  parameters: route,
-  render: over({ ...world, [ENROLLMENTS]: { items: [] } }),
-}
+export const Default: Story = { parameters: route, render: over(world) }
 
 export const Loading: Story = {
-  name: 'Loading',
   parameters: route,
   render: over({ ...world, [ENROLLMENTS]: pending() }),
 }
 
+export const Empty: Story = {
+  parameters: route,
+  render: over({ ...world, [ENROLLMENTS]: { items: [] } }),
+}
+
 export const Failed: Story = {
-  name: 'Error',
   parameters: route,
   render: over({ ...world, [ENROLLMENTS]: refusal(503, 'Состав группы сейчас не читается') }),
 }
 
-export const WithoutRights: Story = {
-  name: 'No permission',
+export const Denied: Story = {
   parameters: route,
   render: over({ ...world, '/edu/users': refusal(403, 'Forbidden') }, [
     'groups:read',

@@ -19,8 +19,7 @@ const meta: Meta<typeof DashboardPage> = {
 export default meta
 type Story = StoryObj<typeof DashboardPage>
 
-export const WithData: Story = {
-  name: 'Data',
+export const Default: Story = {
   render: () => ({
     components: { DashboardPage },
     setup() {

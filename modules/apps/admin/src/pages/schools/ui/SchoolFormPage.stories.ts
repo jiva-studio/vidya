@@ -31,25 +31,19 @@ const meta: Meta<typeof SchoolFormPage> = {
 export default meta
 type Story = StoryObj<typeof SchoolFormPage>
 
-export const WithData: Story = {
-  name: 'Data',
+export const Default: Story = {
   render: over({ [SCHOOL]: { id: 'school-1', name: 'First school' } }, { id: 'school-1' }),
 }
 
-export const Empty: Story = { name: 'Empty', render: over({ 'POST /edu/schools': { id: 'x' } }) }
+export const Loading: Story = { render: over({ [SCHOOL]: pending() }, { id: 'school-1' }) }
 
-export const Loading: Story = {
-  name: 'Loading',
-  render: over({ [SCHOOL]: pending() }, { id: 'school-1' }),
-}
+export const Empty: Story = { render: over({ 'POST /edu/schools': { id: 'x' } }) }
 
 export const Failed: Story = {
-  name: 'Error',
   render: over({ [SCHOOL]: refusal(404, 'Такой школы нет') }, { id: 'school-1' }),
 }
 
-export const WithoutRights: Story = {
-  name: 'No permission',
+export const Denied: Story = {
   render: over(
     { 'POST /edu/schools': refusal(403, 'Недостаточно прав, чтобы создать школу') },
     {},

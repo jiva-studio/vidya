@@ -32,7 +32,7 @@ const meta: Meta<typeof PermissionsPicker> = {
 export default meta
 type Story = StoryObj<typeof PermissionsPicker>
 
-export const EmptyRole: Story = { name: 'Empty role', render: over([]) }
+export const Empty: Story = { render: over([]) }
 
 export const TeacherRole: Story = { name: 'Teacher role', render: over(teacher) }
 

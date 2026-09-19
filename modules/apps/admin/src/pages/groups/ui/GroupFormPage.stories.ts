@@ -34,26 +34,16 @@ const meta: Meta<typeof GroupFormPage> = { title: 'Admin/Teaching/Group', compon
 export default meta
 type Story = StoryObj<typeof GroupFormPage>
 
-export const WithData: Story = {
-  name: 'Data',
+export const Default: Story = {
   parameters: edit,
   render: over({ [GROUP]: { id: 'g1', name: 'Morning group', courseId: 'c1' } }),
 }
 
-export const Empty: Story = {
-  name: 'Empty',
-  parameters: { route: { name: 'group-create' } },
-  render: over({}),
-}
+export const Loading: Story = { parameters: edit, render: over({ [GROUP]: pending() }) }
 
-export const Loading: Story = {
-  name: 'Loading',
-  parameters: edit,
-  render: over({ [GROUP]: pending() }),
-}
+export const Empty: Story = { parameters: { route: { name: 'group-create' } }, render: over({}) }
 
 export const Failed: Story = {
-  name: 'Error',
   parameters: edit,
   render: over({ [GROUP]: refusal(503, 'Группа сейчас не читается') }),
 }

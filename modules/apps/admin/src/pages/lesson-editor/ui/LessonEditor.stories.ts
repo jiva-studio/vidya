@@ -94,23 +94,36 @@ const meta: Meta<typeof LessonEditorView> = {
 export default meta
 type Story = StoryObj<typeof LessonEditorView>
 
-export const Draft: Story = { parameters: route, name: 'Draft', render: over(draft) }
+export const Draft: Story = { parameters: route, render: over(draft) }
 
+export const Loading: Story = {
+  parameters: route,
+  render: over({ [VERSIONS]: pending() }),
+}
+
+export const Empty: Story = {
+  parameters: route,
+  render: over({
+    [`GET ${VERSIONS}`]: { items: [summary('v1', 1, 'draft')] },
+    [`GET ${VERSIONS}/v1`]: details('v1', 1, 'draft', blank),
+  }),
+}
+
+export const Failed: Story = {
+  parameters: route,
+  render: over({ [VERSIONS]: refusal(500, 'Версии урока не читаются') }),
+}
+
+export const Denied: Story = {
+  parameters: route,
+  render: over(draft, ['lessons:read', 'lessons:update'] as PermissionKey[]),
+}
 export const Published: Story = {
   parameters: route,
   name: 'Published version',
   render: over({
     [`GET ${VERSIONS}`]: { items: [summary('v1', 1, 'published')] },
     [`GET ${VERSIONS}/v1`]: details('v1', 1, 'published', filled),
-  }),
-}
-
-export const Empty: Story = {
-  parameters: route,
-  name: 'Empty',
-  render: over({
-    [`GET ${VERSIONS}`]: { items: [summary('v1', 1, 'draft')] },
-    [`GET ${VERSIONS}/v1`]: details('v1', 1, 'draft', blank),
   }),
 }
 
@@ -121,22 +134,4 @@ export const UnknownBlock: Story = {
     [`GET ${VERSIONS}`]: { items: [summary('v1', 1, 'draft')] },
     [`GET ${VERSIONS}/v1`]: details('v1', 1, 'draft', unknown),
   }),
-}
-
-export const Loading: Story = {
-  parameters: route,
-  name: 'Loading',
-  render: over({ [VERSIONS]: pending() }),
-}
-
-export const Failed: Story = {
-  parameters: route,
-  name: 'Error',
-  render: over({ [VERSIONS]: refusal(500, 'Версии урока не читаются') }),
-}
-
-export const WithoutRights: Story = {
-  parameters: route,
-  name: 'No permission',
-  render: over(draft, ['lessons:read', 'lessons:update'] as PermissionKey[]),
 }

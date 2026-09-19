@@ -70,24 +70,16 @@ const meta: Meta<typeof EnrollmentsPage> = {
 export default meta
 type Story = StoryObj<typeof EnrollmentsPage>
 
-export const WithData: Story = { name: 'Data', render: over(world) }
+export const Default: Story = { render: over(world) }
 
-export const Empty: Story = {
-  name: 'Empty',
-  render: over({ ...world, [ENROLLMENTS]: { items: [] } }),
-}
+export const Loading: Story = { render: over({ ...world, [ENROLLMENTS]: pending() }) }
 
-export const Loading: Story = {
-  name: 'Loading',
-  render: over({ ...world, [ENROLLMENTS]: pending() }),
-}
+export const Empty: Story = { render: over({ ...world, [ENROLLMENTS]: { items: [] } }) }
 
 export const Failed: Story = {
-  name: 'Error',
   render: over({ ...world, [ENROLLMENTS]: refusal(500, 'Заявки сейчас не читаются') }),
 }
 
-export const WithoutRights: Story = {
-  name: 'No permission',
+export const Denied: Story = {
   render: over(world, ['enrollments:read', 'users:read'] as PermissionKey[]),
 }

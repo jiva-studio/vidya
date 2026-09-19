@@ -33,12 +33,9 @@ const meta: Meta<typeof AudioBlockEditor> = {
 export default meta
 type Story = StoryObj<typeof AudioBlockEditor>
 
-export const Linked: Story = {
-  name: 'Direct link',
-  render: over(block('url', 'https://example.org/lesson.mp3')),
-}
+export const Default: Story = { render: over(block('url', 'https://example.org/lesson.mp3')) }
 
-export const Empty: Story = { name: 'Empty', render: over(block('url', '')) }
+export const Empty: Story = { render: over(block('url', '')) }
 
 export const Refused: Story = {
   name: 'Link that is not an address',

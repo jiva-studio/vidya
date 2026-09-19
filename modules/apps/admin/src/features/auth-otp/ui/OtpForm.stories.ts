@@ -46,17 +46,21 @@ const enterCode = async (canvasElement: HTMLElement) => {
   await userEvent.click(form.getByRole('button', { name: /войти|sign in/i }))
 }
 
-export const AskingForTheAddress: Story = {
+export const Default: Story = {
   render: over({ [OTP]: { success: true }, [SIGN_IN]: {} }),
 }
 
-export const WaitingForTheCode: Story = {
-  render: over({ [OTP]: { success: true }, [SIGN_IN]: {} }),
+export const Loading: Story = {
+  render: over({ [OTP]: pending() }),
   play: ({ canvasElement }) => askForCode(canvasElement),
 }
 
-export const Sending: Story = {
-  render: over({ [OTP]: pending() }),
+export const Failed: Story = {
+  render: over({ [OTP]: new HttpError(500, OTP, { message: 'Mailer is down' }) }),
+  play: ({ canvasElement }) => askForCode(canvasElement),
+}
+export const WaitingForTheCode: Story = {
+  render: over({ [OTP]: { success: true }, [SIGN_IN]: {} }),
   play: ({ canvasElement }) => askForCode(canvasElement),
 }
 
@@ -68,9 +72,4 @@ export const CodeStillValid: Story = {
 export const WrongCode: Story = {
   render: over({ [OTP]: { success: true }, [SIGN_IN]: new HttpError(401, SIGN_IN) }),
   play: ({ canvasElement }) => enterCode(canvasElement),
-}
-
-export const CouldNotSend: Story = {
-  render: over({ [OTP]: new HttpError(500, OTP, { message: 'Mailer is down' }) }),
-  play: ({ canvasElement }) => askForCode(canvasElement),
 }

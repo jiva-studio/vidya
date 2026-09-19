@@ -41,9 +41,9 @@ const meta: Meta<typeof SectionForm> = {
 export default meta
 type Story = StoryObj<typeof SectionForm>
 
-export const Untitled: Story = { name: 'Untitled', render: over(section('', 'none')) }
+export const Default: Story = { render: over(section('Алфавит', 'none')) }
 
-export const Named: Story = { name: 'Named', render: over(section('Алфавит', 'none')) }
+export const Empty: Story = { render: over(section('', 'none')) }
 
 export const WithHomework: Story = {
   name: 'Asks for homework',

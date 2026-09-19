@@ -84,27 +84,19 @@ const meta: Meta<typeof HomeworkReviewPage> = {
 export default meta
 type Story = StoryObj<typeof HomeworkReviewPage>
 
-export const WithData: Story = { name: 'Data', render: over(world) }
+export const Default: Story = { render: over(world) }
+
+export const Loading: Story = { render: over({ ...world, [`${HOMEWORK}/h1`]: pending() }) }
 
 /** The last work of the queue: there is no next one, and the list is offered. */
-export const Empty: Story = {
-  name: 'Empty',
-  render: over({ ...world, [HOMEWORK]: { items: [summary('h1')] } }),
-}
-
-export const Loading: Story = {
-  name: 'Loading',
-  render: over({ ...world, [`${HOMEWORK}/h1`]: pending() }),
-}
+export const Empty: Story = { render: over({ ...world, [HOMEWORK]: { items: [summary('h1')] } }) }
 
 export const Failed: Story = {
-  name: 'Error',
   render: over({ ...world, [`${HOMEWORK}/h1`]: refusal(503, 'This work cannot be read') }),
 }
 
 /** Reading work is one right, deciding on it another: the decision is absent. */
-export const WithoutRights: Story = {
-  name: 'No permission',
+export const Denied: Story = {
   render: over(world, ['homework:read', 'enrollments:read', 'users:read'] as PermissionKey[]),
 }
 
