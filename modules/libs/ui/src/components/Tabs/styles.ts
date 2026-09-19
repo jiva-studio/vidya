@@ -49,4 +49,3 @@ export const triggerVariants = cva(
 )
 
 export const panelClasses = ['focus:outline-none']
-

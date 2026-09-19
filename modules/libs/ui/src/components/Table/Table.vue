@@ -3,10 +3,11 @@ import { computed } from 'vue'
 
 import EmptyState from '../EmptyState'
 import ErrorState from '../ErrorState'
-import Skeleton from '../Skeleton'
+
 import TableHead from './TableHead.vue'
+import TableSkeleton from './TableSkeleton.vue'
 import { cn } from '../../lib/utils'
-import { captionClasses, frameClasses, loadingClasses, tableClasses } from './styles'
+import { captionClasses, frameClasses, tableClasses } from './styles'
 import type { TableEmits, TableProps, TableRowData } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -68,24 +69,7 @@ function keyOf(row: TableRowData, index: number): string {
         <col v-for="column in props.columns" :key="column.key" :style="{ width: column.width }" />
       </colgroup>
       <TableHead :columns="props.columns" />
-      <tbody>
-        <tr
-          v-for="i in 5"
-          :key="i"
-          class="border-b border-[var(--color-border)] last:border-b-0 h-[var(--row-height)]"
-        >
-          <td
-            v-for="column in props.columns"
-            :key="column.key"
-            class="px-[var(--space-4)] py-[var(--space-2)] align-middle"
-          >
-            <Skeleton
-              shape="text"
-              :class="column.align === 'end' ? 'ml-auto max-w-[4rem]' : 'max-w-[12rem]'"
-            />
-          </td>
-        </tr>
-      </tbody>
+      <TableSkeleton :columns="props.columns" :rows="5" />
     </table>
   </div>
   <EmptyState

@@ -85,16 +85,9 @@ export const rowClasses = [
   'justify-between',
 ]
 
-export const rowLabelClasses = [
-  'text-[length:var(--text-xs)]',
-  'text-[var(--color-text-muted)]',
-]
+export const rowLabelClasses = ['text-[length:var(--text-xs)]', 'text-[var(--color-text-muted)]']
 
-export const dividerClasses = [
-  'h-px',
-  'bg-[var(--color-border)]',
-  'my-[2px]',
-]
+export const dividerClasses = ['h-px', 'bg-[var(--color-border)]', 'my-[2px]']
 
 export const signOutClasses = [
   'w-full',

@@ -78,3 +78,14 @@ export const loadingClasses = [
   'flex flex-col gap-[var(--space-3)] p-[var(--space-4)]',
   'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)]',
 ]
+
+export const skeletonRowClasses = [
+  'border-b border-[var(--color-border)] last:border-b-0 h-[var(--row-height)]',
+]
+
+export const skeletonCellClasses = ['px-[var(--space-4)] py-[var(--space-2)] align-middle']
+
+export const skeletonMarkClasses = {
+  start: 'max-w-[12rem]',
+  end: 'ml-auto max-w-[4rem]',
+}

@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import type { UserDetails } from '@vidya/protocol'
-import { Avatar, Breadcrumbs, ErrorState, FormSection, PageHeader, Separator, Skeleton } from '@vidya/ui'
+import {
+  Avatar,
+  Breadcrumbs,
+  ErrorState,
+  FormSection,
+  PageHeader,
+  Separator,
+  Skeleton,
+} from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -83,8 +91,8 @@ async function load(): Promise<void> {
     </PageHeader>
     <Skeleton v-if="loading" shape="block" :lines="4" />
     <ErrorState
-      :title="$t('state-error-title')"
       v-else-if="error"
+      :title="$t('state-error-title')"
       :description="errorText ?? $t('state-error')"
       :retry-label="$t('action-retry')"
       @retry="onRetry"

@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import type { EnrollmentId } from '@vidya/domain'
-import { Avatar, TableCell, TableRow } from '@vidya/ui'
+import { TableCell, TableRow } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
 
 import { EnrollmentStatusBadge } from '@/entities/enrollment'
+
+import StudentCell from './StudentCell.vue'
 import { ModerationActions } from '@/features/moderate-enrollment'
 import { formatDate } from '@/shared/lib'
 
-import { primaryLineClasses, secondaryLineClasses, stackClasses } from './styles'
+import { secondaryLineClasses, stackClasses } from './styles'
 import type { EnrollmentsTableRowEmits, EnrollmentsTableRowProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -47,17 +49,10 @@ function onAssign(id: EnrollmentId) {
 <template>
   <TableRow>
     <TableCell tone="primary">
-      <div class="flex items-center gap-[var(--space-2)]">
-        <Avatar :name="props.enrollment.studentName ?? '?'" size="sm" />
-        <div :class="stackClasses">
-          <span :class="primaryLineClasses">
-            {{ props.enrollment.studentName ?? $t('enrollments-student-unknown') }}
-          </span>
-          <span :class="secondaryLineClasses">
-            {{ $t('enrollments-requested-at', { at: formatDate(props.enrollment.createdAt) }) }}
-          </span>
-        </div>
-      </div>
+      <StudentCell
+        :name="props.enrollment.studentName ?? $t('enrollments-student-unknown')"
+        :note="$t('enrollments-requested-at', { at: formatDate(props.enrollment.createdAt) })"
+      />
     </TableCell>
     <TableCell truncate :title="props.enrollment.courseName">
       {{ props.enrollment.courseName }}

@@ -59,3 +59,8 @@ export interface TableCellProps {
   actions?: boolean
   class?: string
 }
+
+export interface TableSkeletonProps {
+  columns: TableColumn[]
+  rows: number
+}

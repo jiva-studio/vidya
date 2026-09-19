@@ -58,11 +58,7 @@ function onCancel() {
 
 <template>
   <form :class="formClasses" @submit.prevent="onSubmit">
-    <FormField
-      :label="$t('users-form-name')"
-      :error="nameError"
-      required
-    >
+    <FormField :label="$t('users-form-name')" :error="nameError" required>
       <template #default="field">
         <Input :id="field.id" v-model="name" name="name" :disabled="busy" />
       </template>

@@ -28,7 +28,7 @@ export default defineConfig([
     rules: { 'fsd/segments-by-purpose': 'off' },
   },
   {
-    // Seven slices have exactly one consumer today, and `insignificant-slice`
+    // Eight slices have exactly one consumer today, and `insignificant-slice`
     // suggests merging each into it. They stay separate, named one by one so
     // that a slice nobody uses is still reported everywhere else:
     //
@@ -48,6 +48,7 @@ export default defineConfig([
       './src/entities/homework/**',
       './src/features/assign-group/**',
       './src/features/edit-lesson-content/**',
+      './src/features/switch-language/**',
       './src/features/grade-homework/**',
       './src/features/manage-user-roles/**',
       './src/features/moderate-enrollment/**',

@@ -6,8 +6,9 @@ import { mountWithApp } from '@/shared/testing'
 
 import AccountMenu from '../ui/AccountMenu.vue'
 
-const mountMenu = (props: { name: string; email?: string } = { name: 'Ann', email: 'ann@example.com' }) =>
-  mountWithApp(AccountMenu, { props })
+const mountMenu = (
+  props: { name: string; email?: string } = { name: 'Ann', email: 'ann@example.com' },
+) => mountWithApp(AccountMenu, { props })
 
 describe('AccountMenu', () => {
   beforeEach(() => {

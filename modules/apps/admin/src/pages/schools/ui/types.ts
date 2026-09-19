@@ -1,5 +1,6 @@
-import type { SchoolId } from '@vidya/domain'
+import type { RoleId, SchoolId } from '@vidya/domain'
 
+import type { RoleRow } from '@/entities/role'
 import type { SchoolRow } from '@/entities/school'
 
 export interface SchoolsTableRowProps {
@@ -19,4 +20,21 @@ export interface SchoolFormPageProps {
 
 export interface SchoolSettingsPageProps {
   id: SchoolId
+}
+
+export interface SchoolNameFieldProps {
+  modelValue: string
+  error?: string
+  disabled?: boolean
+}
+
+export interface DefaultRoleFieldProps {
+  modelValue: string
+  options: { value: string; label: string }[]
+}
+
+export interface StudentRolesListProps {
+  roles: RoleRow[]
+  chosen: RoleId[]
+  disabled?: boolean
 }

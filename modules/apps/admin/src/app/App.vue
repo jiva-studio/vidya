@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { UserId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
-import { Avatar } from '@vidya/ui'
 import { computed, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
@@ -65,11 +64,7 @@ function onSignOut() {
     <template #school><SchoolSwitcher /></template>
     <template #nav><SidebarNav :groups="groups" /></template>
     <template #profile>
-      <AccountMenu
-        :name="userName"
-        :email="userEmail"
-        @sign-out="onSignOut"
-      />
+      <AccountMenu :name="userName" :email="userEmail" @sign-out="onSignOut" />
     </template>
     <RouterView />
   </AppShell>

@@ -24,3 +24,8 @@ export interface EnrollmentsTableRowEmits {
   decline: [id: EnrollmentId]
   'assign-group': [id: EnrollmentId]
 }
+
+export interface StudentCellProps {
+  name: string
+  note: string
+}

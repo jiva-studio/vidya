@@ -1,22 +1,5 @@
 <script setup lang="ts">
-import type { AppShellEmits } from '../types'
-import {
-  contentClasses,
-  footerClasses,
-  mainClasses,
-  shellClasses,
-  sidebarClasses,
-} from './styles'
-
-/* --------------------------------- Events --------------------------------- */
-
-const emit = defineEmits<AppShellEmits>()
-
-/* -------------------------------- Handlers -------------------------------- */
-
-function onSignOut() {
-  emit('sign-out')
-}
+import { contentClasses, footerClasses, mainClasses, shellClasses, sidebarClasses } from './styles'
 </script>
 
 <template>
@@ -25,9 +8,8 @@ function onSignOut() {
       <slot name="school" />
       <slot name="nav" />
       <div :class="footerClasses">
-        <slot name="profile">
-          <slot name="footer" />
-        </slot>
+        <slot name="profile" />
+        <slot name="footer" />
       </div>
     </aside>
     <main :class="mainClasses">

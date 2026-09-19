@@ -3,14 +3,11 @@ import type { RoleId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
 import type { SelectOption } from '@vidya/ui'
 import {
-  Checkbox,
   EmptyState,
   ErrorState,
   FormActions,
-  FormField,
   FormSection,
   PageHeader,
-  Select,
   Separator,
   Skeleton,
 } from '@vidya/ui'
@@ -24,8 +21,10 @@ import { reasonOf } from '@/shared/lib'
 import { useSchoolApi } from '@/entities/school'
 import { useHttp } from '@/shared/api'
 
+import DefaultRoleField from './DefaultRoleField.vue'
+import StudentRolesList from './StudentRolesList.vue'
 import type { SchoolSettingsPageProps } from './types'
-import { formClasses, listClasses, pageClasses } from './styles'
+import { formClasses, pageClasses } from './styles'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -124,8 +123,8 @@ async function load(): Promise<void> {
     <PageHeader :title="$t('schools-settings-title')" />
     <Skeleton v-if="loading" shape="block" :lines="4" />
     <ErrorState
-      :title="$t('state-error-title')"
       v-else-if="loadFailed"
+      :title="$t('state-error-title')"
       :description="errorText ?? $t('state-error')"
       :retry-label="$t('action-retry')"
       @retry="onRetry"
@@ -136,32 +135,15 @@ async function load(): Promise<void> {
       :description="$t('schools-settings-empty-body')"
     />
     <form v-else :class="formClasses" @submit.prevent="onSubmit">
-      <FormField
-        :label="$t('schools-settings-default-role')"
-        :hint="$t('schools-settings-default-role-hint')"
-      >
-        <template #default="field">
-          <Select
-            :id="field.id"
-            v-model="defaultStudentRoleId"
-            :options="options"
-            :placeholder="$t('schools-settings-default-role-none')"
-            :described-by="field.describedBy"
-          />
-        </template>
-      </FormField>
+      <DefaultRoleField v-model="defaultStudentRoleId" :options="options" />
       <Separator />
       <FormSection :title="$t('schools-settings-student-roles')">
-        <div :class="listClasses">
-          <Checkbox
-            v-for="role in available"
-            :key="role.id"
-            :model-value="chosen.has(role.id)"
-            :label="role.name"
-            :disabled="busy"
-            @update:model-value="onToggle(role.id, $event)"
-          />
-        </div>
+        <StudentRolesList
+          :roles="available"
+          :chosen="[...chosen]"
+          :disabled="busy"
+          @toggle="onToggle"
+        />
       </FormSection>
       <FormActions
         :submit-label="$t('action-save')"

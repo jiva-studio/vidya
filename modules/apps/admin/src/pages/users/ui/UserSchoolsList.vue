@@ -68,8 +68,8 @@ function nameOf(id: SchoolId): string {
 <template>
   <Skeleton v-if="loading" shape="text" :lines="2" />
   <ErrorState
-    :title="$t('state-error-title')"
     v-else-if="error"
+    :title="$t('state-error-title')"
     :description="errorText ?? $t('state-error')"
     :retry-label="$t('action-retry')"
     @retry="onRetry"

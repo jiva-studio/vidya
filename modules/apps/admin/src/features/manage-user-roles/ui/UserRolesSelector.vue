@@ -55,8 +55,8 @@ function onToggle(roleId: RoleId, checked: boolean) {
   <section :class="sectionClasses">
     <Skeleton v-if="roles.loading.value" shape="block" :lines="3" />
     <ErrorState
-      :title="$t('state-error-title')"
       v-else-if="loadFailed"
+      :title="$t('state-error-title')"
       :description="$t(roles.error.value ?? 'state-error')"
       :retry-label="$t('action-retry')"
       @retry="onRetry"

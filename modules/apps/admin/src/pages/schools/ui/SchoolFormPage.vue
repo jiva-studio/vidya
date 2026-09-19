@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FormActions, FormField, Input, PageHeader } from '@vidya/ui'
+import { FormActions, PageHeader } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -7,6 +7,7 @@ import { useRouter } from 'vue-router'
 import { reasonOf } from '@/shared/lib'
 import { useSchoolApi } from '@/entities/school'
 
+import SchoolNameField from './SchoolNameField.vue'
 import type { SchoolFormPageProps } from './types'
 import { formClasses, pageClasses } from './styles'
 
@@ -91,18 +92,7 @@ async function send(): Promise<void> {
   <section :class="pageClasses">
     <PageHeader :title="title" />
     <form :class="formClasses" @submit.prevent="onSubmit">
-      <FormField :label="$t('schools-form-name')" :error="nameError" required>
-        <template #default="field">
-          <Input
-            :id="field.id"
-            v-model="name"
-            name="name"
-            :described-by="field.describedBy"
-            :invalid="field.invalid"
-            :disabled="busy"
-          />
-        </template>
-      </FormField>
+      <SchoolNameField v-model="name" :error="nameError" :disabled="busy" />
       <FormActions
         :submit-label="$t('action-save')"
         :cancel-label="$t('action-cancel')"

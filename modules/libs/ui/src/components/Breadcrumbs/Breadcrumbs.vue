@@ -44,12 +44,7 @@ function isLast(index: number): boolean {
         >
           {{ item.label }}
         </a>
-        <button
-          v-else
-          type="button"
-          :class="linkClasses"
-          @click="onSelect(item.key)"
-        >
+        <button v-else type="button" :class="linkClasses" @click="onSelect(item.key)">
           {{ item.label }}
         </button>
       </li>
