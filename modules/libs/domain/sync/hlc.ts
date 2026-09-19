@@ -1,29 +1,22 @@
 /**
  * Hybrid Logical Clock (HLC).
  *
- * Copied verbatim from Lectorium (`libs/domain/sync/hlc.ts`); the only change is
- * that the wall clock is now a required argument rather than a `Date.now()`
- * default, because ambient clocks are forbidden in pure layers here.
+ * Every synced change is stamped with an HLC so that two devices pick the same
+ * winner on conflict without trusting the phone's wall clock. Wire format is
+ * `<physical_ms>:<counter>:<device_id>`, e.g.
+ * `000001718000000000:00000:device-abc`, and HLCs compare on
+ * `(physical, counter, device_id)`: `counter` bumps whenever the clock does not
+ * advance (or runs backwards), so successive writes in the same millisecond
+ * stay ordered, and `device_id` is the final tiebreak.
  *
- * Every synced change is stamped with an HLC so two devices deterministically
- * — and identically — pick a winner on conflict without trusting the phone's
- * wall clock. Wire format is `<physical_ms>:<counter>:<device_id>`, e.g.
- * `000001718000000000:00000:device-abc`.
- *
- * The `physical` component is unix milliseconds; `counter` bumps whenever the
- * clock does not advance (or runs backwards) so successive writes in the same
- * millisecond stay ordered; `device_id` is the final tiebreak so both sides
- * converge on the same winner. HLCs compare on `(physical, counter, device_id)`.
- *
- * `toString` zero-pads `physical` and `counter` to fixed widths so a plain
- * lexicographic string comparison (what the server does on the `hlc` text
- * column) yields the SAME order as {@link compareHlc}. Keep both sides in sync
- * if the widths ever change.
+ * `toString` zero-pads `physical` and `counter` to fixed widths so that a plain
+ * lexicographic comparison — what the server does on the `hlc` text column —
+ * yields the same order as {@link compareHlc}. Both must move together if the
+ * widths ever change.
  *
  * Because `(counter, device_id)` makes every write unique, the HLC string also
- * doubles as the idempotency key for retried pushes.
- *
- * Pure value object — no IO, no infra imports.
+ * doubles as the idempotency key for retried pushes. The wall clock is passed
+ * in rather than read here: pure layers take no ambient clock.
  */
 
 /**
@@ -65,8 +58,8 @@ export interface Hlc {
  * fixed width.
  *
  * @param deviceId stable id of this device (the HLC tiebreak).
- * @param lastSeen the highest HLC this device has previously issued or
- *                 observed, or `null` on the very first event.
+ * @param lastSeen the highest HLC this device has already issued or observed,
+ *                 or `null` on the very first event.
  * @param now      wall clock in unix ms, supplied by the caller's clock port.
  */
 export function hlcNow(deviceId: string, lastSeen: Hlc | null, now: number): Hlc {

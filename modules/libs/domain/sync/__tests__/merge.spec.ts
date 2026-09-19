@@ -1,10 +1,9 @@
 /**
- * Merge tests — ….
+ * Merge tests.
  *
- * Nothing here is copied: Lectorium merges last-write-wins by HLC, while our
- * rule is field ownership. What these cases protect is the one sentence the
- * plan builds on — the client and the server never write the same field, so a
- * pulled review status must not land on an answer that has not been sent yet.
+ * The rule under test is field ownership: the client and the server never write
+ * the same field, so a pulled review status must not land on an answer that has
+ * not been sent yet.
  */
 
 import { hlcToString } from '../hlc'
@@ -109,8 +108,8 @@ describe('mergeIncoming, one-way collections', () => {
 })
 
 describe('mergeIncoming, unknown collection', () => {
-  //: dropping the row in silence is how one lane ships a table the
-  // other never hears about.
+  // Dropping the row in silence is how one side ships a table the other never
+  // hears about.
   it('throws rather than quietly passing the row through', () => {
     const remote = doc({ any: 'thing' }, 1)
 

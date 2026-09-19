@@ -1,10 +1,9 @@
 /**
  * The local change journal the push path drains.
  *
- * Shape taken from Lectorium's `libs/domain/ports/outboxRepository.ts`, with
- * the anonymous-identity branches removed — sign-in here is by OTP only, so
- * there is no anonymous account to adopt changes from and no handover to
- * re-attribute. Compaction is gone too: our rows are never deleted.
+ * Sign-in is by OTP only, so there is no anonymous account to adopt changes
+ * from and no handover to re-attribute; and rows are never deleted, so there is
+ * no compaction either.
  *
  * Domain port: the SQL implementation lives with the device's infrastructure.
  * Every method joins the caller's unit of work and never opens a transaction of

@@ -1,10 +1,8 @@
 /**
  * Which way each collection replicates, and who owns which field.
  *
- * This is the "Synchronisation: what goes where" table of `docs/PLAN.md` as
- * data. It is ours, not Lectorium's: there the directions are symmetric and
- * every collection merges last-write-wins, while here the writing sides are
- * split, so a merge never has to guess who is right — it looks the field up.
+ * The writing sides are split per field rather than symmetric, so a merge never
+ * has to guess who is right — it looks the field up here.
  *
  * One table, both sides. The server uses it to drop fields a client is not
  * allowed to write on push; the device uses it to decide what a pull may

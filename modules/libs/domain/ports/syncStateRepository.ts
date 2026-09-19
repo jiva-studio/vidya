@@ -2,11 +2,9 @@
  * Where this device stands: one read position per scope, plus the two
  * watermarks the push path keeps.
  *
- * Shape taken from Lectorium's `libs/domain/ports/syncStateRepository.ts`, with
- * its single `pullCursor` replaced by a position per scope. A new course
- * is then just a scope standing at `0`, whose history arrives through an
- * ordinary pull — which is why there is no backfill port and no backfill
- * endpoint anywhere in this contract.
+ * The read position is per scope rather than one cursor, so a new course is
+ * just a scope standing at `0` whose history arrives through an ordinary pull.
+ * That is why this contract has no backfill port.
  *
  * State is kept per identity as well as per device: signing out erases nothing,
  * and signing back in works offline.

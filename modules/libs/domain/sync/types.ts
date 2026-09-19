@@ -2,9 +2,7 @@
  * Shared sync vocabulary: the collections that replicate, the shape of one
  * replicated document, and the scopes a change is addressed to.
  *
- * Modelled on Lectorium's `libs/domain/sync/types.ts`, with our six collections
- * in place of its playlists and notes, and with scopes added — our read
- * position is per scope, not one number for the whole journal.
+ * A read position is per scope, not one number for the whole journal.
  *
  * Pure: no IO, no transport. The wire shapes in `@vidya/protocol` are built on
  * top of these, so a collection name cannot mean one thing to the server and

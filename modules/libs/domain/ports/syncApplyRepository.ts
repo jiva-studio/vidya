@@ -1,10 +1,6 @@
 /**
  * Writing what the pull brought in, without journaling it back.
  *
- * Shape taken from Lectorium's `libs/domain/ports/syncApplyRepository.ts`, with
- * the anonymous-identity handover (`forgetDocHlcs`) and the data-wipe path
- * removed, and with `applyRemote` made conditional.
- *
  * It exists apart from the domain repositories because those are wrapped by the
  * journal decorator: writing a pulled change through them would put it straight
  * back into the outbox and echo it to the server. This port writes the rows
@@ -31,7 +27,7 @@ export interface ISyncApplyRepository {
    * Persist a merged document without journaling it, and record `serverHlc` as
    * the document's new server pointer.
    *
-   * **Conditional (.)** The write happens only when `serverHlc` is strictly
+   * **Conditional.** The write happens only when `serverHlc` is strictly
    * greater than the pointer already on record; otherwise the call is a no-op
    * and returns `false`. Without that test a page redelivered after a dropped
    * connection, or two scopes moving at their own pace, would put an older

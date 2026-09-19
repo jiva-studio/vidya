@@ -1,10 +1,8 @@
 /**
- * HLC tests — ….
+ * HLC tests.
  *
- * Copied from Lectorium (`libs/domain/sync/__tests__/hlc.test.ts`) and extended
- * with the cases the stage plan numbers: the property check that the padded
- * string order is the structured order, and the seeding rule that a
- * stamp observed from a faster device carries this device forward.
+ * Two properties carry the rest: the padded string order is the structured
+ * order, and a stamp observed from a faster device carries this device forward.
  */
 
 import {

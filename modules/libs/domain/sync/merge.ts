@@ -1,13 +1,11 @@
 /**
  * How an incoming server version is merged into the local one.
  *
- * Ours, not Lectorium's. There the rule is a symmetric last-write-wins by HLC,
- * because both sides write the same fields. Here the writing sides are split
- * (`direction.ts`), so the question a merge answers is not "who wrote last" but
- * "who owns this field": the server's fields are taken from the incoming
- * version always, and the client's are kept whenever this device still holds an
- * unsent outbox row for the document — otherwise the review status would land
- * on top of an answer that has not been sent yet.
+ * The writing sides are split (`direction.ts`), so the question a merge answers
+ * is not "who wrote last" but "who owns this field": the server's fields are
+ * always taken from the incoming version, and the client's are kept whenever
+ * this device still holds an unsent outbox row for the document — otherwise a
+ * review status would land on top of an answer that has not been sent yet.
  *
  * Pure and idempotent: merging a version with itself returns an equivalent
  * value, so a page redelivered after a dropped connection changes nothing.
@@ -28,8 +26,8 @@ import { isSyncCollection, SyncCollection, SyncDoc, SyncPayload } from './types'
  *                              is taken whole.
  *
  * Throws on a collection that does not replicate: a row addressed to an unknown
- * collection is a contract break, and silently dropping it is how a lane ships
- * a table the other side never hears about.
+ * collection is a contract break, and silently dropping it is how one side
+ * ships a table the other never hears about.
  */
 export function mergeIncoming<T extends SyncPayload>(
   collection: SyncCollection,
