@@ -14,6 +14,8 @@ import {
   LESSON_PATH,
   openEditor,
   plain,
+  saveDraft,
+  statuses,
   VERSIONS,
 } from './harness'
 
@@ -66,7 +68,7 @@ describe('opening a lesson', () => {
       .map((call) => `${call.method} ${call.path}`)
 
     expect(versionCalls).toEqual([`GET ${VERSIONS}`, `GET ${VERSIONS}/v1`])
-    expect(plain(wrapper.text())).toContain('Draft v1')
+    expect(statuses(wrapper)).toContain('Draft')
   })
 
   it('renders the lesson text through the sanitising markdown chain', async () => {
@@ -89,7 +91,7 @@ describe('saving', () => {
     const { wrapper, http } = await openEditor(draftAnswers())
 
     await clickText(wrapper, 'Add section')
-    await clickText(wrapper, 'Save draft')
+    await saveDraft()
 
     const writes = http.calls.filter((call) => call.method === 'PATCH')
     expect(writes).toHaveLength(1)
@@ -107,7 +109,7 @@ describe('saving', () => {
     // An empty lesson opens with a section to type into, so a section nobody
     // touched would otherwise reach the server every time the editor was opened.
     await clickText(wrapper, 'Add section')
-    await clickText(wrapper, 'Save draft')
+    await saveDraft()
 
     const body = http.calls.find((call) => call.method === 'PATCH')?.body as {
       content: LessonContent
@@ -123,9 +125,10 @@ describe('saving', () => {
     })
 
     await clickText(wrapper, 'Add section')
-    await clickText(wrapper, 'Save draft')
+    await saveDraft()
 
     expect(plain(wrapper.text())).toContain('Version v1 is published and cannot be edited.')
+    expect(statuses(wrapper)).toContain('Not saved')
   })
 
   it('refuses to save a document it cannot author, and says why', async () => {
@@ -139,9 +142,33 @@ describe('saving', () => {
 
     expect(plain(wrapper.text())).toContain('This lesson cannot be saved')
 
-    const save = wrapper.findAll('button').find((node) => plain(node.text()) === 'Save draft')
-    expect(save?.attributes('disabled')).toBeDefined()
+    const publish = wrapper.findAll('button').find((node) => plain(node.text()) === 'Publish')
+    expect(publish?.attributes('disabled')).toBeDefined()
+
+    await saveDraft()
+
     expect(http.calls.filter((call) => call.method === 'PATCH')).toHaveLength(0)
+  })
+
+  it('sends nothing while a block it cannot show is still in the lesson', async () => {
+    const withUnknown = details('v1', 1, 'draft')
+    withUnknown.content.sections[0].blocks.push({
+      id: 'b2',
+      type: 'diagram',
+    } as unknown as LessonContent['sections'][number]['blocks'][number])
+
+    const { wrapper, http } = await openEditor({
+      ...draftAnswers(),
+      [`GET ${VERSIONS}/v1`]: withUnknown,
+    })
+
+    // Saving strips what this build did not model, and the stripped block is
+    // one a student has already answered against.
+    await clickText(wrapper, 'Add section')
+    await saveDraft()
+
+    expect(http.calls.filter((call) => call.method === 'PATCH')).toHaveLength(0)
+    expect(plain(wrapper.text())).toContain('This lesson cannot be saved')
   })
 })
 
@@ -152,8 +179,7 @@ describe('versions', () => {
       [`GET ${VERSIONS}/v1`]: details('v1', 1, 'published'),
     })
 
-    expect(plain(wrapper.text())).toContain('Published v1')
-    expect(labels(wrapper)).not.toContain('Save draft')
+    expect(statuses(wrapper)).toContain('Published')
     expect(labels(wrapper)).not.toContain('Add section')
     expect(labels(wrapper)).toContain('New version')
   })
@@ -178,7 +204,7 @@ describe('versions', () => {
     await clickText(wrapper, 'New version')
 
     expect(http.calls.map((call) => `${call.method} ${call.path}`)).toContain(`GET ${VERSIONS}/v2`)
-    expect(plain(wrapper.text())).toContain('Draft v2')
+    expect(statuses(wrapper)).toContain('Draft')
     expect(plain(wrapper.text())).not.toContain('already has an open draft')
   })
 
@@ -214,5 +240,102 @@ describe('leaving with unsaved edits', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.path).toBe(AWAY_PATH)
+  })
+})
+
+describe('a lesson with nothing in it', () => {
+  const empty = () => {
+    const details = (id: string, version: number, status: string) => ({
+      id,
+      lessonId: 'l1',
+      version,
+      status,
+      content: { schemaVersion: 1, sections: [] },
+    })
+
+    return {
+      ...draftAnswers(),
+      [`GET ${VERSIONS}/v1`]: details('v1', 1, 'draft'),
+    }
+  }
+
+  it('opens with one section holding one empty text block, so there is a line to type in', async () => {
+    const { wrapper } = await openEditor(empty())
+
+    const titles = wrapper.element.querySelectorAll('input[aria-label="Section title"]')
+    const blocks = wrapper.element.querySelectorAll('[data-block-id]')
+
+    expect(titles).toHaveLength(1)
+    expect((titles[0] as HTMLInputElement).value).toBe('')
+    expect(blocks).toHaveLength(1)
+    expect(plain(wrapper.text())).not.toContain('This lesson is empty')
+  })
+
+  it('reaches the server with nothing, because nobody wrote anything', async () => {
+    const { http } = await openEditor(empty())
+
+    await saveDraft()
+
+    const writes = http.calls.filter((call) => call.method === 'PATCH')
+    const sent = writes.at(0)?.body as { content: LessonContent } | undefined
+
+    expect(sent?.content.sections ?? []).toEqual([])
+  })
+})
+
+/** The ancestor that carries the rules the rendered markdown is shaped by. */
+const shaping = (node: Element | null | undefined): Element | undefined => {
+  for (let at = node ?? undefined; at; at = at.parentElement ?? undefined) {
+    if (/\[&_h1\]:text-/.test(at.className)) return at
+  }
+
+  return undefined
+}
+
+describe('the shape of what was written', () => {
+  const written = () => {
+    const details = {
+      id: 'v1',
+      lessonId: 'l1',
+      version: 1,
+      status: 'draft',
+      content: {
+        schemaVersion: 1,
+        sections: [
+          {
+            id: 's1',
+            title: 'The alphabet',
+            assessment: 'none',
+            blocks: [
+              { id: 'b1', type: 'text', content: '# Letters and sounds\n\nA paragraph under it.' },
+            ],
+          },
+        ],
+      },
+    }
+
+    return { ...draftAnswers(), [`GET ${VERSIONS}/v1`]: details }
+  }
+
+  it('renders a heading as a heading and a paragraph as a paragraph', async () => {
+    const { wrapper } = await openEditor(written())
+
+    // Scoped to the block: the page's own title is an `h1` as well.
+    const block = wrapper.element.querySelector('[data-block-id="b1"]')
+
+    expect(block?.querySelector('h1')?.textContent).toBe('Letters and sounds')
+    expect(block?.querySelector('p')?.textContent).toBe('A paragraph under it.')
+  })
+
+  it('sizes a heading apart from the text around it', async () => {
+    const { wrapper } = await openEditor(written())
+
+    // jsdom computes no styles, so the rule itself is the evidence: the
+    // container sets one size for its own text and a larger one for a heading.
+    const rendered = shaping(wrapper.element.querySelector('[data-block-id="b1"] h1'))
+
+    expect(rendered).toBeDefined()
+    expect(rendered?.className).toMatch(/text-\[length:var\(--text-base\)\]/)
+    expect(rendered?.className).toMatch(/\[&_h1\]:text-\[length:var\(--text-lg\)\]/)
   })
 })

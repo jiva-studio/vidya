@@ -7,10 +7,12 @@ import { manualClock } from '@/shared/lib'
 
 import { messages } from '../i18n'
 import { contentOf, draftOf, imageBlock, sectionOf } from './documents'
-import { accessibleName, openEditor } from './harness'
+import { accessibleName, openEditor, saveDraft } from './harness'
 
 addMessages(messages)
 locale.value = 'en'
+
+const AddLabel = 'Add an image'
 
 const lesson = () => contentOf(sectionOf('s1', 'The alphabet', [imageBlock('m1')]))
 
@@ -27,16 +29,23 @@ const media = (wrapper: { element: Element }): HTMLElement => {
   return node
 }
 
-const fileInput = (wrapper: { element: Element }): HTMLInputElement => {
-  const input = media(wrapper).querySelector<HTMLInputElement>('input[type="file"]')
-  if (!input) throw new Error('the empty media block offers no way to choose a file')
-  return input
+const control = (wrapper: { element: Element }, label: string) =>
+  [...media(wrapper).querySelectorAll('button')].find((node) => accessibleName(node) === label)
+
+/** The one line an empty media block is, which also takes a dropped file. */
+const addRow = (wrapper: { element: Element }): HTMLElement => {
+  const row = control(wrapper, AddLabel)
+  if (!row) throw new Error('the empty media block offers no way to add a file')
+  return row
 }
 
-const choose = async (wrapper: { element: Element }, file: File) => {
-  const input = fileInput(wrapper)
-  Object.defineProperty(input, 'files', { value: [file], configurable: true })
-  input.dispatchEvent(new Event('change', { bubbles: true }))
+const drop = async (wrapper: { element: Element }, file: File) => {
+  const event = new Event('drop', { bubbles: true, cancelable: true })
+  Object.defineProperty(event, 'dataTransfer', {
+    value: { files: [file], items: [], types: ['Files'] },
+  })
+
+  addRow(wrapper).dispatchEvent(event)
   await flushPromises()
 }
 
@@ -52,38 +61,48 @@ const picture = (name = 'Chart.png') => new File(['x'.repeat(64)], name, { type:
 const progress = (wrapper: { element: Element }) =>
   media(wrapper).querySelector('[role="progressbar"]')
 
-const control = (wrapper: { element: Element }, label: string) =>
-  [...media(wrapper).querySelectorAll('button')].find((node) => accessibleName(node) === label)
+const alert = (wrapper: { element: Element }) => media(wrapper).querySelector('[role="alert"]')
 
 beforeEach(() => {
   document.body.innerHTML = ''
 })
 
 describe('an empty media block', () => {
-  it('asks for a file of the kind it can hold', async () => {
+  it('is one line and nothing else', async () => {
     const { wrapper } = await open()
 
-    expect(fileInput(wrapper).getAttribute('accept')).toContain('image/')
+    expect([...media(wrapper).querySelectorAll('button')].map(accessibleName)).toEqual([AddLabel])
+    expect(media(wrapper).querySelectorAll('input')).toHaveLength(0)
+  })
+
+  it('asks for a file of the kind it can hold, where the file is chosen', async () => {
+    const { wrapper } = await open()
+
+    addRow(wrapper).click()
+    await flushPromises()
+
+    const chooser = document.body.querySelector('input[type="file"]')
+    expect(chooser?.getAttribute('accept')).toContain('image/')
   })
 
   it('refuses a file of the wrong kind and stays empty', async () => {
     const { wrapper, clock } = await open()
 
-    await choose(wrapper, new File(['x'], 'Lecture.mp4', { type: 'video/mp4' }))
+    await drop(wrapper, new File(['x'], 'Lecture.mp4', { type: 'video/mp4' }))
     await run(clock)
 
     expect(media(wrapper).querySelector('img')).toBeNull()
     expect(progress(wrapper)).toBeNull()
+    expect(control(wrapper, AddLabel)).toBeDefined()
   })
 
   it('says which kinds it would have taken', async () => {
     const { wrapper, clock } = await open()
 
-    await choose(wrapper, new File(['x'], 'Lecture.mp4', { type: 'video/mp4' }))
+    await drop(wrapper, new File(['x'], 'Lecture.mp4', { type: 'video/mp4' }))
     await run(clock)
 
-    const refusal = media(wrapper).querySelector('[role="alert"]')
-    expect(refusal?.textContent?.toLowerCase()).toContain('image')
+    expect(alert(wrapper)?.textContent?.toLowerCase()).toContain('image')
   })
 })
 
@@ -91,7 +110,7 @@ describe('uploading into a block', () => {
   it('shows the upload advancing while it runs', async () => {
     const { wrapper, clock } = await open()
 
-    await choose(wrapper, picture())
+    await drop(wrapper, picture())
     clock.advance(50)
     await flushPromises()
 
@@ -106,7 +125,7 @@ describe('uploading into a block', () => {
   it('shows what was uploaded once it has arrived', async () => {
     const { wrapper, clock } = await open()
 
-    await choose(wrapper, picture())
+    await drop(wrapper, picture())
     await run(clock)
 
     expect(media(wrapper).querySelector('img')?.getAttribute('src')).toMatch(/^blob:/)
@@ -115,7 +134,7 @@ describe('uploading into a block', () => {
   it('reports the file by name when it lands', async () => {
     const { wrapper, clock } = await open()
 
-    await choose(wrapper, picture())
+    await drop(wrapper, picture())
     await run(clock)
 
     expect(document.body.textContent).toContain('Chart.png')
@@ -124,10 +143,12 @@ describe('uploading into a block', () => {
   it('stores the path the server will serve and never the url of the tab', async () => {
     const { wrapper, http, clock } = await open()
 
-    await choose(wrapper, picture())
+    await drop(wrapper, picture())
     await run(clock)
+    await saveDraft()
 
     const sent = JSON.stringify(http.calls.filter((call) => call.method === 'PATCH'))
+    expect(sent).toContain('/media/')
     expect(sent).not.toContain('blob:')
   })
 })
@@ -136,17 +157,17 @@ describe('an upload that does not arrive', () => {
   it('says so in the block rather than anywhere else', async () => {
     const { wrapper, clock } = await open()
 
-    await choose(wrapper, picture(`${FailingUploadPrefix}ing.png`))
+    await drop(wrapper, picture(`${FailingUploadPrefix}ing.png`))
     await run(clock)
 
-    expect(media(wrapper).querySelector('[role="alert"]')).not.toBeNull()
+    expect(alert(wrapper)).not.toBeNull()
     expect(progress(wrapper)).toBeNull()
   })
 
   it('offers to send the same file again', async () => {
     const { wrapper, clock } = await open()
 
-    await choose(wrapper, picture(`${FailingUploadPrefix}ing.png`))
+    await drop(wrapper, picture(`${FailingUploadPrefix}ing.png`))
     await run(clock)
 
     const retry = control(wrapper, 'Try again')
@@ -165,7 +186,7 @@ describe('an upload the author changes their mind about', () => {
   it('stops it and leaves the block as empty as it was', async () => {
     const { wrapper, clock } = await open()
 
-    await choose(wrapper, picture())
+    await drop(wrapper, picture())
     clock.advance(50)
     await flushPromises()
 
@@ -175,6 +196,6 @@ describe('an upload the author changes their mind about', () => {
 
     expect(progress(wrapper)).toBeNull()
     expect(media(wrapper).querySelector('img')).toBeNull()
-    expect(fileInput(wrapper)).toBeDefined()
+    expect(control(wrapper, AddLabel)).toBeDefined()
   })
 })

@@ -9,12 +9,22 @@ import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 import type { MediaGateway } from '@/entities/media'
 import { FakeMediaGateway, mediaGatewayKey } from '@/entities/media'
 import { httpClientKey, resetApi } from '@/shared/api'
+import { addMessages } from '@/shared/i18n'
 import { manualClock } from '@/shared/lib'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
 
 import { routes } from '../routes'
 import LessonEditorPage from '../ui/LessonEditorPage.vue'
+
+// The breadcrumbs name the two screens above the editor, whose words belong to
+// those screens' own bundles. The application registers every page's texts at
+// start-up; a test mounting one page reaches no further than its own slice, so
+// the two it borrows are stated here rather than imported across.
+addMessages({
+  en: 'nav-courses = Courses\nlessons-title = Lessons\n',
+  ru: 'nav-courses = Курсы\nlessons-title = Уроки\n',
+})
 
 export const SCHOOL = asId<SchoolId>('11111111-1111-1111-1111-111111111111')
 export const VERSIONS = '/edu/lessons/l1/versions'
@@ -104,6 +114,22 @@ export const openEditor = async (
 
   return { wrapper, http, router }
 }
+
+/**
+ * Saves the draft the way the screen does.
+ *
+ * There is no save button any more: autosave carries the document, and the
+ * shortcut is what an author reaches for when they will not wait for it.
+ */
+export const saveDraft = async (): Promise<void> => {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true }))
+  await flushPromises()
+  await flushPromises()
+}
+
+/** What the toolbar says, as one of the words it may say. */
+export const statuses = (wrapper: { element: Element }): string[] =>
+  [...wrapper.element.querySelectorAll('span')].map((node) => plain(node.textContent ?? '').trim())
 
 /** Clicks the button whose visible label is exactly this text. */
 export const clickText = async (

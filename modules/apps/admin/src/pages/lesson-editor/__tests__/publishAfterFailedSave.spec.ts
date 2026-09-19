@@ -6,7 +6,7 @@ import { refusal } from '@/shared/testing'
 
 import { messages } from '../i18n'
 import { contentOf, draftOf, sectionOf, textBlock } from './documents'
-import { clickText, openEditor, plain, VERSIONS } from './harness'
+import { clickText, openEditor, plain, saveDraft, VERSIONS } from './harness'
 
 addMessages(messages)
 locale.value = 'en'
@@ -65,7 +65,7 @@ const refusedThenPublished = async () => {
   const opened = await openEditor(refusingDraft())
 
   await rename(opened.wrapper, Revised)
-  await clickText(opened.wrapper, 'Save draft')
+  await saveDraft()
   await clickText(opened.wrapper, 'Publish')
   await confirmPublish()
 
@@ -81,7 +81,7 @@ describe('publishing a version the server never received', () => {
     const { wrapper } = await openEditor(refusingDraft())
 
     await rename(wrapper, Revised)
-    await clickText(wrapper, 'Save draft')
+    await saveDraft()
 
     expect(plain(wrapper.text())).toContain('Not saved')
   })

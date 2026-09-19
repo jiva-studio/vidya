@@ -6,7 +6,7 @@ import { addMessages, locale } from '@/shared/i18n'
 
 import { messages } from '../i18n'
 import { contentOf, draftOf, sectionOf, textBlock } from './documents'
-import { accessibleName, clickOverlay, clickText, openEditor, VERSIONS } from './harness'
+import { accessibleName, clickOverlay, openEditor, saveDraft, VERSIONS } from './harness'
 
 addMessages(messages)
 locale.value = 'en'
@@ -43,7 +43,7 @@ describe('a blank block the save drops', () => {
     const { wrapper, http } = await openEditor(draftOf(lesson()))
 
     await insertBlank(wrapper, 'Image')
-    await clickText(wrapper, 'Save draft')
+    await saveDraft()
 
     expect(savedContent(http).sections[0].blocks).toHaveLength(1)
   })
@@ -52,7 +52,7 @@ describe('a blank block the save drops', () => {
     const { wrapper } = await openEditor(draftOf(lesson()))
 
     await insertBlank(wrapper, 'Image')
-    await clickText(wrapper, 'Save draft')
+    await saveDraft()
 
     expect(blocksOn(wrapper)).toHaveLength(2)
   })
@@ -72,7 +72,7 @@ describe('a blank block the save drops', () => {
     })
 
     await insertBlank(wrapper, 'Image')
-    await clickText(wrapper, 'Save draft')
+    await saveDraft()
 
     expect(blocksOn(wrapper).map((node) => node.getAttribute('data-block-id'))[0]).toBe('b1')
     expect(wrapper.element.textContent).not.toContain('Not yours')
