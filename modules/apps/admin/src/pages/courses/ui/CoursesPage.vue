@@ -16,7 +16,7 @@ const courses = useCourses()
 const search = ref('')
 
 // Hidden rather than disabled: a button the operator may never press only
-// spends their attention, and the server refuses regardless (AC-7).
+// spends their attention, and the server refuses regardless.
 const canCreate = useCan('courses:create')
 const canEdit = useCan('courses:update')
 

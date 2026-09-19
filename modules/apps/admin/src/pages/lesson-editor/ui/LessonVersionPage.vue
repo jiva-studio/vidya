@@ -27,7 +27,7 @@ const breadcrumbs = computed(() => [
 
 // One named version, read and never written: this is where a reviewer arrives
 // from a piece of work answered against a version that has since been replaced,
-// and what the student read is the whole point of the screen (AC-17).
+// and what the student read is the whole point of the screen.
 const document = useLessonVersionDocument(lessonId)
 
 /* --------------------------------- Hooks ---------------------------------- */

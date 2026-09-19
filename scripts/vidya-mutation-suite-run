@@ -73,7 +73,8 @@ case "$MODE" in
       } \
         | sort -u \
         | grep -E '\.ts$' \
-        | grep -v -E '(/specs/|\.spec\.ts$|/main\.ts$|\.module\.ts$|/index\.ts$)' \
+        | grep -v -E '(/specs/|\.spec\.ts$|\.stories\.ts$|/main\.ts$|\.module\.ts$|/index\.ts$)' \
+        | grep -v -E '(/types\.ts$|/styles\.ts$)' \
         | grep -v -E '(/shared/datasources/|/shared/testing-app\.ts$)' \
         | sed "s|^modules/$LOCATION/||" || true
     )"

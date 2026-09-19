@@ -15,14 +15,18 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@codemirror/lang-markdown": "^6.5.2",
     "@fluent/bundle": "^0.18.0",
     "@ts-stack/markdown": "^1.5.0",
     "@vidya/domain": "^0.0.0",
     "@vidya/protocol": "^0.0.0",
     "@vidya/ui": "^0.0.0",
     "@vueuse/core": "^10.9.0",
+    "@vueuse/integrations": "^10.11.1",
+    "codemirror": "^6.0.2",
     "dompurify": "^3.4.15",
     "fluent-vue": "^3.5.0",
+    "sortablejs": "^1.15.7",
     "vue": "^3.5.43",
     "vue-router": "^4.2.0"
   },
@@ -30,6 +34,7 @@
     "@feature-sliced/steiger-plugin": "^0.7.0",
     "@storybook/vue3-vite": "^10.6.0",
     "@tailwindcss/vite": "^4.3.3",
+    "@types/sortablejs": "^1.15.9",
     "@vitejs/plugin-vue": "^6.0.9",
     "@vue/test-utils": "^2.5.1",
     "jsdom": "^27.4.0",

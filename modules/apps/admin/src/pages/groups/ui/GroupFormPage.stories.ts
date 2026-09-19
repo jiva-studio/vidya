@@ -9,7 +9,7 @@ import GroupFormPage from './GroupFormPage.vue'
 
 /**
  * The group form. "No permission" is absent on purpose: the screen is behind
- * `groups:update`, and a reader without it never reaches it (AC-7).
+ * `groups:update`, and a reader without it never reaches it.
  */
 const GROUP = '/edu/groups/g1'
 

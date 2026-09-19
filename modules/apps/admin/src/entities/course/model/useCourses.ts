@@ -12,7 +12,7 @@ import { getCourses } from '../api'
  *
  * The rows are dropped before the request goes out rather than after it comes
  * back, so switching school never leaves the previous school's courses on
- * screen while the new ones load (AC-6). A late answer to a superseded request
+ * screen while the new ones load. A late answer to a superseded request
  * is discarded by its ticket.
  */
 export const useCourses = () => {

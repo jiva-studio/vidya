@@ -11,7 +11,7 @@ import CourseFormPage from './CourseFormPage.vue'
  * The course form, in the states the screen itself can be in.
  *
  * "No permission" is absent on purpose: the form is behind `courses:update`, and a
- * reader who may not have it never reaches the screen (AC-7).
+ * reader who may not have it never reaches the screen.
  */
 const COURSE = '/edu/courses/c1'
 
