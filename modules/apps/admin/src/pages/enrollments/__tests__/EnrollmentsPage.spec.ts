@@ -1,5 +1,3 @@
-import '../../../../../../libs/ui/vitest.setup'
-
 import type { PermissionKey } from '@vidya/domain'
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
