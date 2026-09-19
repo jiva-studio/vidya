@@ -46,7 +46,10 @@ const card: FakeAnswers = {
   '/edu/schools': { items: [{ id: 'school-1', name: 'First school' }] },
 }
 
-const meta: Meta<typeof UserCardPage> = { title: 'Org/UserCard', component: UserCardPage }
+const meta: Meta<typeof UserCardPage> = {
+  title: 'Admin/Organisation/Person',
+  component: UserCardPage,
+}
 
 export default meta
 type Story = StoryObj<typeof UserCardPage>

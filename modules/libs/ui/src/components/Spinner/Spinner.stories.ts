@@ -1,7 +1,7 @@
 import Spinner from './Spinner.vue'
 
 export default {
-  title: 'Shell/Spinner',
+  title: 'Design system/Feedback/Spinner',
   component: Spinner,
 }
 

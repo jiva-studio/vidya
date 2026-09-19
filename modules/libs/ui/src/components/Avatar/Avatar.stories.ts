@@ -1,6 +1,6 @@
 import Avatar from './Avatar.vue'
 
-export default { title: 'Data/Avatar', component: Avatar }
+export default { title: 'Design system/Data/Avatar', component: Avatar }
 
 export const Initials = { args: { name: 'Radha Devi' } }
 export const SingleName = { args: { name: 'Gauranga' } }

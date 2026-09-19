@@ -1,6 +1,6 @@
 import Breadcrumbs from './Breadcrumbs.vue'
 
-export default { title: 'Shell/Breadcrumbs', component: Breadcrumbs }
+export default { title: 'Design system/Layout/Breadcrumbs', component: Breadcrumbs }
 
 export const Deep = {
   args: {

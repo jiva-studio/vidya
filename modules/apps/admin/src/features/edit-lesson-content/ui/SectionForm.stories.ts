@@ -34,7 +34,7 @@ const over =
   })
 
 const meta: Meta<typeof SectionForm> = {
-  title: 'Edu/LessonEditor/SectionForm',
+  title: 'Admin/Parts/Lesson editor/Section',
   component: SectionForm,
 }
 

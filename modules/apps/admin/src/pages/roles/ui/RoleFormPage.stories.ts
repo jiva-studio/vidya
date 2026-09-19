@@ -31,7 +31,10 @@ const role = {
   permissions: ['courses:read', 'homework:read', 'homework:grade'],
 }
 
-const meta: Meta<typeof RoleFormPage> = { title: 'Org/RoleForm', component: RoleFormPage }
+const meta: Meta<typeof RoleFormPage> = {
+  title: 'Admin/Organisation/Role',
+  component: RoleFormPage,
+}
 
 export default meta
 type Story = StoryObj<typeof RoleFormPage>

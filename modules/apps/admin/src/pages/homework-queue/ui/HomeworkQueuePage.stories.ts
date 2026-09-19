@@ -58,7 +58,7 @@ const over =
   })
 
 const meta: Meta<typeof HomeworkQueuePage> = {
-  title: 'Edu/HomeworkQueue',
+  title: 'Admin/Daily work/Homework queue',
   component: HomeworkQueuePage,
 }
 

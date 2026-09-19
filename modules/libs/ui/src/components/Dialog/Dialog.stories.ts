@@ -19,7 +19,7 @@ const render = (args: Record<string, unknown>) => ({
   `,
 })
 
-export default { title: 'Overlay/Dialog', component: Dialog }
+export default { title: 'Design system/Overlays/Dialog', component: Dialog }
 
 export const Closed = { render, args: { title: 'Assign a group' } }
 export const Open = { render, args: { title: 'Assign a group', open: true } }

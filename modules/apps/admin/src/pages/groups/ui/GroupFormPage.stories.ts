@@ -29,7 +29,7 @@ const over = (answers: FakeAnswers) => () => ({
   template: '<div class="p-[var(--space-6)]"><GroupFormPage /></div>',
 })
 
-const meta: Meta<typeof GroupFormPage> = { title: 'Edu/GroupForm', component: GroupFormPage }
+const meta: Meta<typeof GroupFormPage> = { title: 'Admin/Teaching/Group', component: GroupFormPage }
 
 export default meta
 type Story = StoryObj<typeof GroupFormPage>

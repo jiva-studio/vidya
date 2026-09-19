@@ -30,7 +30,10 @@ const items = [
   { id: 'school-2', name: 'Evening courses' },
 ]
 
-const meta: Meta<typeof SchoolsPage> = { title: 'Org/Schools', component: SchoolsPage }
+const meta: Meta<typeof SchoolsPage> = {
+  title: 'Admin/Organisation/Schools',
+  component: SchoolsPage,
+}
 
 export default meta
 type Story = StoryObj<typeof SchoolsPage>

@@ -26,7 +26,7 @@ const over =
   })
 
 const meta: Meta<typeof AudioBlockEditor> = {
-  title: 'Edu/LessonEditor/AudioBlockEditor',
+  title: 'Admin/Parts/Lesson editor/Audio block',
   component: AudioBlockEditor,
 }
 

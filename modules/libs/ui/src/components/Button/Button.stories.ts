@@ -7,7 +7,7 @@ const render = (args: Record<string, unknown>) => ({
 })
 
 export default {
-  title: 'Input/Button',
+  title: 'Design system/Forms/Button',
   component: Button,
 }
 

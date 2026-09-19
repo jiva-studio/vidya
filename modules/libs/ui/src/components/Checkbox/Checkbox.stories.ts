@@ -1,6 +1,6 @@
 import Checkbox from './Checkbox.vue'
 
-export default { title: 'Input/Checkbox', component: Checkbox }
+export default { title: 'Design system/Forms/Checkbox', component: Checkbox }
 
 export const Default = { args: { label: 'courses:create' } }
 export const Checked = { args: { label: 'courses:create', modelValue: true } }

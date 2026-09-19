@@ -77,7 +77,7 @@ const over =
   })
 
 const meta: Meta<typeof HomeworkReviewPage> = {
-  title: 'Edu/HomeworkReview',
+  title: 'Admin/Daily work/Homework review',
   component: HomeworkReviewPage,
 }
 

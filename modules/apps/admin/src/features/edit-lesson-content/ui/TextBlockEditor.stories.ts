@@ -34,7 +34,7 @@ const over =
   })
 
 const meta: Meta<typeof TextBlockEditor> = {
-  title: 'Edu/LessonEditor/TextBlockEditor',
+  title: 'Admin/Parts/Lesson editor/Text block',
   component: TextBlockEditor,
 }
 

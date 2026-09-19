@@ -6,7 +6,7 @@ const items = [
   { value: 'delete', label: 'Delete course', destructive: true, separatorBefore: true },
 ]
 
-export default { title: 'Overlay/DropdownMenu', component: DropdownMenu }
+export default { title: 'Design system/Overlays/DropdownMenu', component: DropdownMenu }
 
 export const Default = { args: { items } }
 export const WithDisabled = {

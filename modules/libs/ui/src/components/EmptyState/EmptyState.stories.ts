@@ -1,6 +1,6 @@
 import EmptyState from './EmptyState.vue'
 
-export default { title: 'Data/EmptyState', component: EmptyState }
+export default { title: 'Design system/Feedback/EmptyState', component: EmptyState }
 
 export const WithAction = {
   args: {

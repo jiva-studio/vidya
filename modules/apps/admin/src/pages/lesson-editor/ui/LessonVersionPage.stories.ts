@@ -48,7 +48,7 @@ const version = (over: Record<string, unknown> = {}) => ({
 })
 
 const meta: Meta<typeof LessonVersionPage> = {
-  title: 'Edu/LessonEditor',
+  title: 'Admin/Teaching/Lesson editor',
   component: LessonVersionPage,
 }
 

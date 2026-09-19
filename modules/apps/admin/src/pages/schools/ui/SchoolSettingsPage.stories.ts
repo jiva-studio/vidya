@@ -32,7 +32,7 @@ const over =
   })
 
 const meta: Meta<typeof SchoolSettingsPage> = {
-  title: 'Org/SchoolSettings',
+  title: 'Admin/Organisation/School settings',
   component: SchoolSettingsPage,
 }
 

@@ -25,7 +25,7 @@ const teacher = [
 const odd = ['courses:delete', 'lessons:publish', 'users:update'] as PermissionKey[]
 
 const meta: Meta<typeof PermissionsPicker> = {
-  title: 'Org/PermissionsPicker',
+  title: 'Admin/Parts/Roles/Permission picker',
   component: PermissionsPicker,
 }
 

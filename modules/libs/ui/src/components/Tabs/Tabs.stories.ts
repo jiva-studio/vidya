@@ -18,7 +18,7 @@ const render = (args: Record<string, unknown>) => ({
   `,
 })
 
-export default { title: 'Shell/Tabs', component: Tabs }
+export default { title: 'Design system/Layout/Tabs', component: Tabs }
 
 export const Default = { render, args: { items, modelValue: 'content' } }
 export const SecondSelected = { render, args: { items, modelValue: 'preview' } }

@@ -6,7 +6,7 @@ const options = [
   { value: 'archived', label: 'Archived', disabled: true },
 ]
 
-export default { title: 'Input/RadioGroup', component: RadioGroup }
+export default { title: 'Design system/Forms/RadioGroup', component: RadioGroup }
 
 export const Default = { args: { options, modelValue: 'self' } }
 export const Horizontal = { args: { options, modelValue: 'guided', orientation: 'horizontal' } }

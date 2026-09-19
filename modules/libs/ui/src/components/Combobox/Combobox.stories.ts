@@ -6,7 +6,7 @@ const options = [
   { value: 'kirtan', label: 'Kirtan practice' },
 ]
 
-export default { title: 'Input/Combobox', component: Combobox }
+export default { title: 'Design system/Forms/Combobox', component: Combobox }
 
 export const Default = { args: { options } }
 export const Selected = { args: { options, modelValue: 'gita' } }

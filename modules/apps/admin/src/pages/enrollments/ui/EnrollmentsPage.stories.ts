@@ -62,7 +62,10 @@ const over =
     template: '<div class="p-[var(--space-6)]"><EnrollmentsPage /></div>',
   })
 
-const meta: Meta<typeof EnrollmentsPage> = { title: 'Edu/Enrollments', component: EnrollmentsPage }
+const meta: Meta<typeof EnrollmentsPage> = {
+  title: 'Admin/Daily work/Requests',
+  component: EnrollmentsPage,
+}
 
 export default meta
 type Story = StoryObj<typeof EnrollmentsPage>

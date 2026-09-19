@@ -6,7 +6,7 @@ const render = (args: Record<string, unknown>) => ({
   template: '<Label v-bind="args">Course name</Label>',
 })
 
-export default { title: 'Input/Label', component: Label }
+export default { title: 'Design system/Forms/Label', component: Label }
 
 export const Default = { render, args: {} }
 export const Required = { render, args: { required: true } }

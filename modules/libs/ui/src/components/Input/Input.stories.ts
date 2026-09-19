@@ -1,6 +1,6 @@
 import Input from './Input.vue'
 
-export default { title: 'Input/Input', component: Input }
+export default { title: 'Design system/Forms/Input', component: Input }
 
 export const Default = { args: { placeholder: 'Introduction to Sanskrit' } }
 export const Filled = { args: { modelValue: 'Introduction to Sanskrit' } }

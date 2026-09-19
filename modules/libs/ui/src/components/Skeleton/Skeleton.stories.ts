@@ -1,6 +1,6 @@
 import Skeleton from './Skeleton.vue'
 
-export default { title: 'Data/Skeleton', component: Skeleton }
+export default { title: 'Design system/Feedback/Skeleton', component: Skeleton }
 
 export const Text = { args: { shape: 'text', lines: 3 } }
 export const Block = { args: { shape: 'block', lines: 4 } }

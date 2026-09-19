@@ -23,7 +23,7 @@ const over = (answers: Record<string, unknown>) => () => ({
   template: '<div class="max-w-[22rem] p-[var(--space-6)]"><OtpForm /></div>',
 })
 
-const meta: Meta<typeof OtpForm> = { title: 'Auth/OtpForm', component: OtpForm }
+const meta: Meta<typeof OtpForm> = { title: 'Admin/Sign in/Code', component: OtpForm }
 
 export default meta
 type Story = StoryObj<typeof OtpForm>

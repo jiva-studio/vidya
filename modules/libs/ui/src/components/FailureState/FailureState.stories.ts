@@ -1,6 +1,6 @@
 import FailureState from './FailureState.vue'
 
-export default { title: 'Data/FailureState', component: FailureState }
+export default { title: 'Design system/Feedback/FailureState', component: FailureState }
 
 export const Default = {
   args: { description: 'The server did not answer. The list may be out of date.' },

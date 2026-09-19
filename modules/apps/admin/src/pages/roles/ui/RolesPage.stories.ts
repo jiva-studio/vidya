@@ -28,7 +28,7 @@ const items = [
   { id: 'role-2', name: 'Teacher', description: 'Leads a group and reviews work' },
 ]
 
-const meta: Meta<typeof RolesPage> = { title: 'Org/Roles', component: RolesPage }
+const meta: Meta<typeof RolesPage> = { title: 'Admin/Organisation/Roles', component: RolesPage }
 
 export default meta
 type Story = StoryObj<typeof RolesPage>

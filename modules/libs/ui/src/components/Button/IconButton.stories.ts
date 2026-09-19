@@ -8,7 +8,7 @@ const render = (args: Record<string, unknown>) => ({
   template: '<IconButton v-bind="args"><Pencil /></IconButton>',
 })
 
-export default { title: 'Input/IconButton', component: IconButton }
+export default { title: 'Design system/Forms/IconButton', component: IconButton }
 
 export const Ghost = { render, args: { label: 'Edit' } }
 export const Primary = { render, args: { label: 'Edit', variant: 'primary' } }

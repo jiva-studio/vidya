@@ -87,7 +87,7 @@ const draft = {
 }
 
 const meta: Meta<typeof LessonEditorView> = {
-  title: 'Edu/LessonEditor',
+  title: 'Admin/Teaching/Lesson editor',
   component: LessonEditorView,
 }
 

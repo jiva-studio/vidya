@@ -1,6 +1,6 @@
 import Switch from './Switch.vue'
 
-export default { title: 'Input/Switch', component: Switch }
+export default { title: 'Design system/Forms/Switch', component: Switch }
 
 export const Default = { args: { label: 'Accept new enrolments' } }
 export const On = { args: { label: 'Accept new enrolments', modelValue: true } }

@@ -52,7 +52,7 @@ const over =
   })
 
 const meta: Meta<typeof GroupMembersPage> = {
-  title: 'Edu/GroupMembers',
+  title: 'Admin/Teaching/Members',
   component: GroupMembersPage,
 }
 

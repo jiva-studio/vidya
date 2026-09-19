@@ -14,7 +14,7 @@ const render = (args: Record<string, unknown>) => ({
   `,
 })
 
-export default { title: 'Input/FieldGroup', component: FieldGroup }
+export default { title: 'Design system/Forms/FieldGroup', component: FieldGroup }
 
 export const Default = { render, args: { title: 'General' } }
 export const WithDescription = {

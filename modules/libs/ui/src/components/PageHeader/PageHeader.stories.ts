@@ -21,7 +21,7 @@ const plain = (args: Record<string, unknown>) => ({
   template: '<PageHeader v-bind="args" />',
 })
 
-export default { title: 'Shell/PageHeader', component: PageHeader }
+export default { title: 'Design system/Layout/PageHeader', component: PageHeader }
 
 export const WithAction = { render, args: { title: 'Courses' } }
 export const WithDescription = {

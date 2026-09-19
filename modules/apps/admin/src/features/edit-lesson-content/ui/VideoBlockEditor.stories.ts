@@ -26,7 +26,7 @@ const over =
   })
 
 const meta: Meta<typeof VideoBlockEditor> = {
-  title: 'Edu/LessonEditor/VideoBlockEditor',
+  title: 'Admin/Parts/Lesson editor/Video block',
   component: VideoBlockEditor,
 }
 

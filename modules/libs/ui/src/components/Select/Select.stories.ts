@@ -6,7 +6,7 @@ const options = [
   { value: 'archived', label: 'Archived', disabled: true },
 ]
 
-export default { title: 'Input/Select', component: Select }
+export default { title: 'Design system/Forms/Select', component: Select }
 
 export const Default = { args: { options } }
 export const Selected = { args: { options, modelValue: 'guided' } }

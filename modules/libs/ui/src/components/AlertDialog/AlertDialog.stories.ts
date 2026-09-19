@@ -11,7 +11,7 @@ const render = (args: Record<string, unknown>) => ({
   `,
 })
 
-export default { title: 'Overlay/AlertDialog', component: AlertDialog }
+export default { title: 'Design system/Overlays/AlertDialog', component: AlertDialog }
 
 export const Closed = {
   render,

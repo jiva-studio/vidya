@@ -22,7 +22,7 @@ const groups = [
   },
 ]
 
-export default { title: 'Shell/SidebarNav', component: SidebarNav }
+export default { title: 'Design system/Layout/SidebarNav', component: SidebarNav }
 
 export const Default = { args: { groups } }
 export const SingleGroup = { args: { groups: [groups[0]] } }

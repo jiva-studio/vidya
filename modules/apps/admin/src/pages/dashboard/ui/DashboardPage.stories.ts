@@ -11,7 +11,10 @@ import DashboardPage from './DashboardPage.vue'
  * morning of the first day. When it starts summarising the queues it will grow
  * the other four.
  */
-const meta: Meta<typeof DashboardPage> = { title: 'Work/Dashboard', component: DashboardPage }
+const meta: Meta<typeof DashboardPage> = {
+  title: 'Admin/Daily work/Dashboard',
+  component: DashboardPage,
+}
 
 export default meta
 type Story = StoryObj<typeof DashboardPage>

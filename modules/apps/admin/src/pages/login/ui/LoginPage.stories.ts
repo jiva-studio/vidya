@@ -21,7 +21,7 @@ const over = (answers: FakeAnswers) => () => ({
   template: '<LoginPage />',
 })
 
-const meta: Meta<typeof LoginPage> = { title: 'Auth/Login', component: LoginPage }
+const meta: Meta<typeof LoginPage> = { title: 'Admin/Sign in/Sign in', component: LoginPage }
 
 export default meta
 type Story = StoryObj<typeof LoginPage>

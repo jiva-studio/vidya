@@ -27,7 +27,7 @@ const over =
   })
 
 const meta: Meta<typeof QuizBlockEditor> = {
-  title: 'Edu/LessonEditor/QuizBlockEditor',
+  title: 'Admin/Parts/Lesson editor/Quiz block',
   component: QuizBlockEditor,
 }
 

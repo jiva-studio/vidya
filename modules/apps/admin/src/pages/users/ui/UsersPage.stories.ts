@@ -28,7 +28,7 @@ const items = [
   { id: 'user-2', name: 'Pyotr Ivanov' },
 ]
 
-const meta: Meta<typeof UsersPage> = { title: 'Org/Users', component: UsersPage }
+const meta: Meta<typeof UsersPage> = { title: 'Admin/Organisation/People', component: UsersPage }
 
 export default meta
 type Story = StoryObj<typeof UsersPage>

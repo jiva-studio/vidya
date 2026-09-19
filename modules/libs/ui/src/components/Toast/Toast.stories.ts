@@ -6,7 +6,7 @@ const render = (args: Record<string, unknown>) => ({
   template: '<Toaster v-bind="args" />',
 })
 
-export default { title: 'Overlay/Toast', component: Toaster }
+export default { title: 'Design system/Feedback/Toast', component: Toaster }
 
 export const Saved = {
   render,

@@ -23,7 +23,10 @@ const over =
     template: '<div class="p-[var(--space-6)]"><SchoolFormPage v-bind="props" /></div>',
   })
 
-const meta: Meta<typeof SchoolFormPage> = { title: 'Org/SchoolForm', component: SchoolFormPage }
+const meta: Meta<typeof SchoolFormPage> = {
+  title: 'Admin/Organisation/School',
+  component: SchoolFormPage,
+}
 
 export default meta
 type Story = StoryObj<typeof SchoolFormPage>

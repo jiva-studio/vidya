@@ -11,7 +11,7 @@ const render = (args: Record<string, unknown>) => ({
   `,
 })
 
-export default { title: 'Input/FormField', component: FormField }
+export default { title: 'Design system/Forms/FormField', component: FormField }
 
 export const Default = { render, args: { label: 'Course name' } }
 export const WithHint = { render, args: { label: 'Course name', hint: 'Shown to students.' } }

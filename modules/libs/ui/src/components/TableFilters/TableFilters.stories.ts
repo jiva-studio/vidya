@@ -11,7 +11,7 @@ const render = (args: Record<string, unknown>) => ({
   `,
 })
 
-export default { title: 'Data/TableFilters', component: TableFilters }
+export default { title: 'Design system/Data/TableFilters', component: TableFilters }
 
 export const Default = { render, args: {} }
 export const Searching = { render, args: { search: 'sanskrit' } }

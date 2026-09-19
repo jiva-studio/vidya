@@ -6,7 +6,7 @@ const render = (args: Record<string, unknown>) => ({
   template: '<Badge v-bind="args">{{ args.tone }}</Badge>',
 })
 
-export default { title: 'Data/Badge', component: Badge }
+export default { title: 'Design system/Data/Badge', component: Badge }
 
 export const Neutral = { render, args: { tone: 'neutral' } }
 export const Accent = { render, args: { tone: 'accent' } }

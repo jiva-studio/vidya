@@ -32,7 +32,7 @@ const render = (args: Record<string, unknown>) => ({
   `,
 })
 
-export default { title: 'Data/Table', component: Table }
+export default { title: 'Design system/Data/Table', component: Table }
 
 export const Data = { render, args: { columns, rows, caption: 'Courses' } }
 export const Loading = { render, args: { columns, rows: [], loading: true } }

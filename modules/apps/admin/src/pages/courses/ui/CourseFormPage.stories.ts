@@ -36,7 +36,10 @@ const over = (answers: FakeAnswers) => () => ({
   template: '<div class="p-[var(--space-6)]"><CourseFormPage /></div>',
 })
 
-const meta: Meta<typeof CourseFormPage> = { title: 'Edu/CourseForm', component: CourseFormPage }
+const meta: Meta<typeof CourseFormPage> = {
+  title: 'Admin/Teaching/Course',
+  component: CourseFormPage,
+}
 
 export default meta
 type Story = StoryObj<typeof CourseFormPage>

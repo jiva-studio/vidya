@@ -6,7 +6,7 @@ const render = (args: Record<string, unknown>) => ({
   template: '<Card v-bind="args"><p>Thirty-one students, four groups.</p></Card>',
 })
 
-export default { title: 'Shell/Card', component: Card }
+export default { title: 'Design system/Layout/Card', component: Card }
 
 export const Default = { render, args: { title: 'Sanskrit grammar' } }
 export const WithDescription = {

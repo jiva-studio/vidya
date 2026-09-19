@@ -1,6 +1,6 @@
 import FormFooter from './FormFooter.vue'
 
-export default { title: 'Input/FormFooter', component: FormFooter }
+export default { title: 'Design system/Forms/FormFooter', component: FormFooter }
 
 export const Default = { args: {} }
 export const Busy = { args: { busy: true } }
