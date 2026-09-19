@@ -5,6 +5,8 @@ import { defineComponent, h } from 'vue'
 import type { RouteRecordRaw } from 'vue-router'
 import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 
+import type { MediaGateway } from '@/entities/media'
+import { mediaGatewayKey } from '@/entities/media'
 import { httpClientKey, resetApi } from '@/shared/api'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
@@ -51,6 +53,7 @@ const editorRoutes: RouteRecordRaw[] = routes.map((route) => ({
 export const openEditor = async (
   answers: Record<string, unknown>,
   granted: string[] = ['lessons:read', 'lessons:update', 'lessons:publish'],
+  gateway?: MediaGateway,
 ) => {
   resetApi()
   signIn(granted)
@@ -72,7 +75,14 @@ export const openEditor = async (
   await router.isReady()
 
   const wrapper = mountWithApp(Root, {
-    global: { plugins: [router], provide: { [httpClientKey]: http.client } },
+    global: {
+      plugins: [router],
+      // The key is only provided when a test brought a gateway: providing it as
+      // undefined would register the key and hand the editor nothing.
+      provide: gateway
+        ? { [httpClientKey]: http.client, [mediaGatewayKey]: gateway }
+        : { [httpClientKey]: http.client },
+    },
   })
   await flushPromises()
 
@@ -100,3 +110,36 @@ export const labels = (wrapper: { findAll: (selector: string) => { text: () => s
 // Fluent wraps every placeable in bidi isolation marks, which are invisible on
 // screen and in the way of a string comparison.
 export const plain = (text: string) => text.replaceAll('⁨', '').replaceAll('⁩', '')
+
+/* -------------------------------------------------------------------------- */
+/*                          Reaching what is on screen                        */
+/* -------------------------------------------------------------------------- */
+
+/** What a screen reader would call this element: its label, or the text in it. */
+export const accessibleName = (node: Element): string =>
+  plain(node.getAttribute('aria-label') ?? node.textContent ?? '').trim()
+
+/** Every control a menu, a dialog or a popover put outside the mounted tree. */
+export const overlayControls = (): HTMLElement[] => [
+  ...document.body.querySelectorAll<HTMLElement>(
+    'button, [role="option"], [role="menuitem"], [role="tab"]',
+  ),
+]
+
+export const overlayControl = (label: string): HTMLElement | undefined =>
+  overlayControls().find((node) => accessibleName(node) === label)
+
+/** Clicks a control an overlay opened, wherever in the body it was rendered. */
+export const clickOverlay = async (label: string): Promise<void> => {
+  const control = overlayControl(label)
+  if (!control) {
+    throw new Error(
+      `no control labelled "${label}"; the body offers ${overlayControls()
+        .map(accessibleName)
+        .join(', ')}`,
+    )
+  }
+
+  control.click()
+  await flushPromises()
+}

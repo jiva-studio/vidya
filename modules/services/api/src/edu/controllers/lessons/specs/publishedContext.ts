@@ -18,6 +18,9 @@ const QUIZ_BLOCK_ID = domain.asId<domain.BlockId>('33333333-3333-4333-8333-33333
 /** The value that must never leave the server. */
 export const RIGHT_ANSWER = 2
 
+/** Prose that names the answer, and so must not leave the server either. */
+export const EXPLANATION = 'Krishna speaks the Gita to Arjuna on the battlefield.'
+
 const quizContent = (title: string): domain.LessonContent => ({
   schemaVersion: 1,
   sections: [
@@ -33,6 +36,7 @@ const quizContent = (title: string): domain.LessonContent => ({
           question: 'Who is the speaker of Bhagavad-gita?',
           answers: ['Arjuna', 'Sanjaya', 'Krishna', 'Dhritarashtra'],
           rightAnswer: RIGHT_ANSWER,
+          explanation: EXPLANATION,
         },
       ],
     },
