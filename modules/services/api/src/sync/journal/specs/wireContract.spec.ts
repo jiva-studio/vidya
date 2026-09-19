@@ -28,6 +28,17 @@ describe('the journal projects the fields the wire contract declares', () => {
     expect(Object.keys(SYNC_WIRE_FIELDS).sort()).toEqual([...SyncCollections].sort())
   })
 
+  it('projects the school itself, which the contract declares like any other collection', () => {
+    const school = projections.find((projection) => projection.collection === 'schools')
+
+    expect(school).toBeDefined()
+    expect(school.scopeKind).toBe('school')
+    expect(diffAgainstWire('schools', Object.keys(school.project({} as never)))).toEqual({
+      unexpected: [],
+      missing: [],
+    })
+  })
+
   it.each(projections.map((projection) => [projection.collection, projection] as const))(
     '%s sends exactly the declared fields',
     (collection, projection) => {
