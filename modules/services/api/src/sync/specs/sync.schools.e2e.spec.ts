@@ -1,16 +1,19 @@
 import { faker } from '@faker-js/faker'
-import { INestApplication } from '@nestjs/common'
+import { ConflictException, INestApplication } from '@nestjs/common'
 import { AuthService } from '@vidya/api/auth/services'
 import {
   CoursesService,
   EnrollmentsService,
   LessonsService,
   LessonVersionsService,
+  RolesService,
+  SchoolsService,
   UserSchoolsService,
   UsersService,
 } from '@vidya/api/edu/services'
 import { createTestingApp } from '@vidya/api/edu/shared'
-import { SyncScopesService } from '@vidya/api/sync'
+import { testDatabase } from '@vidya/api/shared/datasources'
+import { SyncRequestException, SyncScopesService } from '@vidya/api/sync'
 import * as domain from '@vidya/domain'
 import { Course, Enrollment, Role, School, User } from '@vidya/entities'
 import * as protocol from '@vidya/protocol'
@@ -21,6 +24,8 @@ import { createSyncContext, journalRows, SECTION_ID, SyncContext } from './conte
 
 const routes = protocol.Routes().sync
 const DEVICE = 'device-8f2a6c14'
+
+const describeOnPostgres = testDatabase() === 'postgres' ? describe : describe.skip
 
 const LOGO_URL = 'https://cdn.example.org/logos/devotion.png'
 const SCHOOL_DESCRIPTION = 'Scripture, kirtan and practice.'
@@ -86,6 +91,7 @@ describe('the school scope', () => {
   })
 
   afterEach(async () => {
+    jest.restoreAllMocks()
     await app.close()
   })
 
@@ -400,6 +406,238 @@ describe('the school scope', () => {
       const after = (await pull(token).expect(200)).body as protocol.PullResponse
 
       expect(scopeKeys(after)).toContain(domain.syncScopeKey({ kind: 'school', id: ctx.schoolId }))
+    })
+  })
+
+  /* ------------------------------- ------------------------------- */
+
+  describe('membership of one school is not membership of another', () => {
+    let elsewhere: School
+    let elsewhereCourse: Course
+    let elsewherePlace: Enrollment
+
+    beforeEach(async () => {
+      elsewhere = await app.get(SchoolsService).create({ name: 'School of Grammar' })
+
+      elsewhereCourse = await app.get(CoursesService).create({
+        name: 'Panini in eight books',
+        learningType: 'individual',
+        schoolId: elsewhere.id,
+      })
+
+      await grantRole(ctx.student.id, ctx.schoolId)
+      await grantRole(ctx.student.id, elsewhere.id)
+
+      elsewherePlace = await app.get(EnrollmentsService).create({
+        courseId: elsewhereCourse.id,
+        studentId: ctx.student.id,
+        schoolId: elsewhere.id,
+        status: 'accepted',
+      })
+    })
+
+    it('keeps the roles held in the other school', async () => {
+      await leaveSchool(ctx.student.id)
+
+      expect(await app.get(UserSchoolsService).getUserSchools(ctx.student.id)).toEqual([
+        elsewhere.id,
+      ])
+    })
+
+    it('keeps the places held in the other school', async () => {
+      await leaveSchool(ctx.student.id)
+
+      expect(await placeNow(elsewherePlace.id)).toBe('accepted')
+      expect(await placeNow(ctx.enrollment.id)).toBe('revoked')
+    })
+
+    it('closes one school scope and leaves the other standing', async () => {
+      await leaveSchool(ctx.student.id)
+
+      const granted = await app.get(SyncScopesService).scopesFor(ctx.student.id)
+
+      expect(granted).toContainEqual({ kind: 'school', id: elsewhere.id })
+      expect(granted).toContainEqual({ kind: 'course', id: elsewhereCourse.id })
+      expect(granted).not.toContainEqual({ kind: 'school', id: ctx.schoolId })
+      expect(granted).not.toContainEqual({ kind: 'course', id: ctx.mine.course.id })
+    })
+  })
+
+  /* ------------------------------- ------------------------------- */
+
+  describe('every path that takes the last role away', () => {
+    let roleId: domain.RoleId
+
+    beforeEach(async () => {
+      roleId = await grantRole(ctx.student.id, ctx.schoolId)
+    })
+
+    it('takes the places with it when the whole set of roles is replaced', async () => {
+      await app.get(RolesService).setRolesForUser(ctx.student.id, [])
+
+      expect(await placeNow(ctx.enrollment.id)).toBe('revoked')
+    })
+
+    it('takes the places with it when the roles are replaced within the school', async () => {
+      await app.get(RolesService).setRolesForUserWithin(ctx.student.id, [], [ctx.schoolId])
+
+      expect(await placeNow(ctx.enrollment.id)).toBe('revoked')
+    })
+
+    it('takes the places with it when the role itself is deleted', async () => {
+      await app.get(RolesService).deleteOneBy({ id: roleId })
+
+      expect(await placeNow(ctx.enrollment.id)).toBe('revoked')
+    })
+  })
+
+  /* ------------------------------- ------------------------------- */
+
+  describe('a role taken away that was not the last one', () => {
+    it('leaves the membership, and the places it carries, standing', async () => {
+      await grantRole(ctx.student.id, ctx.schoolId)
+      const kept = await grantRole(ctx.student.id, ctx.schoolId)
+
+      await app.get(RolesService).setRolesForUser(ctx.student.id, [kept])
+
+      expect(await placeNow(ctx.enrollment.id)).toBe('accepted')
+      expect(await app.get(SyncScopesService).scopesFor(ctx.student.id)).toContainEqual({
+        kind: 'school',
+        id: ctx.schoolId,
+      })
+    })
+  })
+
+  /* ------------------------------- ------------------------------- */
+
+  /**
+   * On the real database only: the in-memory fake does not undo a transaction
+   * that rolls back, so under it the role would stay removed whether the code
+   * opened a transaction or not, and the test would report the opposite of what
+   * it measures.
+   */
+  describeOnPostgres('the role and the places it carried move together', () => {
+    it('leaves the role held when taking the places back fails', async () => {
+      await grantRole(ctx.student.id, ctx.schoolId)
+
+      jest
+        .spyOn(app.get(EnrollmentsService), 'revokePlacesIn')
+        .mockRejectedValue(new Error('the cascade failed'))
+
+      await expect(app.get(RolesService).setRolesForUser(ctx.student.id, [])).rejects.toThrow(
+        'the cascade failed',
+      )
+
+      expect(await app.get(UserSchoolsService).getUserSchools(ctx.student.id)).toContain(
+        ctx.schoolId,
+      )
+      expect(await placeNow(ctx.enrollment.id)).toBe('accepted')
+    })
+  })
+
+  /* ------------------------------- ------------------------------- */
+
+  describe('a place the school hands back', () => {
+    const moderate = (enrollment: Enrollment, status: 'accepted' | 'declined') =>
+      app.get(EnrollmentsService).moderate(enrollment, { status, decidedById: ctx.student.id })
+
+    it('puts the student back on the course, scope and all', async () => {
+      await grantRole(ctx.student.id, ctx.schoolId)
+      await leaveSchool(ctx.student.id)
+      await grantRole(ctx.student.id, ctx.schoolId)
+
+      await moderate(
+        await ds.getRepository(Enrollment).findOneBy({ id: ctx.enrollment.id }),
+        'accepted',
+      )
+
+      expect(await placeNow(ctx.enrollment.id)).toBe('accepted')
+      expect(await app.get(SyncScopesService).scopesFor(ctx.student.id)).toContainEqual({
+        kind: 'course',
+        id: ctx.mine.course.id,
+      })
+    })
+
+    it('refuses to reopen a request that was refused on the merits', async () => {
+      const refused = await placeOn(catalogue.id, ctx.student.id, 'declined')
+
+      await expect(moderate(refused, 'accepted')).rejects.toThrow(ConflictException)
+    })
+  })
+
+  /* ------------------------------- ------------------------------- */
+
+  describe('a role handed back after the places were taken', () => {
+    it('does not put the student back on the course they lost', async () => {
+      await grantRole(ctx.student.id, ctx.schoolId)
+      await leaveSchool(ctx.student.id)
+
+      await grantRole(ctx.student.id, ctx.schoolId)
+
+      const granted = await app.get(SyncScopesService).scopesFor(ctx.student.id)
+
+      expect(await placeNow(ctx.enrollment.id)).toBe('revoked')
+      expect(granted).toContainEqual({ kind: 'school', id: ctx.schoolId })
+      expect(granted.filter((scope) => scope.kind === 'course')).toEqual([])
+    })
+  })
+
+  /* ------------------------------- ------------------------------- */
+
+  describe('the ceiling on what one caller may be granted', () => {
+    /**
+     * Places written straight to the tables, because what is being measured is
+     * how many scopes the grant comes to. Two hundred courses built through the
+     * services would be two hundred courses nobody reads, and the count is the
+     * only thing either query looks at.
+     */
+    const fillScopesTo = async (total: number): Promise<void> => {
+      const held = (await app.get(SyncScopesService).scopesFor(ctx.student.id)).length
+
+      for (let index = held; index < total; index += 1) {
+        const courseId = faker.string.uuid()
+
+        await ds.query(
+          `INSERT INTO courses (id, name, "learningType", "schoolId")
+           VALUES ($1, $2, 'individual', $3)`,
+          [courseId, `Filler course ${index}`, ctx.schoolId],
+        )
+
+        await ds.query(
+          `INSERT INTO enrollments (id, "courseId", "studentId", "schoolId", status)
+           VALUES ($1, $2, $3, $4, 'accepted')`,
+          [faker.string.uuid(), courseId, ctx.student.id, ctx.schoolId],
+        )
+      }
+    }
+
+    it('answers a caller standing exactly at the ceiling', async () => {
+      await fillScopesTo(protocol.SYNC_MAX_SCOPES)
+
+      expect(await app.get(SyncScopesService).grantsFor(ctx.student.id)).toHaveLength(
+        protocol.SYNC_MAX_SCOPES,
+      )
+    })
+
+    /**
+     * A grant one over the ceiling would work once, on the empty cursors of a
+     * first run, and refuse every pull after it: the device sends a position
+     * back for every scope it was granted.
+     */
+    it('refuses one scope past the ceiling rather than granting what no pull can carry', async () => {
+      await fillScopesTo(protocol.SYNC_MAX_SCOPES + 1)
+
+      await expect(app.get(SyncScopesService).grantsFor(ctx.student.id)).rejects.toThrow(
+        SyncRequestException,
+      )
+    })
+
+    it('names the refusal on the wire, so a device is told rather than left looping', async () => {
+      await fillScopesTo(protocol.SYNC_MAX_SCOPES + 1)
+
+      const response = await pull(ctx.tokens.student).expect(400)
+
+      expect(response.body.code).toBe('tooManyScopes')
     })
   })
 })

@@ -9,6 +9,7 @@ courses-empty = No courses here yet
 
 # Course
 course-enroll = Enroll
+course-open-enrollment = Open my course
 
 # Enrolling
 enroll-title = Enroll

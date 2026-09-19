@@ -3,8 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { UserSchoolsService } from '@vidya/api/edu/services'
 import * as domain from '@vidya/domain'
 import { Enrollment } from '@vidya/entities'
-import { SyncScopeGrant } from '@vidya/protocol'
+import { SYNC_MAX_SCOPES, SyncScopeGrant } from '@vidya/protocol'
 import { DataSource, Repository } from 'typeorm'
+
+import { SyncRequestException } from '../errors'
 
 /** A scope with the highest position the journal currently holds for it. */
 interface ScopeHead {
@@ -62,9 +64,24 @@ export class SyncScopesService {
    * A scope with nothing in the journal yet still appears, at `0`: the device
    * needs to know the scope exists so it can start following it, and a course
    * whose content has not been published is a real and ordinary state.
+   *
+   * `SYNC_MAX_SCOPES` bounds what is granted and not only what is asked for,
+   * because the device sends a position back for every scope it was granted.
+   * Granting more than a request may carry would work once, on the empty
+   * cursors of a first run, and refuse every pull after it. The contract says a
+   * list over the ceiling is an error with a reason and never a silent
+   * truncation, so the refusal is raised here rather than the tail dropped.
    */
   async grantsFor(userId: domain.UserId): Promise<SyncScopeGrant[]> {
     const scopes = await this.scopesFor(userId)
+
+    if (scopes.length > SYNC_MAX_SCOPES) {
+      throw new SyncRequestException(
+        'tooManyScopes',
+        `the caller holds ${scopes.length} scopes; at most ${SYNC_MAX_SCOPES} fit in one request`,
+      )
+    }
+
     const heads = await this.heads(scopes)
 
     return scopes.map((scope) => ({

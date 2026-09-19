@@ -33,14 +33,16 @@ async function createAndRunApp(db: IDatabase) {
   await useSession().restore()
   await useConnections().restore()
 
+  // Before the mount: the first screen reads through the running engine, and
+  // one mounted ahead of it would find no connection at all. Starting costs
+  // nothing on the network — an engine subscribes to its triggers and the
+  // first run is not awaited.
+  await startDeviceSync(db)
+
   const app = createApp(App).use(IonicVue).use(router).use(fluent)
 
   await router.isReady()
   app.mount(ROOT)
-
-  // After the mount, deliberately: what is already on the device must not wait
-  // behind a network call.
-  await startDeviceSync(db)
 }
 
 /**

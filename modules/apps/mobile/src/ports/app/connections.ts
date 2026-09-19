@@ -28,20 +28,38 @@ export interface IConnectionStore {
   remove(baseUrl: string): Promise<void>
 }
 
+/** An address that is not a URL at all, kept apart from a server refusing to answer. */
+export class InvalidServerAddressError extends Error {
+  constructor(value: string) {
+    super(`not a server address: ${value}`)
+    this.name = 'InvalidServerAddressError'
+  }
+}
+
 /**
- * Scheme, host case, default port and trailing slash removed.
+ * Host case, default port, query, fragment and trailing slash removed; the path
+ * is kept, because a server deployed under one lives at that path and nowhere
+ * else.
  *
  * Connections are identified by this string alone; without it the same server
  * reached by two spellings becomes two connections, two sign-ins and two copies
  * of the same data.
  */
 export const normaliseBaseUrl = (value: string): string => {
-  const url = new URL(value)
+  let url: URL
+  try {
+    url = new URL(value)
+  } catch {
+    throw new InvalidServerAddressError(value)
+  }
+
   const port =
     (url.protocol === 'https:' && url.port === '443') ||
     (url.protocol === 'http:' && url.port === '80')
       ? ''
       : url.port
 
-  return `${url.protocol}//${url.hostname.toLowerCase()}${port ? `:${port}` : ''}`
+  const path = url.pathname.replace(/\/+$/, '')
+
+  return `${url.protocol}//${url.hostname.toLowerCase()}${port ? `:${port}` : ''}${path}`
 }

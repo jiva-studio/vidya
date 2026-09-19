@@ -1,12 +1,10 @@
-import type { UserId } from '@vidya/domain'
-import { asId } from '@vidya/domain'
 import { createGlobalState } from '@vueuse/core'
 import { ref } from 'vue'
 
-import { httpClientFor, PreferencesConnectionStore } from '@/infra'
+import { PreferencesConnectionStore } from '@/infra'
 import type { Connection, IConnectionStore, Session } from '@/ports'
 import { normaliseBaseUrl } from '@/ports'
-import { getProfile } from '@/usecases/auth'
+import { identityAt } from '@/usecases/auth'
 
 import { stopSync } from './sync'
 
@@ -45,11 +43,10 @@ export const useConnections = createGlobalState(() => {
   const signIn = async (input: SignInToConnection) => {
     const baseUrl = normaliseBaseUrl(input.baseUrl)
     const session = input.session
-    const profile = await getProfile(httpClientFor({ baseUrl, session: () => session }))
 
     await store.add({
       baseUrl,
-      ownerId: asId<UserId>(profile.userId),
+      ownerId: await identityAt(baseUrl, session),
       session,
       needsSignIn: false,
     })

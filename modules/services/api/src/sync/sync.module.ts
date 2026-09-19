@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
-import { UserSchoolsService } from '@vidya/api/edu/services'
+import { EduModule } from '@vidya/api/edu/edu.module'
 import { RedisService } from '@vidya/api/shared/services'
-import { Enrollment, Role, School, User, UserRole } from '@vidya/entities'
+import { Enrollment, Role, User, UserRole } from '@vidya/entities'
 
 import { SyncController } from './controllers'
 import { CLOCK, ServerHlcService, SyncJournalSubscriber, systemClock } from './journal'
@@ -31,7 +31,12 @@ import {
  * at boot or nothing is journalled and nothing complains.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Enrollment, User, Role, School, UserRole])],
+  imports: [
+    // For `UserSchoolsService`: the school half of a scope grant is a role in
+    // the school, and that answer belongs where roles are kept.
+    EduModule,
+    TypeOrmModule.forFeature([Enrollment, User, Role, UserRole]),
+  ],
   controllers: [SyncController],
   providers: [
     // What the authentication guard needs to read a token, as `EduModule`
@@ -39,10 +44,6 @@ import {
     RedisService,
     AuthUsersService,
     RevokedTokensService,
-
-    // The school half of a scope grant is a role in the school, which is what
-    // this answers; `EduModule` exports nothing to borrow it from.
-    UserSchoolsService,
 
     { provide: CLOCK, useValue: systemClock },
     ServerHlcService,

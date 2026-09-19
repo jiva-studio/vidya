@@ -156,8 +156,19 @@ function createDeviceRuns(database: IDatabase): DeviceRuns {
     return settleThenSuspend()
   }
 
+  /**
+   * The wait is not a promise that the lock will be taken away afterwards.
+   *
+   * Backgrounding and coming straight back is an ordinary gesture — the task
+   * switcher — and the return can land while the page in flight is still being
+   * committed. Suspending after it would leave a database nobody asked to be
+   * suspended and no event left to undo it: sync would be dead until the app
+   * was restarted, with nothing on screen to say so.
+   */
   const settleThenSuspend = async (): Promise<void> => {
     await pageInFlight()
+    if (!suspended) return
+
     await database.suspend()
   }
 

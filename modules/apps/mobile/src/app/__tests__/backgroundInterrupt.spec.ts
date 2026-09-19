@@ -147,6 +147,28 @@ describe('the background interrupts the queue', () => {
     expect(network.requestsTo(SCHOOL_B)).toHaveLength(0)
   })
 
+  it('a return that lands while the page is committing leaves the database working', async () => {
+    const { db, a } = await wired()
+    const serverA = network.server(SCHOOL_A)
+
+    // Put away and picked straight back up — the task switcher. The return
+    // arrives while the page in flight is still on its way to a commit, and
+    // the suspension waiting behind it must not take the lock away afterwards:
+    // nothing would be left to give it back, and sync would be dead until the
+    // app was restarted, with nothing on screen to say so.
+    serverA.sync.onPull = async () => {
+      serverA.sync.onPull = null
+      void listeners.get('pause')!(undefined)
+      listeners.get('resume')!(undefined)
+    }
+
+    await a.triggers.now()
+    await ticks(50)
+
+    await expect(db.transaction(async () => undefined)).resolves.toBeUndefined()
+    expect((await a.triggers.now()).outcome).toBe('completed')
+  })
+
   it('drops the run it interrupted rather than resurrecting it on the way back', async () => {
     const { db, a, b } = await wired()
 

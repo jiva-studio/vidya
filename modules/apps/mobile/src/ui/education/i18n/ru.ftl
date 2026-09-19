@@ -9,6 +9,7 @@ courses-empty = Курсов пока нет
 
 # Курс
 course-enroll = Записаться
+course-open-enrollment = Перейти к моему курсу
 
 # Запись на курс
 enroll-title = Записаться

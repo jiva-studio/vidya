@@ -1,5 +1,6 @@
 import { App } from '@capacitor/app'
 import { Network } from '@capacitor/network'
+import type { UserId } from '@vidya/domain'
 import { toIsoDateTime } from '@vidya/domain'
 import type { RefreshTokensRequest, RefreshTokensResponse } from '@vidya/protocol'
 import { Routes } from '@vidya/protocol'
@@ -70,12 +71,42 @@ export interface StartedSync {
   readonly triggers: SyncTriggers
 }
 
-const running = new Map<string, StartedSync>()
+/** What is running, and enough about it to tell a repeat start from a new one. */
+interface RunningSync extends StartedSync {
+  readonly runs: DeviceRuns
+  readonly ownerId: UserId
+}
+
+const running = new Map<string, RunningSync>()
+
+/**
+ * The engine already listening for this server, when there is one.
+ *
+ * Starting a second engine for a server that already has one is the defect
+ * this answers: the first would stay subscribed to the lifecycle events with
+ * nothing left holding a handle to it, it would keep its place in the count
+ * that decides when the lock goes back, and — after a second person signed in
+ * on the same server — it would go on pulling and pushing under the previous
+ * `ownerId` into the same database.
+ */
+const alreadyRunning = (baseUrl: string, runs: DeviceRuns): RunningSync | undefined => {
+  const started = running.get(baseUrl)
+  return started?.runs === runs ? started : undefined
+}
 
 export async function startSync(options: SyncSetupOptions): Promise<StartedSync> {
   const baseUrl = normaliseBaseUrl(options.connection.baseUrl)
   const deviceId = new PreferencesDeviceId()
   const runs = deviceRunsFor(options.db)
+
+  const existing = alreadyRunning(baseUrl, runs)
+  if (existing !== undefined) {
+    // The same identity on the same server: hand back the engine that is
+    // already listening. A different one signed in since: the old engine has
+    // to go before the new one takes its place.
+    if (existing.ownerId === options.connection.ownerId) return existing
+    await stopSync(baseUrl)
+  }
 
   // A session is replaced whole when it is renewed, so the client reads it per
   // request rather than capturing the token it was built with.
@@ -108,7 +139,14 @@ export async function startSync(options: SyncSetupOptions): Promise<StartedSync>
   })
 
   runs.attach()
-  const started: StartedSync = { engine, triggers: await listen(engine, runs) }
+
+  const started: RunningSync = {
+    engine,
+    triggers: await listen(engine, runs),
+    runs,
+    ownerId: options.connection.ownerId,
+  }
+
   running.set(baseUrl, started)
 
   return started

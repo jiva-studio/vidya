@@ -309,6 +309,21 @@ const notWritten = (): never => {
   throw new Error('this double reads only; give the screen a repository that writes')
 }
 
+/**
+ * Enrolments as the SQL repository hands them over: tombstones skipped, newest
+ * first.
+ *
+ * A double that is more forgiving than the thing it stands in for tests the
+ * double. A withdrawn request is invisible here for the same reason it is
+ * invisible there, and `getByCourse` answers with the newest row for the same
+ * reason too — which is precisely the ordering a second request would exploit.
+ */
+const liveEnrollments = (): LocalEnrollment[] =>
+  seed.enrollments
+    .filter((item) => item.deletedAt === null)
+    .slice()
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+
 function buildRepositories(): LocalRepositories {
   return {
     schools: {
@@ -335,10 +350,10 @@ function buildRepositories(): LocalRepositories {
     },
 
     enrollments: {
-      list: async () => seed.enrollments,
-      getById: async (id) => seed.enrollments.find((item) => item.id === id) ?? null,
+      list: async () => liveEnrollments(),
+      getById: async (id) => liveEnrollments().find((item) => item.id === id) ?? null,
       getByCourse: async (courseId) =>
-        seed.enrollments.find((item) => item.courseId === courseId) ?? null,
+        liveEnrollments().find((item) => item.courseId === courseId) ?? null,
       request: notWritten,
       withdraw: notWritten,
     },
