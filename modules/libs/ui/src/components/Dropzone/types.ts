@@ -13,3 +13,5 @@ export interface DropzoneEmits {
   files: [files: File[]]
   refused: [files: File[]]
 }
+
+export type DropzoneState = 'idle' | 'dragging' | 'refused'

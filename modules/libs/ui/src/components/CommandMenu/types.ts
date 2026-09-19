@@ -24,3 +24,7 @@ export interface CommandMenuEmits {
   'update:term': [term: string]
   close: []
 }
+
+export interface CommandMenuItemProps {
+  item: CommandItem
+}
