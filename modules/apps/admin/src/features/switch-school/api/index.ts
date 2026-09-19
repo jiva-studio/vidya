@@ -1,0 +1,1 @@
+export { loadSchoolNames } from './schools'

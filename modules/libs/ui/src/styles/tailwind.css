@@ -1,0 +1,40 @@
+/**
+ * The stylesheet an application imports to get @vidya/ui.
+ *
+ * Tailwind supplies layout utilities only. Every value with a design decision
+ * in it — colour, spacing, size, radius, shadow, duration, z-index — is read
+ * from tokens.css through `[var(--token)]`, so a component never spells out a
+ * pixel or a hex.
+ */
+
+@import 'tailwindcss';
+@import './tokens.css';
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-size: 100%;
+  }
+
+  body {
+    background-color: var(--color-page);
+    color: var(--color-text);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+  }
+
+  /* Numbers line up in table columns only if their glyphs share a width. */
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Nothing moves for anyone who asked the system for stillness. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 1ms !important;
+      animation-duration: 1ms !important;
+    }
+  }
+}

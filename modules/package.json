@@ -10,18 +10,23 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
+    "dev": "concurrently --names api,admin --prefix-colors blue,green \"npm:dev:api\" \"npm:dev:admin\"",
+    "dev:api": "NODE_OPTIONS=\"--require $PWD/../scripts/vidya-workspace-aliases.cjs\" PORT=${VIDYA_API_PORT:-7810} npm run start:dev -w @vidya/api",
+    "dev:admin": "npm run dev -w @vidya/admin",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,vue,json,md,css}\"",
     "format:check": "prettier --check \"**/*.{ts,vue,json,md,css}\"",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test"
+    "check": "npm run typecheck && npm run lint && npm run lint:fsd && npm run format:check && npm run test",
+    "lint:fsd": "npm run lint:fsd --workspaces --if-present"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@stryker-mutator/core": "10.0.0",
     "@stryker-mutator/jest-runner": "10.0.0",
+    "concurrently": "^10.0.5",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",

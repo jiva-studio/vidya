@@ -4,6 +4,7 @@
         mutate-diff mutate-full \
         api-build api-run api-test \
         db-start db-schema-drop db-migrate db-testdb-drop \
+        dev dev-up dev-down dev-logs mail storybook bootstrap \
         seed clean
 
 NPM := npm --prefix modules
@@ -122,6 +123,57 @@ db-testdb-drop:
 
 seed:
 	$(NPM) run seed -w @vidya/seeder
+
+# ---------------------------------------------------------------------------
+# Local stand
+# ---------------------------------------------------------------------------
+#
+#   780x  infrastructure   7800 postgres · 7801 redis · 7802 smtp · 7803 mail ui
+#   781x  applications     7810 api · 7811 admin · 7812 storybook
+
+COMPOSE := docker compose -f modules/docker-compose.dev.yml
+MAIL_UI := http://localhost:7803
+
+export VIDYA_DB_PORT      := 7800
+export VIDYA_REDIS_PORT   := 7801
+export VIDYA_MAILER_PORT  := 7802
+export VIDYA_API_PORT     := 7810
+export VIDYA_ADMIN_PORT   := 7811
+export VIDYA_SB_PORT      := 7812
+export VIDYA_API_URL      := http://localhost:7810
+export VIDYA_AUTH_SAVE_PERMISSIONS_IN_JWT_TOKEN := true
+
+dev-up:
+	$(COMPOSE) up -d
+	@echo ""
+	@echo "  postgres  localhost:7800"
+	@echo "  redis     localhost:7801"
+	@echo "  smtp      localhost:7802"
+	@echo "  mail ui   $(MAIL_UI)"
+	@echo ""
+
+dev-down:
+	$(COMPOSE) down
+
+dev-logs:
+	$(COMPOSE) logs -f
+
+# The mailbox every OTP code lands in.
+mail:
+	@xdg-open $(MAIL_UI) >/dev/null 2>&1 || echo "$(MAIL_UI)"
+
+dev: dev-up
+	$(NPM) run dev
+
+# The admin, component by component and screen by screen, without API or database.
+storybook:
+	$(NPM) run storybook -w @vidya/admin
+
+# One school, an owner role holding '*', and a user with that email. Idempotent,
+# unlike `seed`, which truncates first and exists to fill an empty database.
+bootstrap:
+	@test -n "$(EMAIL)" || (echo "usage: make bootstrap EMAIL=you@example.com" && exit 1)
+	$(NPM) run bootstrap -w @vidya/seeder -- --email $(EMAIL)
 
 # ---------------------------------------------------------------------------
 # Housekeeping
