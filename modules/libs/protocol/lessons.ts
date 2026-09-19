@@ -48,6 +48,33 @@ export type LessonVersionDetails = {
 export type LessonVersionSummary = Omit<LessonVersionDetails, 'content'>
 
 /* -------------------------------------------------------------------------- */
+/*                             Student projection                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A quiz as a student may receive it: the question and the options, never the
+ * key. The server withholds `rightAnswer` on the way out, because content is
+ * downloaded whole onto the device — once the key is in the student's local
+ * database, no server-side fix can take it back.
+ */
+export type StudentQuizBlock = Omit<domain.QuizBlock, 'rightAnswer'>
+
+export type StudentLessonBlock =
+  domain.TextBlock | domain.VideoBlock | domain.AudioBlock | StudentQuizBlock
+
+export type StudentLessonSection = Omit<domain.LessonSection, 'blocks'> & {
+  blocks: StudentLessonBlock[]
+}
+
+export type StudentLessonContent = Omit<domain.LessonContent, 'sections'> & {
+  sections: StudentLessonSection[]
+}
+
+export type StudentLessonVersionDetails = Omit<LessonVersionDetails, 'content'> & {
+  content: StudentLessonContent
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                   Create                                   */
 /* -------------------------------------------------------------------------- */
 
@@ -63,6 +90,9 @@ export type GetLessonsResponse = crud.GetItemsListResponse<LessonSummary>
 export type GetLessonResponse = crud.GetItemResponse<LessonDetails>
 export type GetLessonVersionsResponse = crud.GetItemsListResponse<LessonVersionSummary>
 export type GetLessonVersionResponse = crud.GetItemResponse<LessonVersionDetails>
+
+/** The version a student works against, with the quiz keys withheld. */
+export type GetPublishedLessonVersionResponse = crud.GetItemResponse<StudentLessonVersionDetails>
 
 /* -------------------------------------------------------------------------- */
 /*                                   Update                                   */

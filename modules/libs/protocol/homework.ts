@@ -25,6 +25,16 @@ export type HomeworkDetails = {
 
   /** Set when the answered version is no longer the published one: accepted, but flagged. */
   answeredSupersededVersion?: boolean
+
+  /**
+   * When the answer was first written, as the server recorded it.
+   *
+   * On the wire because the device orders a student's answers by it and has no
+   * other way to learn it: an answer written on one phone is read on the next,
+   * and a column filled with a fallback would sort that list wrongly and
+   * silently. `enrollments` carries its `createdAt` for the same reason.
+   */
+  createdAt: domain.IsoDateTime
 }
 
 export type HomeworkSummary = Pick<
@@ -95,5 +105,6 @@ export type SaveBlockStateRequest = {
 }
 
 export type SaveBlockStateResponse = crud.UpdateItemResponse<BlockStateDetails>
-export type GetBlockStatesQuery = { enrollmentId: string; lessonVersionId?: string }
+/** Without an enrolment the caller asks for their own, across every enrolment they hold. */
+export type GetBlockStatesQuery = { enrollmentId?: string; lessonVersionId?: string }
 export type GetBlockStatesResponse = crud.GetItemsListResponse<BlockStateDetails>

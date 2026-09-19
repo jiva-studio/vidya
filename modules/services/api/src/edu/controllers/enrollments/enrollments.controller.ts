@@ -2,13 +2,14 @@ import {
   Body,
   Controller,
   ForbiddenException,
+  Get,
   NotFoundException,
   Param,
   ParseUUIDPipe,
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
@@ -91,6 +92,38 @@ export class EnrollmentsController {
           .scopedBy({ permissions: auth.permissions })
           .findAll({ where: { ...where, studentId: query.studentId } })
       : await this.enrollments.findAll({ where: { ...where, studentId: auth.userId } })
+
+    return { items: toEnrollmentSummaries(found) }
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                          GET /edu/enrollments/my                           */
+  /* -------------------------------------------------------------------------- */
+
+  /**
+   * Every place the caller holds, whatever permissions they also carry.
+   *
+   * A client starting up has no enrolment id to ask with, and the list above
+   * answers a different question for staff — a teacher who also studies would
+   * get the school's enrolments instead of their own. Declared above the
+   * `:id` route because Express matches in declaration order.
+   */
+  @Get(Routes().edu.enrollments.my())
+  @ApiOperation({
+    summary: 'Get the enrollments of the calling user',
+    operationId: 'Enrollment::getMy',
+  })
+  @ApiOkResponse({
+    type: dto.GetEnrollmentsResponse,
+    description: "The caller's own enrollments",
+  })
+  async getMy(
+    @Query() query: dto.GetMyEnrollmentsQuery,
+    @Authentication() auth: UserAuthentication,
+  ): Promise<dto.GetEnrollmentsResponse> {
+    const found = await this.enrollments.findAll({
+      where: { studentId: auth.userId, courseId: query.courseId, status: query.status },
+    })
 
     return { items: toEnrollmentSummaries(found) }
   }

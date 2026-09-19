@@ -22,6 +22,7 @@
       "@vidya/domain": ["libs/domain"],
       "@vidya/entities": ["libs/entities"],
       "@vidya/protocol": ["libs/protocol"],
+      "@vidya/usecases": ["libs/usecases"],
       "@vidya/api/*": ["services/api/src/*"]
     }
   }

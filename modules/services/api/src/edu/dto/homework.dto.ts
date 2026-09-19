@@ -52,6 +52,9 @@ export class HomeworkDetails implements protocol.HomeworkDetails {
   @IsOptional()
   @IsBoolean()
   answeredSupersededVersion?: boolean
+
+  @ApiProperty({ example: '2026-09-18T10:00:00.000Z' })
+  createdAt: domain.IsoDateTime
 }
 
 export class HomeworkSummary implements protocol.HomeworkSummary {
@@ -180,9 +183,12 @@ export class SaveBlockStateRequest implements protocol.SaveBlockStateRequest {
 export class SaveBlockStateResponse extends BlockStateDetails {}
 
 export class GetBlockStatesQuery implements protocol.GetBlockStatesQuery {
-  @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  // Omitted means "mine": a student holds several enrolments and, on a first
+  // run, knows none of their ids yet.
+  @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  @IsOptional()
   @IsUUID()
-  enrollmentId: domain.EnrollmentId
+  enrollmentId?: domain.EnrollmentId
 
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()

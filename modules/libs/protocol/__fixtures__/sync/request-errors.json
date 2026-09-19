@@ -1,0 +1,25 @@
+{
+  "name": "request-errors",
+  "endpoint": "POST /sync/pull",
+  "description": "The failures that are not per-row. Too many scopes is refused with a code rather than answered with a silently truncated list.",
+  "cases": [
+    {
+      "code": "tooManyScopes",
+      "statusCode": 400,
+      "error": "Bad Request",
+      "message": ["at most 200 scopes per request"]
+    },
+    {
+      "code": "invalidCursor",
+      "statusCode": 400,
+      "error": "Bad Request",
+      "message": ["cursor must be a non-negative integer"]
+    },
+    {
+      "code": "batchTooLarge",
+      "statusCode": 400,
+      "error": "Bad Request",
+      "message": ["at most 500 changes per push"]
+    }
+  ]
+}

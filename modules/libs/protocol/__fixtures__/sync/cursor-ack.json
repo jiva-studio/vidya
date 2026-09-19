@@ -1,0 +1,12 @@
+{
+  "name": "cursor-ack",
+  "endpoint": "POST /sync/cursor",
+  "description": "Acknowledges the highest serverSeq applied across all scopes, and is answered with 204 and no body. there is no backfill endpoint and no backfill response shape — a new scope starts at 0 and is pulled (see pull-new-scope.json).",
+  "request": {
+    "deviceId": "device-8f2a6c14",
+    "ackedSeq": 1302
+  },
+  "status": 204,
+  "response": null,
+  "absentEndpoints": ["/sync/backfill"]
+}

@@ -13,6 +13,11 @@ export const Routes = (baseUrl: string = '') => ({
   otp: {
     root: () => `${baseUrl}/auth/otp`,
   },
+  sync: {
+    pull: () => `${baseUrl}/sync/pull`,
+    push: () => `${baseUrl}/sync/push`,
+    cursor: () => `${baseUrl}/sync/cursor`,
+  },
   edu: {
     roles: {
       find: () => `${baseUrl}/edu/roles`,
@@ -54,6 +59,7 @@ export const Routes = (baseUrl: string = '') => ({
         all: (lessonId: string) => `${baseUrl}/edu/lessons/${lessonId}/versions`,
         get: (lessonId: string, versionId: string) =>
           `${baseUrl}/edu/lessons/${lessonId}/versions/${versionId}`,
+        published: (lessonId: string) => `${baseUrl}/edu/lessons/${lessonId}/versions/published`,
         create: (lessonId: string) => `${baseUrl}/edu/lessons/${lessonId}/versions`,
         update: (lessonId: string, versionId: string) =>
           `${baseUrl}/edu/lessons/${lessonId}/versions/${versionId}`,
@@ -70,6 +76,7 @@ export const Routes = (baseUrl: string = '') => ({
     },
     enrollments: {
       find: () => `${baseUrl}/edu/enrollments`,
+      my: () => `${baseUrl}/edu/enrollments/my`,
       get: (id: string) => `${baseUrl}/edu/enrollments/${id}`,
       create: () => `${baseUrl}/edu/enrollments`,
       moderate: (id: string) => `${baseUrl}/edu/enrollments/${id}/moderation`,

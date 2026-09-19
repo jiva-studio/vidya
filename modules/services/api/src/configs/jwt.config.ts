@@ -15,10 +15,9 @@ const duration = (value: string | undefined, fallback: StringValue): StringValue
  * weeks without a network, and coming back to a forced sign-in would strand
  * whatever is waiting in the outbox.
  *
- * The refresh token must always outlive the access token. The other way round —
- * which is what this file used to say, at 15d access against 7d refresh — leaves
- * a window where the session cannot be renewed but is not yet dead, and ends in
- * a sign-out with no way back.
+ * The refresh token must always outlive the access token. The other way round
+ * leaves a window where the session cannot be renewed but is not yet dead, and
+ * ends in a sign-out with no way back.
  */
 export default registerAs('jwt', () => {
   const accessTokenExpiresIn = duration(process.env.VIDYA_JWT_ACCESS_TOKEN_EXPIRES_IN, '1h')
