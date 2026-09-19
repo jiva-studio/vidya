@@ -1,6 +1,5 @@
 import type {
   AudioBlock,
-  BlockSource,
   ImageBlock,
   LessonBlock,
   QuizBlock,
@@ -143,19 +142,11 @@ export interface MediaBlockEditorEmits {
 
 export interface MediaBlockEditorEmptyProps extends Frozen {
   kind: MediaKind
-  accept: string
-
-  /** The link being typed into the block, and what the model makes of it. */
-  link: string
-  source?: BlockSource
 }
 
 export interface MediaBlockEditorEmptyEmits {
   files: [files: File[]]
-  refused: []
   library: []
-  'update:link': [link: string]
-  submit: []
 }
 
 export interface MediaBlockEditorFilledProps extends Frozen {

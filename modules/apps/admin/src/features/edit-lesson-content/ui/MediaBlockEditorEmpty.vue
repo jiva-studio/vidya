@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { Button, Dropzone, FormField, Input } from '@vidya/ui'
+import { useDropZone } from '@vueuse/core'
 import { useFluent } from 'fluent-vue'
-import { computed } from 'vue'
+import { Image, Music, Video } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
 
-import { mediaRowClasses } from './MediaBlockEditor.styles'
+import { emptyIconClasses, emptyRowClasses } from './MediaBlockEditor.styles'
 import type { MediaBlockEditorEmptyEmits, MediaBlockEditorEmptyProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<MediaBlockEditorEmptyProps>(), {
-  frozen: false,
-  source: undefined,
-})
+const props = withDefaults(defineProps<MediaBlockEditorEmptyProps>(), { frozen: false })
 
 /* --------------------------------- Events --------------------------------- */
 
@@ -21,63 +19,39 @@ const emit = defineEmits<MediaBlockEditorEmptyEmits>()
 
 const { $t } = useFluent()
 
-const refusedLabel = computed(() => $t(`editor-media-refused-${props.kind}`))
-const hint = computed(() => $t(`editor-media-drop-hint-${props.kind}`))
-const linkable = computed(() => Boolean(props.source) && !props.frozen)
+const row = ref<HTMLElement | null>(null)
+const icons = { image: Image, video: Video, audio: Music }
+
+const icon = computed(() => icons[props.kind])
+const label = computed(() => $t(`editor-media-add-${props.kind}`))
+
+// A file may be dropped straight onto the line. Everything else — the library,
+// a link, the upload with its progress — is one click away in the dialog, so
+// the block stays a line of the document instead of a form inside it.
+const { isOverDropZone } = useDropZone(row, { onDrop })
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onFiles(files: File[]) {
+function onDrop(files: File[] | null) {
+  if (props.frozen || !files?.length) return
   emit('files', files)
 }
 
-function onRefused() {
-  emit('refused')
-}
-
-function onLibrary() {
-  emit('library')
-}
-
-function onLink(value: string) {
-  emit('update:link', value)
-}
-
-function onSubmit() {
-  emit('submit')
+function onOpen() {
+  if (!props.frozen) emit('library')
 }
 </script>
 
 <template>
-  <div :class="mediaRowClasses">
-    <Dropzone
-      :accept="props.accept"
-      :label="$t('editor-media-drop-label')"
-      :hint="hint"
-      :browse-label="$t('editor-media-browse')"
-      :refused-label="refusedLabel"
-      :disabled="props.frozen"
-      @files="onFiles"
-      @refused="onRefused"
-    />
-    <Button variant="secondary" :disabled="props.frozen" @click="onLibrary">
-      {{ $t('editor-media-library') }}
-    </Button>
-    <FormField :label="$t('editor-media-link-label')" :hint="$t('editor-media-link-hint')">
-      <template #default="field">
-        <Input
-          :id="field.id"
-          :model-value="props.link"
-          :described-by="field.describedBy"
-          :readonly="props.frozen"
-          inputmode="url"
-          placeholder="https://"
-          @update:model-value="onLink"
-        />
-      </template>
-    </FormField>
-    <Button variant="secondary" :disabled="!linkable" @click="onSubmit">
-      {{ $t('media-picker-link-submit') }}
-    </Button>
-  </div>
+  <button
+    ref="row"
+    type="button"
+    :class="emptyRowClasses"
+    :data-dragging="isOverDropZone || undefined"
+    :disabled="props.frozen"
+    @click="onOpen"
+  >
+    <component :is="icon" :class="emptyIconClasses" />
+    <span>{{ label }}</span>
+  </button>
 </template>

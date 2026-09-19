@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { BlockId, LessonBlock, LessonContent, LessonSection, SectionId } from '@vidya/domain'
-import { Button } from '@vidya/ui'
 import { computed, ref } from 'vue'
 
 import type { BlockType, MoveDirection } from '@/features/edit-lesson-content'
@@ -159,10 +158,8 @@ function apply(next: LessonContent) {
       @block-duplicate="onBlockDuplicate"
       @block-remove="onBlockRemove"
     />
-    <div v-if="!props.frozen" :class="addSectionClasses">
-      <Button variant="secondary" full-width @click="onSectionAdd">
-        {{ $t('editor-section-add') }}
-      </Button>
-    </div>
+    <button v-if="!props.frozen" type="button" :class="addSectionClasses" @click="onSectionAdd">
+      {{ $t('editor-section-add') }}
+    </button>
   </div>
 </template>

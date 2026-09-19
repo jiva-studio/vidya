@@ -2,9 +2,11 @@ export const editorClasses = ['flex', 'flex-col', 'gap-[var(--space-4)]']
 
 /* --------------------------------- Toolbar -------------------------------- */
 
-export const toolbarActionsClasses = ['flex', 'flex-wrap', 'items-center', 'gap-[var(--space-2)]']
-
-export const toolbarFactsClasses = ['flex', 'items-center', 'gap-[var(--space-2)]']
+export const toolbarStatusClasses = [
+  'text-[length:var(--text-sm)]',
+  'text-[var(--color-text-muted)]',
+  'whitespace-nowrap',
+]
 
 export const toolbarErrorClasses = ['text-[length:var(--text-sm)]', 'text-[var(--color-danger-fg)]']
 
@@ -35,13 +37,13 @@ export const sectionClasses = ['flex flex-col gap-[var(--space-2)]', 'scroll-mt-
 /* --------------------------------- Section -------------------------------- */
 
 export const sectionHeaderClasses = [
-  'group flex items-center gap-[var(--space-2)]',
+  'group flex items-center gap-[var(--space-2)] ps-[var(--space-8)]',
   'border-b border-transparent focus-within:border-[var(--color-border)]',
 ]
 
 export const sectionTitleClasses =
   'flex-1 min-w-0 m-0 border-0 bg-transparent px-0 shadow-none ' +
-  'text-[length:var(--text-lg)] font-[var(--weight-semibold)] text-[var(--color-text)] ' +
+  'text-[length:var(--text-md)] font-[var(--weight-semibold)] text-[var(--color-text)] ' +
   'focus-visible:outline-none'
 
 export const menuTriggerClasses = [
@@ -65,7 +67,12 @@ export const menuHeadingClasses = [
 
 export const blockListClasses = ['flex flex-col']
 
-export const addSectionClasses = ['pt-[var(--space-2)]']
+export const addSectionClasses = [
+  'self-start ps-[var(--space-8)] pt-[var(--space-2)]',
+  'border-0 bg-transparent text-start',
+  'text-[length:var(--text-base)] text-[var(--color-text-muted)]',
+  'hover:text-[var(--color-text)]',
+]
 
 // A quiet line the author can reach for at the end of a section, rather than a
 // button that competes with the text above it.

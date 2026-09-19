@@ -1,19 +1,16 @@
 # Тексты редактора урока. Владелец — T5.
 
 editor-title = Редактор урока
-editor-back = К урокам
-editor-save = Сохранить черновик
 editor-publish = Опубликовать
 editor-new-revision = Новая версия
-editor-unsaved = Есть несохранённые правки
 editor-retry = Повторить
 
 version-title = Версия урока
 version-subtitle = Опубликованную версию изменить нельзя.
 version-back = Назад
 
-editor-state-draft = Черновик v{ $version }
-editor-state-published = Опубликована v{ $version }
+editor-state-draft = Черновик
+editor-state-published = Опубликовано
 
 editor-no-versions = У этого урока нет ни одной версии.
 editor-load-failed = Не удалось загрузить содержимое урока.
@@ -22,10 +19,6 @@ editor-publish-failed = Не удалось опубликовать верси�
 editor-revision-failed = Не удалось начать новую версию.
 
 # Письмо или чтение
-
-editor-mode-label = Режим
-editor-mode-write = Редактирование
-editor-mode-read = Чтение
 
 # Секции
 
@@ -135,17 +128,9 @@ publish-confirm-cancel = Отмена
 
 # Файлы в медиа-блоке
 
-editor-media-drop-label = Перетащите файл сюда
-editor-media-drop-hint-image = PNG, JPG, GIF или SVG
-editor-media-drop-hint-video = MP4, WebM или MOV
-editor-media-drop-hint-audio = MP3, WAV или OGG
-editor-media-browse = Выбрать файл
 editor-media-refused-image = В этот блок можно положить только изображение.
 editor-media-refused-video = В этот блок можно положить только видео.
 editor-media-refused-audio = В этот блок можно положить только аудио.
-editor-media-library = Выбрать из библиотеки
-editor-media-link-label = Или вставьте ссылку
-editor-media-link-hint = YouTube, Vimeo или прямая ссылка на файл
 editor-media-uploading = Загрузка
 editor-media-cancel = Отмена
 editor-media-retry = Повторить
@@ -202,3 +187,11 @@ editor-save-retry = Сохранить ещё раз
 
 editor-faults-title = Эту версию пока нельзя опубликовать
 editor-fault-block = Раздел { $section }, блок { $position } не заполнен.
+
+editor-media-add-image = Добавить изображение
+editor-media-add-video = Добавить видео
+editor-media-add-audio = Добавить аудио
+editor-media-drop-hint-image = PNG, JPG, GIF или SVG
+editor-media-drop-hint-video = MP4, WebM или MOV
+editor-media-drop-hint-audio = MP3, WAV или OGG
+editor-media-browse = Выбрать файл

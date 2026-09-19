@@ -19,9 +19,6 @@ import type {
 
 import type { AutosaveStatus } from '../model'
 
-/** Writing the lesson, or reading it the way a student will. */
-export type EditorMode = 'write' | 'read'
-
 export interface LessonEditorViewProps {
   lessonId: LessonId
   /** Shown in the toolbar so the operator knows which lesson is open. */
@@ -35,7 +32,6 @@ export interface LessonEditorViewEmits {
 export interface EditorToolbarProps {
   title?: string
   version?: number
-  mode?: EditorMode
   frozen?: boolean
   dirty?: boolean
   status?: AutosaveStatus
@@ -51,7 +47,6 @@ export interface EditorToolbarEmits {
   retry: []
   publish: []
   revision: []
-  'update:mode': [mode: EditorMode]
 }
 
 export interface LessonOutlineProps {

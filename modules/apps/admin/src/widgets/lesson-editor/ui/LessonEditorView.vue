@@ -24,10 +24,8 @@ import {
 import ContentProblemsNotice from './ContentProblemsNotice.vue'
 import EditorToolbar from './EditorToolbar.vue'
 import LessonDocument from './LessonDocument.vue'
-import LessonOutline from './LessonOutline.vue'
-import LessonPreview from './LessonPreview.vue'
-import { editorClasses, readingClasses } from './styles'
-import type { EditorMode, LessonEditorViewEmits, LessonEditorViewProps } from './types'
+import { editorClasses } from './styles'
+import type { LessonEditorViewEmits, LessonEditorViewProps } from './types'
 import UnsavedChangesGuard from './UnsavedChangesGuard.vue'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -48,7 +46,6 @@ const autosave = useAutosave(send)
 
 const publishable = useCan('lessons:publish')
 const publishOpen = ref(false)
-const mode = ref<EditorMode>('write')
 const faults = ref<BlockFault[]>([])
 
 const frozen = computed(() => versionDoc.version.value?.status === 'published')
@@ -56,8 +53,6 @@ const problems = computed(() => contentProblems(editor.content.value))
 const blocked = computed(() => problems.value.length > 0)
 const noticed = computed(() => blocked.value || faults.value.length > 0)
 const actionError = computed(() => draft.error.value ?? publishing.error.value)
-const writing = computed(() => mode.value === 'write')
-const sections = computed(() => editor.content.value.sections)
 
 /* --------------------------------- Hooks ---------------------------------- */
 
@@ -67,11 +62,6 @@ watch(versionDoc.version, (version) => {
   if (version && !editor.dirty.value) editor.load(version.content)
 })
 
-// A version nobody can change opens as what it is: something to read.
-watch(frozen, (value) => {
-  mode.value = value ? 'read' : 'write'
-})
-
 useEditorShortcuts({ undo: onUndo, redo: onRedo, save: onSave })
 
 onMounted(() => {
@@ -79,10 +69,6 @@ onMounted(() => {
 })
 
 /* -------------------------------- Handlers -------------------------------- */
-
-function onMode(next: EditorMode) {
-  mode.value = next
-}
 
 function onContent(content: LessonContent) {
   editor.set(content)
@@ -172,7 +158,6 @@ function reveal(id: SectionId) {
     <EditorToolbar
       :title="props.title"
       :version="versionDoc.version.value?.version"
-      :mode="mode"
       :frozen="frozen"
       :dirty="editor.dirty.value"
       :status="autosave.status.value"
@@ -180,7 +165,6 @@ function reveal(id: SectionId) {
       :publishable="publishable"
       :blocked="blocked"
       :error="actionError && $t(actionError)"
-      @update:mode="onMode"
       @back="onBack"
       @save="onSave"
       @retry="onSaveRetry"
@@ -196,17 +180,12 @@ function reveal(id: SectionId) {
       :retry-label="$t('editor-retry')"
       @retry="onRetry"
     />
-    <template v-else-if="writing || frozen">
-      <LessonOutline v-if="sections.length > 0" :sections="sections" />
-      <LessonDocument
-        :content="editor.content.value"
-        :frozen="frozen"
-        @update:content="onContent"
-      />
-    </template>
-    <div v-else :class="readingClasses">
-      <LessonPreview :content="editor.content.value" />
-    </div>
+    <LessonDocument
+      v-else
+      :content="editor.content.value"
+      :frozen="frozen"
+      @update:content="onContent"
+    />
     <PublishDialog
       :open="publishOpen"
       :version="versionDoc.version.value?.version ?? 0"

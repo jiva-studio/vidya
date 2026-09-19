@@ -1,19 +1,16 @@
 # Texts for the lesson editor. Owned by T5.
 
 editor-title = Lesson editor
-editor-back = Back to lessons
-editor-save = Save draft
 editor-publish = Publish
 editor-new-revision = New version
-editor-unsaved = Unsaved changes
 editor-retry = Try again
 
 version-title = Lesson version
 version-subtitle = A published version cannot be edited.
 version-back = Back
 
-editor-state-draft = Draft v{ $version }
-editor-state-published = Published v{ $version }
+editor-state-draft = Draft
+editor-state-published = Published
 
 editor-no-versions = This lesson has no versions to open.
 editor-load-failed = The lesson content could not be loaded.
@@ -22,10 +19,6 @@ editor-publish-failed = The version could not be published.
 editor-revision-failed = A new version could not be started.
 
 # Writing or reading
-
-editor-mode-label = View
-editor-mode-write = Write
-editor-mode-read = Read
 
 # Sections
 
@@ -135,17 +128,9 @@ publish-confirm-cancel = Cancel
 
 # Files in a media block
 
-editor-media-drop-label = Drop a file here
-editor-media-drop-hint-image = PNG, JPG, GIF or SVG
-editor-media-drop-hint-video = MP4, WebM or MOV
-editor-media-drop-hint-audio = MP3, WAV or OGG
-editor-media-browse = Choose a file
 editor-media-refused-image = Only image files can go in this block.
 editor-media-refused-video = Only video files can go in this block.
 editor-media-refused-audio = Only audio files can go in this block.
-editor-media-library = Choose from the library
-editor-media-link-label = Or paste a link
-editor-media-link-hint = YouTube, Vimeo, or a direct link to a file
 editor-media-uploading = Uploading
 editor-media-cancel = Cancel
 editor-media-retry = Try again
@@ -202,3 +187,11 @@ editor-save-retry = Try saving again
 
 editor-faults-title = This version cannot be published yet
 editor-fault-block = Section { $section }, block { $position } is unfinished.
+
+editor-media-add-image = Add an image
+editor-media-add-video = Add a video
+editor-media-add-audio = Add audio
+editor-media-drop-hint-image = PNG, JPG, GIF or SVG
+editor-media-drop-hint-video = MP4, WebM or MOV
+editor-media-drop-hint-audio = MP3, WAV or OGG
+editor-media-browse = Choose a file

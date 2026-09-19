@@ -65,10 +65,6 @@ function onFiles(files: File[]) {
   void send(files[0])
 }
 
-function onRefused() {
-  refused.value = true
-}
-
 function onLibrary() {
   pickerOpen.value = true
 }
@@ -83,10 +79,6 @@ function onLink(value: string) {
 
 function onPick(picked: PickedMedia) {
   apply(picked)
-}
-
-function onLinkSubmit() {
-  if (linkSource.value) apply({ url: link.value.trim(), source: linkSource.value })
 }
 
 function onCancel() {
@@ -151,15 +143,9 @@ function announce(name: string) {
     <MediaBlockEditorEmpty
       v-else
       :kind="props.kind"
-      :accept="accept"
       :frozen="props.frozen"
-      :link="link"
-      :source="linkSource"
       @files="onFiles"
-      @refused="onRefused"
       @library="onLibrary"
-      @update:link="onLink"
-      @submit="onLinkSubmit"
     />
     <MediaBlockEditorNotice
       v-if="notice"
