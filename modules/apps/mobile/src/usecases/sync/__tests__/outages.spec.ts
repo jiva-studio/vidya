@@ -25,10 +25,10 @@ import {
 import { failingDatabase, type Harness, openHarness, OWNER } from './harness'
 
 /**
- * Dropped connections: ….
+ * Dropped connections.
  *
  * One break at exactly one point, then the run again. The claim is always the
- * same and it is the one the whole lane is judged on: **a repeat is safe**.
+ * same: **a repeat is safe**.
  * Nothing is duplicated, nothing is skipped, and the student's work is where
  * they left it.
  */
@@ -277,8 +277,8 @@ describe('an expired token', () => {
     expect(result.outcome).toBe('deferred')
     expect(refreshToken).toHaveBeenCalledTimes(1)
 
-    // The outbox is untouched and offline reading still works — the session was
-    // never ended, which is the whole of.
+    // The outbox is untouched and offline reading still works: the session was
+    // never ended.
     expect((await harness.outboxOf(OWNER))[0]!.status).toBe('pending')
     expect(await harness.engine.lessons.listByCourse(asId<never>(COURSE_ID))).toHaveLength(1)
   })

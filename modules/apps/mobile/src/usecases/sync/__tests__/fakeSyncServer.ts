@@ -29,16 +29,15 @@ import type { ISyncClient } from '@vidya/usecases'
 /**
  * A server that behaves like one, in memory.
  *
- * The device lane cannot use the real endpoints — the server lane is being
- * written at the same time — but a client that simply hands back canned pages
- * proves nothing about paging, cursors, echo suppression or idempotency, which
- * is where every interesting device bug lives. So this keeps an append-only
+ * A client that simply hands back canned pages proves nothing about paging,
+ * cursors, echo suppression or idempotency, which is where every interesting
+ * device bug lives. So this keeps an append-only
  * journal, hands out pages by scope position, suppresses the caller's own rows
  * and answers a push row by row, exactly as the contract says.
  *
  * It is a test instrument, not a second implementation of the server: it holds
  * no permissions, no validation and no HLC re-stamping beyond what a test asks
- * for. Where the two lanes must agree, they agree through the shared wire
+ * for. Where it and the server must agree, they agree through the shared wire
  * fixtures in `libs/protocol/__fixtures__/sync/`, which both drive.
  */
 
@@ -151,8 +150,8 @@ export class FakeSyncServer implements ISyncClient {
   /**
    * Append a row exactly as given, defaults and all bypassed.
    *
-   * The only way to stage what section 11.6 is about: rows a correct server
-   * would never send, which the device still has to survive ( … ).
+   * The only way to stage rows a correct server would never send, and which
+   * the device still has to survive.
    */
   malformed(row: Record<string, unknown> & { scope: SyncScopeRef }): void {
     this.seq += 1

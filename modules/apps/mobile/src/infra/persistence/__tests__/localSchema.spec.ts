@@ -226,7 +226,7 @@ describe('the local schema', () => {
       ['sync_doc_hlc', ['collection', 'doc_id', 'owner_id', 'server_hlc']],
       ['sync_state', ['acked_seq', 'device_id', 'owner_id', 'pushed_outbox_id']],
       ['sync_scopes', ['checksum', 'cursor', 'id', 'kind', 'owner_id', 'removed_at']],
-    ])('gives %s the columns the plan names', async (table, expected) => {
+    ])('gives %s the columns the sync engine reads and writes', async (table, expected) => {
       const { db } = await openTestDatabase()
 
       expect(await columnNames(db, table)).toEqual(expected)

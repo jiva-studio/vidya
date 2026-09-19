@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { COLLECTION_PROJECTIONS, projectionOf } from '../collectionProjections'
 
 /**
- *, device half: what this table expects to be sent is what the contract
- * says is sent.
+ * The device half of the wire contract: what this table expects to be sent is
+ * what the contract says is sent.
  *
  * The server half lives in `@vidya/api` and holds its journal projections to
  * the same `SYNC_WIRE_FIELDS`. Two halves rather than one test on purpose: an

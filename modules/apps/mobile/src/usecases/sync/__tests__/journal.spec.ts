@@ -31,7 +31,7 @@ import {
 import { failingDatabase, type Harness, openHarness, OTHER_OWNER, OWNER } from './harness'
 
 /**
- * The journal decorator:.
+ * The journal decorator.
  *
  * Everything runs against real SQLite. The atomicity case in particular cannot
  * be shown any other way — a fake repository has no transaction to roll back,

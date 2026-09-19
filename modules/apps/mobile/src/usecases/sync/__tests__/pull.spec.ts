@@ -19,8 +19,7 @@ import {
 import { failingDatabase, type Harness, openHarness, OWNER } from './harness'
 
 /**
- * Pulling and merging:,
- *, and the crooked-data family ….
+ * Pulling and merging, including the rows a correct server would never send.
  *
  * All of it against real SQLite, because the claims are about transactions,
  * cursors and what survives a rollback — none of which a fake repository has.

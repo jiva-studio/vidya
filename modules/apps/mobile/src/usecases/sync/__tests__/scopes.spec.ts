@@ -15,7 +15,7 @@ import {
 import { type Harness, openHarness } from './harness'
 
 /**
- * Scope positions:.
+ * Scope positions.
  *
  * These four are the payoff for keeping a position per scope instead of one
  * number for the journal. A new course needs no backfill path because it

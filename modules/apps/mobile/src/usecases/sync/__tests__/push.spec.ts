@@ -24,10 +24,10 @@ import {
 import { type Harness, openHarness, OTHER_OWNER, OWNER } from './harness'
 
 /**
- * Draining the journal:.
+ * Draining the journal to the server.
  *
- * The invariant under every one of them is the same, and it is the reason this
- * lane exists: **the student's work never leaves the device because of a
+ * The invariant under every one of these is the same, and it is the reason the
+ * engine exists: **the student's work never leaves the device because of a
  * synchronisation decision.** An accepted row is marked, a refused row keeps
  * its reason, and the table only ever grows.
  */

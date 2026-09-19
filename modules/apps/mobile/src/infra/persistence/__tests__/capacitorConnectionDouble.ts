@@ -5,15 +5,10 @@ import type { CapacitorConnection } from '../capacitor/capacitorSqlDatabase'
 /**
  * A stand-in for the plugin's `SQLiteDBConnection`, backed by real SQLite.
  *
- * The Capacitor adapter had never been executed — not in the app, not in one
- * test — because everything runs on sql.js. This double closes that gap on CI:
- * the adapter's own logic (its transaction queue, its recovery, its suspend)
- * runs against real SQL, with the plugin's interface in front of it rather than
- * sql.js's.
- *
- * It is not a simulator of the plugin and does not pretend to be one. It
- * reproduces the two behaviours the adapter actually depends on and that sql.js
- * cannot show:
+ * Everything else runs on sql.js, so without this double the Capacitor
+ * adapter's own logic — its transaction queue, its recovery, its suspend —
+ * executes nowhere on CI. It is not a simulator of the plugin: it reproduces
+ * the two behaviours the adapter depends on and sql.js cannot show.
  *
  * - `beginTransaction` refuses while a transaction is open, the way SQLite
  *   does — "cannot start a transaction within a transaction";
@@ -22,8 +17,8 @@ import type { CapacitorConnection } from '../capacitor/capacitorSqlDatabase'
  *   until the app restarts.
  *
  * What only the device can prove — that the plugin parses our DDL, that the
- * native side honours `busy_timeout` — is why the conformance suite is written
- * to be pointed at a real connection too.
+ * native side honours `busy_timeout` — is why the conformance suite can be
+ * pointed at a real connection too.
  */
 export interface ConnectionFaults {
   /**

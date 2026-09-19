@@ -5,18 +5,15 @@ import { DatabaseSuspendedError, type IDatabase } from '@/ports'
 /**
  * One suite, run against every implementation of {@link IDatabase}.
  *
- * The port has two adapters and only one of them was ever tested. That is the
- * cause behind every finding in the Capacitor adapter, not a coincidence beside
- * them: a promise the port makes and only one adapter keeps is a promise the
- * app relies on and the device breaks. So the promises are written once, here,
- * and parameterised by the thing that has to keep them.
+ * A promise the port makes and only one adapter keeps is a promise the app
+ * relies on and the device breaks, so the promises are written once, here, and
+ * parameterised by the adapter that has to keep them.
  *
  * On CI this runs against sql.js and against the Capacitor adapter over a
- * stand-in connection. It is written to be pointed at a real device connection
- * unchanged: hand it a subject whose `create` opens through
- * `useCapacitorSqlPersistence`, and the same five promises are checked against
- * the plugin, the native layer and a real file — which is where the DDL and the
- * busy timeout can finally be checked too.
+ * stand-in connection. It can be pointed at a real device connection unchanged:
+ * hand it a subject whose `create` opens through `useCapacitorSqlPersistence`,
+ * and the same promises are checked against the plugin, the native layer and a
+ * real file — which is where the DDL and the busy timeout can be checked too.
  *
  * What it does not cover is anything requiring two connections or a suspended
  * process: those are the device's own territory and a fake would only pretend.

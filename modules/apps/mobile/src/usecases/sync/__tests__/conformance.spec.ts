@@ -29,10 +29,9 @@ import { DEVICE, OWNER } from './harness'
  * The shared fuse: the wire fixtures of `libs/protocol/__fixtures__/sync/`,
  * driven through the device.
  *
- * The server lane runs these same files through HTTP. Neither lane can see the
- * other's code while both are being written, so agreement has to be enforced by
- * something both sides consume — and a fixture both sides read is the only
- * thing that catches a contract drifting apart before the parts are first put
+ * The server runs these same files through HTTP. Agreement has to be enforced
+ * by something both sides consume, and a fixture both sides read is the only
+ * thing that catches a contract drifting apart before the two are first put
  * together.
  *
  * The device's half of the conformance set is deliberately about *reading*: can

@@ -171,11 +171,10 @@ describe('the collection projection table', () => {
 /**
  * The times a pulled row lands with.
  *
- * `homework` used to name `created_at` and `updated_at` while the server sent
- * neither, so every pulled answer was stored with an empty string in both — and
- * `listByEnrollment`, which orders by `created_at`, put them all first, in
- * whatever order SQLite happened to return. Nothing failed; the list was simply
- * wrong. `lesson_versions.created_at` was the same thing one table over.
+ * A column the wire never fills is stored as an empty string, which sorts
+ * before every real instant. `listByEnrollment` orders by `created_at`, so such
+ * rows come back first, in whatever order SQLite happens to return — nothing
+ * fails, and the list is simply wrong.
  */
 describe('the times a pulled row lands with', () => {
   const OWNER = 'owner-a'

@@ -26,7 +26,7 @@ import {
 import { type Harness, openHarness, OTHER_OWNER, OWNER } from './harness'
 
 /**
- * Two students on one handset:.
+ * Two students on one handset.
  *
  * There is one database per installation, not one per account. That is a
  * deliberate choice and it buys something worth having — signing out erases

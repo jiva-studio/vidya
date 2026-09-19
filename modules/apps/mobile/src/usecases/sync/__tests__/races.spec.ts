@@ -29,7 +29,7 @@ import {
 import { type Harness, openHarness, OWNER } from './harness'
 
 /**
- * Two things happening at once: ….
+ * Two things happening at once.
  *
  * Two devices of one student are the only place in this design where last write
  * wins at all — everywhere else the writing sides are split and there is

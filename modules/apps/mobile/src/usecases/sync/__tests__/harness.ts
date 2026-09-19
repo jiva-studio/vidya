@@ -12,11 +12,10 @@ import { FakeSyncServer } from './fakeSyncServer'
  * One line to get a migrated SQLite database, the real adapters, the real
  * scenarios, and a server that behaves like one.
  *
- * Every test in this lane runs against actual SQLite through `sql.js` — no
- * device, no emulator, no mocked repository. That is the whole reason the
- * device work could be done in parallel with the server's: the engine's
- * failures are transaction failures, ordering failures and cursor failures, and
- * none of them reproduce against a fake repository that cannot roll back.
+ * Every test here runs against actual SQLite through `sql.js` — no device, no
+ * emulator, no mocked repository. The engine's failures are transaction
+ * failures, ordering failures and cursor failures, and none of them reproduce
+ * against a fake repository that cannot roll back.
  *
  * Clock and randomness are pinned and advanced by hand, because HLC ordering
  * and retry jitter are precisely what is under test.

@@ -26,14 +26,13 @@ import {
 import { type Harness, openHarness, OTHER_OWNER, OWNER } from './harness'
 
 /**
- * The seven defects a hostile review reproduced on this engine, each pinned by
- * the run that showed it.
+ * The silent failures of the engine, each pinned by the run that shows it.
  *
  * Every one of them is a silence: nothing throws, nothing is logged, and the
  * student sees a screen that is merely wrong — a course that never updates, a
  * lesson that never arrives, an answer that was there a moment ago. So each
- * test states the observable end of the defect and not the mechanism, because
- * the mechanism is what the fix is free to change.
+ * test states what the student observes and not the mechanism, which an
+ * implementation is free to change.
  */
 
 const homework = (fields: SyncPayload = {}): SyncPayload => ({
@@ -70,7 +69,7 @@ const ALIEN_SCOPE = { kind: 'group', id: '7f' } as unknown as SyncScopeRef
 /** A scope of a kind we know whose id the server could never cast to a uuid. */
 const CROOKED_COURSE = { kind: 'course', id: 'not-a-uuid' } as unknown as SyncScopeRef
 
-describe('the seven defects', () => {
+describe('the silent failures', () => {
   let harness: Harness
 
   beforeEach(async () => {
@@ -112,7 +111,7 @@ describe('the seven defects', () => {
     expect(Object.keys(lastCursors())).toEqual([syncScopeKey(COURSE_SCOPE)])
   })
 
-  it('a scope an earlier build already wrote down is never asked about again', async () => {
+  it('a stored scope this build cannot name is never asked about again', async () => {
     await harness.db.execute(
       `INSERT INTO sync_scopes (owner_id, kind, id, cursor, checksum, removed_at)
        VALUES (?, 'group', '7f', 12, NULL, NULL)`,
