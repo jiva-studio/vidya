@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import type { AudioBlock, LessonBlock, QuizBlock, TextBlock, VideoBlock } from '@vidya/domain'
+import type {
+  AudioBlock,
+  ImageBlock,
+  LessonBlock,
+  QuizBlock,
+  TextBlock,
+  VideoBlock,
+} from '@vidya/domain'
 import { computed } from 'vue'
 
 import { isKnownBlockType } from '../model'
 import AudioBlockEditor from './AudioBlockEditor.vue'
+import ImageBlockEditor from './ImageBlockEditor.vue'
 import QuizBlockEditor from './QuizBlockEditor.vue'
 import TextBlockEditor from './TextBlockEditor.vue'
 import type { LessonBlockEditorEmits, LessonBlockEditorProps } from './types'
@@ -28,6 +36,9 @@ const video = computed(() =>
 )
 const audio = computed(() =>
   props.block.type === 'audio' ? (props.block as AudioBlock) : undefined,
+)
+const image = computed(() =>
+  props.block.type === 'image' ? (props.block as ImageBlock) : undefined,
 )
 const quiz = computed(() => (props.block.type === 'quiz' ? (props.block as QuizBlock) : undefined))
 
@@ -59,6 +70,7 @@ function onEscape() {
     @slash="onSlash"
     @escape="onEscape"
   />
+  <ImageBlockEditor v-if="image" :block="image" :frozen="props.frozen" @update="onUpdate" />
   <VideoBlockEditor v-if="video" :block="video" :frozen="props.frozen" @update="onUpdate" />
   <AudioBlockEditor v-if="audio" :block="audio" :frozen="props.frozen" @update="onUpdate" />
   <QuizBlockEditor v-if="quiz" :block="quiz" :frozen="props.frozen" @update="onUpdate" />
