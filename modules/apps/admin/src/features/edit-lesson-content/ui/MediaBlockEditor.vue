@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import type { ToastItem } from '@vidya/ui'
-import { Toaster } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
 
 import type { MediaRecord, PickedMedia } from '@/entities/media'
 import { useMediaGateway } from '@/entities/media'
+import { useToasts } from '@/shared/lib'
 import { MediaPickerDialog, useMediaUpload } from '@/features/pick-media'
 
 import { mediaSrc, sourceOf } from '../model/urls'
@@ -31,7 +30,7 @@ const { $t } = useFluent()
 const gateway = useMediaGateway()
 const upload = useMediaUpload()
 
-const toasts = ref<ToastItem[]>([])
+const toasts = useToasts()
 const pickerOpen = ref(false)
 const link = ref('')
 const refused = ref(false)
@@ -107,10 +106,6 @@ function onReplace() {
   emit('update', { ...props.block, url: '', source: 'url' })
 }
 
-function onDismiss(id: string) {
-  toasts.value = toasts.value.filter((toast) => toast.id !== id)
-}
-
 /* -------------------------------- Helpers --------------------------------- */
 
 async function send(file: File | undefined) {
@@ -137,10 +132,7 @@ function apply(picked: PickedMedia) {
 }
 
 function announce(name: string) {
-  toasts.value = [
-    ...toasts.value,
-    { id: `media-${name}`, title: $t('editor-media-uploaded', { name }), tone: 'success' },
-  ]
+  toasts.show({ title: $t('editor-media-uploaded', { name }), tone: 'success' })
 }
 </script>
 
@@ -185,6 +177,5 @@ function announce(name: string) {
       @update:link="onLink"
       @pick="onPick"
     />
-    <Toaster v-if="toasts.length > 0" :toasts="toasts" @dismiss="onDismiss" />
   </div>
 </template>

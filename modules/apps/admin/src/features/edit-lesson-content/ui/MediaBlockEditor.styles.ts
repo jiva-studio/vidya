@@ -16,5 +16,3 @@ export const mediaFrameClasses = [
 export const mediaMutedClasses = ['m-0 text-[length:var(--text-sm)] text-[var(--color-text-muted)]']
 
 export const mediaAlertClasses = ['m-0 text-[length:var(--text-sm)] text-[var(--color-danger-fg)]']
-
-export const mediaHiddenInputClasses = ['sr-only']

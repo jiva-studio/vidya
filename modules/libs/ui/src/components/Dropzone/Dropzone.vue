@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useDropZone, useFileDialog } from '@vueuse/core'
+import { useDropZone } from '@vueuse/core'
 import { computed, ref } from 'vue'
 
 import Button from '../Button'
 import { cn } from '../../lib/utils'
-import { hintClasses, labelClasses, refusedClasses, zoneVariants } from './styles'
+import { hintClasses, labelClasses, pickerClasses, refusedClasses, zoneVariants } from './styles'
 import type { DropzoneEmits, DropzoneProps, DropzoneState } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -22,13 +22,9 @@ const emit = defineEmits<DropzoneEmits>()
 
 const zone = ref<HTMLElement | null>(null)
 const wasRefused = ref(false)
+const picker = ref<HTMLInputElement | null>(null)
 const { isOverDropZone } = useDropZone(zone, { onDrop: onDrop, onEnter: onEnter })
-const { open, onChange } = useFileDialog({ accept: props.accept, reset: true })
 const state = computed<DropzoneState>(() => stateOf(isOverDropZone.value, wasRefused.value))
-
-/* --------------------------------- Hooks ---------------------------------- */
-
-onChange((list) => hand(list ? Array.from(list) : []))
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -42,7 +38,13 @@ function onEnter() {
 
 function onBrowse() {
   if (props.disabled) return
-  open()
+  picker.value?.click()
+}
+
+function onPicked(event: Event) {
+  const input = event.target as HTMLInputElement
+  hand([...(input.files ?? [])])
+  input.value = ''
 }
 
 /* -------------------------------- Helpers --------------------------------- */
@@ -92,5 +94,14 @@ function matches(file: File, pattern: string): boolean {
     <Button variant="secondary" :disabled="props.disabled" @click="onBrowse">
       {{ props.browseLabel }}
     </Button>
+    <input
+      ref="picker"
+      type="file"
+      :accept="props.accept"
+      :disabled="props.disabled"
+      :aria-label="props.browseLabel"
+      :class="pickerClasses"
+      @change="onPicked"
+    />
   </div>
 </template>

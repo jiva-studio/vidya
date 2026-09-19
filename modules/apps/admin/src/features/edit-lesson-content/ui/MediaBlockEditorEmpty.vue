@@ -3,7 +3,7 @@ import { Button, Dropzone, FormField, Input } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
 
-import { mediaHiddenInputClasses, mediaRowClasses } from './MediaBlockEditor.styles'
+import { mediaRowClasses } from './MediaBlockEditor.styles'
 import type {
   MediaBlockEditorEmptyEmits,
   MediaBlockEditorEmptyProps,
@@ -38,14 +38,6 @@ function onRefused() {
   emit('refused')
 }
 
-// `Dropzone` opens the browser's file dialog through an input it never puts in
-// the document, so the block keeps its own: the types it accepts have to be on
-// an element a screen reader — and a test — can actually reach.
-function onChange(event: Event) {
-  const input = event.target as HTMLInputElement
-  emit('files', [...(input.files ?? [])])
-}
-
 function onLibrary() {
   emit('library')
 }
@@ -70,14 +62,6 @@ function onSubmit() {
       :disabled="props.frozen"
       @files="onFiles"
       @refused="onRefused"
-    />
-    <input
-      type="file"
-      :accept="props.accept"
-      :disabled="props.frozen"
-      :class="mediaHiddenInputClasses"
-      :aria-label="$t('editor-media-browse')"
-      @change="onChange"
     />
     <Button variant="secondary" :disabled="props.frozen" @click="onLibrary">
       {{ $t('editor-media-library') }}

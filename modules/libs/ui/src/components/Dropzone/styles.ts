@@ -28,3 +28,6 @@ export const labelClasses = [
 export const hintClasses = ['text-[length:var(--text-sm)] text-[var(--color-text-muted)]']
 
 export const refusedClasses = ['text-[length:var(--text-sm)] text-[var(--color-danger-fg)]']
+
+// Reachable by a screen reader and a test, out of the way of everyone else.
+export const pickerClasses = ['sr-only']

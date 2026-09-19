@@ -4,8 +4,12 @@ import { asId } from '@vidya/domain'
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { Toaster } from '@vidya/ui'
+import { provide } from 'vue'
+
 import { getLesson } from '@/entities/lesson'
 import { useHttp } from '@/shared/api'
+import { createToasts, toastsKey } from '@/shared/lib'
 import { LessonEditorView } from '@/widgets/lesson-editor'
 
 import { pageClasses } from './styles'
@@ -20,6 +24,11 @@ const courseId = asId<CourseId>(String(route.params.courseId ?? ''))
 const lessonId = asId<LessonId>(String(route.params.lessonId ?? ''))
 
 const title = ref<string | undefined>(undefined)
+
+// Anything on this screen announces here; the stack belongs to the page so two
+// blocks uploading do not raise two of them.
+const toasts = createToasts()
+provide(toastsKey, toasts)
 
 /* --------------------------------- Hooks ---------------------------------- */
 
@@ -44,5 +53,6 @@ function onBack() {
 <template>
   <section :class="pageClasses">
     <LessonEditorView :lesson-id="lessonId" :title="title" @back="onBack" />
+    <Toaster :toasts="toasts.items.value" @dismiss="toasts.dismiss" />
   </section>
 </template>
