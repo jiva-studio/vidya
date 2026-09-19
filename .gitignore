@@ -13,3 +13,10 @@ plan.md
 # would otherwise leave a permanent trail of transient planning in history.
 .agents/specs/*
 !.agents/specs/TEMPLATE.md
+
+# Stryker's sandbox and HTML reports. The incremental baseline under
+# .stryker/incremental/ is committed on purpose: it is what a branch is
+# measured against.
+.stryker-tmp
+modules/**/reports
+stryker.log

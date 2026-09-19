@@ -32,6 +32,9 @@ actually defines.
   imports. [`architecture.md`](../../../rules/architecture.md) states the limits.
 - **Formatter fails** -> REJECT. Formatting is decided once, by the tool.
 - **Tests fail** -> REJECT.
+- **Mutation score on the diff below the package threshold** -> REJECT. Run
+  `make mutate-diff PKG=<package>`. New code the suite does not actually
+  exercise is untested code with a coverage number attached to it.
 
 **Never accept a partial gate as a passing gate.**
 `make lint` alone proves nothing about types, formatting or behaviour, and a
@@ -52,21 +55,26 @@ each is actually looked at.
 2. **Declared structure**
    - Do files follow the section order, naming and layout the style rule requires?
    - Is a helper named for what it is, rather than dumped in a noun-named file?
-3. **Type and contract placement**
+3. **Comments and docblocks** — against
+   [`comments.md`](../../../rules/comments.md). Reject identifiers from
+   documents that are not in the repository (`(D-14)`, `(AC-22f)`, `T-S-35`),
+   in comments and in test names alike; defect history narrated in a docblock;
+   and any explanation out of proportion to what it explains.
+4. **Type and contract placement**
    - Are public types declared and re-exported where the rules say, so consumers
      import from the package entry point rather than reaching inside?
    - Do both sides of a wire contract still agree, including optional fields?
-4. **Presentation vs logic**
+5. **Presentation vs logic**
    - Is business logic absent from templates and views?
    - Does any component read state out of the DOM instead of through its inputs?
    - Are style definitions extracted where the rules require, not inlined?
-5. **Domain purity & cohesion**
+6. **Domain purity & cohesion**
    - REJECT a service that combines concerns from different bounded contexts.
    - REJECT a service shaped after one endpoint's composite response.
      Composition across domains belongs in the transport layer.
    - REJECT a flat catch-all API module or direct network calls made from
      components. Network access goes through a typed client behind a domain service.
-6. **Transport separation & god objects**
+7. **Transport separation & god objects**
    - REJECT a unit that routes, validates, persists and notifies at once.
    - Domain code must not know about the transport it is served over.
 

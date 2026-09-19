@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Runs the test suites, against one of three backends.
+#
+#   memory              every suite, backed by pg-mem. The default, and what
+#                       `make test` and CI's main job run. Needs nothing
+#                       installed and finishes in about a minute.
+#
+#   postgres-required   only the suites a real database is required for — the
+#                       ones named `*.postgres.spec.ts`. pg-mem has a single
+#                       session and stubs advisory locking out, so properties
+#                       like "two processes cannot apply the same migration at
+#                       once" cannot be tested there at all: under pg-mem these
+#                       suites skip themselves and prove nothing. This is the
+#                       postgres target that belongs in the mandatory gate.
+#
+#   postgres            every suite, with a real Postgres swapped in for pg-mem.
+#                       Broader, slower, and run by hand or on a schedule rather
+#                       than per change.
+#
+# Without a reachable server the two postgres modes stop immediately and say so.
+# They do not fall back to pg-mem: a silent fallback reports a pass for suites
+# that never ran, which is worse than a failure.
+#
+# Connection settings come from VIDYA_TEST_DB_HOST / _PORT / _USERNAME /
+# _PASSWORD. The database name is derived from the checkout so that worktrees
+# sharing one server do not overwrite each other's schema; see
+# `services/api/src/shared/datasources/testing.datasource.ts`.
+
+usage() {
+  echo "usage: $(basename "$0") [memory|postgres|postgres-required]" >&2
+  exit 2
+}
+
+MODE="${1:-memory}"
+shift || true
+
+MODULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../modules" && pwd)"
+cd "$MODULES_DIR"
+
+require_server() {
+  local host="${VIDYA_TEST_DB_HOST:-127.0.0.1}"
+  local port="${VIDYA_TEST_DB_PORT:-5432}"
+
+  # A plain TCP connect, so the check needs neither psql nor a driver.
+  if ! VIDYA_PG_HOST="$host" VIDYA_PG_PORT="$port" node -e '
+    const net = require("net")
+    const socket = net.connect(
+      { host: process.env.VIDYA_PG_HOST, port: Number(process.env.VIDYA_PG_PORT) },
+      () => { socket.destroy(); process.exit(0) },
+    )
+    socket.setTimeout(3000)
+    socket.on("timeout", () => { socket.destroy(); process.exit(1) })
+    socket.on("error", () => process.exit(1))
+  '; then
+    echo "No Postgres at ${host}:${port}." >&2
+    echo "Start one with 'make db-start', or point VIDYA_TEST_DB_HOST/_PORT at a server." >&2
+    exit 1
+  fi
+}
+
+case "$MODE" in
+  memory)
+    npm run test --workspaces --if-present
+    ;;
+  postgres)
+    require_server
+    VIDYA_TEST_DB=postgres npm run test --workspaces --if-present
+    ;;
+  postgres-required)
+    require_server
+    # Only @vidya/api talks to a database, so only its suites can need one.
+    VIDYA_TEST_DB=postgres npm run test -w @vidya/api -- --testPathPattern '\.postgres\.spec\.ts$'
+    ;;
+  *)
+    usage
+    ;;
+esac
