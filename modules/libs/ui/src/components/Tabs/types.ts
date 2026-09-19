@@ -4,9 +4,12 @@ export interface TabItem {
   disabled?: boolean
 }
 
+export type TabsVariant = 'line' | 'segmented'
+
 export interface TabsProps {
   modelValue: string
   items: TabItem[]
+  variant?: TabsVariant
   label?: string
   class?: string
 }

@@ -80,7 +80,7 @@ export const answerListClasses = ['flex flex-col gap-[var(--space-1)] list-none 
 export const answerRowClasses = ['group/answer flex items-center gap-[var(--space-2)]']
 
 export const answerActionsClasses = [
-  'shrink-0 opacity-0 transition-opacity duration-[var(--duration-fast)] ease-[var(--ease)]',
+  'shrink-0 w-[var(--control-sm)] grid place-items-center opacity-0 transition-opacity duration-[var(--duration-fast)] ease-[var(--ease)]',
   'group-hover/answer:opacity-100 group-focus-within/answer:opacity-100',
 ]
 

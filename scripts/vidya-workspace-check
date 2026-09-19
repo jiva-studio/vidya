@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Runs the four gate stages — typecheck, lint, format, test — against a single
+# workspace instead of all of them.
+#
+# This is the inner loop, not the gate. A change confined to one package is
+# proved here in seconds rather than minutes; a change is only ready to merge
+# once `make check` has run the same four stages over every workspace, because
+# a package's own tests say nothing about the packages that import it.
+
+usage() {
+  echo "usage: $(basename "$0") <@vidya/package>" >&2
+  echo "       run 'make check' for the whole workspace" >&2
+  exit 2
+}
+
+PKG="${1:-}"
+[ -n "$PKG" ] || usage
+
+MODULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../modules" && pwd)"
+cd "$MODULES_DIR"
+
+# npm knows where each workspace lives; deriving it here keeps the script
+# working when a package moves between libs/, apps/ and services/.
+LOCATION="$(npm query ".workspace" | PKG="$PKG" node -e '
+  let raw = ""
+  process.stdin.on("data", (chunk) => (raw += chunk))
+  process.stdin.on("end", () => {
+    const match = JSON.parse(raw).find((w) => w.name === process.env.PKG)
+    if (!match) {
+      console.error(`unknown workspace: ${process.env.PKG}`)
+      process.exit(1)
+    }
+    console.log(match.location)
+  })
+')"
+
+echo "==> typecheck  $PKG"
+npm run typecheck -w "$PKG" --if-present
+
+echo "==> lint       $LOCATION"
+npx eslint "$LOCATION"
+
+echo "==> format     $LOCATION"
+npx prettier --check "$LOCATION/**/*.{ts,vue,json,md,css}"
+
+echo "==> test       $PKG"
+npm run test -w "$PKG" --if-present
+
+echo "==> $PKG is clean. Run 'make check' before handing the branch over."

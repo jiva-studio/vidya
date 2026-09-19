@@ -114,6 +114,10 @@ describe('the assembled application', () => {
     signIn()
     const { app, router } = await mountApp('/')
 
+    const trigger = app.find('aside button[aria-label="Аккаунт"]')
+    await trigger.trigger('click')
+    await flushPromises()
+
     const signOut = app.findAll('aside button').find((node) => node.text() === 'Выйти')
     await signOut?.trigger('click')
     await flushPromises()

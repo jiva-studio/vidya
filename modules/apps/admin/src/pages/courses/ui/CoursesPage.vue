@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Button, PageHeader } from '@vidya/ui'
+import { Button, PageHeader, TableToolbar } from '@vidya/ui'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useCourses } from '@/entities/course'
@@ -12,11 +13,18 @@ import { pageClasses } from './styles'
 
 const router = useRouter()
 const courses = useCourses()
+const search = ref('')
 
 // Hidden rather than disabled: a button the operator may never press only
 // spends their attention, and the server refuses regardless (AC-7).
 const canCreate = useCan('courses:create')
 const canEdit = useCan('courses:update')
+
+const displayedItems = computed(() => {
+  if (!search.value.trim()) return courses.items.value
+  const query = search.value.trim().toLowerCase()
+  return courses.items.value.filter((course) => course.name.toLowerCase().includes(query))
+})
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -35,6 +43,10 @@ function onLessons(id: string) {
 function onRetry() {
   void courses.reload()
 }
+
+function onClear() {
+  search.value = ''
+}
 </script>
 
 <template>
@@ -44,8 +56,15 @@ function onRetry() {
         <Button v-if="canCreate" @click="onCreate">{{ $t('courses-create') }}</Button>
       </template>
     </PageHeader>
+    <TableToolbar
+      v-if="courses.items.value.length >= 10 || search"
+      v-model:search="search"
+      :search-label="$t('courses-title')"
+      :filters-applied="!!search"
+      @clear="onClear"
+    />
     <CoursesTable
-      :rows="courses.items.value"
+      :rows="displayedItems"
       :loading="courses.loading.value"
       :error="courses.error.value && $t(courses.error.value)"
       :can-create="canCreate"

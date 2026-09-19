@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Badge, Button, PageHeader, Tabs } from '@vidya/ui'
+import { Badge, Breadcrumbs, Button, PageHeader, Tabs } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
 
@@ -32,12 +32,24 @@ const { $t } = useFluent()
 const stateTone = computed(() => (props.frozen ? 'success' : 'warning'))
 const stateKey = computed(() => (props.frozen ? 'editor-state-published' : 'editor-state-draft'))
 
+const breadcrumbs = computed(() => [
+  { key: 'courses', label: $t('courses-title') || $t('nav-courses') || 'Courses' },
+  { key: 'lessons', label: $t('lessons-title') || 'Lessons' },
+  { key: 'current', label: props.title ?? $t('editor-title') },
+])
+
 const modes = computed(() => [
   { value: 'write', label: $t('editor-mode-write') },
   { value: 'read', label: $t('editor-mode-read') },
 ])
 
 /* -------------------------------- Handlers -------------------------------- */
+
+function onBreadcrumb(key: string) {
+  if (key === 'courses' || key === 'lessons') {
+    emit('back')
+  }
+}
 
 function onMode(mode: string) {
   emit('update:mode', mode as EditorMode)
@@ -62,19 +74,23 @@ function onRevision() {
 
 <template>
   <PageHeader :title="props.title ?? $t('editor-title')">
+    <template #breadcrumbs>
+      <Breadcrumbs :items="breadcrumbs" @select="onBreadcrumb" />
+    </template>
     <template #actions>
+      <Tabs
+        :model-value="props.mode"
+        :items="modes"
+        variant="segmented"
+        :label="$t('editor-mode-label')"
+        @update:model-value="onMode"
+      />
       <span :class="toolbarFactsClasses">
         <Badge v-if="props.version" :tone="stateTone">
           {{ $t(stateKey, { version: props.version }) }}
         </Badge>
         <Badge v-if="props.dirty" tone="info">{{ $t('editor-unsaved') }}</Badge>
       </span>
-      <Tabs
-        :model-value="props.mode"
-        :items="modes"
-        :label="$t('editor-mode-label')"
-        @update:model-value="onMode"
-      />
       <span :class="toolbarActionsClasses">
         <Button variant="ghost" @click="onBack">{{ $t('editor-back') }}</Button>
         <Button v-if="props.frozen" :busy="props.busy" @click="onRevision">

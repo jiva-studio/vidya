@@ -1,8 +1,8 @@
-export const wrapperClasses = ['flex items-start gap-[var(--space-2)]']
+export const wrapperClasses = ['flex gap-[var(--space-2)]']
 
 export const boxClasses = [
   'peer shrink-0 grid place-items-center',
-  'size-[var(--space-4)] mt-[var(--space-1)]',
+  'size-[var(--space-4)]',
   'rounded-[var(--radius-sm)] border border-[var(--color-border-strong)]',
   'bg-[var(--color-surface)] text-[var(--color-text-inverse)]',
   'transition-colors duration-[var(--duration-fast)] ease-[var(--ease)]',

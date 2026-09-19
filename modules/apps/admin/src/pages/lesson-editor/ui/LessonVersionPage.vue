@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { LessonId, LessonVersionId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
-import { Button, ErrorState, PageHeader, Skeleton } from '@vidya/ui'
-import { onMounted } from 'vue'
+import { Breadcrumbs, Button, ErrorState, PageHeader, Skeleton } from '@vidya/ui'
+import { useFluent } from 'fluent-vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { LessonPreview } from '@/widgets/lesson-editor'
@@ -12,11 +13,17 @@ import { pageClasses } from './styles'
 
 /* --------------------------------- State ---------------------------------- */
 
+const { $t } = useFluent()
 const route = useRoute()
 const router = useRouter()
 
 const lessonId = asId<LessonId>(String(route.params.lessonId ?? ''))
 const versionId = asId<LessonVersionId>(String(route.params.versionId ?? ''))
+
+const breadcrumbs = computed(() => [
+  { key: 'courses', label: $t('nav-courses') },
+  { key: 'current', label: $t('version-title') },
+])
 
 // One named version, read and never written: this is where a reviewer arrives
 // from a piece of work answered against a version that has since been replaced,
@@ -31,6 +38,10 @@ onMounted(() => {
 
 /* -------------------------------- Handlers -------------------------------- */
 
+function onBreadcrumb(key: string) {
+  if (key === 'courses') void router.push({ name: 'courses' })
+}
+
 function onBack() {
   router.back()
 }
@@ -43,6 +54,9 @@ function onRetry() {
 <template>
   <section :class="pageClasses">
     <PageHeader :title="$t('version-title')" :description="$t('version-subtitle')">
+      <template #breadcrumbs>
+        <Breadcrumbs :items="breadcrumbs" @select="onBreadcrumb" />
+      </template>
       <template #actions>
         <Button variant="ghost" @click="onBack">{{ $t('version-back') }}</Button>
       </template>

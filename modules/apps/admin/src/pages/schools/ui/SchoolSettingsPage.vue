@@ -11,6 +11,7 @@ import {
   FormSection,
   PageHeader,
   Select,
+  Separator,
   Skeleton,
 } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
@@ -24,7 +25,7 @@ import { useSchoolApi } from '@/entities/school'
 import { useHttp } from '@/shared/api'
 
 import type { SchoolSettingsPageProps } from './types'
-import { formClasses, listClasses } from './styles'
+import { formClasses, listClasses, pageClasses } from './styles'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -119,54 +120,57 @@ async function load(): Promise<void> {
 </script>
 
 <template>
-  <PageHeader :title="$t('schools-settings-title')" />
-  <Skeleton v-if="loading" shape="block" :lines="4" />
-  <ErrorState
-    :title="$t('state-error-title')"
-    v-else-if="loadFailed"
-    :description="errorText ?? $t('state-error')"
-    :retry-label="$t('action-retry')"
-    @retry="onRetry"
-  />
-  <EmptyState
-    v-else-if="available.length === 0"
-    :title="$t('schools-settings-empty-title')"
-    :description="$t('schools-settings-empty-body')"
-  />
-  <form v-else :class="formClasses" @submit.prevent="onSubmit">
-    <FormField
-      :label="$t('schools-settings-default-role')"
-      :hint="$t('schools-settings-default-role-hint')"
-    >
-      <template #default="field">
-        <Select
-          :id="field.id"
-          v-model="defaultStudentRoleId"
-          :options="options"
-          :placeholder="$t('schools-settings-default-role-none')"
-          :described-by="field.describedBy"
-        />
-      </template>
-    </FormField>
-    <FormSection :title="$t('schools-settings-student-roles')">
-      <div :class="listClasses">
-        <Checkbox
-          v-for="role in available"
-          :key="role.id"
-          :model-value="chosen.has(role.id)"
-          :label="role.name"
-          :disabled="busy"
-          @update:model-value="onToggle(role.id, $event)"
-        />
-      </div>
-    </FormSection>
-    <FormActions
-      :submit-label="$t('action-save')"
-      :cancel-label="$t('action-cancel')"
-      :busy="busy"
-      :error="errorText"
-      @submit="onSubmit"
-      @cancel="onCancel"
+  <section :class="pageClasses">
+    <PageHeader :title="$t('schools-settings-title')" />
+    <Skeleton v-if="loading" shape="block" :lines="4" />
+    <ErrorState
+      :title="$t('state-error-title')"
+      v-else-if="loadFailed"
+      :description="errorText ?? $t('state-error')"
+      :retry-label="$t('action-retry')"
+      @retry="onRetry"
     />
-  </form>
+    <EmptyState
+      v-else-if="available.length === 0"
+      :title="$t('schools-settings-empty-title')"
+      :description="$t('schools-settings-empty-body')"
+    />
+    <form v-else :class="formClasses" @submit.prevent="onSubmit">
+      <FormField
+        :label="$t('schools-settings-default-role')"
+        :hint="$t('schools-settings-default-role-hint')"
+      >
+        <template #default="field">
+          <Select
+            :id="field.id"
+            v-model="defaultStudentRoleId"
+            :options="options"
+            :placeholder="$t('schools-settings-default-role-none')"
+            :described-by="field.describedBy"
+          />
+        </template>
+      </FormField>
+      <Separator />
+      <FormSection :title="$t('schools-settings-student-roles')">
+        <div :class="listClasses">
+          <Checkbox
+            v-for="role in available"
+            :key="role.id"
+            :model-value="chosen.has(role.id)"
+            :label="role.name"
+            :disabled="busy"
+            @update:model-value="onToggle(role.id, $event)"
+          />
+        </div>
+      </FormSection>
+      <FormActions
+        :submit-label="$t('action-save')"
+        :cancel-label="$t('action-cancel')"
+        :busy="busy"
+        :error="errorText"
+        @submit="onSubmit"
+        @cancel="onCancel"
+      />
+    </form>
+  </section>
 </template>

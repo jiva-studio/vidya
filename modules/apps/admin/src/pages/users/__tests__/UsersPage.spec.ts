@@ -113,4 +113,27 @@ describe('UsersPage', () => {
 
     expect(transport.calls).toHaveLength(2)
   })
+
+  it('filters users by search term when list is large', async () => {
+    const { page } = await mountPage({
+      [USERS]: {
+        items: Array.from({ length: 12 }, (_, i) => ({
+          id: `user-${i}`,
+          name: i === 0 ? 'Ann Smith' : i === 1 ? 'Bob Jones' : `User ${i}`,
+        })),
+      },
+    })
+
+    expect(page.text()).toContain('Ann Smith')
+    expect(page.text()).toContain('Bob Jones')
+
+    const input = page.find('input[type="search"]')
+    expect(input.exists()).toBe(true)
+    await input.setValue('Smith')
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flushPromises()
+
+    expect(page.text()).toContain('Ann Smith')
+    expect(page.text()).not.toContain('Bob Jones')
+  })
 })

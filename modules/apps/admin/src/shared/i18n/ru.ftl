@@ -19,6 +19,7 @@ error-forbidden = Нет доступа. Попросите роль у адми
 error-not-found = Этого больше нет — возможно, удалили.
 
 language-label = Язык
+account-menu-label = Аккаунт
 
 school-switcher-label = Школа
 school-unnamed = Школа { $id }

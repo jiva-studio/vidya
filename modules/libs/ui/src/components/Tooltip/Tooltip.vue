@@ -21,7 +21,7 @@ const props = withDefaults(defineProps<TooltipProps>(), {
 </script>
 
 <template>
-  <TooltipProvider :delay-duration="props.delay">
+  <TooltipProvider :delay-duration="props.delay" :skip-delay-duration="props.delay === 0 ? 0 : 300">
     <TooltipRoot>
       <TooltipTrigger as-child>
         <slot />

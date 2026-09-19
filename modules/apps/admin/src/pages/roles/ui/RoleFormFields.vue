@@ -34,12 +34,7 @@ function onPermissions(value: PermissionKey[]) {
 </script>
 
 <template>
-  <FormField
-    :label="$t('roles-form-name')"
-    :hint="$t('roles-form-name-hint')"
-    :error="props.nameError"
-    required
-  >
+  <FormField :label="$t('roles-form-name')" :error="props.nameError" required>
     <template #default="field">
       <Input
         :id="field.id"
@@ -52,7 +47,7 @@ function onPermissions(value: PermissionKey[]) {
       />
     </template>
   </FormField>
-  <FormField :label="$t('roles-form-description')" :hint="$t('roles-form-description-hint')">
+  <FormField :label="$t('roles-form-description')">
     <template #default="field">
       <Textarea
         :id="field.id"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Badge, TableCell, TableRow } from '@vidya/ui'
+import { Avatar, Badge, TableCell, TableRow } from '@vidya/ui'
 import type { BadgeTone } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
@@ -39,7 +39,12 @@ function nameText(): string {
 
 <template>
   <TableRow>
-    <TableCell tone="primary" truncate :title="name">{{ name }}</TableCell>
+    <TableCell tone="primary" truncate :title="name">
+      <div class="inline-flex items-center gap-[var(--space-2)]">
+        <Avatar :name="name" size="sm" />
+        <span class="truncate">{{ name }}</span>
+      </div>
+    </TableCell>
     <TableCell nowrap>
       <Badge :tone="tone">{{ $t(status) }}</Badge>
     </TableCell>

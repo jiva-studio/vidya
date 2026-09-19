@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { EmptyState } from '@vidya/ui'
+import { Card, EmptyState } from '@vidya/ui'
 import { computed } from 'vue'
 
 import { useSession } from '@/shared/session'
 
-import { cardClasses, headerClasses, titleClasses } from './styles'
+import { headerClasses, titleClasses } from './styles'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -25,6 +25,8 @@ const grantsNothing = computed(() => permissions.value.every((entry) => entry.p.
       :title="$t('page-dashboard-no-access-title')"
       :description="$t('page-dashboard-no-access-body')"
     />
-    <div v-else :class="cardClasses">{{ $t('page-dashboard-empty') }}</div>
+    <Card v-else class="text-[var(--color-text-muted)]">
+      {{ $t('page-dashboard-empty') }}
+    </Card>
   </section>
 </template>

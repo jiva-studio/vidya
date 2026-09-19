@@ -87,9 +87,9 @@ describe('Table', () => {
   })
 
   it('shows a busy placeholder while loading, not an empty state', () => {
-    const wrapper = mountTable({ rows: [], loading: true })
+    const wrapper = mountTable({ rows: [], loading: true, emptyTitle: 'No courses yet' })
 
     expect(wrapper.find('[role="status"]').attributes('aria-busy')).toBe('true')
-    expect(wrapper.find('table').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('No courses yet')
   })
 })

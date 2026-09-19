@@ -36,9 +36,22 @@ function isLast(index: number): boolean {
         <span v-if="isLast(index)" :class="currentClasses" aria-current="page">
           {{ item.label }}
         </span>
-        <a v-else :href="item.href" :class="linkClasses" @click="onSelect(item.key)">
+        <a
+          v-else-if="item.href"
+          :href="item.href"
+          :class="linkClasses"
+          @click.prevent="onSelect(item.key)"
+        >
           {{ item.label }}
         </a>
+        <button
+          v-else
+          type="button"
+          :class="linkClasses"
+          @click="onSelect(item.key)"
+        >
+          {{ item.label }}
+        </button>
       </li>
     </ol>
   </nav>

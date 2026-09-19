@@ -15,7 +15,12 @@ at Phase 1, never duplicated here.
    layering, dependency direction, structural limits.
 2. Read the coding-style rule for the layer you are touching, from
    [`../../rules/`](../../rules/).
-3. If a spec exists for the current branch at `.agents/specs/<branch-slug>.md`,
+3. Read [`../../rules/comments.md`](../../rules/comments.md) — what a comment
+   may say and how long it may be.
+4. Read [`../../rules/process.md`](../../rules/process.md) — who owns which
+   files when more than one agent is on the band, and what you must prove
+   before handing over.
+5. If a spec exists for the current branch at `.agents/specs/<branch-slug>.md`,
    read it. It is the contract: its acceptance criteria define done, and its
    non-goals define where to stop.
 
@@ -50,21 +55,52 @@ Leave nothing unwired. A new module that nothing imports, a handler nothing
 routes to, a component nothing renders — these read as complete and are not.
 Stage 0 of [`../review/SKILL.md`](../review/SKILL.md) rejects exactly this.
 
+### Comments you write in this phase
+
+The full rule is [`../../rules/comments.md`](../../rules/comments.md). The four
+things it forbids, because they are the four that keep happening:
+
+1. **No identifiers from documents that are not in the repository.** `(D-14)`,
+   `(I-2, AC-22f)`, `(T-S-35)` — the plan and the spec are not committed, so for
+   the next reader these point nowhere. This includes test names: a test says
+   what breaks, not which row of which table asked for it.
+2. **No defect history.** What was broken and how it was found belongs in the
+   commit message. The docblock describes the code as it stands.
+3. **Size matches the subject.** One field gets one line. A non-trivial
+   algorithm gets a paragraph. Anything longer is documentation and belongs in
+   `docs/`, linked by path.
+4. **Say why, not what.** What the code does is the code's job — if a comment is
+   needed to explain that, the name is wrong. A comment exists for the constraint,
+   the invariant, or the trade-off that the reader cannot see.
+
 ## Phase 4: Gatekeeper (strict)
 
-Before reporting the task complete, run the project gate from the repository root:
+While working, use the narrow gate — the same four stages against the one
+workspace you are changing:
+
+```bash
+make check-package PKG=@vidya/api
+```
+
+Before reporting the task complete, run the full gate from the repository root,
+and the mutation score on what you changed:
 
 ```bash
 make check
+make mutate-diff PKG=@vidya/api
 ```
 
-The [`../makefile/SKILL.md`](../makefile/SKILL.md) skill documents what this
-project's gate chains and which targets exist for a faster inner loop.
+The [`../makefile/SKILL.md`](../makefile/SKILL.md) skill documents every target.
 
-**A partial gate is not a gate.** Running only the linter or only one package's
-tests leaves the rest unverified, and a change that satisfies one stage routinely
-fails another — a decomposition that fixes a line-count violation still has to
-compile, stay formatted and keep the tests green.
+**A partial gate is not a gate.** `check-package` is the inner loop and not a
+substitute: a package's own tests say nothing about the packages that import it,
+and a change that satisfies one stage routinely fails another — a decomposition
+that fixes a line-count violation still has to compile, stay formatted and keep
+the rest of the workspace green.
+
+**A green suite is not the same as a tested change.** `mutate-diff` breaks your
+new code on purpose and checks that something fails. If a mutant survives, the
+suite is passing for a reason unrelated to the behaviour you added.
 
 If any check fails, fix the violation and re-run until the gate exits 0. Report
 the result honestly: if something is still failing, say which and why, rather

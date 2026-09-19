@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { UserId } from '@vidya/domain'
 import type { TableColumn, TableRowData } from '@vidya/ui'
-import { PageHeader, Table } from '@vidya/ui'
+import { PageHeader, Table, TableToolbar } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { UserRow } from '@/entities/user'
@@ -17,6 +17,7 @@ import UsersTableRow from './UsersTableRow.vue'
 const { $t } = useFluent()
 const router = useRouter()
 const users = useUsers()
+const search = ref('')
 
 const columns = computed<TableColumn[]>(() => [
   { key: 'name', label: $t('users-column-name') },
@@ -24,6 +25,12 @@ const columns = computed<TableColumn[]>(() => [
 ])
 
 const errorText = computed(() => (users.error.value ? $t(users.error.value) : undefined))
+
+const displayedRows = computed(() => {
+  if (!search.value.trim()) return users.rows.value
+  const query = search.value.trim().toLowerCase()
+  return users.rows.value.filter((user) => user.name.toLowerCase().includes(query))
+})
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -41,6 +48,10 @@ function onRetry() {
   void users.load()
 }
 
+function onClear() {
+  search.value = ''
+}
+
 /* -------------------------------- Helpers --------------------------------- */
 
 function asUser(row: TableRowData): UserRow {
@@ -51,9 +62,16 @@ function asUser(row: TableRowData): UserRow {
 <template>
   <section :class="sectionClasses">
     <PageHeader :title="$t('users-title')" :description="$t('users-description')" />
+    <TableToolbar
+      v-if="users.rows.value.length >= 10 || search"
+      v-model:search="search"
+      :search-label="$t('users-title')"
+      :filters-applied="!!search"
+      @clear="onClear"
+    />
     <Table
       :columns="columns"
-      :rows="users.rows.value"
+      :rows="displayedRows"
       :loading="users.loading.value"
       :error="errorText"
       :empty-title="$t('users-empty-title')"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { EnrollmentId } from '@vidya/domain'
-import { TableCell, TableRow } from '@vidya/ui'
+import { Avatar, TableCell, TableRow } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
 
@@ -47,13 +47,16 @@ function onAssign(id: EnrollmentId) {
 <template>
   <TableRow>
     <TableCell tone="primary">
-      <div :class="stackClasses">
-        <span :class="primaryLineClasses">
-          {{ props.enrollment.studentName ?? $t('enrollments-student-unknown') }}
-        </span>
-        <span :class="secondaryLineClasses">
-          {{ $t('enrollments-requested-at', { at: formatDate(props.enrollment.createdAt) }) }}
-        </span>
+      <div class="flex items-center gap-[var(--space-2)]">
+        <Avatar :name="props.enrollment.studentName ?? '?'" size="sm" />
+        <div :class="stackClasses">
+          <span :class="primaryLineClasses">
+            {{ props.enrollment.studentName ?? $t('enrollments-student-unknown') }}
+          </span>
+          <span :class="secondaryLineClasses">
+            {{ $t('enrollments-requested-at', { at: formatDate(props.enrollment.createdAt) }) }}
+          </span>
+        </div>
       </div>
     </TableCell>
     <TableCell truncate :title="props.enrollment.courseName">

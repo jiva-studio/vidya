@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { CourseId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
-import { Button, PageHeader } from '@vidya/ui'
-import { ref } from 'vue'
+import { Breadcrumbs, Button, PageHeader } from '@vidya/ui'
+import { useFluent } from 'fluent-vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useCourseLessons } from '@/entities/lesson'
@@ -14,6 +15,7 @@ import { pageClasses } from './styles'
 
 /* --------------------------------- State ---------------------------------- */
 
+const { $t } = useFluent()
 const route = useRoute()
 const router = useRouter()
 
@@ -26,7 +28,16 @@ const canEdit = useCan('lessons:update')
 const adding = ref(false)
 const busy = ref(false)
 
+const breadcrumbs = computed(() => [
+  { key: 'courses', label: $t('courses-title') },
+  { key: 'lessons', label: $t('lessons-title') },
+])
+
 /* -------------------------------- Handlers -------------------------------- */
+
+function onBreadcrumb(key: string) {
+  if (key === 'courses') void router.push({ name: 'courses' })
+}
 
 function onCreate() {
   adding.value = true
@@ -61,6 +72,9 @@ function onRetry() {
 <template>
   <section :class="pageClasses">
     <PageHeader :title="$t('lessons-title')">
+      <template #breadcrumbs>
+        <Breadcrumbs :items="breadcrumbs" @select="onBreadcrumb" />
+      </template>
       <template #actions>
         <Button variant="ghost" @click="onBack">{{ $t('lessons-back') }}</Button>
         <Button v-if="canCreate" @click="onCreate">{{ $t('lessons-add') }}</Button>

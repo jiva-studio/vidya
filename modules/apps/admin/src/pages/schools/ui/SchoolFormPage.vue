@@ -8,7 +8,7 @@ import { reasonOf } from '@/shared/lib'
 import { useSchoolApi } from '@/entities/school'
 
 import type { SchoolFormPageProps } from './types'
-import { formClasses } from './styles'
+import { formClasses, pageClasses } from './styles'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -88,32 +88,29 @@ async function send(): Promise<void> {
 </script>
 
 <template>
-  <PageHeader :title="title" />
-  <form :class="formClasses" @submit.prevent="onSubmit">
-    <FormField
-      :label="$t('schools-form-name')"
-      :hint="$t('schools-form-name-hint')"
-      :error="nameError"
-      required
-    >
-      <template #default="field">
-        <Input
-          :id="field.id"
-          v-model="name"
-          name="name"
-          :described-by="field.describedBy"
-          :invalid="field.invalid"
-          :disabled="busy"
-        />
-      </template>
-    </FormField>
-    <FormActions
-      :submit-label="$t('action-save')"
-      :cancel-label="$t('action-cancel')"
-      :busy="busy"
-      :error="errorText"
-      @submit="onSubmit"
-      @cancel="onCancel"
-    />
-  </form>
+  <section :class="pageClasses">
+    <PageHeader :title="title" />
+    <form :class="formClasses" @submit.prevent="onSubmit">
+      <FormField :label="$t('schools-form-name')" :error="nameError" required>
+        <template #default="field">
+          <Input
+            :id="field.id"
+            v-model="name"
+            name="name"
+            :described-by="field.describedBy"
+            :invalid="field.invalid"
+            :disabled="busy"
+          />
+        </template>
+      </FormField>
+      <FormActions
+        :submit-label="$t('action-save')"
+        :cancel-label="$t('action-cancel')"
+        :busy="busy"
+        :error="errorText"
+        @submit="onSubmit"
+        @cancel="onCancel"
+      />
+    </form>
+  </section>
 </template>

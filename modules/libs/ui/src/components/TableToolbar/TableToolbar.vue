@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { Search } from 'lucide-vue-next'
+import { Search, X } from 'lucide-vue-next'
 import { onBeforeUnmount, ref, watch } from 'vue'
 
-import Button from '../Button'
 import Input from '../Input'
 import { cn } from '../../lib/utils'
 import {
   actionsClasses,
+  clearButtonClasses,
+  clearIconClasses,
   filtersClasses,
   searchIconClasses,
   searchInputClasses,
@@ -19,11 +20,11 @@ import type { TableToolbarEmits, TableToolbarProps } from './types'
 
 const props = withDefaults(defineProps<TableToolbarProps>(), {
   search: '',
-  searchPlaceholder: 'Search',
-  searchLabel: 'Search the list',
+  searchPlaceholder: 'Поиск...',
+  searchLabel: 'Поиск по списку',
   searchDebounce: 250,
   filtersApplied: false,
-  clearLabel: 'Clear filters',
+  clearLabel: 'Очистить',
   class: undefined,
 })
 
@@ -56,6 +57,9 @@ function onTerm(value: string) {
 }
 
 function onClear() {
+  term.value = ''
+  clearTimeout(pending.value)
+  emit('update:search', '')
   emit('clear')
 }
 </script>
@@ -73,14 +77,20 @@ function onClear() {
         :class="cn(searchInputClasses)"
         @update:model-value="onTerm"
       />
+      <button
+        v-if="term"
+        type="button"
+        :class="clearButtonClasses"
+        :aria-label="props.clearLabel"
+        @click="onClear"
+      >
+        <X :class="clearIconClasses" />
+      </button>
     </div>
-    <div :class="filtersClasses">
+    <div v-if="$slots.filters" :class="filtersClasses">
       <slot name="filters" />
     </div>
-    <Button v-if="props.filtersApplied" variant="ghost" size="sm" @click="onClear">
-      {{ props.clearLabel }}
-    </Button>
-    <div :class="actionsClasses">
+    <div v-if="$slots.actions" :class="actionsClasses">
       <slot name="actions" />
     </div>
   </div>

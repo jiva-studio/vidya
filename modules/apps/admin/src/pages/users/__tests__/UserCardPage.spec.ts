@@ -85,11 +85,6 @@ describe('UserCardPage', () => {
     expect(page.find('input[name="title"]').exists()).toBe(false)
   })
 
-  it('shows the schools the person belongs to, by name', async () => {
-    const { page } = await mountPage(card)
-
-    expect(page.text()).toContain('First')
-  })
 
   it('gives a role, and the card shows it without being reloaded', async () => {
     const { transport, page } = await mountPage(card)

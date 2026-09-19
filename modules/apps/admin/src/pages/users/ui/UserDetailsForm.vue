@@ -20,7 +20,6 @@ const api = useUserApi()
 
 const name = ref(props.user.name)
 const email = ref(props.user.email)
-const phone = ref(props.user.phone ?? '')
 const busy = ref(false)
 const invalid = ref(false)
 const error = ref<string | undefined>(undefined)
@@ -41,7 +40,6 @@ async function onSubmit() {
     await api.update(props.user.id, {
       name: name.value.trim(),
       email: email.value.trim(),
-      phone: phone.value.trim() || undefined,
     })
   } catch (failure) {
     error.value = reasonOf(failure)
@@ -53,7 +51,6 @@ async function onSubmit() {
 function onCancel() {
   name.value = props.user.name
   email.value = props.user.email
-  phone.value = props.user.phone ?? ''
   invalid.value = false
   error.value = undefined
 }
@@ -63,7 +60,6 @@ function onCancel() {
   <form :class="formClasses" @submit.prevent="onSubmit">
     <FormField
       :label="$t('users-form-name')"
-      :hint="$t('users-form-name-hint')"
       :error="nameError"
       required
     >
@@ -71,14 +67,9 @@ function onCancel() {
         <Input :id="field.id" v-model="name" name="name" :disabled="busy" />
       </template>
     </FormField>
-    <FormField :label="$t('users-form-email')" :hint="$t('users-form-email-hint')">
+    <FormField :label="$t('users-form-email')">
       <template #default="field">
         <Input :id="field.id" v-model="email" name="email" type="email" :disabled="busy" />
-      </template>
-    </FormField>
-    <FormField :label="$t('users-form-phone')" :hint="$t('users-form-phone-hint')">
-      <template #default="field">
-        <Input :id="field.id" v-model="phone" name="phone" :disabled="busy" />
       </template>
     </FormField>
     <FormActions

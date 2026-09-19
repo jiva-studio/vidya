@@ -20,6 +20,7 @@ error-forbidden = No access. Ask a school administrator for the role.
 error-not-found = This no longer exists — it may have been deleted.
 
 language-label = Language
+account-menu-label = Account
 
 school-switcher-label = School
 school-unnamed = School { $id }

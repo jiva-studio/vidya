@@ -20,6 +20,7 @@ const emit = defineEmits<TextBlockEditorEmits>()
 const area = ref<ComponentPublicInstance | null>(null)
 
 const filled = computed(() => props.block.content.trim().length > 0)
+const rows = computed(() => Math.min(Math.max(props.block.content.split('\n').length + 1, 3), 16))
 
 // A block with nothing in it has nothing to read, so it opens as what it is:
 // a place to write. Everything else shows the text and turns into a field when
@@ -56,7 +57,7 @@ function focusArea() {
     <Textarea
       ref="area"
       :model-value="props.block.content"
-      :rows="8"
+      :rows="rows"
       :aria-label="$t('editor-text-label')"
       :placeholder="$t('editor-text-placeholder')"
       @update:model-value="onContent"

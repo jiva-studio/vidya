@@ -2,12 +2,13 @@
 import { TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 
 import { cn } from '../../lib/utils'
-import { listClasses, rootClasses, triggerClasses } from './styles'
+import { listVariants, rootClasses, triggerVariants } from './styles'
 import type { TabsEmits, TabsProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
 const props = withDefaults(defineProps<TabsProps>(), {
+  variant: 'line',
   label: 'Sections',
   class: undefined,
 })
@@ -29,13 +30,13 @@ function onUpdate(value: unknown) {
     :class="cn(rootClasses, props.class)"
     @update:model-value="onUpdate"
   >
-    <TabsList :class="listClasses" :aria-label="props.label">
+    <TabsList :class="listVariants({ variant: props.variant })" :aria-label="props.label">
       <TabsTrigger
         v-for="item in props.items"
         :key="item.value"
         :value="item.value"
         :disabled="item.disabled"
-        :class="triggerClasses"
+        :class="triggerVariants({ variant: props.variant })"
       >
         {{ item.label }}
       </TabsTrigger>

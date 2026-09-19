@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Button, PageHeader } from '@vidya/ui'
+import { Button, PageHeader, TableToolbar } from '@vidya/ui'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useGroups } from '@/entities/group'
@@ -12,9 +13,16 @@ import { pageClasses } from './styles'
 
 const router = useRouter()
 const groups = useGroups()
+const search = ref('')
 
 const canCreate = useCan('groups:create')
 const canEdit = useCan('groups:update')
+
+const displayedItems = computed(() => {
+  if (!search.value.trim()) return groups.items.value
+  const query = search.value.trim().toLowerCase()
+  return groups.items.value.filter((group) => group.name.toLowerCase().includes(query))
+})
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -33,6 +41,10 @@ function onMembers(id: string) {
 function onRetry() {
   void groups.reload()
 }
+
+function onClear() {
+  search.value = ''
+}
 </script>
 
 <template>
@@ -42,8 +54,15 @@ function onRetry() {
         <Button v-if="canCreate" @click="onCreate">{{ $t('groups-create') }}</Button>
       </template>
     </PageHeader>
+    <TableToolbar
+      v-if="groups.items.value.length >= 10 || search"
+      v-model:search="search"
+      :search-label="$t('groups-title')"
+      :filters-applied="!!search"
+      @clear="onClear"
+    />
     <GroupsTable
-      :rows="groups.items.value"
+      :rows="displayedItems"
       :loading="groups.loading.value"
       :error="groups.error.value && $t(groups.error.value)"
       :can-create="canCreate"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Avatar } from '@vidya/ui'
 import { HomeworkStatusBadge } from '@/entities/homework'
 import { formatDateTime } from '@/shared/lib'
 
@@ -14,9 +15,12 @@ const props = defineProps<HomeworkWorkProps>()
 <template>
   <article :class="workClasses">
     <header :class="metaClasses">
-      <span :class="titleClasses">
-        {{ props.context.studentName ?? $t('homework-student-unknown') }}
-      </span>
+      <div class="inline-flex items-center gap-[var(--space-2)]">
+        <Avatar :name="props.context.studentName ?? '?'" size="md" />
+        <span :class="titleClasses">
+          {{ props.context.studentName ?? $t('homework-student-unknown') }}
+        </span>
+      </div>
       <HomeworkStatusBadge :status="props.work.status" />
       <span v-if="props.context.courseName">{{ props.context.courseName }}</span>
       <span v-if="props.context.groupName">{{ props.context.groupName }}</span>

@@ -70,12 +70,7 @@ function errorFor(field: 'name' | 'courseId', key: string): string | undefined {
 
 <template>
   <form :class="formClasses" novalidate @submit.prevent="onSubmit">
-    <FormField
-      :label="$t('group-form-name-label')"
-      :hint="$t('group-form-name-hint')"
-      :error="nameError"
-      required
-    >
+    <FormField :label="$t('group-form-name-label')" :error="nameError" required>
       <template #default="field">
         <Input
           :id="field.id"
@@ -108,10 +103,7 @@ function errorFor(field: 'name' | 'courseId', key: string): string | undefined {
       </template>
     </FormField>
 
-    <FormField
-      :label="$t('group-form-description-label')"
-      :hint="$t('group-form-description-hint')"
-    >
+    <FormField :label="$t('group-form-description-label')">
       <template #default="field">
         <Textarea
           :id="field.id"

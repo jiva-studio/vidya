@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TableCell, TableRow } from '@vidya/ui'
+import { Avatar, TableCell, TableRow } from '@vidya/ui'
 
 import { HomeworkStatusBadge } from '@/entities/homework'
 import { formatDate } from '@/shared/lib'
@@ -24,7 +24,10 @@ function onOpen() {
 <template>
   <TableRow interactive @select="onOpen">
     <TableCell tone="primary" truncate>
-      {{ props.row.studentName ?? $t('homework-student-unknown') }}
+      <div class="inline-flex items-center gap-[var(--space-2)]">
+        <Avatar :name="props.row.studentName ?? '?'" size="sm" />
+        <span class="truncate">{{ props.row.studentName ?? $t('homework-student-unknown') }}</span>
+      </div>
     </TableCell>
     <TableCell truncate :title="props.row.courseName">{{ props.row.courseName }}</TableCell>
     <TableCell truncate :title="props.row.groupName">{{ props.row.groupName }}</TableCell>

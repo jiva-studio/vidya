@@ -44,12 +44,12 @@ function onUpdate(value: boolean | 'indeterminate') {
 </script>
 
 <template>
-  <div :class="cn(wrapperClasses, props.class)">
+  <div :class="cn(wrapperClasses, props.description ? 'items-start' : 'items-center', props.class)">
     <CheckboxRoot
       :id="controlId"
       :model-value="state"
       :disabled="props.disabled"
-      :class="boxClasses"
+      :class="cn(boxClasses, props.description && 'mt-[2px]')"
       @update:model-value="onUpdate"
     >
       <CheckboxIndicator>

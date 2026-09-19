@@ -15,10 +15,11 @@ module.exports = {
   maxWorkers: '50%',
   coverageDirectory: '../coverage',
   testEnvironment: 'node',
+  // Only the package's own alias is mapped. The sibling packages resolve
+  // through the workspace symlinks in node_modules instead of a relative path,
+  // so a tool that copies this package into a sandbox — Stryker — still finds
+  // them where npm put them.
   moduleNameMapper: {
     '^@vidya/api/(.*)$': '<rootDir>/$1',
-    '^@vidya/protocol$': '<rootDir>/../../../libs/protocol',
-    '^@vidya/entities$': '<rootDir>/../../../libs/entities',
-    '^@vidya/domain$': '<rootDir>/../../../libs/domain',
   },
 }

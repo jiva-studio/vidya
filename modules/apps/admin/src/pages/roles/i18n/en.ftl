@@ -30,7 +30,7 @@ permission-group-enrollments = Requests
 permission-group-homework = Homework
 
 permission-action-all = Every permission in this school
-permission-all-hint = The role gets any permission in this school, including the ones added to the product later. Everything below stops mattering.
+permission-all-hint = Users with this role have full access to all school features.
 permission-all-notice = There is nothing to choose: the role already holds every permission. Turn the switch off to grant them one by one.
 
 permission-action-create = Create

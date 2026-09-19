@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { SchoolId } from '@vidya/domain'
 import type { TableColumn, TableRowData } from '@vidya/ui'
-import { Button, PageHeader, Table } from '@vidya/ui'
+import { Button, PageHeader, Table, TableToolbar } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { SchoolRow } from '@/entities/school'
@@ -18,6 +18,7 @@ import { sectionClasses } from './styles'
 const { $t } = useFluent()
 const router = useRouter()
 const schools = useSchools()
+const search = ref('')
 
 // Hidden rather than disabled: the server refuses regardless, and a control
 // nobody can explain only spends the reader's attention.
@@ -31,6 +32,12 @@ const columns = computed<TableColumn[]>(() => [
 
 const errorText = computed(() => (schools.error.value ? $t(schools.error.value) : undefined))
 const emptyActionLabel = computed(() => (canCreate.value ? $t('schools-create') : undefined))
+
+const displayedRows = computed(() => {
+  if (!search.value.trim()) return schools.rows.value
+  const query = search.value.trim().toLowerCase()
+  return schools.rows.value.filter((school) => school.name.toLowerCase().includes(query))
+})
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -56,6 +63,10 @@ function onRetry() {
   void schools.load()
 }
 
+function onClear() {
+  search.value = ''
+}
+
 /* -------------------------------- Helpers --------------------------------- */
 
 // The table hands rows back as plain records; this names the one it holds.
@@ -71,9 +82,16 @@ function asSchool(row: TableRowData): SchoolRow {
         <Button v-if="canCreate" @click="onCreate">{{ $t('schools-create') }}</Button>
       </template>
     </PageHeader>
+    <TableToolbar
+      v-if="schools.rows.value.length >= 10 || search"
+      v-model:search="search"
+      :search-label="$t('schools-title')"
+      :filters-applied="!!search"
+      @clear="onClear"
+    />
     <Table
       :columns="columns"
-      :rows="schools.rows.value"
+      :rows="displayedRows"
       :loading="schools.loading.value"
       :error="errorText"
       :empty-title="$t('schools-empty-title')"

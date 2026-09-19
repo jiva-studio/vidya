@@ -1,4 +1,4 @@
-import { pgClientConfig, testDatabase } from '@vidya/api/shared/datasources'
+import { pgClientConfig, testDatabase, testDatabaseName } from '@vidya/api/shared/datasources'
 import { runMigrations } from '@vidya/api/shared/migrations'
 import { mkdtempSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
@@ -27,7 +27,7 @@ describeOnPostgres('runMigrations against Postgres', () => {
     return client
   }
 
-  const migrationDb = `vidya_migrations_${process.env.JEST_WORKER_ID ?? '0'}`
+  const migrationDb = testDatabaseName(`migrations_${process.env.JEST_WORKER_ID ?? '0'}`)
 
   const migrations = (files: Record<string, string>): string => {
     const dir = mkdtempSync(join(tmpdir(), 'vidya-pg-migrations-'))

@@ -22,3 +22,4 @@ export default { title: 'Shell/Tabs', component: Tabs }
 
 export const Default = { render, args: { items, modelValue: 'content' } }
 export const SecondSelected = { render, args: { items, modelValue: 'preview' } }
+export const Segmented = { render, args: { items, modelValue: 'content', variant: 'segmented' } }

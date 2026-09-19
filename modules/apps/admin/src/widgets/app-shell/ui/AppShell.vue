@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import type { AppShellEmits } from '../types'
 import {
-  brandClasses,
   contentClasses,
   footerClasses,
   mainClasses,
   shellClasses,
   sidebarClasses,
-  signOutClasses,
 } from './styles'
 
 /* --------------------------------- Events --------------------------------- */
@@ -24,14 +22,12 @@ function onSignOut() {
 <template>
   <div :class="shellClasses">
     <aside :class="sidebarClasses">
-      <p :class="brandClasses">{{ $t('app-name') }}</p>
       <slot name="school" />
       <slot name="nav" />
       <div :class="footerClasses">
-        <slot name="profile" />
-        <button :class="signOutClasses" type="button" @click="onSignOut">
-          {{ $t('action-sign-out') }}
-        </button>
+        <slot name="profile">
+          <slot name="footer" />
+        </slot>
       </div>
     </aside>
     <main :class="mainClasses">

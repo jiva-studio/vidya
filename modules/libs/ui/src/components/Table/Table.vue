@@ -59,9 +59,34 @@ function keyOf(row: TableRowData, index: number): string {
     :class="props.class"
     @retry="onRetry"
   />
-  <div v-else-if="props.loading" :class="cn(loadingClasses, props.class)">
-    <Skeleton shape="text" :lines="1" />
-    <Skeleton shape="block" :lines="4" />
+  <div v-else-if="props.loading" :class="cn(frameClasses, props.class)">
+    <table :class="tableClasses">
+      <caption v-if="props.caption" :class="captionClasses">
+        {{ props.caption }}
+      </caption>
+      <colgroup>
+        <col v-for="column in props.columns" :key="column.key" :style="{ width: column.width }" />
+      </colgroup>
+      <TableHead :columns="props.columns" />
+      <tbody>
+        <tr
+          v-for="i in 5"
+          :key="i"
+          class="border-b border-[var(--color-border)] last:border-b-0 h-[var(--row-height)]"
+        >
+          <td
+            v-for="column in props.columns"
+            :key="column.key"
+            class="px-[var(--space-4)] py-[var(--space-2)] align-middle"
+          >
+            <Skeleton
+              shape="text"
+              :class="column.align === 'end' ? 'ml-auto max-w-[4rem]' : 'max-w-[12rem]'"
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
   <EmptyState
     v-else-if="isEmpty"

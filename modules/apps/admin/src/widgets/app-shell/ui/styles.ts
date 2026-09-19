@@ -8,6 +8,10 @@ export const shellClasses = [
 export const sidebarClasses = [
   'flex',
   'w-[var(--sidebar-width)]',
+  'h-screen',
+  'sticky',
+  'top-0',
+  'overflow-y-auto',
   'shrink-0',
   'flex-col',
   'border-r',
@@ -24,20 +28,11 @@ export const brandClasses = [
 
 export const footerClasses = [
   'mt-auto',
-  'flex',
-  'flex-col',
-  'items-start',
-  'gap-[var(--space-2)]',
+  'w-full',
   'border-t',
   'border-[var(--color-border)]',
-  'px-[var(--space-4)]',
+  'px-[var(--space-3)]',
   'py-[var(--space-3)]',
-]
-
-export const signOutClasses = [
-  'text-[length:var(--text-sm)]',
-  'text-[var(--color-text-muted)]',
-  'hover:text-[var(--color-text)]',
 ]
 
 export const mainClasses = ['min-w-0', 'flex-1', 'px-[var(--space-6)]', 'py-[var(--space-5)]']

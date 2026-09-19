@@ -13,3 +13,4 @@ export default { title: 'Overlay/Tooltip', component: Tooltip }
 
 export const Default = { render, args: { text: 'The student answered an older version.' } }
 export const OnTheRight = { render, args: { text: 'Draft, never published.', side: 'right' } }
+export const Instant = { render, args: { text: 'Instant tooltip without delay', delay: 0 } }
