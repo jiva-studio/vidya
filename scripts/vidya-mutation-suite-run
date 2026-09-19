@@ -66,6 +66,12 @@ case "$MODE" in
     # question before the last commit as well as after it. Stryker's own mutate
     # patterns do not apply to files named on the command line, so the same
     # exclusions — specs, modules, barrel files — are applied here instead.
+    #
+    # `.vue` is absent on purpose. Stryker instruments a component with local
+    # counters, and Vue refuses a `defineProps` that reads a local, so a
+    # component written the way this project writes them cannot be compiled once
+    # it is instrumented. Components are defended by their tests and by the
+    # hand-mutation the process asks for, not by a score.
     CHANGED="$(
       {
         git -C "$REPO_ROOT" diff --name-only --diff-filter=d "$BASE...HEAD" -- "modules/$LOCATION/src"
