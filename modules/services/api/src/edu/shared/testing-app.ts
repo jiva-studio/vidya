@@ -22,8 +22,8 @@ export type TestingOverride = {
 
 /**
  * Applied to the app between creation and `init()`, for the few things that are
- * bootstrap's rather than a module's — CORS is the one there is. After `init()`
- * it is too late: the middleware stack is already built.
+ * bootstrap's rather than a module's — CORS and Swagger are the two there are.
+ * After `init()` it is too late: the middleware stack is already built.
  */
 export type TestingBootstrap = (app: NestExpressApplication) => void
 
