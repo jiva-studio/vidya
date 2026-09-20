@@ -6,13 +6,16 @@
     :course-name="item.courseName"
     :group-name="item.groupName"
     :status="item.status"
+    :requested-at="item.requestedAt"
     @click="() => onEnrollmentClicked(item.id)"
+    @action="(action) => onActionRequested(item.id, action)"
   />
 </template>
 
 <script setup lang="ts">
 import type { EnrollmentId } from '@vidya/domain'
 
+import type { EnrollmentActionView } from '../../model/enrollmentActions'
 import EnrollmentsListItem from './EnrollmentsListItem.vue'
 import type { EnrollmentsListEmits, EnrollmentsListProps } from './types'
 
@@ -28,5 +31,9 @@ const emit = defineEmits<EnrollmentsListEmits>()
 
 function onEnrollmentClicked(enrollmentId: EnrollmentId) {
   emit('click', enrollmentId)
+}
+
+function onActionRequested(enrollmentId: EnrollmentId, action: EnrollmentActionView) {
+  emit('action', enrollmentId, action)
 }
 </script>

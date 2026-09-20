@@ -69,6 +69,23 @@ enrollment-status-declined = Declined
 enrollment-status-revoked = Place withdrawn by the school
 enrollment-status-withdrawn = You left the course
 enrollment-no-group-yet = Waiting for a group
+enrollment-requested-on = Applied { DATETIME($at, year: "numeric", month: "long", day: "numeric") }
+
+# What a request offers to do with itself
+enrollment-action-cancel = Cancel the request
+enrollment-action-cancel-confirm = The school will not see this request any more. You can ask again later.
+enrollment-action-leave = Leave the course
+enrollment-action-leave-confirm = Your place goes back to the school. Only the school can give it back.
+enrollment-action-remove = Remove from the list
+enrollment-removed = Removed from the list
+enrollment-removed-undo = Undo
+
+# A group that closed while the request was waiting
+enrollment-group-closed = The group you asked for is no longer taking students. The school will look for another one for you.
+
+# What the school would not take
+enrollment-rejection-retry = Your answer is still on this device — send it again.
+enrollment-rejection-settled = The school has already accepted and marked this work, so your change will not reach the school.
 
 # Lesson
 lesson-title = Lesson

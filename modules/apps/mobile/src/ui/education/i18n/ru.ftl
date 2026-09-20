@@ -69,6 +69,23 @@ enrollment-status-declined = Отклонено
 enrollment-status-revoked = Отозвано
 enrollment-status-withdrawn = Вы ушли с курса
 enrollment-no-group-yet = Ожидает группу
+enrollment-requested-on = Заявка от { DATETIME($at, year: "numeric", month: "long", day: "numeric") }
+
+# Что можно сделать с заявкой
+enrollment-action-cancel = Отменить заявку
+enrollment-action-cancel-confirm = Школа больше не увидит эту заявку. Передумаете — подадите новую.
+enrollment-action-leave = Уйти с курса
+enrollment-action-leave-confirm = Место вернётся школе. Вернуть его может только школа.
+enrollment-action-remove = Убрать из списка
+enrollment-removed = Убрано из списка
+enrollment-removed-undo = Отменить
+
+# Группа закрылась, пока заявка ждала ответа
+enrollment-group-closed = Группа, которую вы выбрали, больше не набирает. Школа подберёт вам другую.
+
+# Чего школа не приняла
+enrollment-rejection-retry = Ваш ответ остался на устройстве — отправьте его ещё раз.
+enrollment-rejection-settled = Школа уже приняла и оценила эту работу, ваша правка до школы не дойдёт.
 
 # Урок
 lesson-title = Урок

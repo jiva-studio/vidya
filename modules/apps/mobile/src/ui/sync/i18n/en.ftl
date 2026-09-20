@@ -36,6 +36,10 @@ sync-revoked-text = The school ended your enrolment on { $course }.
 sync-revoked-downloaded-stays = Everything already downloaded stays readable on this device.
 sync-revoked-open-downloaded = Open what is downloaded
 
+# A course the student handed back themselves
+sync-withdrawn-title = You are no longer on this course
+sync-withdrawn-text = You left { $course }.
+
 # Lesson content this build does not understand
 sync-outdated-app-title = Update the app to open this lesson
 sync-outdated-app-text = This lesson was made with a newer version of Vidya. Nothing is lost, the app simply cannot draw it yet.
