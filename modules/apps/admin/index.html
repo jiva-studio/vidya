@@ -3,6 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      The refresh token in localStorage (see shared/session/tokenStore.ts) is only
+      as safe as this line: it is reachable by any script that runs on the page,
+      so the policy that keeps an injected script from running is what actually
+      protects it, not where the token is kept.
+
+      `style-src` carries `unsafe-inline` on purpose, not by default: the built
+      bundle has no inline `<script>` or `<style>` tag (verified against `npm run
+      build`'s `dist/index.html`), but `@vidya/ui`'s `Progress`, `Table` and
+      `TableHead` components bind `:style` to values computed at runtime, which
+      Vue writes as inline `style=""` attributes, and CSP polices those the same
+      as a `<style>` block. Those values are never attacker input, so the risk
+      accepted here is scoped and small; `script-src` carries no such exception.
+
+      `frame-ancestors` is deliberately absent. A `<meta>` tag cannot carry it —
+      the directive is ignored there by specification — so it has to be a
+      response header from whatever serves this build, and nothing does yet
+      (`modules/services/gateway/` is an empty README). Whoever stands the
+      gateway up owes this document `X-Frame-Options: DENY` or
+      `Content-Security-Policy: frame-ancestors 'none'` as a response header,
+      the same decision the API already makes for its own Swagger page.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'"
+    />
     <title>Vidya</title>
   </head>
   <body>
