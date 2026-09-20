@@ -1,3 +1,4 @@
+import { AuditLog } from './auditLog'
 import { BlockState } from './blockState'
 import { Course, LearningType } from './course'
 import { Enrollment } from './enrollment'
@@ -11,10 +12,12 @@ import { SyncJournal } from './syncJournal'
 import { User } from './user'
 import { UserRole } from './userRole'
 
+export type { AuditAction } from './auditLog'
 export type { SchoolConfig } from './school'
 export type { SyncOp, SyncScopeKind } from './syncJournal'
 
 export {
+  AuditLog,
   BlockState,
   Course,
   Enrollment,
@@ -32,6 +35,7 @@ export {
 }
 
 export const Entities = [
+  AuditLog,
   BlockState,
   Course,
   Enrollment,

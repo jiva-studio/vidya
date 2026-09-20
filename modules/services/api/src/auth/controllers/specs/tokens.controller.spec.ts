@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing'
 import { AuthService, AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
+import { AuditLogService } from '@vidya/api/shared/services'
 import * as domain from '@vidya/domain'
 import { User } from '@vidya/entities'
 import { RefreshToken } from '@vidya/protocol'
@@ -50,16 +51,23 @@ describe('TokensController', () => {
               getUserPermissions: jest.fn().mockResolvedValue([]),
             },
           },
+          {
+            provide: AuditLogService,
+            useValue: { record: jest.fn().mockResolvedValue(undefined) },
+          },
         ],
       }).compile()
 
       const controller = module.get(TokensController)
+      const req = { ip: '127.0.0.1' } as Parameters<typeof controller.refreshTokens>[1]
 
       let settled = false
-      const call = controller.refreshTokens({ refreshToken: 'refresh-token' }).then((response) => {
-        settled = true
-        return response
-      })
+      const call = controller
+        .refreshTokens({ refreshToken: 'refresh-token' }, req)
+        .then((response) => {
+          settled = true
+          return response
+        })
 
       // Drain the microtask queue several times over. Every other mock above
       // resolves on a microtask, so an unawaited `revoke` would let the handler

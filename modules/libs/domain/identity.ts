@@ -30,6 +30,7 @@ export type BlockStateId = Id<'BlockState'>
 export type UserId = Id<'User'>
 export type RoleId = Id<'Role'>
 export type UserRoleId = Id<'UserRole'>
+export type AuditLogId = Id<'AuditLog'>
 
 /** Identifies a block or section inside lesson content, not a table row. */
 export type BlockId = Id<'Block'>

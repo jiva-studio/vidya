@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UnauthorizedException, UseGuards } from '@nestjs/common'
+import { Body, Controller, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common'
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -16,7 +16,9 @@ import {
   OtpService,
   RevokedTokensService,
 } from '@vidya/api/auth/services'
+import { AuditLogService } from '@vidya/api/shared/services'
 import { OtpType, Routes } from '@vidya/protocol'
+import { Request } from 'express'
 
 import { Authentication } from '../decorators'
 import { UserAuthentication } from '../utils'
@@ -29,6 +31,7 @@ export class UserAuthenticationController {
     private readonly usersService: AuthUsersService,
     private readonly authService: AuthService,
     private readonly revokedTokensService: RevokedTokensService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   /* -------------------------------------------------------------------------- */
@@ -55,12 +58,20 @@ export class UserAuthenticationController {
     type: dto.ErrorResponse,
     description: 'Too many requests',
   })
-  async signinWithOtp(@Body() request: dto.OtpSignInRequest): Promise<dto.OtpSignInResponse> {
+  async signinWithOtp(
+    @Body() request: dto.OtpSignInRequest,
+    @Req() req: Request,
+  ): Promise<dto.OtpSignInResponse> {
     // TODO rate limit login attempts by login
 
     // validate OTP, if invalid send 401 Unauthorized response
     const otp = await this.otpService.validate(request.login, request.otp)
     if (!otp) {
+      await this.auditLogService.record({
+        action: 'auth.signIn.failure',
+        actorLogin: request.login,
+        sourceAddress: req.ip,
+      })
       throw new UnauthorizedException(['otp is invalid'])
     }
 
@@ -77,6 +88,15 @@ export class UserAuthenticationController {
       user.id,
       await this.usersService.getUserPermissions(user.id),
     )
+
+    await this.auditLogService.record({
+      action: 'auth.signIn.success',
+      actorUserId: user.id,
+      actorLogin: request.login,
+      subjectType: 'user',
+      subjectId: user.id,
+      sourceAddress: req.ip,
+    })
 
     return new dto.OtpSignInResponse({
       accessToken: tokens.accessToken,
@@ -111,6 +131,7 @@ export class UserAuthenticationController {
   async logoutUser(
     @Body() request: dto.SignOutRequest,
     @Authentication() auth: UserAuthentication,
+    @Req() req: Request,
   ): Promise<dto.SignOutResponse> {
     // revoke access token to prevent reusing it
     await this.revokedTokensService.revoke(auth.accessToken)
@@ -122,6 +143,14 @@ export class UserAuthenticationController {
     if (token && token.sub === auth.userId) {
       await this.revokedTokensService.revoke(token)
     }
+
+    await this.auditLogService.record({
+      action: 'auth.signOut',
+      actorUserId: auth.userId,
+      subjectType: 'user',
+      subjectId: auth.userId,
+      sourceAddress: req.ip,
+    })
 
     // user logged out
     return new dto.SignOutResponse()
