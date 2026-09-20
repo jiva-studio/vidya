@@ -1,9 +1,10 @@
 # gateway
 
-The reverse proxy Vidya deploys behind: TLS termination, one origin serving
-the built admin and proxying `/api` to the API, the response headers that
-belong at the edge rather than in an application, and a coarse rate limit.
-nginx, driven by two small templates and a shell entrypoint — no application
+The reverse proxy Vidya deploys behind: TLS termination (certificates
+obtained and renewed automatically, no certbot, no sidecar), one origin
+serving the built admin and proxying `/api` to the API, the response headers
+that belong at the edge rather than in an application, and a coarse rate
+limit. Caddy, driven by one Caddyfile and a shell entrypoint — no application
 code.
 
 Before this existed, nothing terminated TLS, so `Strict-Transport-Security`
@@ -21,11 +22,11 @@ one origin, a built admin, a real reverse proxy — against your own machine.
 
 ```bash
 make api-run      # or `make dev`; something has to answer on VIDYA_API_PORT
-make gateway-up   # builds the admin fresh and starts nginx in front of it
+make gateway-up   # builds the admin fresh and starts Caddy in front of it
 ```
 
 Then open `http://localhost:7813`. `make gateway-down` stops it,
-`make gateway-logs` follows nginx's access/error log.
+`make gateway-logs` follows Caddy's access/error log.
 
 `gateway-up` sits behind a docker-compose profile (`gateway`), so
 `make dev-up`/`make dev` never start it — see the header comment in
@@ -33,45 +34,57 @@ Then open `http://localhost:7813`. `make gateway-down` stops it,
 `781x` application slot after `7810` (api), `7811` (admin) and `7812`
 (storybook).
 
-TLS is off in this local stand: there is no certificate to hand it, and
-turning HSTS on against a host that does not really offer TLS would lock a
-visitor out rather than protect them (the same call `security-headers.config.ts`
-makes for the API). What you get locally is everything else: same-origin
-routing, the coarse rate limit, and the admin document's headers.
+TLS is off in this local stand, and stays off on purpose: there is no public
+domain to request a certificate for, and Caddy's automatic HTTPS would try
+ACME against `localhost` and fail slowly and noisily rather than fast and
+quiet (Caddy does have an internal certificate authority for exactly this
+case, but it still means a self-signed root, browser trust prompts, and one
+more thing to explain to a developer who just wants `make gateway-up` to
+work). Plain HTTP was the simpler of Caddy's two ways to stay quick and quiet
+locally, so that is what `VIDYA_GATEWAY_TLS_ENABLED=false` (the default)
+gives you: same-origin routing, the coarse rate limit, and the admin
+document's headers, everything except TLS itself.
 
 ### Configuration
 
 All environment variables, with their defaults:
 
-| Variable                         | Default                                | What it does                                       |
-| -------------------------------- | -------------------------------------- | -------------------------------------------------- |
-| `VIDYA_GATEWAY_API_UPSTREAM`     | `http://host.docker.internal:7810`     | Where `/api/*` is proxied, prefix stripped         |
-| `VIDYA_GATEWAY_SERVER_NAME`      | `_` (any)                              | nginx `server_name`                                |
-| `VIDYA_GATEWAY_TLS_ENABLED`      | `false`                                | Terminate TLS on 8443 and redirect 8080 → 8443     |
-| `VIDYA_GATEWAY_TLS_CERT`         | `/etc/vidya-gateway/tls/fullchain.pem` | Certificate (chain), PEM                           |
-| `VIDYA_GATEWAY_TLS_KEY`          | `/etc/vidya-gateway/tls/privkey.pem`   | Private key, PEM                                   |
-| `VIDYA_GATEWAY_HSTS_MAX_AGE`     | `63072000` (2 years)                   | `Strict-Transport-Security` max-age, TLS mode only |
-| `VIDYA_GATEWAY_RATE_LIMIT_RPS`   | `20`                                   | Coarse per-IP request rate                         |
-| `VIDYA_GATEWAY_RATE_LIMIT_BURST` | `40`                                   | Burst absorbed before a 503                        |
+| Variable                         | Default                            | What it does                                                            |
+| -------------------------------- | ---------------------------------- | ----------------------------------------------------------------------- |
+| `VIDYA_GATEWAY_API_UPSTREAM`     | `http://host.docker.internal:7810` | Where `/api/*` is proxied, prefix stripped                              |
+| `VIDYA_GATEWAY_TLS_ENABLED`      | `false`                            | Request a real certificate and terminate TLS on 8443                    |
+| `VIDYA_GATEWAY_DOMAIN`           | _(none)_                           | The public domain to request a certificate for; required when TLS is on |
+| `VIDYA_GATEWAY_HSTS_MAX_AGE`     | `63072000` (2 years)               | `Strict-Transport-Security` max-age, TLS mode only                      |
+| `VIDYA_GATEWAY_RATE_LIMIT_RPS`   | `20`                               | Coarse per-IP sustained request rate                                    |
+| `VIDYA_GATEWAY_RATE_LIMIT_BURST` | `40`                               | Per-IP requests absorbed in any single second                           |
 
-The container always listens on 8080 (plain HTTP, or the HTTPS redirect
-target when TLS is on) and 8443 (HTTPS, only bound when TLS is on); a
-deployment maps those to whatever ports it actually exposes.
+The container always listens on 8080 (plain HTTP locally, or the
+HTTP→HTTPS redirect and ACME challenge listener once TLS is on) and 8443
+(HTTPS, only meaningfully served once TLS is on); a deployment maps those to
+whatever ports it actually exposes.
 
 ### TLS certificates
 
-Not decided in this repository, on purpose: how a certificate reaches this
-container depends on how Vidya is deployed, and that is not settled yet. What
-is decided is the shape a deployment has to fill in: mount a certificate chain
-and a private key as files, in PEM format, at the two paths above (or point
-the two env vars elsewhere), and set `VIDYA_GATEWAY_TLS_ENABLED=true`. That
-is deliberately the same shape `certbot`, `acme.sh` and most ACME sidecars
-already produce, and equally the shape a mounted Kubernetes TLS secret takes,
-so nothing here has to assume which one is in front of it. Fetching or
-renewing a certificate is out of scope for this service; it consumes one.
+Caddy obtains and renews these itself — that is the reason this gateway is
+Caddy and not another reverse proxy (see the top of this file). Set
+`VIDYA_GATEWAY_TLS_ENABLED=true` and `VIDYA_GATEWAY_DOMAIN` to the public
+domain this deployment answers on; on first request Caddy gets a certificate
+from Let's Encrypt (falling back to ZeroSSL if that issuer is unavailable),
+staples OCSP, and renews ahead of expiry, all without a cron job. The
+container needs port 80 and 443 reachable from the internet at that domain —
+mapped from its own 8080/8443 (see "Configuration" above) — for the ACME
+HTTP-01 challenge and for ordinary HTTPS traffic.
 
-If the two files are missing, the entrypoint refuses to start nginx at all
-rather than starting it TLS-broken.
+Certificates and account keys are cached under `/data` inside the container
+(Caddy's default `XDG_DATA_HOME`). A deployment that throws this container
+away and recreates it on every deploy should mount `/data` on a persistent
+volume — otherwise every redeploy requests a fresh certificate, and repeated
+requests for the same domain in a short window risk Let's Encrypt's rate
+limits.
+
+If `VIDYA_GATEWAY_TLS_ENABLED=true` and `VIDYA_GATEWAY_DOMAIN` is unset, the
+entrypoint refuses to start rather than starting Caddy with nothing to
+request a certificate for.
 
 ## Header ownership
 
@@ -81,13 +94,18 @@ drift out of sync silently. The split:
 **The API's helmet (`services/api/src/shared/security-headers/`) owns every
 header on `/api/*`.** The gateway proxies and rate-limits that path; it adds
 no response headers of its own there. That includes `Strict-Transport-Security`
-— the API already sends it, conditionally, once `VIDYA_HSTS_ENABLED=true`, and
-standing this gateway up in front of it in a real deployment is exactly what
-that flag has been waiting for (see `configs/security-headers.config.ts`).
+— the API already sends it, conditionally, once `VIDYA_HSTS_ENABLED=true`. A
+deployment that runs this gateway with `VIDYA_GATEWAY_TLS_ENABLED=true` is
+exactly the condition `VIDYA_HSTS_ENABLED` was waiting for (see
+`configs/security-headers.config.ts`): TLS is real and terminated in front of
+the API, so the API's own promise of TLS-only is no longer premature. Turning
+one on without the other is still safe either way — each header is
+independent of the other process — but there is no longer a reason to leave
+the API's off once the gateway's TLS path is live.
 
 **The gateway owns every header on the admin document and its static assets
 (`/`, everything not under `/api/`).** Nothing else runs in front of that
-build — no helmet, no application — so nginx sets, in TLS mode:
+build — no helmet, no application — so Caddy sets, in TLS mode:
 `Strict-Transport-Security`, `X-Frame-Options: DENY`,
 `Content-Security-Policy: frame-ancestors 'none'`, `X-Content-Type-Options:
 nosniff`, `Referrer-Policy: no-referrer`. The frame headers in particular are
@@ -100,69 +118,73 @@ Adding it in the other place too is how it drifts.
 
 ## Rate limiting
 
-`limit_req_zone`, per client IP, `VIDYA_GATEWAY_RATE_LIMIT_RPS` (default 20)
-with a `VIDYA_GATEWAY_RATE_LIMIT_BURST` (default 40) absorbed before a 503.
-This is a coarse outer layer meant to catch what should never reach the
-application at all — it is not tuned against the API's own limiter, because
-at the time this was written the API had no rate limiting wired in yet (the
-`@nestjs/throttler` dependency is present; nothing uses it). Whoever lands
-that should check these numbers sit comfortably above whatever the
-application enforces, not the other way round.
+A coarse outer layer meant to catch what should never reach the application
+at all — per client IP, well above what the API's own throttling (`#37`)
+enforces.
+
+Stock Caddy has no rate limiter; this uses `caddy-ratelimit`
+(`github.com/mholt/caddy-ratelimit`), compiled in at build time via `xcaddy`
+(see the Dockerfile), which has no separate burst parameter of its own. Two
+zones approximate nginx's rate-plus-burst with the primitives it does have: a
+1-second window capped at `VIDYA_GATEWAY_RATE_LIMIT_BURST` events absorbs a
+short spike, and a 5-second window capped at `VIDYA_GATEWAY_RATE_LIMIT_RPS *
+5` events caps the sustained average at `VIDYA_GATEWAY_RATE_LIMIT_RPS`
+req/s — the same math as "RPS per second, sustained." Both zones key on the
+client IP and apply to the whole site, `/api/*` and the admin document alike.
 
 ## Forwarded headers and `trust proxy`
 
 The gateway is the trust boundary: nothing reaches it except from the open
-internet. It sets `X-Forwarded-For` to the real client address — overwriting
-any inbound value rather than appending to it, so a client cannot plant an
-address ahead of its own — and `X-Forwarded-Proto` to the scheme it actually
-terminated (`http` or `https`).
+internet. Caddy's `reverse_proxy` sets `X-Forwarded-For` and
+`X-Forwarded-Proto` itself, from what it actually observed on the
+connection — verified directly (see "What was verified" below): a request
+carrying a client-supplied `X-Forwarded-For` arrived at the upstream with
+that header replaced by the real peer address, not appended to it, exactly
+like the nginx gateway this replaces. A client cannot plant an address ahead
+of its own.
 
 For that to mean anything by the time it reaches application code, whatever
-wires Express's `trust proxy` setting (`main.ts`, out of scope for this
-change) has to trust **exactly one hop** — `app.set('trust proxy', 1)` — so
-`req.ip` reads this header instead of the gateway's own socket address.
-Trusting more hops than exist re-opens the spoofing this header is supposed
-to close.
+wires Express's `trust proxy` setting (`main.ts`) has to trust **exactly one
+hop** — `VIDYA_TRUST_PROXY=1` — so `req.ip` reads this header instead of the
+gateway's own socket address. This is unchanged from the nginx gateway: one
+process still sits between the caller and the API, so the hop count a
+deployment sets is the same. Trusting more hops than exist re-opens the
+spoofing this header is supposed to close.
 
 ## What was verified, and what was not
 
-Actually built and run — `docker build`, `docker run`, and the real
-`make gateway-up` compose profile — not just read for plausibility:
+Actually built and run — `docker build`, and Caddy run directly against a
+disposable upstream and against a real built admin bundle, both over plain
+HTTP and over TLS (Caddy's internal certificate authority standing in for a
+real ACME-issued one, since there is no public domain to request one for
+here):
 
 - Admin document headers (`X-Frame-Options`, `frame-ancestors 'none'`,
-  `X-Content-Type-Options`, `Referrer-Policy`, and `Strict-Transport-Security`
-  in TLS mode) — verified present, over both plain HTTP and a self-signed TLS
-  cert, and again through `make gateway-up` on port 7813.
+  `X-Content-Type-Options`, `Referrer-Policy`) — verified present over plain
+  HTTP, and `Strict-Transport-Security` additionally present once TLS is on.
 - `/api/*` proxying with the prefix stripped, matching the dev proxy, against
-  a live NestJS API — `GET /api/edu/schools` came back `401 Unauthorized`
-  (the API's own answer, not nginx's) rather than a 502/504.
-- `X-Forwarded-For` being overwritten rather than appended, and
-  `X-Forwarded-Proto` reflecting the actual scheme (`http` and `https`) —
-  verified against a disposable echo upstream that logs what it received.
-- The coarse rate limit actually returning 503 past its burst — verified with
-  a concurrent request burst.
-- The HTTP → HTTPS redirect in TLS mode — verified.
+  a disposable HTTP upstream that echoes back what it received.
+- `X-Forwarded-For` being overwritten rather than appended even when the
+  client sends its own, and `X-Forwarded-Proto` reflecting the actual scheme
+  (`http` and `https`) — verified against that same echo upstream.
+- The rate limiter actually returning `429` past its burst, both on `/` and
+  on `/api/*` from the same zone — verified with a request burst.
+- The HTTP → HTTPS redirect once TLS is on — verified.
 - The entrypoint refusing to start when `VIDYA_GATEWAY_TLS_ENABLED=true` and
-  the certificate files are absent — verified.
-- `smoke-test.sh` itself — run for real; 5 of its 6 checks passed (see below
-  for the one that didn't).
-
-One gap, specific to the sandbox this was written in rather than to the
-config: the compose service reaches the API via
-`http://host.docker.internal:${VIDYA_API_PORT}` over the default bridge
-network, and in that sandbox a container cannot open a TCP connection to a
-host-bound port that way — `host.docker.internal` resolves correctly and
-ICMP gets through, but the TCP connect times out. The proxy mechanics
-themselves are verified (above, against the real API) using `--network host`
-to sidestep exactly that restriction; what is not verified is the bridge hop
-`make gateway-up` actually uses. This is Docker's standard, documented
-mechanism for a container reaching the host and is expected to work on an
-ordinary Linux or Docker Desktop machine — but it was not observed working
-here, so it is called out rather than assumed. If `make gateway-up` cannot
-reach the API on a real machine, look here first.
+  `VIDYA_GATEWAY_DOMAIN` is unset — verified.
+- `smoke-test.sh` checks 1 and 3 (headers, forwarded headers) — run directly
+  against the built image with the same disposable echo upstream the script
+  itself uses. Check 2, which needs a live NestJS API on the compose
+  bridge network, was not run end to end in this environment: other agents
+  were concurrently using this machine's shared `vidya-postgres` /
+  `vidya-redis` / `vidya-mailpit` containers, and starting or restarting them
+  risked interfering with that work. `/api/*` proxying itself (routing,
+  prefix stripping, forwarded headers) was verified as above, against a
+  disposable upstream rather than the real API.
 
 Not verified, and not verifiable without a real deployment: an actual
-CA-signed certificate and its renewal path.
+ACME issuance and renewal against a real, publicly resolvable domain, and
+the ZeroSSL fallback path.
 
 ## Media, issue #15
 
@@ -178,7 +200,8 @@ does today. No route table here names media specifically, and none needs to.
 `make gateway-up`. It checks the admin document's headers, that `/api`
 reaches a live upstream, and that the forwarded headers arrive at an upstream
 correctly — the last of those against a disposable stand-in server it starts
-and tears down itself, since the real API does not read `trust proxy` yet and
-so cannot show the difference on its own. There is no existing pattern in
-this repository for testing infrastructure like this service; a shell script
-next to the thing it tests was the simplest fit.
+and tears down itself, since the real API's `trust proxy` is off by default
+in the dev environment (`VIDYA_TRUST_PROXY` is unset) and so cannot show the
+difference on its own. There is no existing pattern in this repository for
+testing infrastructure like this service; a shell script next to the thing
+it tests was the simplest fit.

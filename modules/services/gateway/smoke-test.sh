@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Smoke test for the gateway, run against a real local stand. It exercises
-# three things end to end rather than reading the rendered nginx config:
+# three things end to end rather than reading the adapted Caddy config:
 #
 #   1. the admin document carries the headers the gateway owns (see
 #      README.md, "Header ownership")
@@ -18,9 +18,10 @@
 # Check 3 does not depend on the real API or on the running gateway: it starts
 # a disposable Python HTTP server that echoes the request headers it received,
 # points a throwaway gateway container straight at it, and tears both down
-# again. This is the one check the real API cannot answer today — main.ts
-# does not set `trust proxy` yet (see README.md) — so it is verified against
-# the mechanism nginx is running, not against app-observable behaviour.
+# again. This is the one check the real API cannot answer today — the dev
+# environment does not set `VIDYA_TRUST_PROXY` (see README.md, "Forwarded
+# headers and trust proxy") — so it is verified against the mechanism Caddy
+# is running, not against app-observable behaviour.
 set -uo pipefail
 
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:7813}"
@@ -101,7 +102,6 @@ docker build -q -f "$REPO_ROOT/modules/services/gateway/Dockerfile" -t "$probe_i
 docker rm -f vidya-gateway-fwd-probe >/dev/null 2>&1
 docker run -d --name vidya-gateway-fwd-probe --network host \
   -e VIDYA_GATEWAY_API_UPSTREAM=http://127.0.0.1:19199 \
-  -e VIDYA_GATEWAY_SERVER_NAME=localhost \
   "$probe_image" >/dev/null
 
 cleanup() {
