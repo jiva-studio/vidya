@@ -141,7 +141,6 @@ export VIDYA_API_PORT     := 7810
 export VIDYA_ADMIN_PORT   := 7811
 export VIDYA_SB_PORT      := 7812
 export VIDYA_API_URL      := http://localhost:7810
-export VIDYA_AUTH_SAVE_PERMISSIONS_IN_JWT_TOKEN := true
 
 dev-up:
 	$(COMPOSE) up -d

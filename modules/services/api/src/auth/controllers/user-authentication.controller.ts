@@ -1,5 +1,4 @@
-import { Body, Controller, Inject, Post, UnauthorizedException, UseGuards } from '@nestjs/common'
-import { ConfigType } from '@nestjs/config'
+import { Body, Controller, Post, UnauthorizedException, UseGuards } from '@nestjs/common'
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -17,7 +16,6 @@ import {
   OtpService,
   RevokedTokensService,
 } from '@vidya/api/auth/services'
-import { AuthConfig } from '@vidya/api/configs'
 import { OtpType, Routes } from '@vidya/protocol'
 
 import { Authentication } from '../decorators'
@@ -27,8 +25,6 @@ import { UserAuthentication } from '../utils'
 @ApiTags('🔐 Authentication')
 export class UserAuthenticationController {
   constructor(
-    @Inject(AuthConfig.KEY)
-    private readonly authConfig: ConfigType<typeof AuthConfig>,
     private readonly otpService: OtpService,
     private readonly usersService: AuthUsersService,
     private readonly authService: AuthService,
@@ -79,9 +75,7 @@ export class UserAuthenticationController {
     )
     const tokens = await this.authService.generateTokens(
       user.id,
-      this.authConfig.savePermissionsInJwtToken
-        ? await this.usersService.getUserPermissions(user.id)
-        : undefined,
+      await this.usersService.getUserPermissions(user.id),
     )
 
     return new dto.OtpSignInResponse({
