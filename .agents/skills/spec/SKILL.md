@@ -20,6 +20,16 @@ flowchart TD
 
 ## Specification Protocol
 
+### Step 0: Prior Art Research
+
+Before any interview question is asked, search the web for existing solutions to
+the problem at hand: established approaches, current direction of the field, and
+known failure modes. Collect three to six recent sources.
+
+The findings open the specification document as a **Prior art** section, above
+the options, and the interview in Step 2 is conducted against them — an option
+the field has already abandoned is raised as such.
+
 ### Step 1: Branch & Spec Path Resolution
 
 1. Determine repository root and active branch:

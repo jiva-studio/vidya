@@ -43,6 +43,17 @@ When the user triggers `/review` (or `review`), resolve the repository root and 
 
 ---
 
+## Stage 0: Prior Art
+
+Before Stage 1, search the web for how the problem the diff solves is solved
+elsewhere: the established approach, the current direction, the known failure
+modes. Three to six recent sources, each one line.
+
+The report opens with this block. Findings in the later stages cite it wherever
+the diff departs from what the field settled on.
+
+---
+
 ## Sequential Execution Stages
 
 ### Stage 1: Gatekeeper & Architectural Audit
