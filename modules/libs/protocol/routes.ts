@@ -80,6 +80,7 @@ export const Routes = (baseUrl: string = '') => ({
       get: (id: string) => `${baseUrl}/edu/enrollments/${id}`,
       create: () => `${baseUrl}/edu/enrollments`,
       moderate: (id: string) => `${baseUrl}/edu/enrollments/${id}/moderation`,
+      archive: (id: string) => `${baseUrl}/edu/enrollments/${id}/archive`,
       group: (id: string) => `${baseUrl}/edu/enrollments/${id}/group`,
       delete: (id: string) => `${baseUrl}/edu/enrollments/${id}`,
     },

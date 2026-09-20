@@ -51,9 +51,11 @@ export class SyncScopesService {
       (id): domain.SyncScopeRef => ({ kind: 'school', id }),
     )
 
-    const courses = accepted.map((enrollment): domain.SyncScopeRef => {
-      return { kind: 'course', id: enrollment.courseId }
-    })
+    // A student who took a course twice still holds one course. `SYNC_MAX_SCOPES`
+    // counts what is granted, so a name repeated spends another scope's budget.
+    const courses = [...new Set(accepted.map((place) => place.courseId))].map(
+      (id): domain.SyncScopeRef => ({ kind: 'course', id }),
+    )
 
     return [{ kind: 'user', id: userId }, ...schools, ...courses]
   }

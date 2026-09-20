@@ -72,6 +72,29 @@ const rejected = (change: PushChange, refusal: Rejection): PushResult => ({
   detail: refusal.detail,
 })
 
+/** The unique index that keeps a student to one live place per course. */
+const LIVE_PLACE_INDEX = 'UQ_enrollments_live_course_student'
+
+/**
+ * Why a row the database refused is answered here and not by the applier.
+ *
+ * A constraint fires inside the row's transaction, which is aborted from that
+ * moment on, so nothing may be looked up again to name what happened — the
+ * error itself is the only evidence left, and this catch is the only place it
+ * is readable. Losing the race for a live place is told as `alreadyAccepted`,
+ * the one reason that makes a device take the server's row instead of keeping
+ * its own; anything else is a row nobody can make sense of.
+ */
+const refusalFor = (error: unknown): Rejection => {
+  const failure = error as { code?: string; constraint?: string }
+
+  if (failure?.code === '23505' && failure?.constraint === LIVE_PLACE_INDEX) {
+    return reject('alreadyAccepted', 'the student already holds a place on this course')
+  }
+
+  return reject('malformed', 'the row could not be applied')
+}
+
 /**
  * Whether the envelope can be read at all, before a transaction is opened.
  *
@@ -143,7 +166,7 @@ export class SyncPushRowService {
       // device and comes back on the next attempt.
       this.logger.error(`push of ${change.collection}/${change.docId} failed`, error)
 
-      return rejected(change, reject('malformed', 'the row could not be applied'))
+      return rejected(change, refusalFor(error))
     }
   }
 

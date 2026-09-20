@@ -31,6 +31,12 @@ const ENROLLMENT = [
   'decidedById',
   'decidedAt',
   'createdAt',
+  'preferredGroupId',
+  'preferredTimes',
+  'comment',
+  'archivedByStudentAt',
+  'archivedBySchoolAt',
+  'archivedBySchoolById',
 ] as const
 const ENROLLMENT_SUMMARY = ['id', 'courseId', 'groupId', 'status', 'createdAt'] as const
 

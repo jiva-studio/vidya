@@ -1,7 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
-import { IsEnum, IsIn, IsOptional, IsUUID, ValidateIf } from 'class-validator'
+import { IsEnum, IsIn, IsOptional, IsString, IsUUID, MaxLength, ValidateIf } from 'class-validator'
+
+import { IsPreferredTimes } from '../validations'
+
+/** Long enough for a paragraph, short enough that the column is not an essay. */
+const MAX_COMMENT_LENGTH = 1000
 
 export class EnrollmentDetails implements protocol.EnrollmentDetails {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
@@ -30,6 +35,29 @@ export class EnrollmentDetails implements protocol.EnrollmentDetails {
 
   @ApiProperty({ example: '2026-09-18T10:00:00.000Z' })
   createdAt: domain.IsoDateTime
+
+  @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  preferredGroupId?: domain.GroupId
+
+  @ApiPropertyOptional({
+    example: {
+      timeZone: 'Asia/Kolkata',
+      ranges: [{ days: ['sat', 'sun'], startMinute: 420, endMinute: 660 }],
+    },
+  })
+  preferredTimes?: domain.PreferredTimes
+
+  @ApiPropertyOptional({ example: 'Evenings are hard, I work late.' })
+  comment?: string
+
+  @ApiPropertyOptional({ example: '2026-09-18T10:00:00.000Z' })
+  archivedByStudentAt?: domain.IsoDateTime
+
+  @ApiPropertyOptional({ example: '2026-09-18T10:00:00.000Z' })
+  archivedBySchoolAt?: domain.IsoDateTime
+
+  @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  archivedBySchoolById?: domain.UserId
 }
 
 export class EnrollmentSummary implements protocol.EnrollmentSummary {
@@ -53,6 +81,27 @@ export class CreateEnrollmentRequest implements protocol.CreateEnrollmentRequest
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsUUID()
   courseId: domain.CourseId
+
+  @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  @IsOptional()
+  @IsUUID()
+  preferredGroupId?: domain.GroupId
+
+  @ApiPropertyOptional({
+    example: {
+      timeZone: 'Asia/Kolkata',
+      ranges: [{ days: ['sat', 'sun'], startMinute: 420, endMinute: 660 }],
+    },
+  })
+  @IsOptional()
+  @IsPreferredTimes()
+  preferredTimes?: domain.PreferredTimes
+
+  @ApiPropertyOptional({ example: 'Evenings are hard, I work late.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(MAX_COMMENT_LENGTH)
+  comment?: string
 }
 
 export class CreateEnrollmentResponse implements protocol.CreateEnrollmentResponse {
@@ -113,6 +162,8 @@ export class ModerateEnrollmentRequest implements protocol.ModerateEnrollmentReq
 }
 
 export class ModerateEnrollmentResponse extends EnrollmentDetails {}
+
+export class ArchiveEnrollmentResponse extends EnrollmentDetails {}
 
 export class AssignEnrollmentGroupRequest implements protocol.AssignEnrollmentGroupRequest {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd', nullable: true })

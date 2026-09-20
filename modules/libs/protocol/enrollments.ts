@@ -78,6 +78,12 @@ export type ModerateEnrollmentRequest = {
 
 export type ModerateEnrollmentResponse = crud.UpdateItemResponse<EnrollmentDetails>
 
+/**
+ * The school puts an answered row out of its own sight. No body: the tidying
+ * carries no data, and who did it is read from the caller.
+ */
+export type ArchiveEnrollmentResponse = crud.UpdateItemResponse<EnrollmentDetails>
+
 /** Move an already accepted student between groups, or out of the queue. */
 export type AssignEnrollmentGroupRequest = { groupId: domain.GroupId | null }
 export type AssignEnrollmentGroupResponse = crud.UpdateItemResponse<EnrollmentDetails>

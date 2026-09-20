@@ -1,5 +1,6 @@
 export * from './permission-grant.validation'
 export * from './permissions.validation'
+export * from './preferredTimes.validation'
 export * from './role.validation'
 export * from './school.validation'
 export * from './target'

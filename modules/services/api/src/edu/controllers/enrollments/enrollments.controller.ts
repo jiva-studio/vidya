@@ -14,7 +14,12 @@ import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
-import { CoursesService, EnrollmentsService } from '@vidya/api/edu/services'
+import {
+  CoursesService,
+  EnrollmentsService,
+  visibleToSchool,
+  visibleToStudent,
+} from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
 import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
@@ -66,7 +71,11 @@ export class EnrollmentsController {
       throw new NotFoundException(`Course with id ${request.courseId} not found`)
     }
 
-    const created = await this.enrollments.request(course, auth.userId)
+    const created = await this.enrollments.request(course, auth.userId, {
+      preferredGroupId: request.preferredGroupId,
+      preferredTimes: request.preferredTimes,
+      comment: request.comment,
+    })
 
     return toCreatedId(created)
   }
@@ -86,12 +95,15 @@ export class EnrollmentsController {
       status: query.status,
     }
 
-    // Staff see the school's enrollments; everyone else sees only their own.
+    // Staff see the school's enrollments; everyone else sees only their own, and
+    // each side is shown its own list with its own tidying-up taken off it.
     const found = auth.permissions.has(['enrollments:read'])
       ? await this.enrollments
           .scopedBy({ permissions: auth.permissions })
-          .findAll({ where: { ...where, studentId: query.studentId } })
-      : await this.enrollments.findAll({ where: { ...where, studentId: auth.userId } })
+          .findAll({ where: { ...where, studentId: query.studentId, ...visibleToSchool() } })
+      : await this.enrollments.findAll({
+          where: { ...where, studentId: auth.userId, ...visibleToStudent() },
+        })
 
     return { items: toEnrollmentSummaries(found) }
   }
@@ -122,7 +134,12 @@ export class EnrollmentsController {
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetEnrollmentsResponse> {
     const found = await this.enrollments.findAll({
-      where: { studentId: auth.userId, courseId: query.courseId, status: query.status },
+      where: {
+        studentId: auth.userId,
+        courseId: query.courseId,
+        status: query.status,
+        ...visibleToStudent(),
+      },
     })
 
     return { items: toEnrollmentSummaries(found) }
@@ -174,6 +191,31 @@ export class EnrollmentsController {
     })
 
     return toEnrollmentDetails(updated)
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                    PATCH /edu/enrollments/:id/archive                      */
+  /* -------------------------------------------------------------------------- */
+
+  /**
+   * The school puts an answered row out of its own sight.
+   *
+   * Guarded by the key that answers requests rather than one of its own:
+   * whoever moderates is who ends up with the list to keep, and a separate key
+   * would answer 403 to every member of staff already doing the job.
+   */
+  @Crud.UpdateOne(Routes().edu.enrollments.archive(':id'))
+  async archive(
+    @Param('id', new ParseUUIDPipe()) id: domain.EnrollmentId,
+    @Authentication() auth: UserAuthentication,
+  ): Promise<dto.ArchiveEnrollmentResponse> {
+    const enrollment = await this.enrollments.getOrFail(id)
+
+    if (!auth.permissions.has(['enrollments:moderate'], { schoolId: enrollment.schoolId })) {
+      throw new ForbiddenException('User does not have permission')
+    }
+
+    return toEnrollmentDetails(await this.enrollments.archiveForSchool(enrollment, auth.userId))
   }
 
   /* -------------------------------------------------------------------------- */
