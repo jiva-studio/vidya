@@ -122,6 +122,18 @@ describe('FetchHttpClient', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
+  // The server says when to come back; a client that ignores it and asks again
+  // in 300ms is what the status was sent to stop.
+  it('waits as long as a refusal asked before it tries again', async () => {
+    const started = Date.now()
+    fetchMock.mockResolvedValueOnce(
+      new Response('{}', { status: 429, headers: { 'retry-after': '1' } }),
+    )
+
+    await expect(client().get('/edu/courses')).resolves.toEqual({ ok: true })
+    expect(Date.now() - started).toBeGreaterThanOrEqual(900)
+  })
+
   // A write that timed out may well have been carried out: repeating it is how
   // a student is enrolled twice.
   it('never repeats a write on its own', async () => {

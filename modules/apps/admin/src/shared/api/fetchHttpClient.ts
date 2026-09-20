@@ -12,6 +12,9 @@ const ReadAttempts = 2
 
 const RetryDelayMs = 300
 
+/** The longest wait a server may ask a request to be held open for. */
+const MaxRetryAfterMs = 30_000
+
 /** Statuses that say the request failed on the way rather than on its merits. */
 const Transient = [408, 425, 429, 500, 502, 503, 504]
 
@@ -31,7 +34,7 @@ export class FetchHttpClient implements HttpClient {
     this.call = ofetch.create({
       baseURL: options.baseUrl,
       timeout: TimeoutMs,
-      retryDelay: RetryDelayMs,
+      retryDelay: ({ response }) => askedFor(response) ?? RetryDelayMs,
       retryStatusCodes: Transient,
       headers: { accept: 'application/json' },
       onRequest: ({ options: request }) => {
@@ -64,6 +67,22 @@ export class FetchHttpClient implements HttpClient {
       throw translate(path, error as FetchError)
     }
   }
+}
+
+/**
+ * What the server asked the client to wait, in milliseconds.
+ *
+ * `Retry-After` is either a count of seconds or a date. A server asking for
+ * longer than the ceiling is telling the operator to come back later, not the
+ * client to hold a request open, so the wait is capped rather than honoured.
+ */
+const askedFor = (response: Response | undefined): number | undefined => {
+  const header = response?.headers?.get('retry-after')
+  if (!header) return undefined
+
+  const seconds = Number(header)
+  const ms = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(header) - Date.now()
+  return Number.isNaN(ms) ? undefined : Math.max(0, Math.min(ms, MaxRetryAfterMs))
 }
 
 /** The transport takes an object or nothing; what a caller hands over is its own. */
