@@ -6,6 +6,7 @@
         api-build api-run api-test \
         db-start db-schema-drop db-migrate db-testdb-drop \
         dev dev-up dev-down dev-logs mail storybook bootstrap \
+        gateway-up gateway-down gateway-logs \
         seed clean
 
 NPM := npm --prefix modules
@@ -145,7 +146,7 @@ seed:
 # ---------------------------------------------------------------------------
 #
 #   780x  infrastructure   7800 postgres · 7801 redis · 7802 smtp · 7803 mail ui
-#   781x  applications     7810 api · 7811 admin · 7812 storybook
+#   781x  applications     7810 api · 7811 admin · 7812 storybook · 7813 gateway
 
 COMPOSE := docker compose -f modules/docker-compose.dev.yml
 MAIL_UI := http://localhost:7803
@@ -193,6 +194,23 @@ dev: dev-up
 # The admin, component by component and screen by screen, without API or database.
 storybook:
 	$(NPM) run storybook -w @vidya/admin
+
+# The production shape, locally: one origin serving a built admin and proxying
+# /api to the API on the host. Opt-in — see the `gateway` profile note in
+# modules/docker-compose.dev.yml and modules/services/gateway/README.md — and
+# not part of `dev`/`dev-up`, so the everyday Vite-proxy flow is unaffected.
+# `api-run` or `dev` must already be serving the API for /api to answer.
+gateway-up:
+	$(COMPOSE) --profile gateway up -d --build gateway
+	@echo ""
+	@echo "  gateway   http://localhost:7813"
+	@echo ""
+
+gateway-down:
+	$(COMPOSE) --profile gateway down
+
+gateway-logs:
+	$(COMPOSE) --profile gateway logs -f gateway
 
 # One school, an owner role holding '*', and a user with that email. Idempotent,
 # unlike `seed`, which truncates first and exists to fill an empty database.

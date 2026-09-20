@@ -1,0 +1,49 @@
+# Shared between the plain-HTTP and TLS server blocks (see http.conf.template
+# and https.conf.template) so the routing and the header split documented in
+# README.md exist in exactly one place, not two that can drift apart.
+#
+# Rendered by docker-entrypoint.sh into conf.d/locations.conf. ${VIDYA_GATEWAY_HSTS_HEADER}
+# is filled with an `add_header Strict-Transport-Security ...` line when TLS is
+# enabled and left blank otherwise — HSTS is a promise about a TLS-only future,
+# so it has no business on a plaintext deployment.
+
+location /api/ {
+  limit_req zone=vidya_gateway burst=${VIDYA_GATEWAY_RATE_LIMIT_BURST} nodelay;
+
+  # Matches modules/apps/admin/vite.config.ts's dev proxy: the `/api` prefix is
+  # stripped on the way, so the admin talks to one same-origin path in every
+  # environment and CORS never has to enter the picture in production.
+  proxy_pass ${VIDYA_GATEWAY_API_UPSTREAM}/;
+  proxy_http_version 1.1;
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+
+  # This is the trust boundary: nothing reaches this process except from the
+  # open internet, so any inbound X-Forwarded-For is replaced, not appended to
+  # — a client cannot plant an address ahead of its own. Whatever wires the
+  # app's own rate limiting has to trust exactly this one hop (Express:
+  # `app.set('trust proxy', 1)`) for req.ip to read this value instead of the
+  # socket address. See README.md.
+  proxy_set_header X-Forwarded-For $remote_addr;
+  proxy_set_header X-Forwarded-Proto $scheme;
+
+  # No response headers are added here on purpose: this is JSON, and helmet
+  # already owns every header on it (see README.md, "Header ownership").
+}
+
+location / {
+  root /usr/share/vidya-gateway/admin;
+  try_files $uri $uri/ /index.html;
+
+  limit_req zone=vidya_gateway burst=${VIDYA_GATEWAY_RATE_LIMIT_BURST} nodelay;
+
+  # Nothing else runs in front of this document, and `frame-ancestors` cannot
+  # live in the <meta> tag in index.html (see its comment) — a CSP directive
+  # ignored there by specification. These are the gateway's alone to set. See
+  # README.md, "Header ownership".
+  ${VIDYA_GATEWAY_HSTS_HEADER}
+  add_header X-Frame-Options "DENY" always;
+  add_header Content-Security-Policy "frame-ancestors 'none'" always;
+  add_header X-Content-Type-Options "nosniff" always;
+  add_header Referrer-Policy "no-referrer" always;
+}
