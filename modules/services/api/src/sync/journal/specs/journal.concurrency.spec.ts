@@ -1,11 +1,11 @@
 import { pgClientConfig, testDatabase } from '@vidya/api/shared/datasources'
 import { appendJournalRow } from '@vidya/api/sync'
 import { SchoolId } from '@vidya/domain'
+import { randomUUID } from 'crypto'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { Client } from 'pg'
 import { EntityManager } from 'typeorm'
-import { v4 as uuid } from 'uuid'
 
 /**
  * What only a real Postgres can prove about the journal.
@@ -47,7 +47,7 @@ describeOnPostgres('sync journal under concurrency', () => {
 
   /** Appends through the production writer and reports the number it was given. */
   const append = async (client: Client, scopeId: string, hlc: string): Promise<string> => {
-    const docId = uuid()
+    const docId = randomUUID()
 
     await appendJournalRow(managerFor(client), {
       collection: 'homework',
@@ -101,7 +101,7 @@ describeOnPostgres('sync journal under concurrency', () => {
   /* ------------------------------ -------------------------------- */
 
   it('a row committed late is never stranded below an advanced cursor', async () => {
-    const scope = uuid()
+    const scope = randomUUID()
     const [slow, fast, reader] = await Promise.all([connect(), connect(), connect()])
 
     // The slow writer takes its number and stays open. This is the transaction
@@ -144,7 +144,7 @@ describeOnPostgres('sync journal under concurrency', () => {
   })
 
   it('the row a reader already saw is never re-ordered behind a later one', async () => {
-    const scope = uuid()
+    const scope = randomUUID()
     const [first, second, reader] = await Promise.all([connect(), connect(), connect()])
 
     await first.query('BEGIN')
@@ -165,7 +165,7 @@ describeOnPostgres('sync journal under concurrency', () => {
   /* ------------------------------ -------------------------------- */
 
   it('a device pulling throughout a hundred concurrent pushes misses none', async () => {
-    const scope = uuid()
+    const scope = randomUUID()
 
     // Twenty-five sessions, four transactions each: a hundred pushes racing,
     // without asking the server for a hundred connections at once.
@@ -211,7 +211,7 @@ describeOnPostgres('sync journal under concurrency', () => {
   })
 
   it('a cursor walked forward one page at a time sees every row exactly once', async () => {
-    const scope = uuid()
+    const scope = randomUUID()
     const writers = await Promise.all(Array.from({ length: 20 }, () => connect()))
 
     await Promise.all(
@@ -243,7 +243,7 @@ describeOnPostgres('sync journal under concurrency', () => {
   /* ------------------------------ -------------------------------- */
 
   it('a long transaction elsewhere does not delay reading the journal', async () => {
-    const scope = uuid()
+    const scope = randomUUID()
     const [writer, hog, reader] = await Promise.all([connect(), connect(), connect()])
 
     await hog.query('CREATE TABLE reports (id int)')
@@ -268,7 +268,7 @@ describeOnPostgres('sync journal under concurrency', () => {
   })
 
   it('the horizon the rejected cure reads below would hide a delivered row', async () => {
-    const scope = uuid()
+    const scope = randomUUID()
     const [writer, hog, reader] = await Promise.all([connect(), connect(), connect()])
 
     await hog.query('CREATE TABLE reports (id int)')

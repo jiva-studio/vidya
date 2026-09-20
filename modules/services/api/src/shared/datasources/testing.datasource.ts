@@ -1,11 +1,10 @@
 import { MigrationClient, runMigrations } from '@vidya/api/shared/migrations'
 import { Entities } from '@vidya/entities'
-import { createHash } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import { basename, join, resolve } from 'path'
 import { Client } from 'pg'
 import { DataType, newDb } from 'pg-mem'
 import { DataSource } from 'typeorm'
-import { v4 } from 'uuid'
 
 /** The same `.sql` files production applies, so the test schema cannot drift. */
 export const MIGRATIONS_DIR = join(__dirname, '..', '..', '..', 'migrations')
@@ -131,7 +130,7 @@ const inMemoryDataSource = async (): Promise<DataSource> => {
     schema.registerFunction({
       name: 'uuid_generate_v4',
       returns: DataType.uuid,
-      implementation: v4,
+      implementation: randomUUID,
       impure: true,
     })
   })

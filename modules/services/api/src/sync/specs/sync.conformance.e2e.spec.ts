@@ -5,9 +5,9 @@ import { INestApplication } from '@nestjs/common'
 import { createTestingApp } from '@vidya/api/edu/shared'
 import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
+import { randomUUID } from 'crypto'
 import * as request from 'supertest'
 import { DataSource } from 'typeorm'
-import { v4 as uuid } from 'uuid'
 
 import { createSyncContext, SECTION_ID, SyncContext } from './context'
 
@@ -130,7 +130,7 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
       const good = {
         outboxId: 41,
         collection: 'homework',
-        docId: uuid(),
+        docId: randomUUID(),
         op: 'upsert',
         hlc: '001789686000000:00000:device-8f2a6c14',
         baseHlc: null,
@@ -183,14 +183,14 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
         },
       })
 
-      const first = uuid()
+      const first = randomUUID()
 
       await send(routes.push(), pushBody([body('device-8f2a6c14', first)])).expect(200)
 
       const second = (
         await send(routes.push(), {
           deviceId: 'device-b21e7f05',
-          changes: [body('device-b21e7f05', uuid())],
+          changes: [body('device-b21e7f05', randomUUID())],
         }).expect(200)
       ).body as protocol.PushResponse
 
@@ -233,7 +233,7 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
         `INSERT INTO sync_journal
            (collection, doc_id, op, data, hlc, scope_kind, scope_id, school_id, device_id, author_id)
          VALUES ('lesson_versions', $1, 'delete', NULL, $2, 'course', $3, $4, NULL, NULL)`,
-        [uuid(), '001789689609000:00000:server', ctx.mine.course.id, ctx.schoolId],
+        [randomUUID(), '001789689609000:00000:server', ctx.mine.course.id, ctx.schoolId],
       )
 
       const body = (await send(routes.pull(), { deviceId: DEVICE, cursors: {} }).expect(200))
@@ -249,7 +249,7 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
       const change = {
         outboxId: 70,
         collection: 'homework',
-        docId: uuid(),
+        docId: randomUUID(),
         op: 'upsert',
         hlc: '001789689540000:00000:device-8f2a6c14',
         baseHlc: null,
@@ -326,7 +326,7 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
       const change = {
         outboxId: 1,
         collection: 'homework',
-        docId: uuid(),
+        docId: randomUUID(),
         op: 'upsert',
         hlc: sent,
         baseHlc: null,

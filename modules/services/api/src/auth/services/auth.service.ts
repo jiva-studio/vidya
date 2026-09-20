@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt'
 import { JwtConfig } from '@vidya/api/configs'
 import * as domain from '@vidya/domain'
 import { RefreshToken, TokenKind, UserPermission } from '@vidya/protocol'
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'crypto'
 
 export type Tokens = {
   accessToken: string
@@ -33,7 +33,7 @@ export class AuthService {
   async generateTokens(userId: domain.UserId, permissions: UserPermission[]): Promise<Tokens> {
     const accessToken = await this.jwtService.signAsync(
       {
-        jti: uuidv4(),
+        jti: randomUUID(),
         sub: userId,
         typ: 'access' satisfies TokenKind,
         permissions,
@@ -45,7 +45,7 @@ export class AuthService {
     )
     const refreshToken = await this.jwtService.signAsync(
       {
-        jti: uuidv4(),
+        jti: randomUUID(),
         sub: userId,
         typ: 'refresh' satisfies TokenKind,
       },

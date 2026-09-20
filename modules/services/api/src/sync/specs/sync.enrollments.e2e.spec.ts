@@ -5,9 +5,9 @@ import { CLOCK } from '@vidya/api/sync'
 import * as domain from '@vidya/domain'
 import { Enrollment } from '@vidya/entities'
 import * as protocol from '@vidya/protocol'
+import { randomUUID } from 'crypto'
 import * as request from 'supertest'
 import { DataSource } from 'typeorm'
-import { v4 as uuid } from 'uuid'
 
 import { createSyncContext, SyncContext } from './context'
 
@@ -53,7 +53,7 @@ describe('POST /sync/push: a request for a place on a course', () => {
     courseId: domain.CourseId,
     overrides: Partial<protocol.PushChange> = {},
   ): protocol.PushChange => {
-    const docId = overrides.docId ?? uuid()
+    const docId = overrides.docId ?? randomUUID()
 
     return {
       outboxId: 1,
@@ -129,7 +129,7 @@ describe('POST /sync/push: a request for a place on a course', () => {
   })
 
   it('refuses a request for a course that does not exist', async () => {
-    const change = asks(domain.asId<domain.CourseId>(uuid()))
+    const change = asks(domain.asId<domain.CourseId>(randomUUID()))
 
     const [result] = await results([change])
 
@@ -145,7 +145,7 @@ describe('POST /sync/push: a request for a place on a course', () => {
         status: 'accepted',
         decidedById: ctx.student.id,
         decidedAt: new Date(NOW).toISOString(),
-        groupId: uuid(),
+        groupId: randomUUID(),
       },
     })
 
