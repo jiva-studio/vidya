@@ -3,7 +3,7 @@
 # Ports follow one scheme, so nothing has to be remembered twice:
 #
 #   780x  infrastructure      7800 postgres · 7801 redis · 7802 smtp · 7803 mail ui
-#   781x  applications        7810 api      · 7811 admin
+#   781x  applications        7810 api · 7811 admin · 7812 storybook · 7813 gateway
 #
 # Nothing here is reachable on a default port, so a system Postgres or Redis
 # already running on this machine cannot be hit by accident.
@@ -13,6 +13,13 @@
 # `make dev` exports a fixture value for; see the "Local stand" section of the
 # root Makefile. It has no default in code: `configs/jwt.config.ts` refuses to
 # start without it.
+#
+# `gateway` is the odd one out: it sits behind the `gateway` profile, so
+# `docker compose up` (what `make dev-up` runs) never starts it. It is an
+# option for exercising the production shape locally — see
+# services/gateway/README.md — not a dependency of the everyday dev flow,
+# which still runs the admin through Vite's own dev server. Bring it up with
+# `make gateway-up`.
 
 services:
   postgres:
@@ -53,6 +60,31 @@ services:
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+  # Reverse proxy in front of a built admin and the API. Opt-in (see the
+  # `gateway` profile note above); `make gateway-up` passes `--build`, so an
+  # admin source change is picked up on the next run rather than serving a
+  # stale bundle. TLS is off by default here — there is no certificate to hand
+  # it in a dev stand — so this only exercises the same-origin routing, the
+  # coarse rate limit and the admin document's headers, not the TLS path. See
+  # services/gateway/README.md.
+  gateway:
+    build:
+      context: ..
+      dockerfile: modules/services/gateway/Dockerfile
+    container_name: vidya-gateway
+    profiles: ['gateway']
+    ports:
+      - '7813:8080'
+    environment:
+      VIDYA_GATEWAY_API_UPSTREAM: http://host.docker.internal:${VIDYA_API_PORT:-7810}
+      VIDYA_GATEWAY_RATE_LIMIT_RPS: ${VIDYA_GATEWAY_RATE_LIMIT_RPS:-20}
+      VIDYA_GATEWAY_RATE_LIMIT_BURST: ${VIDYA_GATEWAY_RATE_LIMIT_BURST:-40}
+    extra_hosts:
+      # The API runs on the host, not in this compose file (see above) — this
+      # is how the container reaches it. Linux needs the explicit mapping;
+      # Docker Desktop (macOS/Windows) already resolves the name without it.
+      - 'host.docker.internal:host-gateway'
 
 volumes:
   vidya-postgres:

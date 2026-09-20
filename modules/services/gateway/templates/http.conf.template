@@ -1,0 +1,14 @@
+# Plain HTTP only — the local-stand shape (VIDYA_GATEWAY_TLS_ENABLED=false).
+# There is no certificate to terminate, so there is also no HSTS: promising
+# TLS-only against a host that does not offer it locks a visitor out rather
+# than protecting them (the API's own security-headers.config.ts makes the
+# same call for the same reason).
+
+limit_req_zone $binary_remote_addr zone=vidya_gateway:10m rate=${VIDYA_GATEWAY_RATE_LIMIT_RPS}r/s;
+
+server {
+  listen 8080;
+  server_name ${VIDYA_GATEWAY_SERVER_NAME};
+
+  include /etc/nginx/includes/locations.conf;
+}
