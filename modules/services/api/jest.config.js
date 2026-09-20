@@ -15,6 +15,9 @@ module.exports = {
   maxWorkers: '50%',
   coverageDirectory: '../coverage',
   testEnvironment: 'node',
+  // Fills the config values a suite needs but is not itself testing — today
+  // just `VIDYA_JWT_SECRET`, which `AppModule` refuses to start without.
+  setupFiles: ['<rootDir>/shared/testing-env.setup.ts'],
   // Only the package's own alias is mapped. The sibling packages resolve
   // through the workspace symlinks in node_modules instead of a relative path,
   // so a tool that copies this package into a sandbox — Stryker — still finds

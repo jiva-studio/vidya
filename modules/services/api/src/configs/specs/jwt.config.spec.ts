@@ -30,4 +30,23 @@ describe('jwt config', () => {
 
     expect(ms(config.refreshTokenExpiresIn)).toBeGreaterThanOrEqual(ms('30d'))
   })
+
+  it('refuses to start without a signing secret', () => {
+    delete process.env.VIDYA_JWT_SECRET
+
+    expect(() => JwtConfig()).toThrow(/VIDYA_JWT_SECRET is not set/)
+  })
+
+  it('refuses a secret too short to resist brute-forcing HS256', () => {
+    process.env.VIDYA_JWT_SECRET = 'short-secret'
+
+    expect(() => JwtConfig()).toThrow(/must be at least 32/)
+  })
+
+  it('accepts a secret at or above the 32-character floor', () => {
+    process.env.VIDYA_JWT_SECRET = 'a'.repeat(32)
+
+    expect(() => JwtConfig()).not.toThrow()
+    expect(JwtConfig().secret).toBe('a'.repeat(32))
+  })
 })

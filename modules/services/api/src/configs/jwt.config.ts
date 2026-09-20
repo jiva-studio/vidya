@@ -30,8 +30,34 @@ export default registerAs('jwt', () => {
     )
   }
 
+  const secret = process.env.VIDYA_JWT_SECRET
+
+  // The signing key is the whole of the authorisation model: the access token
+  // carries the caller's permissions, and the guard trusts that claim without
+  // re-reading the database when it is present. A missing secret must not fall
+  // back to a literal — that is a key published in the source tree — and it
+  // must not fall back to one generated at boot either: with more than one
+  // replica each process would mint its own key, so a token issued by one
+  // would be rejected by every other, and a deployment would look randomly
+  // broken instead of cleanly broken. Refusing to start is the only fallback
+  // that fails loud instead of failing open.
+  if (!secret) {
+    throw new Error(
+      'VIDYA_JWT_SECRET is not set; the API refuses to start rather than sign tokens with a ' +
+        'well-known or generated key.',
+    )
+  }
+
+  // The floor HS256 needs to resist brute-forcing the key itself.
+  if (secret.length < 32) {
+    throw new Error(
+      `VIDYA_JWT_SECRET is ${secret.length} characters; it must be at least 32 so HS256 has a ` +
+        'key an attacker cannot feasibly brute-force.',
+    )
+  }
+
   return {
-    secret: process.env.VIDYA_JWT_SECRET || 'secret',
+    secret,
     accessTokenExpiresIn,
     refreshTokenExpiresIn,
   }

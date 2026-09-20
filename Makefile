@@ -163,6 +163,11 @@ export VIDYA_API_URL      := http://localhost:7810
 # that production needs to be off.
 export VIDYA_DB_LOGGING   := true
 
+# `configs/jwt.config.ts` refuses to start without a real secret — no fallback,
+# generated or literal (see its comment for why). This is a fixture for the
+# local stand only; anything beyond one developer's machine sets its own.
+export VIDYA_JWT_SECRET   := local-dev-fixture-jwt-secret-do-not-use-elsewhere
+
 dev-up:
 	$(COMPOSE) up -d
 	@echo ""
