@@ -63,7 +63,11 @@ export class UserSchoolsService {
    * implementation here would be a second place to forget that the places the
    * role carried go with it.
    */
-  async removeUser(userId: domain.UserId, schoolId: domain.SchoolId): Promise<void> {
-    await this.rolesService.setRolesForUserWithin(userId, [], [schoolId])
+  async removeUser(
+    userId: domain.UserId,
+    schoolId: domain.SchoolId,
+    actorUserId?: domain.UserId | null,
+  ): Promise<void> {
+    await this.rolesService.setRolesForUserWithin(userId, [], [schoolId], actorUserId)
   }
 }

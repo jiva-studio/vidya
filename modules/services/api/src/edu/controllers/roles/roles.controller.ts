@@ -115,12 +115,15 @@ export class RolesController {
     assertPermissionsGrantable(request.permissions, request.schoolId, auth.permissions)
 
     // Create role
-    const entity = await this.rolesService.create({
-      name: request.name,
-      description: request.description,
-      permissions: request.permissions,
-      schoolId: request.schoolId,
-    })
+    const entity = await this.rolesService.create(
+      {
+        name: request.name,
+        description: request.description,
+        permissions: request.permissions,
+        schoolId: request.schoolId,
+      },
+      auth.userId,
+    )
 
     // Return created role details
     return toId(entity)
@@ -162,6 +165,7 @@ export class RolesController {
         description: request.description,
         permissions: request.permissions,
       },
+      auth.userId,
     )
 
     // Return updated role details
@@ -192,7 +196,7 @@ export class RolesController {
     }
 
     // Delete role
-    await this.rolesService.deleteOneBy({ id })
+    await this.rolesService.deleteOneBy({ id }, auth.userId)
 
     // Return success response
     return new dto.DeleteRoleResponse({ success: true })

@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { PERMISSIONS_CACHE_EVICTION, PermissionsCacheEviction } from '@vidya/api/edu/ports'
+import { AuditLogService } from '@vidya/api/shared/services'
 import * as domain from '@vidya/domain'
 import { Role, School, User } from '@vidya/entities'
 import { Repository } from 'typeorm'
@@ -10,6 +11,7 @@ export class SchoolCreationService {
   constructor(
     @InjectRepository(School) private readonly schools: Repository<School>,
     @Inject(PERMISSIONS_CACHE_EVICTION) private readonly permissionsCache: PermissionsCacheEviction,
+    private readonly auditLog: AuditLogService,
   ) {}
 
   async createNewSchool(userId: domain.UserId, params: Partial<School>): Promise<School> {
@@ -38,6 +40,21 @@ export class SchoolCreationService {
       // same honest limit as `RolesService` — see its `setRolesForUser` for
       // the note on the gap between this call and the transaction's COMMIT.
       await this.permissionsCache.evict([userId])
+
+      // Written on the same manager, so a school that never actually gets
+      // created — the transaction rolls back — leaves no trace of an owner
+      // grant that never happened either.
+      await this.auditLog.record(
+        {
+          action: 'edu.school.created',
+          actorUserId: userId,
+          subjectType: 'school',
+          subjectId: school.id,
+          schoolId: school.id,
+          payload: { ownerId: userId, ownerRoleId: adminRole.id },
+        },
+        transaction,
+      )
 
       // Return the created school
       return school

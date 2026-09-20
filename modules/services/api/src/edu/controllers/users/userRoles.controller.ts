@@ -64,7 +64,7 @@ export class UserRolesController {
   ): Promise<dto.SetUserRolesResponse> {
     const schoolIds = auth.permissions.getScopes(['users:update']).map((s) => s.schoolId)
 
-    await this.rolesService.setRolesForUserWithin(userId, request.roleIds, schoolIds)
+    await this.rolesService.setRolesForUserWithin(userId, request.roleIds, schoolIds, auth.userId)
     return new dto.SetUserRolesResponse()
   }
 }

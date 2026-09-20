@@ -5,14 +5,22 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
  * Namespaced `<context>.<action>[.<outcome>]`, so the table can grow into
  * contexts beyond `auth` without colliding on a bare verb.
  *
- * Only the authentication events are wired today, from
+ * The authentication events are wired from
  * `auth/controllers/tokens.controller.ts` and
- * `auth/controllers/user-authentication.controller.ts`. Role assignment, role
- * removal and school creation are a follow-up: extend this union when their
- * call sites are added, there is nothing else to change to support them.
+ * `auth/controllers/user-authentication.controller.ts`. The `edu` events are
+ * wired from `RolesService` and `SchoolCreationService`.
  */
 export type AuditAction =
-  'auth.signIn.success' | 'auth.signIn.failure' | 'auth.signOut' | 'auth.token.refresh'
+  | 'auth.signIn.success'
+  | 'auth.signIn.failure'
+  | 'auth.signOut'
+  | 'auth.token.refresh'
+  | 'edu.role.assigned'
+  | 'edu.role.removed'
+  | 'edu.role.created'
+  | 'edu.role.permissionsUpdated'
+  | 'edu.role.deleted'
+  | 'edu.school.created'
 
 /**
  * One recorded action: who did it (or tried to), what they did, what it
