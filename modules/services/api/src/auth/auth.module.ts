@@ -4,8 +4,8 @@ import { JwtModule } from '@nestjs/jwt'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { MailerModule } from '@nestjs-modules/mailer'
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/adapters/handlebars.adapter'
-import { RedisService } from '@vidya/api/shared/services'
-import { Role, User, UserRole } from '@vidya/entities'
+import { AuditLogService, RedisService } from '@vidya/api/shared/services'
+import { AuditLog, Role, User, UserRole } from '@vidya/entities'
 
 import { MailerConfig } from '../configs'
 import { OtpController } from './controllers/otp.controller'
@@ -19,7 +19,7 @@ import { RevokedTokensService } from './services/revokedTokens.service'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Role, UserRole]),
+    TypeOrmModule.forFeature([User, Role, UserRole, AuditLog]),
     JwtModule.register({ global: true }),
     MailerModule.forRootAsync({
       useFactory: (config: ConfigType<typeof MailerConfig>) => ({
@@ -45,6 +45,13 @@ import { RevokedTokensService } from './services/revokedTokens.service'
     }),
   ],
   controllers: [UserAuthenticationController, OtpController, TokensController, ProfileController],
-  providers: [OtpService, AuthUsersService, AuthService, RevokedTokensService, RedisService],
+  providers: [
+    OtpService,
+    AuthUsersService,
+    AuthService,
+    RevokedTokensService,
+    RedisService,
+    AuditLogService,
+  ],
 })
 export class AuthModule {}

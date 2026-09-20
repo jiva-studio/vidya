@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post, UnauthorizedException } from '@nestjs/common'
+import { Body, Controller, HttpCode, Post, Req, UnauthorizedException } from '@nestjs/common'
 import {
   ApiBadRequestResponse,
   ApiOkResponse,
@@ -8,7 +8,9 @@ import {
 } from '@nestjs/swagger'
 import * as dto from '@vidya/api/auth/dto'
 import { AuthService, AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
+import { AuditLogService } from '@vidya/api/shared/services'
 import { Routes } from '@vidya/protocol'
+import { Request } from 'express'
 
 @Controller()
 @ApiTags('🔐 Authentication')
@@ -17,6 +19,7 @@ export class TokensController {
     private readonly revokedTokensService: RevokedTokensService,
     private readonly authService: AuthService,
     private readonly usersService: AuthUsersService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   /* -------------------------------------------------------------------------- */
@@ -46,6 +49,7 @@ export class TokensController {
   })
   async refreshTokens(
     @Body() request: dto.RefreshTokensRequest,
+    @Req() req: Request,
   ): Promise<dto.RefreshTokensResponse> {
     // verify refresh token, if invalid send 401 Unauthorized response
     const refreshToken = await this.authService.verifyToken(request.refreshToken, 'refresh')
@@ -73,6 +77,15 @@ export class TokensController {
       refreshToken.sub,
       await this.usersService.getUserPermissions(user.id),
     )
+
+    await this.auditLogService.record({
+      action: 'auth.token.refresh',
+      actorUserId: user.id,
+      subjectType: 'user',
+      subjectId: user.id,
+      sourceAddress: req.ip,
+    })
+
     return new dto.RefreshTokensResponse({
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
