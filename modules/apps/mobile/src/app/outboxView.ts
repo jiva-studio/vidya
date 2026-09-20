@@ -19,8 +19,9 @@ import { useSyncStatus } from './syncStatus'
  * row is rendered rather than a promise. The journal is therefore read into a
  * snapshot and re-read when a run finishes.
  *
- * Only unsettled rows are held: a row the server has taken is gone from the
- * list, and a document with no row is accepted.
+ * Two readings are held: the rows still waiting to be sent, and the refused
+ * ones, which no later push will carry. A document with neither was taken by
+ * the server, and only then is it accepted.
  */
 export interface OutboxView {
   state(collection: SyncCollection, docId: string): SubmissionState
@@ -46,6 +47,9 @@ export const useOutboxView = createGlobalState((): OutboxView => {
     for (const [ownerId, outbox] of journals) {
       const unsettled = await outbox.listUnsettled({ ownerId })
       for (const row of unsettled) snapshot.set(keyOf(row.collection, row.docId), row)
+
+      const dead = await outbox.listDead({ ownerId })
+      for (const row of dead) snapshot.set(keyOf(row.collection, row.docId), row)
     }
 
     rows.value = snapshot

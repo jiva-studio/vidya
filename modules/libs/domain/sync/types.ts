@@ -182,21 +182,3 @@ export type SyncRejectionReason = (typeof SyncRejectionReasons)[number]
 export const isSyncRejectionReason = (value: string): value is SyncRejectionReason =>
   (SyncRejectionReasons as readonly string[]).includes(value)
 
-/**
- * Whether a refusal leaves the text on the device the student's own.
- *
- * A refused row keeps the work, and keeping it means more than leaving
- * a row in the outbox: until something takes the student's text, the next pull
- * must not paint the server's copy over it. So every reason answers
- * `true` — the row was never accepted, the text was never delivered, and the
- * only copy of it is the one on the phone.
- *
- * `alreadyAccepted` is the one exception, and it is not a matter of taste. It
- * says the work has been reviewed and its text frozen for good: there is no
- * later push that could deliver the edit, and holding the unsent version on top
- * of the server's would show the student an answer nobody will ever grade,
- * differing from the one their teacher is looking at, with nothing on any
- * screen to explain the difference. There the server's copy is the truth.
- */
-export const rejectionKeepsLocalWork = (reason: SyncRejectionReason): boolean =>
-  reason !== 'alreadyAccepted'

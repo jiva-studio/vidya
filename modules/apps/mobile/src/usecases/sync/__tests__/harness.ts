@@ -1,4 +1,4 @@
-import type { OutboxEntry, SyncPayload } from '@vidya/domain'
+import type { OutboxEntry, OutboxScope, SyncPayload } from '@vidya/domain'
 import type { ISyncClient, RetryPolicyOptions, TokenRefresher } from '@vidya/usecases'
 
 import type { UtcClock } from '@/infra/persistence'
@@ -73,6 +73,23 @@ export interface Harness {
 
 /** The outbox as a test reads it: the port's entry plus what the port hides. */
 export type OutboxRowShape = OutboxEntry
+
+/**
+ * The second reading the journal owes a screen: rows it is finished with that
+ * the server never took.
+ *
+ * Declared here rather than imported, because the port does not carry it yet —
+ * and a test that cannot name the reading cannot state what is missing.
+ */
+export interface DeadLetterJournal {
+  listDead(scope: OutboxScope): Promise<readonly OutboxEntry[]>
+}
+
+export const deadRows = (
+  harness: Harness,
+  ownerId: string = OWNER,
+): Promise<readonly OutboxEntry[]> =>
+  (harness.engine.outbox as unknown as DeadLetterJournal).listDead({ ownerId })
 
 export async function openHarness(options: HarnessOptions = {}): Promise<Harness> {
   const db = options.db ?? (await openTestDatabase()).db

@@ -36,8 +36,9 @@ import type { ISyncClient } from '@vidya/usecases'
  * and answers a push row by row, exactly as the contract says.
  *
  * It is a test instrument, not a second implementation of the server: it holds
- * no permissions, no validation and no HLC re-stamping beyond what a test asks
- * for. Where it and the server must agree, they agree through the shared wire
+ * no permissions and no validation. It does restamp, because restamping is a
+ * contract term rather than a server detail — a device the instrument never
+ * corrects is a device whose clock defects go unnoticed here. Where it and the server must agree, they agree through the shared wire
  * fixtures in `libs/protocol/__fixtures__/sync/`, which both drive.
  */
 
@@ -124,6 +125,7 @@ export class FakeSyncServer implements ISyncClient {
 
   private seq = 0
   private clock = 0
+  private reissued = 0
 
   /** Append a row to the journal, as the server's subscriber would. */
   journal(row: NewJournalRow): JournalRow {
@@ -231,11 +233,13 @@ export class FakeSyncServer implements ISyncClient {
   /**
    * Apply one pushed row.
    *
-   * Idempotent on `(collection, docId, hlc)`, which is what makes a push
-   * replayed after a dropped connection free: a repeat finds its
+   * Idempotent on `(collection, docId, hlc)` *and the body*, which is what
+   * makes a push replayed after a dropped connection free: a repeat finds its
    * row already journaled and is accepted without a second one being written.
-   * A downward-only collection is refused, and the refusal leaves its
-   * neighbours applied.
+   * The body is half the key on purpose — the same stamp carrying different
+   * text is two devices sharing a device id, not a repeat, and it is restamped
+   * rather than swallowed. A downward-only collection is refused, and the
+   * refusal leaves its neighbours applied.
    */
   private apply(change: PushChange, deviceId: string): PushResult {
     const answer = {
@@ -258,11 +262,18 @@ export class FakeSyncServer implements ISyncClient {
       (row) =>
         row.collection === change.collection && row.docId === docId && row.hlc === change.hlc,
     )
-    if (existing !== undefined) {
+
+    // Same stamp, same body: a genuine repeat, and free.
+    if (existing !== undefined && sameBody(existing.data, change.data)) {
       return { ...named, status: 'accepted', serverHlc: existing.hlc, restamped: false }
     }
 
-    const stamped = this.restamp(change.hlc)
+    // Same stamp, a *different* body — what two handsets restored from one
+    // backup produce, because they share a device id and so issue the same
+    // stamps. Keeping the idempotency key here would swallow the second write
+    // as an imagined repeat, which is a lost answer reported as a saved one, so
+    // the contract restamps and keeps both records.
+    const stamped = existing === undefined ? this.restamp(change.hlc) : this.nextServerStamp()
     this.journal({
       collection: change.collection,
       docId,
@@ -312,7 +323,17 @@ export class FakeSyncServer implements ISyncClient {
     const ceiling = this.serverNowMs + SYNC_CLOCK_SKEW_TOLERANCE_MS
     if (parseHlc(hlc).physical <= ceiling) return hlc
 
-    return hlcToString({ physical: this.serverNowMs, counter: 0, deviceId: 'server' })
+    return this.nextServerStamp()
+  }
+
+  /** A stamp of the server's own, distinct from every one it has issued before. */
+  private nextServerStamp(): string {
+    this.reissued += 1
+    return hlcToString({
+      physical: this.serverNowMs,
+      counter: this.reissued,
+      deviceId: 'server',
+    })
   }
 
   private isGranted(scope: SyncScopeRef): boolean {
@@ -392,6 +413,10 @@ export const serverHlc = (tick: number): string =>
 /** The matching instant, UTC and millisecond-precise. */
 export const instant = (tick: number): IsoDateTime =>
   new Date(1_789_689_600_000 + tick).toISOString() as IsoDateTime
+
+/** Whether the journal already holds exactly what was sent under this stamp. */
+const sameBody = (stored: SyncPayload | null, sent: SyncPayload | null): boolean =>
+  JSON.stringify(stored ?? null) === JSON.stringify(sent ?? null)
 
 async function intercept(queue: Interception[]): Promise<void> {
   const next = queue.shift()

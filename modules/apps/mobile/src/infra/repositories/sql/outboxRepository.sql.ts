@@ -11,7 +11,6 @@ import type {
   SyncPayload,
   SyncRejectionReason,
 } from '@vidya/domain'
-import { rejectionKeepsLocalWork } from '@vidya/domain'
 
 import type { IDatabase, QueryValue } from '@/ports'
 
@@ -65,6 +64,7 @@ export function createSqlOutboxRepository(deps: SqlOutboxRepositoryDeps): IOutbo
   return {
     listPending: (scope, limit) => listPending(db, scope, limit),
     listUnsettled: (scope) => listUnsettled(db, scope),
+    listDead: (scope) => listDead(db, scope),
     append: (entry) => append(db, now, entry),
     acknowledge: (results) => acknowledge(db, results),
     renameDoc: (rename) => renameDoc(db, rename),
@@ -102,24 +102,32 @@ async function listPending(
 }
 
 /**
- * Rows of one owner whose work is still only on this device.
+ * Rows of one owner the server still owes an answer on.
  *
- * `pending`, plus the refused rows whose reason leaves the text the student's.
- * Which reasons those are is the domain's answer, not this adapter's, so the
- * filter is applied over the rows rather than written into the SQL: a reason
- * added to the contract later must not need a second decision spelt out here.
+ * `pending` alone: a refused row is finished, and holding it here would pin the
+ * document it names to this device's copy for good.
  */
 async function listUnsettled(db: IDatabase, scope: OutboxScope): Promise<readonly OutboxEntry[]> {
   const rows = await db.query<OutboxRow>(
     `SELECT * FROM outbox
-      WHERE owner_id = ? AND status IN ('pending', 'rejected')
+      WHERE owner_id = ? AND status = 'pending'
       ORDER BY id ASC`,
     [scope.ownerId],
   )
 
-  return rows
-    .map(toEntry)
-    .filter((entry) => entry.reason === null || rejectionKeepsLocalWork(entry.reason))
+  return rows.map(toEntry)
+}
+
+/** Rows of one owner the server refused, oldest first. */
+async function listDead(db: IDatabase, scope: OutboxScope): Promise<readonly OutboxEntry[]> {
+  const rows = await db.query<OutboxRow>(
+    `SELECT * FROM outbox
+      WHERE owner_id = ? AND status = 'rejected'
+      ORDER BY id ASC`,
+    [scope.ownerId],
+  )
+
+  return rows.map(toEntry)
 }
 
 /**

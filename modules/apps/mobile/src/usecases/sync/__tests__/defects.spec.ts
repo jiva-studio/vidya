@@ -23,7 +23,7 @@ import {
   SECTION_ID,
   USER_SCOPE,
 } from './fakeSyncServer'
-import { type Harness, openHarness, OTHER_OWNER, OWNER } from './harness'
+import { deadRows, type Harness, openHarness, OTHER_OWNER, OWNER } from './harness'
 
 /**
  * The silent failures of the engine, each pinned by the run that shows it.
@@ -240,7 +240,7 @@ describe('the silent failures', () => {
     expect(lastCursors()[syncScopeKey(COURSE_SCOPE)]).toBe(reached)
   })
 
-  it('a refused row goes on protecting the answer it carries', async () => {
+  it('a refused row hands the document back and keeps the answer to show', async () => {
     harness.server.rejectIf = (change) => (change.collection === 'homework' ? 'malformed' : null)
 
     await harness.engine.homework.saveAnswer(answer('the answer I wrote'))
@@ -260,9 +260,24 @@ describe('the silent failures', () => {
     })
     await harness.engine.runner.run()
 
-    // The work is still on the screen. It exists nowhere else: no code reads a
-    // text back out of the outbox.
-    expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('the answer I wrote')
+    // The document stops diverging. Holding the local value on top of it was a
+    // defence that only worked while one row named the document: a second edit
+    // and the student is reading their own text over everybody else's changes,
+    // with nothing on any screen saying so, for good.
+    expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('')
+    expect(await harness.engine.outbox.listUnsettled({ ownerId: OWNER })).toEqual([])
+
+    // The answer itself is not lost — it moved to where the student is told
+    // about it. The refused row keeps its payload, and the reason with it.
+    const dead = await deadRows(harness)
+    expect(dead).toHaveLength(1)
+    expect(dead[0]).toMatchObject({
+      collection: 'homework',
+      docId: HOMEWORK_ID,
+      status: 'rejected',
+      reason: 'malformed',
+    })
+    expect(dead[0]!.data!.text).toBe('the answer I wrote')
   })
 
   it('work refused as already accepted yields to the copy the teacher graded', async () => {
