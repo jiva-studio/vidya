@@ -1,0 +1,7 @@
+{
+  "name": "preview-email",
+  "version": "3.4.0",
+  "description": "Inert stand-in for preview-email; see README.md.",
+  "main": "index.js",
+  "license": "MIT"
+}
