@@ -8,13 +8,17 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger'
+import { Throttle } from '@nestjs/throttler'
 import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
+import { throttlerSettings } from '@vidya/api/configs'
 import { Routes } from '@vidya/protocol'
 
 import * as dto from '../dto'
 import { SyncCursorsService, SyncPullService, SyncPushService } from '../services'
+
+const syncThrottle = throttlerSettings().sync
 
 /**
  * The three endpoints a device speaks to.
@@ -29,6 +33,11 @@ import { SyncCursorsService, SyncPullService, SyncPushService } from '../service
 @ApiTags('🔄 Sync')
 @ApiBearerAuth()
 @UseGuards(AuthenticatedUserGuard)
+// A device that has been offline for a while catches up in the same burst
+// that made `main.ts` raise the body limit for this controller — the global
+// default counts every route's normal traffic, not one device replaying
+// months of homework across `pull`, `push` and `cursor` in quick succession.
+@Throttle({ default: { limit: syncThrottle.limit, ttl: syncThrottle.windowMs } })
 export class SyncController {
   constructor(
     private readonly pullService: SyncPullService,

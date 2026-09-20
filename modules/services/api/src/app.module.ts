@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigType } from '@nestjs/config'
+import { APP_GUARD } from '@nestjs/core'
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import {
   AuthConfig,
@@ -11,7 +13,10 @@ import {
   OtpConfig,
   RedisConfig,
   SecurityHeadersConfig,
+  ThrottlerConfig,
+  TrustProxyConfig,
 } from '@vidya/api/configs'
+import { RedisThrottlerStorage, RedisThrottlerStorageModule } from '@vidya/api/shared/throttling'
 import { Entities } from '@vidya/entities'
 
 import { AuthModule } from './auth/auth.module'
@@ -32,6 +37,8 @@ import { SyncModule } from './sync/sync.module'
         MailerConfig,
         MigrationsConfig,
         SecurityHeadersConfig,
+        ThrottlerConfig,
+        TrustProxyConfig,
       ],
     }),
     TypeOrmModule.forRootAsync({
@@ -51,11 +58,26 @@ import { SyncModule } from './sync/sync.module'
       inject: [DbConfig.KEY],
     }),
     TypeOrmModule.forFeature([]),
+    // The app-wide floor every route gets unless it overrides `default` (see
+    // `SyncController`, `TokensController`) or layers `KeyedThrottlerGuard` on
+    // top (see the OTP and sign-in controllers). Headers are off everywhere:
+    // a throttled caller learns nothing about which limit it hit.
+    ThrottlerModule.forRootAsync({
+      imports: [RedisThrottlerStorageModule],
+      inject: [RedisThrottlerStorage, ThrottlerConfig.KEY],
+      useFactory: (storage: RedisThrottlerStorage, config: ConfigType<typeof ThrottlerConfig>) => ({
+        throttlers: [
+          { name: 'default', limit: config.default.limit, ttl: config.default.windowMs },
+        ],
+        storage,
+        setHeaders: false,
+      }),
+    }),
     AuthModule,
     EduModule,
     SyncModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

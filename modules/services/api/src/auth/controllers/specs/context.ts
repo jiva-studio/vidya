@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common'
 import { MailerService } from '@nestjs-modules/mailer'
-import { createTestingApp, TestingOverride } from '@vidya/api/edu/shared'
+import { createTestingApp, TestingBootstrap, TestingOverride } from '@vidya/api/edu/shared'
 import { RedisService } from '@vidya/api/shared/services'
 
 /** Remembers what it was asked to send, and never opens a socket. */
@@ -49,7 +49,7 @@ export type AuthContext = {
   redis: FakeRedis
 }
 
-export const createAuthContext = async (): Promise<AuthContext> => {
+export const createAuthContext = async (bootstrap?: TestingBootstrap): Promise<AuthContext> => {
   const mail = new SentMail()
   const redis = new FakeRedis()
 
@@ -58,5 +58,5 @@ export const createAuthContext = async (): Promise<AuthContext> => {
     { provide: RedisService, useValue: redis },
   ]
 
-  return { app: await createTestingApp(overrides), mail, redis }
+  return { app: await createTestingApp(overrides, bootstrap), mail, redis }
 }

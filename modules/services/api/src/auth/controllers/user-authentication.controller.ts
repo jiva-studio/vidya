@@ -16,12 +16,38 @@ import {
   OtpService,
   RevokedTokensService,
 } from '@vidya/api/auth/services'
+import { throttlerSettings } from '@vidya/api/configs'
 import { AuditLogService } from '@vidya/api/shared/services'
+import { KeyedThrottlerGuard } from '@vidya/api/shared/throttling'
 import { OtpType, Routes } from '@vidya/protocol'
 import { Request } from 'express'
 
 import { Authentication } from '../decorators'
-import { UserAuthentication } from '../utils'
+import { normalizeLogin, UserAuthentication } from '../utils'
+
+/**
+ * Keyed by the normalised login *and* by IP: a botnet spreading its guesses
+ * across many addresses still shares one login's five-attempt budget, and one
+ * caller rotating its own IP still shares its own. The login side is read
+ * straight off the raw body, ahead of the DTO's own `@Transform`, so it has
+ * to normalise it the same way `OtpSignInRequest.login` does — see
+ * `normalize-login.util.ts`.
+ */
+const signinThrottle = throttlerSettings().signin
+const SIGNIN_THROTTLE = KeyedThrottlerGuard([
+  {
+    name: 'auth:signin:login',
+    limit: signinThrottle.loginLimit,
+    windowMs: signinThrottle.windowMs,
+    value: (req) => normalizeLogin(req.body?.login) as string | undefined,
+  },
+  {
+    name: 'auth:signin:ip',
+    limit: signinThrottle.ipLimit,
+    windowMs: signinThrottle.windowMs,
+    value: (req) => req.ip,
+  },
+])
 
 @Controller()
 @ApiTags('🔐 Authentication')
@@ -39,6 +65,7 @@ export class UserAuthenticationController {
   /* -------------------------------------------------------------------------- */
 
   @Post(Routes().auth.signIn('otp'))
+  @UseGuards(SIGNIN_THROTTLE)
   @ApiOperation({
     summary: 'Signs user in with OTP',
     operationId: 'auth::signIn',
@@ -62,8 +89,6 @@ export class UserAuthenticationController {
     @Body() request: dto.OtpSignInRequest,
     @Req() req: Request,
   ): Promise<dto.OtpSignInResponse> {
-    // TODO rate limit login attempts by login
-
     // validate OTP, if invalid send 401 Unauthorized response
     const otp = await this.otpService.validate(request.login, request.otp)
     if (!otp) {
