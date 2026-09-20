@@ -15,4 +15,5 @@ export interface ModerationActionsEmits {
   accept: [id: EnrollmentId]
   decline: [id: EnrollmentId]
   'assign-group': [id: EnrollmentId]
+  review: [id: EnrollmentId]
 }

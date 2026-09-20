@@ -23,6 +23,8 @@ export interface EnrollmentsTableRowEmits {
   accept: [id: EnrollmentId]
   decline: [id: EnrollmentId]
   'assign-group': [id: EnrollmentId]
+  review: [id: EnrollmentId]
+  archive: [id: EnrollmentId]
 }
 
 export interface StudentCellProps {

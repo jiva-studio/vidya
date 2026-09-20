@@ -41,6 +41,28 @@ enrollments-requested-at = Подана { $at }
 enrollments-decided-by = { $who }, { $at }
 enrollments-student-unknown = Студент
 
+enrollments-review = Рассмотреть
+enrollments-review-title = Заявка
+enrollments-review-group = Выбранная группа
+enrollments-review-group-closed = Набор закрыт
+enrollments-review-group-gone = Группы больше нет
+enrollments-review-times = Когда удобно
+enrollments-review-zone = Время в поясе { $zone }
+enrollments-review-comment = Комментарий
+enrollments-review-decision = Группа
+enrollments-review-accept = Принять в группу
+enrollments-archive = Убрать
+enrollments-archive-title = Убрать заявку из списка?
+enrollments-archive-consequence = Строка уйдёт из списка школы навсегда. У студента она останется.
+
+weekday-mon = пн
+weekday-tue = вт
+weekday-wed = ср
+weekday-thu = чт
+weekday-fri = пт
+weekday-sat = сб
+weekday-sun = вс
+
 enrollment-status-pending = Ждёт решения
 enrollment-status-accepted = Принята
 enrollment-status-declined = Отклонена

@@ -24,6 +24,9 @@ export class GroupSummary implements protocol.GroupSummary {
 
   @ApiProperty({ example: 'Morning group' })
   name: string
+
+  @ApiProperty({ enum: domain.GroupStatuses, example: 'pending' })
+  status: domain.GroupStatus
 }
 
 export class CreateGroupRequest implements protocol.CreateGroupRequest {

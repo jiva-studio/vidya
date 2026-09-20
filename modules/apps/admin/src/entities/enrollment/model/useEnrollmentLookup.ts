@@ -27,6 +27,10 @@ export const useEnrollmentLookup = () => {
         decidedAt: found.decidedAt,
         courseId: found.courseId,
         groupId: found.groupId,
+        preferredGroupId: found.preferredGroupId,
+        preferredTimes: found.preferredTimes,
+        comment: found.comment,
+        archivedBySchoolAt: found.archivedBySchoolAt,
       })
     } catch {
       // One unreadable enrolment leaves its row without a name, not the page without rows.

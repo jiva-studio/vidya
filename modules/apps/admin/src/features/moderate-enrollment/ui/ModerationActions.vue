@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import type { EnrollmentStatus } from '@vidya/domain'
 import { AlertDialog, IconButton } from '@vidya/ui'
-import { Check, RotateCcw, Users, X } from 'lucide-vue-next'
+import { Check, Eye, RotateCcw, Users, X } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { ModerationActionsEmits, ModerationActionsProps } from '../types'
@@ -26,10 +27,14 @@ const isPending = computed(() => props.enrollment.status === 'pending')
 const canDecide = computed(() => props.canModerate && isPending.value)
 const canPlace = computed(() => props.canModerate && props.enrollment.status === 'accepted')
 
-// A place the school took back is the one decision it may reverse, and the
-// only way back is onto the course: there is no open request left to refuse,
-// so giving back is offered here alone, without its usual pair.
-const canRestore = computed(() => props.canModerate && props.enrollment.status === 'revoked')
+// A place that has been given up is the one decision that may be reversed, and
+// the only way back is onto the course: there is no open request left to
+// refuse, so giving back is offered here alone, without its usual pair. The
+// school taking a place away and the student handing it back arrive at the same
+// place, and the server takes both of them back to `accepted`.
+const RETURNABLE: EnrollmentStatus[] = ['revoked', 'withdrawn']
+
+const canRestore = computed(() => props.canModerate && RETURNABLE.includes(props.enrollment.status))
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -57,6 +62,10 @@ function onRestoreConfirmed() {
 
 function onAssign() {
   emit('assign-group', props.enrollment.id)
+}
+
+function onReview() {
+  emit('review', props.enrollment.id)
 }
 </script>
 
@@ -88,6 +97,14 @@ function onAssign() {
     </IconButton>
     <IconButton v-if="canPlace" :label="$t('enrollments-assign-group')" @click="onAssign">
       <Users />
+    </IconButton>
+    <IconButton
+      v-if="props.canModerate"
+      variant="ghost"
+      :label="$t('enrollments-review')"
+      @click="onReview"
+    >
+      <Eye />
     </IconButton>
     <AlertDialog
       v-model:open="confirming"

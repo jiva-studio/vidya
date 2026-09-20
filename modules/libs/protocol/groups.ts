@@ -13,7 +13,15 @@ export type GroupDetails = {
   description?: string
 }
 
-export type GroupSummary = Pick<GroupDetails, 'id' | 'name'>
+/**
+ * A group as a list names it.
+ *
+ * `status` lives here and not on {@link GroupDetails} because the CRUD requests
+ * are derived from that type: widening it would turn `status` into an ordinary
+ * `PATCH` field and let recruitment close around the one action that stamps
+ * `startsAt`.
+ */
+export type GroupSummary = Pick<GroupDetails, 'id' | 'name'> & { status: domain.GroupStatus }
 
 /**
  * A group as it travels to a device.
