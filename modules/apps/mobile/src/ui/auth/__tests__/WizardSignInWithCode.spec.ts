@@ -78,7 +78,7 @@ afterEach(() => vi.restoreAllMocks())
  * The server takes the code and answers with tokens; after that the app
  * records the connection, starts the engine and reads the profile. A failure
  * in the second half reported as "that code did not work" sends somebody to
- * retype six digits that were right — and the code is spent by then, so every
+ * retype eight digits that were right — and the code is spent by then, so every
  * attempt after the first is refused for real. The screen would be lying and
  * then proving its own lie.
  */

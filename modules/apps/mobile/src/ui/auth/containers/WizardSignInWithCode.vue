@@ -84,7 +84,7 @@ function onBackButtonClicked() {
  *
  * `401` here, and only here, means the code itself was refused. Anything else
  * is the server or the network, and saying "wrong code" about it would send
- * somebody to correct six digits that were right.
+ * somebody to correct eight digits that were right.
  */
 async function tradeTheCode(): Promise<Session | undefined> {
   try {

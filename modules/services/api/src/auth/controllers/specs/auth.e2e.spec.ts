@@ -55,7 +55,7 @@ describe('/auth', () => {
 
     expect(ctx.mail.messages).toHaveLength(1)
     expect(ctx.mail.last.to).toBe(LOGIN)
-    expect(code).toMatch(/^\d{6}$/)
+    expect(code).toMatch(/^\d{8}$/)
   })
 
   it('refuses a second code while the first is still valid', async () => {

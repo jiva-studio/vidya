@@ -18,7 +18,7 @@ const reasonFor = (error: unknown): string => {
  * The two steps of signing in, and what the screen shows between them.
  *
  * A wrong code leaves the field as it was: the operator mistyped one digit of
- * six, and clearing the box makes them read the email again for no reason.
+ * eight, and clearing the box makes them read the email again for no reason.
  */
 export const useOtpSignIn = () => {
   const http = useHttp()

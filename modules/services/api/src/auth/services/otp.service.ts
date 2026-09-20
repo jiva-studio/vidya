@@ -67,7 +67,7 @@ export class OtpService {
    * The OTP code is expired immediately upon successful validation to
    * prevent replay attacks and multiple logins. A wrong guess is counted
    * against the login, and the code is burned once the guess budget runs out
-   * — a six-digit numeric code is small enough to brute-force otherwise.
+   * — the code's search space is small enough to brute-force otherwise.
    *
    * The counter is keyed off the raw login string, same as the code itself.
    * Logins are not normalised anywhere yet, so `Bob@x.com` and `bob@x.com`
