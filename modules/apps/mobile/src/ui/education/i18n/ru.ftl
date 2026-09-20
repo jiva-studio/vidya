@@ -36,6 +36,8 @@ enrollment-declined = Заявка отклонена
 enrollment-declined-summary = Причина не указана.
 enrollment-revoked = Место отозвано
 enrollment-revoked-summary = Школа прекратила вашу запись на курс. Всё уже скачанное остаётся доступным.
+enrollment-withdrawn = Вы ушли с курса
+enrollment-withdrawn-summary = Вы сами отказались от места. Всё уже скачанное остаётся доступным.
 
 # Статус записи в списке
 enrollment-status-pending = На рассмотрении

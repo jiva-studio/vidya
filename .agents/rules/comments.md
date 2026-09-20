@@ -174,10 +174,11 @@ paragraph: no `Co-Authored-By:` naming a model, no "Generated with" footer, no
 session link. A pull request body is the same — what changed and why, and
 nothing about what produced it.
 
-Before handing a diff over:
+The gate reads the working tree, the diff against `main` and the branch's
+commit messages, so this is checked whether or not anyone remembers to look:
 
 ```sh
-git diff main... | grep -niE 'claude|anthropic|co-authored|generated (with|by)|session'
+npm run lint:guards   # from modules/, and part of npm run check
 ```
 
 ## Checklist before handing a diff over

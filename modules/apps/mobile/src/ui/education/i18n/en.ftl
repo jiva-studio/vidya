@@ -36,6 +36,8 @@ enrollment-declined = Request declined
 enrollment-declined-summary = No reason was given.
 enrollment-revoked = Place withdrawn
 enrollment-revoked-summary = The school has ended your enrolment on this course. Everything already downloaded stays readable.
+enrollment-withdrawn = You left the course
+enrollment-withdrawn-summary = You handed your place back. Everything already downloaded stays readable.
 
 # Enrolment status in a list
 enrollment-status-pending = Pending

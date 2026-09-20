@@ -7,7 +7,7 @@
   >
     <EnrollmentReviewStatus
       v-if="enrollment && enrollment.status !== 'accepted'"
-      :image="`enrollment/${enrollment.status}.webp`"
+      :image="statusImage"
       :header="$t(`enrollment-${enrollment.status}`)"
       :text="$t(`enrollment-${enrollment.status}-summary`)"
       :action-text="$t('my-enrollment-go-back')"
@@ -54,6 +54,16 @@ const { data, busy, loaded } = useLocalData(
   { enrollment: null, lessons: [] },
   { watching: [() => props.enrollmentId] },
 )
+
+// Only these two outcomes have art. A status without its own picture takes
+// the one for a refusal rather than a broken image, which is what `revoked`
+// rendered before this.
+const STATUS_IMAGES = new Set(['pending', 'declined'])
+
+const statusImage = computed(() => {
+  const status = data.value.enrollment?.status
+  return `enrollment/${status && STATUS_IMAGES.has(status) ? status : 'declined'}.webp`
+})
 
 const enrollment = computed(() => data.value.enrollment)
 const lessons = computed(() => data.value.lessons)
