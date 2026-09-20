@@ -128,7 +128,7 @@ describe('GroupMembersPage', () => {
     })
 
     expect(page.text()).not.toContain('The database is asleep')
-    expect(page.text()).toContain('The server could not do this')
+    expect(page.text()).toContain('That did not work. Try again.')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Try again')
     await retry?.trigger('click')

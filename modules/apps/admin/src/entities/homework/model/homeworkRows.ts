@@ -31,7 +31,7 @@ export const filterHomeworkRows = (
  * Whether a work belongs to the school on screen.
  *
  * The list endpoint answers with every school the reviewer may read, so work
- * from another one has to be dropped here (AC-6). Work whose course could not
+ * from another one has to be dropped here. Work whose course could not
  * be resolved at all is kept: a reviewer without `enrollments:read` resolves
  * nothing, and an empty queue would be a worse answer than an unattributed one.
  */

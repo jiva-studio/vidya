@@ -65,7 +65,7 @@ function idFromRoute(): CourseId | undefined {
     <FailureState
       v-else-if="loadFailed"
       :title="$t('state-error-title')"
-      :description="$t(form.error.value ?? 'course-load-failed')"
+      :description="$t('state-error')"
       :retry-label="$t('action-retry')"
       @retry="onRetry"
     />
@@ -73,7 +73,6 @@ function idFromRoute(): CourseId | undefined {
       v-else
       v-model="form.values.value"
       :busy="form.saving.value"
-      :error="form.error.value && $t(form.error.value)"
       @submit="onSubmit"
       @cancel="onCancel"
     />

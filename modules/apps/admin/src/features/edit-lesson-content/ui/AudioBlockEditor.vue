@@ -1,13 +1,6 @@
 <script setup lang="ts">
-import type { BlockSource } from '@vidya/domain'
-import { FormField, Input, Select } from '@vidya/ui'
-import { useFluent } from 'fluent-vue'
-import { computed } from 'vue'
-
-import { checkBlockUrl } from '../model'
-import { sourceOptions } from './sourceOptions'
-import { fieldStackClasses } from './styles'
-import type { AudioBlockEditorEmits, AudioBlockEditorProps } from './types'
+import MediaBlockEditor from './MediaBlockEditor.vue'
+import type { MediaBlock, AudioBlockEditorEmits, AudioBlockEditorProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -17,55 +10,14 @@ const props = withDefaults(defineProps<AudioBlockEditorProps>(), { frozen: false
 
 const emit = defineEmits<AudioBlockEditorEmits>()
 
-/* --------------------------------- State ---------------------------------- */
-
-const { $t } = useFluent()
-
-const options = computed(() => sourceOptions(props.block.source, $t))
-const problem = computed(() => checkBlockUrl(props.block.source, props.block.url))
-
 /* -------------------------------- Handlers -------------------------------- */
 
-function onSource(source: string) {
-  emit('update', { ...props.block, source: source as BlockSource })
-}
-
-function onUrl(url: string) {
-  emit('update', { ...props.block, url })
+// The shell speaks the union; only this block's own kind can come back out of it.
+function onUpdate(block: MediaBlock) {
+  emit('update', block as AudioBlockEditorProps['block'])
 }
 </script>
 
 <template>
-  <div :class="fieldStackClasses">
-    <FormField :label="$t('editor-source-label')" :hint="$t('editor-source-hint')">
-      <template #default="field">
-        <Select
-          :id="field.id"
-          :model-value="props.block.source"
-          :options="options"
-          :placeholder="$t('editor-source-placeholder')"
-          :disabled="props.frozen"
-          @update:model-value="onSource"
-        />
-      </template>
-    </FormField>
-    <FormField
-      :label="$t('editor-url-label')"
-      :hint="$t('editor-url-hint')"
-      :error="problem && $t(problem)"
-    >
-      <template #default="field">
-        <Input
-          :id="field.id"
-          :model-value="props.block.url"
-          :described-by="field.describedBy"
-          :invalid="field.invalid"
-          :readonly="props.frozen"
-          inputmode="url"
-          placeholder="https://"
-          @update:model-value="onUrl"
-        />
-      </template>
-    </FormField>
-  </div>
+  <MediaBlockEditor :block="props.block" kind="audio" :frozen="props.frozen" @update="onUpdate" />
 </template>

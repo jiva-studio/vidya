@@ -39,7 +39,7 @@ export const Loading: Story = { render: over({ [ROLES]: pending() }) }
 
 export const Empty: Story = { render: over({ [ROLES]: { items: [] } }) }
 
-export const Failed: Story = { render: over({ [ROLES]: refusal(500, 'Роли не читаются') }) }
+export const Failed: Story = { render: over({ [ROLES]: refusal(500, 'The roles cannot be read') }) }
 
 export const Denied: Story = {
   render: over({ [ROLES]: { items } }, ['roles:read'] as PermissionKey[]),

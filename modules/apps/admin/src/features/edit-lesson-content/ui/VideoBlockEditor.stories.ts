@@ -3,6 +3,9 @@ import type { BlockId, BlockSource, VideoBlock } from '@vidya/domain'
 import { asId } from '@vidya/domain'
 import { ref } from 'vue'
 
+import { FakeMediaGateway, mediaGatewayKey } from '@/entities/media'
+import { systemClock } from '@/shared/lib'
+
 import VideoBlockEditor from './VideoBlockEditor.vue'
 
 const block = (source: BlockSource, url: string): VideoBlock => ({
@@ -20,7 +23,8 @@ const over =
       const model = ref(value)
       return { model, frozen, onUpdate: (next: VideoBlock) => (model.value = next) }
     },
-    template: `<div class="max-w-[var(--form-max)]">
+    provide: { [mediaGatewayKey as symbol]: new FakeMediaGateway({ clock: systemClock }) },
+    template: `<div class="max-w-[var(--prose-max)]">
     <VideoBlockEditor :block="model" :frozen="frozen" @update="onUpdate" />
   </div>`,
   })
@@ -38,11 +42,6 @@ export const Default: Story = {
 }
 
 export const Empty: Story = { render: over(block('url', '')) }
-
-export const Refused: Story = {
-  name: 'Link from the wrong host',
-  render: over(block('youtube', 'https://example.org/video.mp4')),
-}
 
 export const Frozen: Story = {
   name: 'Frozen',

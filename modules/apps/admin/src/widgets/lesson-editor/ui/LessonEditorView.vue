@@ -1,20 +1,31 @@
 <script setup lang="ts">
-import type { LessonContent } from '@vidya/domain'
+import type { LessonContent, SectionId } from '@vidya/domain'
 import { FailureState, Skeleton } from '@vidya/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
-import { contentProblems, useLessonContentEditor } from '@/features/edit-lesson-content'
+import type { BlockFault } from '@/features/edit-lesson-content'
+import {
+  findBlockFaults,
+  contentProblems,
+  pruneForSave,
+  useLessonContentEditor,
+} from '@/features/edit-lesson-content'
 import { PublishDialog } from '@/features/publish-lesson'
 import { useCan } from '@/shared/access'
 
-import { useDraftSaving, useLessonPublishing, useLessonVersionDocument } from '../model'
+import { anchorOf } from '../lib'
+import {
+  useAutosave,
+  useDraftSaving,
+  useEditorShortcuts,
+  useLessonPublishing,
+  useLessonVersionDocument,
+} from '../model'
 import ContentProblemsNotice from './ContentProblemsNotice.vue'
 import EditorToolbar from './EditorToolbar.vue'
 import LessonDocument from './LessonDocument.vue'
-import LessonOutline from './LessonOutline.vue'
-import LessonPreview from './LessonPreview.vue'
-import { editorClasses, readingClasses } from './styles'
-import type { EditorMode, LessonEditorViewEmits, LessonEditorViewProps } from './types'
+import { editorClasses } from './styles'
+import type { LessonEditorViewEmits, LessonEditorViewProps } from './types'
 import UnsavedChangesGuard from './UnsavedChangesGuard.vue'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -31,28 +42,26 @@ const versionDoc = useLessonVersionDocument(props.lessonId)
 const editor = useLessonContentEditor()
 const draft = useDraftSaving(props.lessonId)
 const publishing = useLessonPublishing(props.lessonId)
+const autosave = useAutosave(send)
 
-const canPublish = useCan('lessons:publish')
+const publishable = useCan('lessons:publish')
 const publishOpen = ref(false)
-const mode = ref<EditorMode>('write')
+const faults = ref<BlockFault[]>([])
 
 const frozen = computed(() => versionDoc.version.value?.status === 'published')
 const problems = computed(() => contentProblems(editor.content.value))
 const blocked = computed(() => problems.value.length > 0)
-const actionError = computed(() => draft.error.value ?? publishing.error.value)
-const writing = computed(() => mode.value === 'write')
-const sections = computed(() => editor.content.value.sections)
+const noticed = computed(() => blocked.value || faults.value.length > 0)
 
 /* --------------------------------- Hooks ---------------------------------- */
 
+// A reopened version replaces what is on screen only when nothing is unsaved:
+// an edit the server refused exists nowhere else.
 watch(versionDoc.version, (version) => {
-  if (version) editor.load(version.content)
+  if (version && !editor.dirty.value) editor.load(version.content)
 })
 
-// A version nobody can change opens as what it is: something to read.
-watch(frozen, (value) => {
-  mode.value = value ? 'read' : 'write'
-})
+useEditorShortcuts({ undo: onUndo, redo: onRedo, save: onSave })
 
 onMounted(() => {
   void versionDoc.open()
@@ -60,32 +69,51 @@ onMounted(() => {
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onMode(next: EditorMode) {
-  mode.value = next
-}
-
 function onContent(content: LessonContent) {
   editor.set(content)
+  queue()
+}
+
+function onUndo() {
+  editor.undo()
+  queue()
+}
+
+function onRedo() {
+  editor.redo()
+  queue()
 }
 
 function onBack() {
   emit('back')
 }
 
+function onRename(title: string) {
+  emit('rename', title)
+}
+
 function onRetry() {
   void versionDoc.open()
 }
 
+function onSaveRetry() {
+  void autosave.retry()
+}
+
 function onPublish() {
-  publishOpen.value = true
+  faults.value = findBlockFaults(editor.content.value)
+  const first = faults.value.at(0)
+
+  if (first) reveal(first.sectionId)
+  else publishOpen.value = true
 }
 
 function onPublishOpen(open: boolean) {
   publishOpen.value = open
 }
 
-async function onSave() {
-  await store()
+function onSave() {
+  void autosave.flush()
 }
 
 // Publishing freezes what the server holds, so anything still on screen has to
@@ -93,7 +121,7 @@ async function onSave() {
 async function onPublishConfirm() {
   const version = versionDoc.version.value
   if (!version) return
-  if (editor.dirty.value && !(await store())) return
+  if (!(await autosave.flush())) return
   if (!(await publishing.publish(version.id))) return
 
   publishOpen.value = false
@@ -107,13 +135,24 @@ async function onRevision() {
 
 /* -------------------------------- Helpers --------------------------------- */
 
-async function store(): Promise<boolean> {
+function queue() {
+  faults.value = []
+  if (!frozen.value && !blocked.value) autosave.schedule(editor.content.value)
+}
+
+// The save carries the snapshot it was given, and the answer clears the dirty
+// flag against that snapshot alone — whatever was typed since stays unsaved.
+async function send(content: LessonContent): Promise<boolean> {
   const version = versionDoc.version.value
   if (!version || frozen.value || blocked.value) return false
 
-  const saved = await draft.save(version.id, editor.content.value)
-  if (saved) editor.markSaved()
-  return saved
+  const stored = await draft.save(version.id, pruneForSave(content))
+  if (stored) editor.markSaved(content)
+  return stored
+}
+
+function reveal(id: SectionId) {
+  document.getElementById(anchorOf(id))?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 </script>
 
@@ -122,40 +161,34 @@ async function store(): Promise<boolean> {
     <EditorToolbar
       :title="props.title"
       :version="versionDoc.version.value?.version"
-      :mode="mode"
       :frozen="frozen"
       :dirty="editor.dirty.value"
-      :saving="draft.saving.value"
+      :status="autosave.status.value"
       :busy="publishing.busy.value"
-      :can-publish="canPublish"
+      :publishable="publishable"
       :blocked="blocked"
-      :error="actionError && $t(actionError)"
-      @update:mode="onMode"
+      @rename="onRename"
       @back="onBack"
       @save="onSave"
+      @retry="onSaveRetry"
       @publish="onPublish"
       @revision="onRevision"
     />
-    <ContentProblemsNotice v-if="blocked" :problems="problems" />
+    <ContentProblemsNotice v-if="noticed" :problems="problems" :faults="faults" />
     <Skeleton v-if="versionDoc.loading.value" shape="block" />
     <FailureState
       v-else-if="versionDoc.error.value"
       :title="$t('state-error-title')"
-      :description="$t(versionDoc.error.value)"
+      :description="$t('state-error')"
       :retry-label="$t('editor-retry')"
       @retry="onRetry"
     />
-    <template v-else-if="writing">
-      <LessonOutline v-if="sections.length > 0" :sections="sections" />
-      <LessonDocument
-        :content="editor.content.value"
-        :frozen="frozen"
-        @update:content="onContent"
-      />
-    </template>
-    <div v-else :class="readingClasses">
-      <LessonPreview :content="editor.content.value" />
-    </div>
+    <LessonDocument
+      v-else
+      :content="editor.content.value"
+      :frozen="frozen"
+      @update:content="onContent"
+    />
     <PublishDialog
       :open="publishOpen"
       :version="versionDoc.version.value?.version ?? 0"

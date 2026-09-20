@@ -77,7 +77,6 @@ function idFromRoute(): GroupId | undefined {
       :courses="options"
       :course-locked="editing"
       :busy="form.saving.value"
-      :error="form.error.value && $t(form.error.value)"
       @submit="onSubmit"
       @cancel="onCancel"
     />

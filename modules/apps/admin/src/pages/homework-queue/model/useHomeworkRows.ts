@@ -23,7 +23,7 @@ export const useHomeworkRows = () => {
   const users = useUserApi()
   const { generation } = useCurrentSchool()
 
-  const students = useStudentNames(async (id) => (await users.get(id)).name)
+  const students = useStudentNames(async (id) => (await users.nameOf(id)).name)
 
   const contextOf = (enrollmentId: EnrollmentId): WorkContext | undefined => {
     const resolved = lookup.details.value.get(enrollmentId)

@@ -29,7 +29,6 @@ const columns = computed<TableColumn[]>(() => [
   { key: 'actions', label: $t('roles-column-actions'), align: 'end' },
 ])
 
-const errorText = computed(() => (roles.error.value ? $t(roles.error.value) : undefined))
 const emptyActionLabel = computed(() => (canCreate.value ? $t('roles-create') : undefined))
 
 const displayedRows = computed(() => {
@@ -91,7 +90,7 @@ function asRole(row: TableRowData): RoleRow {
       :columns="columns"
       :rows="displayedRows"
       :loading="roles.loading.value"
-      :error="errorText"
+      :error="roles.error.value ? $t('state-error') : undefined"
       :empty-title="$t('roles-empty-title')"
       :empty-description="$t('roles-empty-body')"
       :empty-action-label="emptyActionLabel"

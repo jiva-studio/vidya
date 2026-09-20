@@ -82,7 +82,7 @@ describe('SchoolsPage', () => {
     const { transport, page } = await mountPage({ [SCHOOLS]: refusal(503, 'Try again later') })
 
     expect(page.find('[role="alert"]').text()).not.toContain('Try again later')
-    expect(page.find('[role="alert"]').text()).toContain('Сервер не смог это выполнить')
+    expect(page.find('[role="alert"]').text()).toContain('Не получилось. Попробуйте ещё раз.')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
     await retry?.trigger('click')

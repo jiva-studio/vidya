@@ -24,8 +24,6 @@ const columns = computed<TableColumn[]>(() => [
   { key: 'actions', label: $t('users-column-actions'), align: 'end' },
 ])
 
-const errorText = computed(() => (users.error.value ? $t(users.error.value) : undefined))
-
 const displayedRows = computed(() => {
   if (!search.value.trim()) return users.rows.value
   const query = search.value.trim().toLowerCase()
@@ -73,7 +71,7 @@ function asUser(row: TableRowData): UserRow {
       :columns="columns"
       :rows="displayedRows"
       :loading="users.loading.value"
-      :error="errorText"
+      :error="users.error.value ? $t('state-error') : undefined"
       :empty-title="$t('users-empty-title')"
       :empty-description="$t('users-empty-body')"
       :retry-label="$t('action-retry')"

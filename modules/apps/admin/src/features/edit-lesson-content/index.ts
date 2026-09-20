@@ -1,14 +1,24 @@
 // Public API of the edit-lesson-content feature — editing sections and blocks. Owned by T5.
 export { getLessonVersion, saveLessonVersion } from './api'
+export { useMenuKeys } from './lib'
+export type { BlockFault } from './model'
 export {
   addAnswer,
   addBlock,
   addSection,
+  blockBelow,
   checkBlockUrl,
   contentProblems,
+  convertBlock,
   createBlock,
+  duplicateBlock,
   EmbedHosts,
   embedSrc,
+  endTextBlock,
+  findBlockFaults,
+  findInvalidBlocks,
+  insertBlockAfter,
+  insertSectionAfter,
   isEmbedSource,
   isKnownBlockType,
   mediaSrc,
@@ -16,11 +26,14 @@ export {
   moveSection,
   newBlockId,
   newSectionId,
+  pruneForSave,
   removeAnswer,
   removeBlock,
   removeSection,
   renameSection,
-  renderMarkdown,
+  reorderBlocks,
+  reorderSections,
+  sectionBelow,
   setAnswer,
   setQuestion,
   setRightAnswer,
@@ -31,15 +44,17 @@ export {
 export type * from './types'
 export { AuthorableSources, BlockTypes } from './types'
 export {
-  AddBlockMenu,
   AudioBlockEditor,
-  ItemActions,
+  BlockHandle,
+  BlockInserter,
+  BlockInsertMenu,
+  BlockMenu,
   LessonBlockEditor,
+  LessonBlockFrame,
   MarkdownText,
   QuizBlockEditor,
-  SectionBlocks,
-  SectionForm,
   TextBlockEditor,
+  useMarkdownEditor,
   VideoBlockEditor,
 } from './ui'
 export type * from './ui/types'

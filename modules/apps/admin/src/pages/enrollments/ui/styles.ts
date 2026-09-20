@@ -4,8 +4,6 @@ export const filtersClasses = ['flex', 'flex-wrap', 'items-end', 'gap-[var(--spa
 
 export const filterClasses = 'w-[12rem]'
 
-export const errorClasses = ['text-[length:var(--text-sm)]', 'text-[var(--color-danger-fg)]']
-
 // A row is read down a column, so what belongs to one fact stays in one cell:
 // the name with when it was asked for, the status with who decided it.
 export const stackClasses = ['flex flex-col items-start gap-[var(--space-1)]']

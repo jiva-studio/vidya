@@ -66,6 +66,17 @@ case "$MODE" in
     # question before the last commit as well as after it. Stryker's own mutate
     # patterns do not apply to files named on the command line, so the same
     # exclusions — specs, modules, barrel files — are applied here instead.
+    #
+    # `.vue` is absent on purpose. Stryker instruments a component with local
+    # counters, and Vue refuses a `defineProps` that reads a local, so a
+    # component written the way this project writes them cannot be compiled once
+    # it is instrumented.
+    #
+    # The front-end packages carry no config. The vitest runner does not drive
+    # vitest 5 — it reports a fraction of a test per mutant and everything
+    # survives — and the command runner, which does work, needs a command
+    # naming the specs that cover the file: the whole suite fails inside the
+    # sandbox. Until that is settled they are measured by hand, as §4.2 asks.
     CHANGED="$(
       {
         git -C "$REPO_ROOT" diff --name-only --diff-filter=d "$BASE...HEAD" -- "modules/$LOCATION/src"
@@ -73,7 +84,8 @@ case "$MODE" in
       } \
         | sort -u \
         | grep -E '\.ts$' \
-        | grep -v -E '(/specs/|\.spec\.ts$|/main\.ts$|\.module\.ts$|/index\.ts$)' \
+        | grep -v -E '(/specs/|\.spec\.ts$|\.stories\.ts$|/main\.ts$|\.module\.ts$|/index\.ts$)' \
+        | grep -v -E '(/types\.ts$|/styles\.ts$)' \
         | grep -v -E '(/shared/datasources/|/shared/testing-app\.ts$)' \
         | sed "s|^modules/$LOCATION/||" || true
     )"

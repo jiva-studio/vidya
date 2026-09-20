@@ -39,9 +39,6 @@ const breadcrumbs = computed(() => [
   { key: 'current', label: context.value.studentName ?? $t('homework-review-title') },
 ])
 
-const errorText = computed(() => details.error.value && $t(details.error.value))
-const failure = computed(() => grading.error.value && $t(grading.error.value))
-
 /* ---------------------------------- Hooks --------------------------------- */
 
 onMounted(() => {
@@ -136,9 +133,9 @@ function advance(id: HomeworkId, updated: HomeworkDetails) {
     </PageHeader>
     <Skeleton v-if="details.loading.value" shape="block" :lines="6" />
     <FailureState
-      v-else-if="errorText"
+      v-else-if="details.error.value"
       :title="$t('state-error-title')"
-      :description="errorText"
+      :description="$t('state-error')"
       :retry-label="$t('action-retry')"
       @retry="onRetry"
     />
@@ -149,7 +146,6 @@ function advance(id: HomeworkId, updated: HomeworkDetails) {
         v-model:confirming="confirming"
         :can-grade="canGrade"
         :busy="grading.busy.value"
-        :error="failure"
         @accept="onAccept"
         @return="onReturn"
       />

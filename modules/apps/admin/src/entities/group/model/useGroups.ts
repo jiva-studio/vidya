@@ -11,7 +11,7 @@ import { getGroups } from '../api'
  * The groups the operator may see, optionally narrowed to one course.
  *
  * The rows go before the request does, so a school change never leaves the
- * previous school's groups on screen (AC-6). The request carries no school:
+ * previous school's groups on screen. The request carries no school:
  * `GetGroupsQuery` has no field for one and the server scopes by the grants in
  * the token.
  */

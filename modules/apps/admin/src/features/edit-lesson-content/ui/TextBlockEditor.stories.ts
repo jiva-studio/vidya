@@ -13,10 +13,10 @@ const block = (content: string): TextBlock => ({
 
 const written = `# Devanagari
 
-Читаем **слева направо**. Буквы висят на верхней линии.
+Read it **left to right**. The letters hang from the line above.
 
-- स — «sa»
-- र — «ra»`
+- स — "sa"
+- र — "ra"`
 
 // The editor writes into the block it is given, so a story that dropped the
 // update would show a field nothing typed into stays in.

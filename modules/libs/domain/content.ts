@@ -24,12 +24,21 @@ export type TextBlock = {
   content: string
 }
 
+export type ImageBlock = {
+  id: BlockId
+  type: 'image'
+  source: BlockSource
+  url: string
+  caption?: string
+}
+
 export type VideoBlock = {
   id: BlockId
   type: 'video'
   source: BlockSource
   url: string
   posterUrl?: string
+  caption?: string
 }
 
 export type AudioBlock = {
@@ -37,6 +46,7 @@ export type AudioBlock = {
   type: 'audio'
   source: BlockSource
   url: string
+  caption?: string
 }
 
 export type QuizBlock = {
@@ -45,9 +55,12 @@ export type QuizBlock = {
   question: string
   answers: string[]
   rightAnswer: number
+
+  /** Shown after answering, and withheld from the student's copy like the key itself. */
+  explanation?: string
 }
 
-export type LessonBlock = TextBlock | VideoBlock | AudioBlock | QuizBlock
+export type LessonBlock = TextBlock | ImageBlock | VideoBlock | AudioBlock | QuizBlock
 
 /**
  * A section is the unit homework attaches to, so its id is a durable reference,

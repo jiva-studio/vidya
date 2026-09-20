@@ -73,7 +73,7 @@ export const Empty: Story = {
 
 export const Failed: Story = {
   parameters: route,
-  render: over({ ...world, [ENROLLMENTS]: refusal(503, 'Состав группы сейчас не читается') }),
+  render: over({ ...world, [ENROLLMENTS]: refusal(503, 'The roster cannot be read right now') }),
 }
 
 export const Denied: Story = {

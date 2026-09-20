@@ -25,7 +25,6 @@ const invalid = ref(false)
 const error = ref<string | undefined>(undefined)
 
 const nameError = computed(() => (invalid.value ? $t('users-form-name-required') : undefined))
-const errorText = computed(() => (error.value ? $t(error.value) : undefined))
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -72,7 +71,6 @@ function onCancel() {
       :submit-label="$t('action-save')"
       :cancel-label="$t('action-cancel')"
       :busy="busy"
-      :error="errorText"
       @submit="onSubmit"
       @cancel="onCancel"
     />

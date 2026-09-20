@@ -44,7 +44,6 @@ const title = computed(() =>
 const canSubmit = computed(() => Boolean(props.id) || Boolean(schoolId.value))
 const canEdit = computed(() => (props.id ? canUpdate.value : canCreate.value))
 const nameError = computed(() => (invalid.value ? $t('roles-form-name-required') : undefined))
-const errorText = computed(() => (error.value ? $t(error.value) : undefined))
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -130,7 +129,6 @@ async function send(): Promise<void> {
         :cancel-label="$t('action-cancel')"
         :busy="busy"
         :disabled="!canSubmit"
-        :error="errorText"
         @submit="onSubmit"
         @cancel="onCancel"
       />

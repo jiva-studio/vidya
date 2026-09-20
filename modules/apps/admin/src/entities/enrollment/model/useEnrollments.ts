@@ -14,7 +14,7 @@ import { useEnrollmentLookup } from './useEnrollmentLookup'
  *
  * The list endpoint narrows by permission rather than by school, so the rows
  * are kept to the courses of the school in hand; without that, switching school
- * would leave another school's requests on screen (AC-6).
+ * would leave another school's requests on screen.
  *
  * Neither the names of people nor the names of courses are this entity's to
  * fetch — both live in other slices — so the caller passes them in and the same

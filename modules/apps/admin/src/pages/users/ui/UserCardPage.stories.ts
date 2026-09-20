@@ -68,7 +68,7 @@ export const Empty: Story = {
 }
 
 export const Failed: Story = {
-  render: over({ ...card, [USER]: refusal(404, 'Такого человека нет') }),
+  render: over({ ...card, [USER]: refusal(404, 'No such person') }),
 }
 
 export const Denied: Story = { render: over(card, READER) }

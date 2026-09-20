@@ -1,0 +1,151 @@
+{
+  "files": {
+    "src/lib/utils.ts": {
+      "language": "typescript",
+      "mutants": [
+        {
+          "id": "0",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "\n RUN  v5.0.1 /home/akd/Projects/jiva-studio/vidya/source/vidya-lesson-editor/modules/libs/ui/.stryker-tmp/sandbox-8TV1Mg\n\n\n ❯ src/components/Thumbnail/Thumbnail.spec.ts (3 tests | 1 failed) 89ms\n   ❯ Thumbnail (3)\n\n     × marks the tile the author picked 25ms\n\n ❯ src/components/Table/Table.spec.ts (7 tests | 1 failed) 117ms\n   ❯ Table (7)\n     × keeps a row action in the middle of its row 9ms\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯\n\n\n FAIL  src/components/Table/Table.spec.ts > Table > keeps a row action in the middle of its row\nAssertionError: expected [] to include 'align-middle'\n ❯ src/components/Table/Table.spec.ts:47:41\n\n     45|     const wrapper = mount(TableCell, { props: { actions: true }, slots…\n     46|\n     47|     expect(wrapper.get('td').classes()).toContain('align-middle')\n       |                                         ^\n     48|     expect(wrapper.get('td div').classes()).toContain('items-center')\n     49|   })\n\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\n\n FAIL  src/components/Thumbnail/Thumbnail.spec.ts > Thumbnail > marks the tile the author picked\n\nAssertionError: expected [] to include 'border-[var(--color-primary)]'\n ❯ src/components/Thumbnail/Thumbnail.spec.ts:30:30\n     28|\n     29|     expect(plain.classes()).not.toContain('border-[var(--color-primary…\n     30|     expect(picked.classes()).toContain('border-[var(--color-primary)]')\n       |                              ^\n     31|   })\n     32| })\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯\n\n\n\n\n Test Files  2 failed | 9 passed (11)\n      Tests  2 failed | 46 passed (48)\n\n   Start at  18:25:38\n\n   Duration  2.78s (environment 45%, import 24%, transform 20%, tests 9%, setup 1%, worker 1%)\n\n\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 2,
+              "line": 8
+            },
+            "start": {
+              "column": 53,
+              "line": 6
+            }
+          }
+        }
+      ],
+      "source": "import { type ClassValue, clsx } from 'clsx'\nimport { twMerge } from 'tailwind-merge'\n\n// The one place class lists are joined. Components pass arrays from their\n// styles.ts plus whatever the caller handed down through `class`.\nexport function cn(...inputs: ClassValue[]): string {\n  return twMerge(clsx(inputs))\n}\n"
+    }
+  },
+  "schemaVersion": "1.0",
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "break": 50
+  },
+  "testFiles": {
+    "": {
+      "tests": [
+        {
+          "id": "0",
+          "name": "All tests"
+        }
+      ]
+    }
+  },
+  "projectRoot": "/home/akd/Projects/jiva-studio/vidya/source/vidya-lesson-editor/modules/libs/ui",
+  "config": {
+    "$schema": "../../node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+    "packageManager": "npm",
+    "testRunner": "command",
+    "commandRunner": {
+      "command": "npx vitest run"
+    },
+    "coverageAnalysis": "off",
+    "incremental": true,
+    "incrementalFile": "../../../.stryker/incremental/ui.json",
+    "mutate": [
+      "src/lib/utils.ts"
+    ],
+    "reporters": [
+      "clear-text",
+      "progress"
+    ],
+    "clearTextReporter": {
+      "maxTestsToLog": 0,
+      "allowColor": true,
+      "allowEmojis": false,
+      "logTests": true,
+      "reportTests": true,
+      "reportMutants": true,
+      "reportScoreTable": true,
+      "skipFull": false
+    },
+    "timeoutMS": 120000,
+    "timeoutFactor": 2,
+    "dryRunTimeoutMinutes": 15,
+    "concurrency": 4,
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 50
+    },
+    "allowConsoleColors": true,
+    "checkers": [],
+    "checkerNodeArgs": [],
+    "dashboard": {
+      "baseUrl": "https://dashboard.stryker-mutator.io/api/reports",
+      "reportType": "full"
+    },
+    "dryRunOnly": false,
+    "eventReporter": {
+      "baseDir": "reports/mutation/events"
+    },
+    "ignorePatterns": [],
+    "ignoreStatic": false,
+    "force": false,
+    "fileLogLevel": "off",
+    "inPlace": false,
+    "logLevel": "info",
+    "maxConcurrentTestRunners": 9007199254740991,
+    "maxTestRunnerReuse": 0,
+    "mutator": {
+      "plugins": null,
+      "excludedMutations": []
+    },
+    "plugins": [
+      "@stryker-mutator/*"
+    ],
+    "appendPlugins": [],
+    "htmlReporter": {
+      "fileName": "reports/mutation/mutation.html"
+    },
+    "jsonReporter": {
+      "fileName": "reports/mutation/mutation.json"
+    },
+    "disableTypeChecks": true,
+    "symlinkNodeModules": true,
+    "tempDirName": ".stryker-tmp",
+    "cleanTempDir": true,
+    "testRunnerNodeArgs": [],
+    "tsconfigFile": "tsconfig.json",
+    "warnings": true,
+    "disableBail": false,
+    "allowEmpty": false,
+    "ignorers": [],
+    "testFiles": [],
+    "jest": {
+      "projectType": "custom",
+      "enableFindRelatedTests": true
+    },
+    "vitest": {
+      "related": true
+    }
+  },
+  "framework": {
+    "name": "StrykerJS",
+    "version": "10.0.0",
+    "branding": {
+      "homepageUrl": "https://stryker-mutator.io",
+      "imageUrl": "data:image/svg+xml;utf8,%3Csvg viewBox='0 0 1458 1458' xmlns='http://www.w3.org/2000/svg' fill-rule='evenodd' clip-rule='evenodd' stroke-linejoin='round' stroke-miterlimit='2'%3E%3Cpath fill='none' d='M0 0h1458v1458H0z'/%3E%3CclipPath id='a'%3E%3Cpath d='M0 0h1458v1458H0z'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath d='M1458 729c0 402.655-326.345 729-729 729S0 1131.655 0 729C0 326.445 326.345 0 729 0s729 326.345 729 729' fill='%23e74c3c' fill-rule='nonzero'/%3E%3Cpath d='M778.349 1456.15L576.6 1254.401l233-105 85-78.668v-64.332l-257-257-44-187-50-208 251.806-82.793L1076.6 389.401l380.14 379.15c-19.681 367.728-311.914 663.049-678.391 687.599z' fill-opacity='.3'/%3E%3Cpath d='M753.4 329.503c41.79 0 74.579 7.83 97.925 25.444 23.571 18.015 41.69 43.956 55.167 77.097l11.662 28.679 165.733-58.183-14.137-32.13c-26.688-60.655-64.896-108.61-114.191-144.011-49.329-35.423-117.458-54.302-204.859-54.302-50.78 0-95.646 7.376-134.767 21.542-40.093 14.671-74.09 34.79-102.239 60.259-28.84 26.207-50.646 57.06-65.496 92.701-14.718 35.052-22.101 72.538-22.101 112.401 0 72.536 20.667 133.294 61.165 182.704 38.624 47.255 98.346 88.037 179.861 121.291 42.257 17.475 78.715 33.125 109.227 46.994 27.193 12.361 49.294 26.124 66.157 41.751 15.309 14.186 26.497 30.584 33.63 49.258 7.721 20.214 11.16 45.69 11.16 76.402 0 28.021-4.251 51.787-13.591 71.219-8.832 18.374-20.171 33.178-34.523 44.219-14.787 11.374-31.193 19.591-49.393 24.466-19.68 5.359-39.14 7.993-58.69 7.993-29.359 0-54.387-3.407-75.182-10.747-20.112-7.013-37.144-16.144-51.259-27.486-13.618-11.009-24.971-23.766-33.744-38.279-9.64-15.8-17.272-31.924-23.032-48.408l-10.965-31.376-161.669 60.585 10.734 30.124c10.191 28.601 24.197 56.228 42.059 82.748 18.208 27.144 41.322 51.369 69.525 72.745 27.695 21.075 60.904 38.218 99.481 51.041 37.777 12.664 82.004 19.159 132.552 19.159 49.998 0 95.818-8.321 137.611-24.622 42.228-16.471 78.436-38.992 108.835-67.291 30.719-28.597 54.631-62.103 71.834-100.642 17.263-38.56 25.923-79.392 25.923-122.248 0-54.339-8.368-100.37-24.208-138.32-16.29-38.759-38.252-71.661-65.948-98.797-26.965-26.418-58.269-48.835-93.858-67.175-33.655-17.241-69.196-33.11-106.593-47.533-35.934-13.429-65.822-26.601-89.948-39.525-22.153-11.868-40.009-24.21-53.547-37.309-11.429-11.13-19.83-23.678-24.718-37.664-5.413-15.49-7.98-33.423-7.98-53.577 0-40.883 11.293-71.522 37.086-90.539 28.443-20.825 64.985-30.658 109.311-30.658z' fill='%23f1c40f' fill-rule='nonzero'/%3E%3Cpath d='M720 0h18v113h-18zM1458 738v-18h-113v18h113zM720 1345h18v113h-18zM113 738v-18H0v18h113z'/%3E%3C/g%3E%3C/svg%3E"
+    },
+    "dependencies": {
+      "@stryker-mutator/jest-runner": "10.0.0",
+      "jest": "29.7.0",
+      "typescript": "5.9.3",
+      "webpack": "5.106.2",
+      "ts-jest": "29.4.12"
+    }
+  }
+}

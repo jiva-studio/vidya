@@ -6,6 +6,8 @@ import type {
   GetLessonsQuery,
   GetLessonsResponse,
   GetLessonVersionsResponse,
+  UpdateLessonRequest,
+  UpdateLessonResponse,
 } from '@vidya/protocol'
 import { Routes } from '@vidya/protocol'
 
@@ -34,6 +36,15 @@ export const getLessonVersions = (
   lessonId: LessonId,
 ): Promise<GetLessonVersionsResponse> =>
   http.get<GetLessonVersionsResponse>(Routes().edu.lessons.versions.all(lessonId))
+
+export const renameLesson = (
+  http: HttpClient,
+  id: LessonId,
+  title: string,
+): Promise<UpdateLessonResponse> =>
+  http.patch<UpdateLessonResponse>(Routes().edu.lessons.update(id), {
+    title,
+  } as UpdateLessonRequest)
 
 export const createLesson = (
   http: HttpClient,

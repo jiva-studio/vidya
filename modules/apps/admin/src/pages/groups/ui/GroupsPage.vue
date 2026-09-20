@@ -64,7 +64,7 @@ function onClear() {
     <GroupsTable
       :rows="displayedItems"
       :loading="groups.loading.value"
-      :error="groups.error.value && $t(groups.error.value)"
+      :error="groups.error.value ? $t('state-error') : undefined"
       :can-create="canCreate"
       :can-edit="canEdit"
       @retry="onRetry"

@@ -1,19 +1,18 @@
 # Тексты редактора урока. Владелец — T5.
 
 editor-title = Редактор урока
-editor-back = К урокам
-editor-save = Сохранить черновик
+editor-title-label = Название урока
+editor-title-placeholder = Урок без названия
 editor-publish = Опубликовать
 editor-new-revision = Новая версия
-editor-unsaved = Есть несохранённые правки
 editor-retry = Повторить
 
 version-title = Версия урока
 version-subtitle = Опубликованную версию изменить нельзя.
 version-back = Назад
 
-editor-state-draft = Черновик v{ $version }
-editor-state-published = Опубликована v{ $version }
+editor-state-draft = Черновик
+editor-state-published = Опубликовано
 
 editor-no-versions = У этого урока нет ни одной версии.
 editor-load-failed = Не удалось загрузить содержимое урока.
@@ -22,10 +21,6 @@ editor-publish-failed = Не удалось опубликовать верси�
 editor-revision-failed = Не удалось начать новую версию.
 
 # Письмо или чтение
-
-editor-mode-label = Режим
-editor-mode-write = Редактирование
-editor-mode-read = Чтение
 
 # Секции
 
@@ -49,10 +44,11 @@ editor-section-remove-cancel = Оставить
 
 editor-homework-placeholder = Нужна ли работа?
 editor-homework-label = Домашняя работа
-editor-homework-none = Не задаётся
-editor-homework-auto = Задаётся, проверяется автоматически
-editor-homework-teacher = Задаётся, проверяет преподаватель
+editor-homework-none = Нет
+editor-homework-auto = Проверяется автоматически
+editor-homework-teacher = Проверяет преподаватель
 editor-homework-note = Отдельного поля для задания нет — сформулируйте его в тексте секции
+editor-homework-needs-quiz = Проверять автоматически нечего: в секции нет вопросов
 
 # Блоки
 
@@ -60,6 +56,7 @@ editor-block-text = Текст
 editor-block-video = Видео
 editor-block-audio = Аудио
 editor-block-quiz = Вопрос
+editor-block-section = Секция
 editor-block-add = Добавить блок
 editor-block-up = Переместить блок «{ $block }» выше
 editor-block-down = Переместить блок «{ $block }» ниже
@@ -73,7 +70,7 @@ editor-block-unknown-body = Здесь его не отредактироват�
 editor-text-label = Текст урока
 editor-text-edit = Редактировать текст
 editor-text-hint = Markdown: # заголовок, **жирный**, *курсив*, - список, [ссылка](https://example.org), > цитата
-editor-text-placeholder = Наберите текст урока здесь.
+editor-text-placeholder = Текст урока, или «/» чтобы вставить блок
 
 editor-source-placeholder = Выберите источник
 editor-source-label = Источник
@@ -132,3 +129,70 @@ publish-confirm-title = Опубликовать эту версию?
 publish-confirm-body = Версию { $version } начнут читать студенты. Изменить её потом нельзя — только создать новую.
 publish-confirm-submit = Опубликовать
 publish-confirm-cancel = Отмена
+
+# Файлы в медиа-блоке
+
+editor-media-refused-image = В этот блок можно положить только изображение.
+editor-media-refused-video = В этот блок можно положить только видео.
+editor-media-refused-audio = В этот блок можно положить только аудио.
+editor-media-uploading = Загрузка
+editor-media-cancel = Отмена
+editor-media-retry = Повторить
+editor-media-uploaded = { $name } загружен
+editor-media-replace = Заменить
+editor-media-caption-label = Подпись
+editor-media-caption-hint = Показывается под файлом. Необязательно.
+editor-media-preview-alt = Загруженный файл
+editor-media-unavailable = Пока недоступно. Загруженные здесь файлы живут только до перезагрузки страницы.
+
+# Выбор файла
+
+media-picker-title = Выберите файл
+media-picker-close = Закрыть
+media-picker-tab-upload = Загрузка
+media-picker-tab-library = Библиотека
+media-picker-tab-link = Ссылка
+media-picker-drop-label = Перетащите файл сюда
+media-picker-search = Поиск по названию
+media-picker-empty-title = Здесь пока пусто
+media-picker-empty-body = Загрузите файл или поищите по другому названию.
+media-picker-failed-title = Не удалось прочитать библиотеку
+media-picker-retry = Повторить
+media-picker-link-label = Ссылка
+media-picker-link-hint = YouTube, Vimeo или прямая ссылка на файл
+media-picker-link-submit = Использовать ссылку
+
+# Медиа, которое не удалось сохранить
+
+media-upload-failed = Не удалось загрузить файл.
+media-upload-cancelled = Загрузка остановлена.
+media-unavailable = Файлы пока негде хранить.
+editor-block-image = Изображение
+editor-block-menu = Действия с блоком
+editor-section-menu = Действия с разделом
+editor-move-up = Вверх
+editor-move-down = Вниз
+editor-duplicate = Дублировать
+editor-delete = Удалить
+# Вопрос
+editor-quiz-explanation-label = Пояснение
+editor-quiz-explanation-placeholder = Почему ответ именно такой? Покажем после ответа.
+# Сохранение
+
+editor-status-saving = Сохраняем…
+editor-status-saved = Сохранено
+editor-status-failed = Не сохранено
+editor-save-retry = Сохранить ещё раз
+
+# Незаполненные блоки
+
+editor-faults-title = Эту версию пока нельзя опубликовать
+editor-fault-block = Раздел { $section }, блок { $position } не заполнен.
+
+editor-media-add-image = Добавить изображение
+editor-media-add-video = Добавить видео
+editor-media-add-audio = Добавить аудио
+editor-media-drop-hint-image = PNG, JPG, GIF или SVG
+editor-media-drop-hint-video = MP4, WebM или MOV
+editor-media-drop-hint-audio = MP3, WAV или OGG
+editor-media-browse = Выбрать файл

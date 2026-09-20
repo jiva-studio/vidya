@@ -112,8 +112,8 @@ describe('CourseFormPage', () => {
     expect((page.get('input').element as HTMLInputElement).value).toBe('Kirtan practice')
   })
 
-  it('shows the reason a save was refused instead of a generic failure', async () => {
-    const { page } = await open('/courses/new', {
+  it('reports the reason a save was refused, and keeps it out of the form', async () => {
+    const { page, transport } = await open('/courses/new', {
       [COURSES]: refusal(409, 'A course with that name already exists'),
     })
 
@@ -121,7 +121,10 @@ describe('CourseFormPage', () => {
     await page.get('form').trigger('submit')
     await flushPromises()
 
-    expect(page.text()).toContain('A course with that name already exists')
+    expect(transport.failures).toEqual([
+      { key: 'failure-conflict', reason: 'A course with that name already exists' },
+    ])
+    expect(page.text()).not.toContain('A course with that name already exists')
   })
 
   it('offers a retry rather than an empty form when the course could not be read', async () => {
@@ -130,7 +133,7 @@ describe('CourseFormPage', () => {
     })
 
     expect(page.text()).not.toContain('The database is asleep')
-    expect(page.text()).toContain('The server could not do this')
+    expect(page.text()).toContain('That did not work. Try again.')
     expect(page.find('form').exists()).toBe(false)
   })
 })
