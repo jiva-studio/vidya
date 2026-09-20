@@ -2,6 +2,10 @@
 
 ## Environment Variables
 
+#### `VIDYA_JWT_SECRET`
+
+The key the API signs and verifies access and refresh tokens with. Required, at least 32 characters (the floor for HS256), and shared across every replica of the API — the process refuses to start without it rather than fall back to a well-known key or generate one at boot, either of which would make the auth model trivial to forge or replica-specific. See `docs/Development Environment.md` for the local dev value.
+
 #### `VIDYA_AUTH_USER_PERMISSIONS_CACHE_TTL`.
 Time to live for the user permissions cache in seconds. Set to 0 to disable caching for development purposes for example.
 

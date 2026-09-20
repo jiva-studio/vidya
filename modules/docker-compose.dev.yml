@@ -7,6 +7,12 @@
 #
 # Nothing here is reachable on a default port, so a system Postgres or Redis
 # already running on this machine cannot be hit by accident.
+#
+# The API is not one of these services — it runs on the host, via `make dev` —
+# so its environment is not set here. That includes VIDYA_JWT_SECRET, which
+# `make dev` exports a fixture value for; see the "Local stand" section of the
+# root Makefile. It has no default in code: `configs/jwt.config.ts` refuses to
+# start without it.
 
 services:
   postgres:
