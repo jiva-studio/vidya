@@ -1,6 +1,7 @@
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { PERMISSIONS_CACHE_EVICTION, PermissionsCacheEviction } from '@vidya/api/edu/ports'
+import { AuditLogService } from '@vidya/api/shared/services'
 import * as domain from '@vidya/domain'
 import { Role, UserRole } from '@vidya/entities'
 import { DeepPartial, EntityManager, FindOptionsWhere, In, Repository } from 'typeorm'
@@ -15,6 +16,7 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
     @InjectRepository(UserRole) private userRolesRepo: Repository<UserRole>,
     private readonly enrollments: EnrollmentsService,
     @Inject(PERMISSIONS_CACHE_EVICTION) private readonly permissionsCache: PermissionsCacheEviction,
+    private readonly auditLog: AuditLogService,
   ) {
     super(repository, (query, scope) => {
       // FindOptionsWhere<Role> does not surface the entity's own fields, hence the cast.
@@ -34,6 +36,29 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
           }
         : { where: { schoolId: In([]) } }
     })
+  }
+
+  /**
+   * Creates a role and records who created it.
+   *
+   * No holder can exist yet, so there is nothing to evict and nothing to wrap
+   * in a transaction of its own — the audit write is fire-and-forget here,
+   * the same way an authentication event is, rather than inventing a
+   * transaction whose only purpose would be to cover the audit call.
+   */
+  async create(request: DeepPartial<Role>, actorUserId?: domain.UserId | null): Promise<Role> {
+    const role = await super.create(request)
+
+    await this.auditLog.record({
+      action: 'edu.role.created',
+      actorUserId: actorUserId ?? null,
+      subjectType: 'role',
+      subjectId: role.id,
+      schoolId: role.schoolId,
+      payload: { name: role.name, permissions: role.permissions },
+    })
+
+    return role
   }
 
   async getRolesOfUser(userId: domain.UserId): Promise<Role[]> {
@@ -84,6 +109,7 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
     userId: domain.UserId,
     roleIds: domain.RoleId[],
     schoolIds: domain.SchoolId[],
+    actorUserId?: domain.UserId | null,
   ): Promise<void> {
     await this.assertRolesWithin(roleIds, schoolIds)
 
@@ -91,10 +117,14 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
       .filter((role) => !schoolIds.includes(role.schoolId))
       .map((role) => role.id)
 
-    await this.setRolesForUser(userId, [...elsewhere, ...roleIds])
+    await this.setRolesForUser(userId, [...elsewhere, ...roleIds], actorUserId)
   }
 
-  async setRolesForUser(userId: domain.UserId, roleIds: domain.RoleId[]): Promise<void> {
+  async setRolesForUser(
+    userId: domain.UserId,
+    roleIds: domain.RoleId[],
+    actorUserId?: domain.UserId | null,
+  ): Promise<void> {
     const existing = await this.userRolesRepo.findBy({ userId })
 
     // find roles to add or remove
@@ -133,6 +163,16 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
       if (rolesToAssign.length > 0 || rolesToRemove.length > 0) {
         await this.permissionsCache.evict([userId])
       }
+
+      // Audited on the same manager as the rest of this callback, so a throw
+      // above — including inside the eviction — leaves no row behind either.
+      await this.recordRoleAssignmentChanges(
+        transactionalEntityManager,
+        userId,
+        rolesToAssign,
+        rolesToRemove.map((userRole) => userRole.roleId),
+        actorUserId,
+      )
     })
   }
 
@@ -143,11 +183,18 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
    * database cascades the role off its holders, and a holder left with nothing
    * in that school has stopped belonging to it.
    */
-  async deleteOneBy(query: FindOptionsWhere<Role>): Promise<void> {
+  async deleteOneBy(
+    query: FindOptionsWhere<Role>,
+    actorUserId?: domain.UserId | null,
+  ): Promise<void> {
     await this.repository.manager.transaction(async (manager) => {
       const role = await manager.findOneBy(Role, query)
 
       if (!role) return
+
+      // Captured before `remove` — TypeORM clears an entity's primary key
+      // once it has been removed, and the audit entry below is written after.
+      const roleId = role.id
 
       const holders = (await manager.findBy(UserRole, { roleId: role.id })).map(
         (userRole) => userRole.userId,
@@ -167,6 +214,24 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
       if (holders.length > 0) {
         await this.permissionsCache.evict(holders)
       }
+
+      // One entry per holder — a role deletion is really "each of these
+      // people lost this access", which is the question this table exists to
+      // answer. Written on the same manager, so a throw anywhere above —
+      // including the eviction — leaves none of them behind.
+      for (const holder of holders) {
+        await this.auditLog.record(
+          {
+            action: 'edu.role.deleted',
+            actorUserId: actorUserId ?? null,
+            subjectType: 'user',
+            subjectId: holder,
+            schoolId: role.schoolId,
+            payload: { roleId, roleName: role.name },
+          },
+          manager,
+        )
+      }
     })
   }
 
@@ -179,7 +244,11 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
    * about the row alone — and the base method, shared by every other entity in
    * this hierarchy, has no business knowing that.
    */
-  async updateOneBy(query: FindOptionsWhere<Role>, request: DeepPartial<Role>): Promise<Role> {
+  async updateOneBy(
+    query: FindOptionsWhere<Role>,
+    request: DeepPartial<Role>,
+    actorUserId?: domain.UserId | null,
+  ): Promise<Role> {
     return await this.repository.manager.transaction(async (manager) => {
       const entity = await manager.findOneBy(Role, query)
       const updated = await manager.save(Role, manager.merge(Role, entity, request))
@@ -193,6 +262,22 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
       // before Redis and the transaction's COMMIT ever agree.
       if (holders.length > 0) {
         await this.permissionsCache.evict(holders)
+      }
+
+      // Only when the request actually touched permissions — a name or
+      // description edit is not the event this table exists to answer.
+      if (request.permissions !== undefined) {
+        await this.auditLog.record(
+          {
+            action: 'edu.role.permissionsUpdated',
+            actorUserId: actorUserId ?? null,
+            subjectType: 'role',
+            subjectId: updated.id,
+            schoolId: updated.schoolId,
+            payload: { permissions: updated.permissions },
+          },
+          manager,
+        )
       }
 
       return updated
@@ -243,6 +328,44 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
 
     if (remaining === 0) {
       await this.enrollments.revokePlacesIn(userId, schoolId, manager)
+    }
+  }
+
+  /**
+   * One entry per role assigned and per role removed — `setRolesForUser`
+   * replaces a set, but "what did this user reach, and for how long" needs
+   * the individual grants and revocations, not the set's before/after.
+   */
+  private async recordRoleAssignmentChanges(
+    manager: EntityManager,
+    userId: domain.UserId,
+    assignedRoleIds: domain.RoleId[],
+    removedRoleIds: domain.RoleId[],
+    actorUserId: domain.UserId | null | undefined,
+  ): Promise<void> {
+    const touchedRoleIds = [...assignedRoleIds, ...removedRoleIds]
+    if (touchedRoleIds.length === 0) return
+
+    const roles = await manager.find(Role, { where: { id: In(touchedRoleIds) } })
+    const schoolIdOf = new Map(roles.map((role) => [role.id, role.schoolId]))
+
+    const entries = [
+      ...assignedRoleIds.map((roleId) => ({ action: 'edu.role.assigned' as const, roleId })),
+      ...removedRoleIds.map((roleId) => ({ action: 'edu.role.removed' as const, roleId })),
+    ]
+
+    for (const { action, roleId } of entries) {
+      await this.auditLog.record(
+        {
+          action,
+          actorUserId: actorUserId ?? null,
+          subjectType: 'user',
+          subjectId: userId,
+          schoolId: schoolIdOf.get(roleId) ?? null,
+          payload: { roleId },
+        },
+        manager,
+      )
     }
   }
 }

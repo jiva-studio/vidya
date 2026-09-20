@@ -24,10 +24,11 @@ export class AuditLogService {
    *
    * Pass `manager` when the action being audited runs inside a transaction the
    * entry must share — a rolled-back change must leave no row, and a
-   * committed one must always have its own. That is how the `edu` call sites
-   * (role assignment, role removal, school creation) will use this once they
-   * are wired up. Authentication events have no surrounding transaction, so
-   * they call this with no manager and accept that a write can be lost, same
+   * committed one must always have its own. `RolesService` and
+   * `SchoolCreationService` do this for role assignment, role removal, role
+   * deletion, a permission rewrite and school creation. Authentication events
+   * (and a plain role creation, which has no surrounding transaction of its
+   * own) call this with no manager and accept that a write can be lost, same
    * as any other fire-and-forget insert.
    *
    * Never put a credential in `entry.payload` — an OTP code, an access or
