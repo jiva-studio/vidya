@@ -115,9 +115,11 @@ export class UserAuthenticationController {
     // revoke access token to prevent reusing it
     await this.revokedTokensService.revoke(auth.accessToken)
 
-    // revoke refresh token if still valid
+    // revoke refresh token if still valid and it belongs to the caller;
+    // silently skip a mismatch instead of rejecting, since a 403 would tell
+    // the caller that the token they guessed was valid and someone else's
     const token = await this.authService.verifyToken(request.refreshToken, 'refresh')
-    if (token) {
+    if (token && token.sub === auth.userId) {
       await this.revokedTokensService.revoke(token)
     }
 

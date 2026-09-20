@@ -16,24 +16,25 @@ describe('/auth', () => {
 
   const routes = protocol.Routes()
   const LOGIN = 'student@example.com'
+  const OTHER_LOGIN = 'other-student@example.com'
 
   const server = () => ctx.app.getHttpServer()
 
   /** Asks for a code and reads it out of the mail that was "sent". */
-  const requestCode = async (): Promise<string> => {
+  const requestCode = async (login: string = LOGIN): Promise<string> => {
     await request(server())
       .post(routes.otp.root())
-      .send({ type: 'email', destination: LOGIN })
+      .send({ type: 'email', destination: login })
       .expect(200)
 
     return ctx.mail.last.context.code
   }
 
-  const signIn = async (): Promise<protocol.OtpSignInResponse> => {
-    const code = await requestCode()
+  const signIn = async (login: string = LOGIN): Promise<protocol.OtpSignInResponse> => {
+    const code = await requestCode(login)
     const response = await request(server())
       .post(routes.auth.signIn('otp'))
-      .send({ login: LOGIN, otp: code })
+      .send({ login, otp: code })
       .expect(201)
 
     return response.body as protocol.OtpSignInResponse
@@ -225,6 +226,28 @@ describe('/auth', () => {
     return request(server())
       .post(routes.auth.tokens.refresh())
       .send({ refreshToken: tokens.refreshToken })
+      .expect(401)
+  })
+
+  it('does not let one user revoke another users refresh token', async () => {
+    const userA = await signIn()
+    const userB = await signIn(OTHER_LOGIN)
+
+    await request(server())
+      .post(routes.auth.signOut())
+      .auth(userA.accessToken, { type: 'bearer' })
+      .send({ refreshToken: userB.refreshToken })
+      .expect(201)
+
+    await request(server())
+      .post(routes.auth.tokens.refresh())
+      .send({ refreshToken: userB.refreshToken })
+      .expect(200)
+
+    return request(server())
+      .post(routes.auth.signOut())
+      .auth(userA.accessToken, { type: 'bearer' })
+      .send({ refreshToken: userA.refreshToken })
       .expect(401)
   })
 
