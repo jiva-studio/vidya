@@ -105,4 +105,19 @@ export class AuthUsersService {
       return permissions
     }
   }
+
+  /**
+   * Forgets the cached permissions of the given users.
+   *
+   * The cache is owned here — this is the only place that knows the key shape
+   * and holds the Redis client that writes it — so every context whose action
+   * changes what a user may do (`edu`'s roles and school creation, today)
+   * reaches this through a port rather than the key itself. A miss just means
+   * the next `getUserPermissions` recomputes from the database, so evicting a
+   * user who did not need it costs a read, never correctness.
+   * @param userIds Ids of the users whose cached permissions are now stale.
+   */
+  async evictUserPermissions(userIds: domain.UserId[]): Promise<void> {
+    await Promise.all(userIds.map((userId) => this.redis.del(UserPermissionsStorageKey(userId))))
+  }
 }
