@@ -4,6 +4,8 @@ import type {
   CourseLearningType,
   EnrollmentId,
   EnrollmentStatus,
+  GroupId,
+  GroupStatus,
   HomeworkId,
   HomeworkStatus,
   IsoDateTime,
@@ -87,6 +89,19 @@ export interface LocalLessonVersion {
   readonly publishedAt: IsoDateTime | null
 }
 
+export interface LocalGroup {
+  readonly id: GroupId
+  readonly schoolId: SchoolId
+  readonly courseId: CourseId
+  readonly name: string
+  readonly description: string | null
+
+  /** Stamped when recruitment closed; `null` while the group is still taking students. */
+  readonly startsAt: IsoDateTime | null
+
+  readonly status: GroupStatus
+}
+
 export interface LocalEnrollment {
   readonly id: EnrollmentId
   readonly schoolId: SchoolId
@@ -163,6 +178,20 @@ export interface ICourseRepository {
 export interface ILessonRepository {
   listByCourse(courseId: CourseId): Promise<readonly LocalLesson[]>
   getById(id: LessonId): Promise<LocalLesson | null>
+}
+
+export interface IGroupRepository {
+  /**
+   * The groups of a course that are still taking students.
+   *
+   * The filter belongs to the query and not to the screens: two of them read
+   * this list, and one predicate written twice will one day disagree with
+   * itself about which group is still open.
+   */
+  listRecruitingByCourse(courseId: CourseId): Promise<readonly LocalGroup[]>
+
+  /** Unfiltered: an accepted student's own group is shown whatever its status. */
+  getById(id: GroupId): Promise<LocalGroup | null>
 }
 
 export interface ILessonVersionRepository {

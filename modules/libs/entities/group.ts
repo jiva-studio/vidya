@@ -9,7 +9,7 @@ export class Group {
   @PrimaryGeneratedColumn('uuid')
   id: GroupId
 
-  @Column({ unique: true })
+  @Column({ nullable: false })
   name: string
 
   @Column({ nullable: true })
@@ -29,7 +29,7 @@ export class Group {
   @JoinColumn()
   school: School
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   startsAt: Date
 
   @Column({ type: 'enum', enum: GroupStatuses, enumName: 'groupStatus', default: 'pending' })

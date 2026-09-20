@@ -105,6 +105,23 @@ export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionP
       ],
     },
 
+    // No tombstone: a group that ends says so in its status, and the device
+    // needs the closed ones to know recruitment is over.
+    groups: {
+      collection: 'groups',
+      table: 'groups',
+      tombstone: null,
+      columns: [
+        text('id', 'id', KEY),
+        text('school_id', 'schoolId', KEY),
+        text('course_id', 'courseId', KEY),
+        text('name', 'name', EMPTY),
+        text('description', 'description'),
+        text('starts_at', 'startsAt'),
+        text('status', 'status', { fallback: 'pending' }),
+      ],
+    },
+
     lessons: {
       collection: 'lessons',
       table: 'lessons',
@@ -151,6 +168,10 @@ export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionP
         text('decided_at', 'decidedAt'),
         text('created_at', 'createdAt', EMPTY),
         text('deleted_at', 'deletedAt'),
+        text('preferred_group_id', 'preferredGroupId'),
+        { column: 'preferred_times', field: 'preferredTimes', kind: 'json' },
+        text('comment', 'comment'),
+        text('archived_by_student_at', 'archivedByStudentAt'),
       ],
     },
 

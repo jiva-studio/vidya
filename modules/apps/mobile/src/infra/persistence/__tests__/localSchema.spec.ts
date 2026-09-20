@@ -1,35 +1,31 @@
+import { SyncCollections } from '@vidya/domain'
 import { describe, expect, it } from 'vitest'
 
 import type { IDatabase } from '@/ports'
 
 import { listTables, openTestDatabase } from '../testing'
 
-/** Every table the device migrations declare, plus the bookkeeping one. */
-const ALL_TABLES = [
-  'block_states',
-  'courses',
-  'enrollments',
-  'homework',
-  'lesson_versions',
-  'lessons',
-  'migrations',
-  'outbox',
-  'schools',
-  'sync_doc_hlc',
-  'sync_scopes',
-  'sync_state',
-]
+/**
+ * The collections that sync, and so carry both axes of the layout.
+ *
+ * Derived, not typed out. A collection's name is its table's name on both
+ * sides — `SyncCollections` says so — and a list kept by hand falls one
+ * collection behind every time one is added, which is the moment the checks
+ * below are most worth having. Derived, the same list says something stronger:
+ * a collection the domain declares and the migrations never built fails here,
+ * and so does a table the migrations built for nothing.
+ */
+const SYNCED_TABLES = [...SyncCollections].sort()
 
-/** The collections that sync, and so carry both axes of the layout. */
-const SYNCED_TABLES = [
-  'block_states',
-  'courses',
-  'enrollments',
-  'homework',
-  'lesson_versions',
-  'lessons',
-  'schools',
-]
+/**
+ * The tables that are the device's own business — the migration ledger and the
+ * engine's bookkeeping. This list does stay by hand: it does not grow with the
+ * collections, and a new one here is a decision rather than a consequence.
+ */
+const LOCAL_TABLES = ['migrations', 'outbox', 'sync_doc_hlc', 'sync_scopes', 'sync_state']
+
+/** Every table the device migrations declare. */
+const ALL_TABLES = [...SYNCED_TABLES, ...LOCAL_TABLES].sort()
 
 interface ColumnRow {
   name: string
@@ -39,7 +35,7 @@ interface ColumnRow {
 }
 
 const columnsOf = (db: IDatabase, table: string): Promise<ColumnRow[]> =>
-  db.query<ColumnRow>(`PRAGMA table_info(${table})`)
+  db.query<ColumnRow>(`PRAGMA table_info("${table}")`)
 
 const columnNames = async (db: IDatabase, table: string): Promise<string[]> =>
   (await columnsOf(db, table)).map((column) => column.name).sort()
@@ -53,7 +49,7 @@ describe('the local schema', () => {
 
       const offenders: string[] = []
       for (const table of await listTables(db)) {
-        const keys = await db.query(`PRAGMA foreign_key_list(${table})`)
+        const keys = await db.query(`PRAGMA foreign_key_list("${table}")`)
         if (keys.length > 0) offenders.push(table)
       }
 

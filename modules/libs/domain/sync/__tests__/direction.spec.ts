@@ -6,6 +6,7 @@
  * fails here instead of surfacing as a row that silently never replicates.
  */
 
+import type { SyncDirection } from '../direction'
 import {
   clientOwnedFields,
   FIELD_OWNER,
@@ -27,6 +28,20 @@ describe('SYNC_DIRECTION', () => {
     for (const collection of SyncCollections) {
       expect(SyncDirections).toContain(SYNC_DIRECTION[collection])
     }
+  })
+
+  it('replicates the catalogue of groups, downward', () => {
+    // The table is read through a widened view on purpose: a missing key has to
+    // arrive as a failed expectation naming it, not as a compile error that
+    // takes every other case in this file down with it.
+    const collections: readonly string[] = SyncCollections
+    const direction = SYNC_DIRECTION as Readonly<Record<string, SyncDirection | undefined>>
+
+    expect(collections).toContain('groups')
+
+    // The school writes the group and the student only reads it: a place in a
+    // group is assigned by moderation, never claimed from a phone.
+    expect(direction.groups).toBe('down')
   })
 
   it('keeps content flowing down and student-written rows going up', () => {

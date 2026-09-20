@@ -5,19 +5,19 @@
       "file": "cursor-ack.json",
       "name": "cursor-ack",
       "endpoint": "POST /sync/cursor",
-      "description": "Acknowledges the highest serverSeq applied across all scopes, and is answered with 204 and no body. there is no backfill endpoint and no backfill response shape — a new scope starts at 0 and is pulled (see pull-new-scope.json)."
+      "description": "Acknowledges the highest serverSeq applied across all scopes, and is answered with 204 and no body. there is no backfill endpoint and no backfill response shape \u2014 a new scope starts at 0 and is pulled (see pull-new-scope.json)."
     },
     {
       "file": "hlc-format.json",
       "name": "hlc-format",
       "endpoint": "n/a",
-      "description": "The HLC as it travels: physical unix milliseconds zero-padded to 15 digits, counter to 5, then the device id, which may itself contain colons. The padding is the point — the server compares the column as text, and that order has to be the domain order. Times beside them are UTC ISO 8601 with milliseconds."
+      "description": "The HLC as it travels: physical unix milliseconds zero-padded to 15 digits, counter to 5, then the device id, which may itself contain colons. The padding is the point \u2014 the server compares the column as text, and that order has to be the domain order. Times beside them are UTC ISO 8601 with milliseconds."
     },
     {
       "file": "optional-fields.json",
       "name": "optional-fields",
       "endpoint": "POST /sync/pull, POST /sync/push",
-      "description": "Every optional and nullable field at its edge, so both sides read them the same way: a pull request without limit, a delete tombstone whose data is null, a row whose nullable fields are all null, an empty text, an empty page with no scopes advanced, and an accepted result with no detail."
+      "description": "Every optional and nullable field at its edge, so both sides read them the same way: a pull request without limit, a delete tombstone whose data is null, a row whose nullable fields are all null, an empty text, an empty page with no scopes advanced, and an accepted result with no detail. The enrolment carries every nullable field it has, the student's own archiving stamp included: a clean install has no local row to merge, so a key left off the wire is a key that never arrives."
     },
     {
       "file": "pull-new-scope.json",
@@ -35,7 +35,7 @@
       "file": "pull-school-scope.json",
       "name": "pull-school-scope",
       "endpoint": "POST /sync/pull",
-      "description": "A student who holds a role in a school but is enrolled on nothing. The school scope carries the school itself and its courses; no lesson, version or section rides it, because content belongs to the course scope and the student has no course scope at all."
+      "description": "A student who holds a role in a school but is enrolled on nothing. The school scope carries the school itself, its courses and the groups of those courses; no lesson, version or section rides it, because content belongs to the course scope and the student has no course scope at all. The groups are what a student who is not enrolled reads before asking for a place, which is why they ride the school and not the course: the course scope is exactly what they do not have. Both statuses travel \u2014 recruitment is closed by the status, and a group whose recruitment has closed still has to reach the device, or it stays in the catalogue for ever."
     },
     {
       "file": "push-mixed.json",
@@ -47,7 +47,7 @@
       "file": "push-natural-key.json",
       "name": "push-natural-key",
       "endpoint": "POST /sync/push",
-      "description": "A row written under an id other than the one it was sent with. The natural key of a homework answer is (enrolment, version, section), so the second device of one student lands on the row the first created; serverDocId names it, and is absent on every other accepted row."
+      "description": "The second device of one student hands in a section the first has already handed in, under a local id of its own. The table's key is the natural one (enrolment, version, section), so the server writes onto the row that key already holds and the HLC decides the text. The answer names both ids: docId is what was sent, serverDocId is the row it landed in. Without the second the device would keep a local row the server has never heard of \u2014 carried by no pull, removed by no tombstone \u2014 beside the winning row arriving as a second answer to one section."
     },
     {
       "file": "push-rejections.json",

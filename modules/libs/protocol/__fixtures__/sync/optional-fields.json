@@ -1,7 +1,7 @@
 {
   "name": "optional-fields",
   "endpoint": "POST /sync/pull, POST /sync/push",
-  "description": "Every optional and nullable field at its edge, so both sides read them the same way: a pull request without limit, a delete tombstone whose data is null, a row whose nullable fields are all null, an empty text, an empty page with no scopes advanced, and an accepted result with no detail.",
+  "description": "Every optional and nullable field at its edge, so both sides read them the same way: a pull request without limit, a delete tombstone whose data is null, a row whose nullable fields are all null, an empty text, an empty page with no scopes advanced, and an accepted result with no detail. The enrolment carries every nullable field it has, the student's own archiving stamp included: a clean install has no local row to merge, so a key left off the wire is a key that never arrives.",
   "request": {
     "deviceId": "device-8f2a6c14",
     "cursors": {}
@@ -34,7 +34,11 @@
           "status": "pending",
           "groupId": null,
           "decidedById": null,
-          "decidedAt": null
+          "decidedAt": null,
+          "preferredGroupId": null,
+          "preferredTimes": null,
+          "comment": null,
+          "archivedByStudentAt": null
         },
         "hlc": "001789689609500:00000:server",
         "scope": {
@@ -68,6 +72,30 @@
           },
           "hlc": "001789689540000:00000:device-8f2a6c14",
           "baseHlc": null
+        },
+        {
+          "outboxId": 71,
+          "collection": "enrollments",
+          "docId": "3a5c7e92-4b18-4d06-9f2e-1c8b6d4a3f57",
+          "op": "upsert",
+          "data": {
+            "status": "pending",
+            "preferredGroupId": "d3f8a1b6-5e29-4c07-b84d-6a1f0e7c2953",
+            "preferredTimes": {
+              "timeZone": "Europe/Belgrade",
+              "ranges": [
+                {
+                  "days": ["mon", "wed"],
+                  "startMinute": 1080,
+                  "endMinute": 1200
+                }
+              ]
+            },
+            "comment": "Evenings suit me best.",
+            "archivedByStudentAt": null
+          },
+          "hlc": "001789689540000:00001:device-8f2a6c14",
+          "baseHlc": null
         }
       ]
     },
@@ -80,9 +108,17 @@
           "status": "accepted",
           "serverHlc": "001789689540000:00000:device-8f2a6c14",
           "restamped": false
+        },
+        {
+          "outboxId": 71,
+          "collection": "enrollments",
+          "docId": "3a5c7e92-4b18-4d06-9f2e-1c8b6d4a3f57",
+          "status": "accepted",
+          "serverHlc": "001789689540000:00001:device-8f2a6c14",
+          "restamped": false
         }
       ],
-      "journaledOutboxId": 70
+      "journaledOutboxId": 71
     }
   }
 }

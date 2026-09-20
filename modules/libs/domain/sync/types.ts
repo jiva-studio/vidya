@@ -17,6 +17,7 @@
 export const SyncCollections = [
   'schools',
   'courses',
+  'groups',
   'lessons',
   'lesson_versions',
   'enrollments',

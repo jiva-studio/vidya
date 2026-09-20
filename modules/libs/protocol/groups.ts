@@ -15,6 +15,23 @@ export type GroupDetails = {
 
 export type GroupSummary = Pick<GroupDetails, 'id' | 'name'>
 
+/**
+ * A group as it travels to a device.
+ *
+ * Separate from {@link GroupDetails} because the CRUD requests are derived from
+ * that type: `UpdateGroupRequest` is a `Partial` of it, so widening it would
+ * turn `status` into an ordinary `PATCH` field and let recruitment close around
+ * the one action that stamps `startsAt`.
+ */
+export type GroupSyncDetails = GroupDetails & {
+  schoolId: domain.SchoolId
+
+  /** Stamped when recruitment closes; `null` while the group is still taking students. */
+  startsAt: string | null
+
+  status: domain.GroupStatus
+}
+
 /* -------------------------------------------------------------------------- */
 /*                                    CRUD                                    */
 /* -------------------------------------------------------------------------- */

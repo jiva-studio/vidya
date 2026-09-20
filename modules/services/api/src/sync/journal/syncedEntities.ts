@@ -2,6 +2,7 @@ import {
   BlockState,
   Course,
   Enrollment,
+  Group,
   Homework,
   Lesson,
   LessonVersion,
@@ -23,6 +24,7 @@ import {
 export const SYNCED_ENTITIES = [
   School,
   Course,
+  Group,
   Lesson,
   LessonVersion,
   Enrollment,

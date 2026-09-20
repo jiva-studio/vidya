@@ -2,6 +2,7 @@ import type * as domain from '@vidya/domain'
 
 import type { CourseDetails } from './courses'
 import type { EnrollmentDetails } from './enrollments'
+import type { GroupSyncDetails } from './groups'
 import type { BlockStateDetails, HomeworkDetails } from './homework'
 import type { LessonDetails, LessonVersionDetails } from './lessons'
 import type { SchoolDetails } from './schools'
@@ -38,6 +39,17 @@ export const SYNC_WIRE_FIELDS: Readonly<Record<domain.SyncCollection, readonly s
       'learningType',
     ] satisfies readonly (keyof CourseDetails)[],
 
+    // No `schoolId`: the envelope states it, and the group rides the school
+    // scope because a student who has not enrolled holds no course scope.
+    groups: [
+      'id',
+      'courseId',
+      'name',
+      'description',
+      'startsAt',
+      'status',
+    ] satisfies readonly (keyof GroupSyncDetails)[],
+
     lessons: ['id', 'courseId', 'lessonNumber', 'title'] satisfies readonly (keyof LessonDetails)[],
 
     lesson_versions: [
@@ -59,6 +71,12 @@ export const SYNC_WIRE_FIELDS: Readonly<Record<domain.SyncCollection, readonly s
       'decidedById',
       'decidedAt',
       'createdAt',
+      'preferredGroupId',
+      'preferredTimes',
+      'comment',
+      // The school's own archiving stays off the wire; this one is the
+      // student's, and a clean install has no local row to merge it onto.
+      'archivedByStudentAt',
     ] satisfies readonly (keyof EnrollmentDetails)[],
 
     homework: [
