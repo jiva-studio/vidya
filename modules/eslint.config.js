@@ -57,6 +57,10 @@ export default tseslint.config(
       '**/*.tsbuildinfo',
       'apps/*/android/**',
       'apps/*/ios/**',
+
+      // Stand-ins for packages an `overrides` entry keeps out of installs.
+      // Not project source, and CommonJS where this config assumes ESM.
+      'vendor/**',
     ],
   },
 
