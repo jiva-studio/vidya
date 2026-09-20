@@ -49,14 +49,14 @@ document's headers, everything except TLS itself.
 
 All environment variables, with their defaults:
 
-| Variable                         | Default                            | What it does                                        |
-| --------------------------------- | ----------------------------------- | ---------------------------------------------------- |
-| `VIDYA_GATEWAY_API_UPSTREAM`     | `http://host.docker.internal:7810` | Where `/api/*` is proxied, prefix stripped           |
-| `VIDYA_GATEWAY_TLS_ENABLED`      | `false`                            | Request a real certificate and terminate TLS on 8443 |
+| Variable                         | Default                            | What it does                                                            |
+| -------------------------------- | ---------------------------------- | ----------------------------------------------------------------------- |
+| `VIDYA_GATEWAY_API_UPSTREAM`     | `http://host.docker.internal:7810` | Where `/api/*` is proxied, prefix stripped                              |
+| `VIDYA_GATEWAY_TLS_ENABLED`      | `false`                            | Request a real certificate and terminate TLS on 8443                    |
 | `VIDYA_GATEWAY_DOMAIN`           | _(none)_                           | The public domain to request a certificate for; required when TLS is on |
-| `VIDYA_GATEWAY_HSTS_MAX_AGE`     | `63072000` (2 years)                | `Strict-Transport-Security` max-age, TLS mode only   |
-| `VIDYA_GATEWAY_RATE_LIMIT_RPS`   | `20`                                | Coarse per-IP sustained request rate                 |
-| `VIDYA_GATEWAY_RATE_LIMIT_BURST` | `40`                                | Per-IP requests absorbed in any single second         |
+| `VIDYA_GATEWAY_HSTS_MAX_AGE`     | `63072000` (2 years)               | `Strict-Transport-Security` max-age, TLS mode only                      |
+| `VIDYA_GATEWAY_RATE_LIMIT_RPS`   | `20`                               | Coarse per-IP sustained request rate                                    |
+| `VIDYA_GATEWAY_RATE_LIMIT_BURST` | `40`                               | Per-IP requests absorbed in any single second                           |
 
 The container always listens on 8080 (plain HTTP locally, or the
 HTTP→HTTPS redirect and ACME challenge listener once TLS is on) and 8443
