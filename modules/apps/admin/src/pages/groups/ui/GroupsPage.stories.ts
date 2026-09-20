@@ -46,7 +46,7 @@ export const Loading: Story = { render: over({ ...world, [GROUPS]: pending() }) 
 export const Empty: Story = { render: over({ ...world, [GROUPS]: { items: [] } }) }
 
 export const Failed: Story = {
-  render: over({ ...world, [GROUPS]: refusal(503, 'Группы сейчас не читаются') }),
+  render: over({ ...world, [GROUPS]: refusal(503, 'The groups cannot be read right now') }),
 }
 
 export const Denied: Story = { render: over(world, ['groups:read'] as PermissionKey[]) }

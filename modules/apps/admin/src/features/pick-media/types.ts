@@ -32,10 +32,10 @@ export interface MediaLibraryPanelEmits {
   pick: [picked: PickedMedia]
 }
 
+/** A file in the library, with the address it can be shown at — absent when the
+ * file did not outlive the session that uploaded it. */
 export interface MediaLibraryTileProps {
   record: MediaRecord
-
-  /** Absent when the file did not outlive the session that uploaded it. */
   src?: string
 }
 

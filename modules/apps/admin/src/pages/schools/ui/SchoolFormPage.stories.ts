@@ -40,12 +40,12 @@ export const Loading: Story = { render: over({ [SCHOOL]: pending() }, { id: 'sch
 export const Empty: Story = { render: over({ 'POST /edu/schools': { id: 'x' } }) }
 
 export const Failed: Story = {
-  render: over({ [SCHOOL]: refusal(404, 'Такой школы нет') }, { id: 'school-1' }),
+  render: over({ [SCHOOL]: refusal(404, 'No such school') }, { id: 'school-1' }),
 }
 
 export const Denied: Story = {
   render: over(
-    { 'POST /edu/schools': refusal(403, 'Недостаточно прав, чтобы создать школу') },
+    { 'POST /edu/schools': refusal(403, 'Not enough rights to create a school') },
     {},
     [] as PermissionKey[],
   ),

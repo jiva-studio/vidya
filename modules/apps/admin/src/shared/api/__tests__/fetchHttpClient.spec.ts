@@ -122,6 +122,41 @@ describe('FetchHttpClient', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
+  // A server that is restarting is not back in 300ms, and a second attempt in
+  // the same moment as the first is a second attempt into the same outage.
+  it('waits longer before each further attempt', async () => {
+    const started = Date.now()
+    fetchMock.mockImplementationOnce(async () => json({}, 503))
+    fetchMock.mockImplementationOnce(async () => json({}, 503))
+
+    await expect(client().get('/edu/courses')).resolves.toEqual({ ok: true })
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(Date.now() - started).toBeGreaterThanOrEqual(850)
+  })
+
+  // The header carries whole seconds, so the moment it names is up to a second
+  // earlier than the one asked for; the wait is measured against that floor.
+  it('reads a date in Retry-After as well as a count of seconds', async () => {
+    const at = new Date(Date.now() + 2000).toUTCString()
+    fetchMock.mockImplementationOnce(
+      async () => new Response('{}', { status: 429, headers: { 'retry-after': at } }),
+    )
+
+    const started = Date.now()
+    await expect(client().get('/edu/courses')).resolves.toEqual({ ok: true })
+    expect(Date.now() - started).toBeGreaterThanOrEqual(1000)
+  })
+
+  it('falls back to its own wait when Retry-After is nonsense', async () => {
+    fetchMock.mockImplementationOnce(
+      async () => new Response('{}', { status: 429, headers: { 'retry-after': 'soon' } }),
+    )
+
+    const started = Date.now()
+    await expect(client().get('/edu/courses')).resolves.toEqual({ ok: true })
+    expect(Date.now() - started).toBeLessThan(800)
+  })
+
   // The server says when to come back; a client that ignores it and asks again
   // in 300ms is what the status was sent to stop.
   it('waits as long as a refusal asked before it tries again', async () => {

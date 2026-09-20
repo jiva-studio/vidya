@@ -10,7 +10,7 @@ export const STORY_SCHOOL = 'school-1'
  *
  * The token is assembled rather than signed: nothing in the browser verifies
  * it, and a story that needed a real one would need the API. The same helper
- * serves the mounted tests, so "Без прав" in Storybook and the test that
+ * serves the mounted tests, so "no rights" in Storybook and the test that
  * asserts the button is gone are driven by one thing.
  */
 export const signInAs = (permissions: PermissionKey[], schoolId = STORY_SCHOOL): void => {

@@ -38,21 +38,21 @@ const sections = [
     title: 'Alphabet',
     assessment: 'none',
     blocks: [
-      { id: 'b1', type: 'text', content: '# Devanagari\n\nЧитаем **слева направо**.' },
+      { id: 'b1', type: 'text', content: '# Devanagari\n\nRead it **left to right**.' },
       { id: 'b2', type: 'video', source: 'youtube', url: 'https://www.youtube.com/watch?v=abc' },
     ],
   },
   {
     id: 's2',
-    title: 'Сандхи',
+    title: 'Sandhi',
     assessment: 'teacher',
     blocks: [
-      { id: 'b3', type: 'text', content: 'Разберите три примера и пришлите разбор.' },
+      { id: 'b3', type: 'text', content: 'Take three examples apart and send the working.' },
       {
         id: 'b4',
         type: 'quiz',
-        question: 'Что меняется на стыке?',
-        answers: ['Vowel', 'Согласная'],
+        question: 'What changes where two words meet?',
+        answers: ['A vowel', 'A consonant'],
         rightAnswer: 0,
       },
     ],
@@ -65,7 +65,7 @@ const strange = [
     title: 'Alphabet',
     assessment: 'none',
     blocks: [
-      { id: 'b1', type: 'text', content: 'Читаем слева направо.' },
+      { id: 'b1', type: 'text', content: 'Read it left to right.' },
       { id: 'b9', type: 'flashcards', cards: [{ front: 'स', back: 'sa' }] },
     ],
   },
@@ -111,7 +111,7 @@ export const Empty: Story = {
 
 export const Failed: Story = {
   parameters: route,
-  render: over({ [VERSIONS]: refusal(500, 'Версии урока не читаются') }),
+  render: over({ [VERSIONS]: refusal(500, 'The lesson versions cannot be read') }),
 }
 
 export const Denied: Story = {

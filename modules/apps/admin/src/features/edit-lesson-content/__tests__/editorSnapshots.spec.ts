@@ -2,7 +2,7 @@ import type { LessonContent, SectionId } from '@vidya/domain'
 import { LessonContentSchemaVersion } from '@vidya/domain'
 import { describe, expect, it } from 'vitest'
 
-import { prunedForSave } from '../model/saving'
+import { pruneForSave } from '../model/saving'
 import { useLessonContentEditor } from '../model/useLessonContentEditor'
 
 const doc = (title: string): LessonContent => ({
@@ -26,7 +26,7 @@ describe('an answer arriving after the editor moved on', () => {
 
     editor.load(doc('First'))
     editor.set(doc('Second'))
-    editor.markSaved(prunedForSave(editor.content.value))
+    editor.markSaved(pruneForSave(editor.content.value))
 
     expect(editor.dirty.value).toBe(true)
   })

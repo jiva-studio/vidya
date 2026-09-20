@@ -1,43 +1,43 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkBlockUrl, sourceOf } from '../model'
+import { checkBlockUrl, detectSource } from '../model'
 
 describe('working out where a pasted link comes from', () => {
   it('recognises a YouTube watch link', () => {
-    expect(sourceOf('https://www.youtube.com/watch?v=abc123')).toBe('youtube')
+    expect(detectSource('https://www.youtube.com/watch?v=abc123')).toBe('youtube')
   })
 
   it('recognises a shortened YouTube link', () => {
-    expect(sourceOf('https://youtu.be/abc123')).toBe('youtube')
+    expect(detectSource('https://youtu.be/abc123')).toBe('youtube')
   })
 
   it('recognises a Vimeo link, including its player host', () => {
-    expect(sourceOf('https://vimeo.com/76979871')).toBe('vimeo')
-    expect(sourceOf('https://player.vimeo.com/video/76979871')).toBe('vimeo')
+    expect(detectSource('https://vimeo.com/76979871')).toBe('vimeo')
+    expect(detectSource('https://player.vimeo.com/video/76979871')).toBe('vimeo')
   })
 
   it('treats any other well-formed https address as a direct link', () => {
-    expect(sourceOf('https://example.org/lecture.mp4')).toBe('url')
+    expect(detectSource('https://example.org/lecture.mp4')).toBe('url')
   })
 
   it('never promotes a host that only looks like one of the embed sites', () => {
-    expect(sourceOf('https://youtube.com.evil.example/watch?v=abc')).toBe('url')
-    expect(sourceOf('https://notvimeo.com/76979871')).toBe('url')
+    expect(detectSource('https://youtube.com.evil.example/watch?v=abc')).toBe('url')
+    expect(detectSource('https://notvimeo.com/76979871')).toBe('url')
   })
 
   it('refuses a link that is not an address at all', () => {
-    expect(sourceOf('not a link')).toBeUndefined()
-    expect(sourceOf('')).toBeUndefined()
+    expect(detectSource('not a link')).toBeUndefined()
+    expect(detectSource('')).toBeUndefined()
   })
 
   it('refuses a scheme a lesson may not carry', () => {
-    expect(sourceOf('javascript:alert(1)')).toBeUndefined()
-    expect(sourceOf('data:text/html,<script>alert(1)</script>')).toBeUndefined()
-    expect(sourceOf('ftp://example.org/lecture.mp4')).toBeUndefined()
+    expect(detectSource('javascript:alert(1)')).toBeUndefined()
+    expect(detectSource('data:text/html,<script>alert(1)</script>')).toBeUndefined()
+    expect(detectSource('ftp://example.org/lecture.mp4')).toBeUndefined()
   })
 
   it('ignores the whitespace around a pasted link', () => {
-    expect(sourceOf('  https://vimeo.com/76979871  ')).toBe('vimeo')
+    expect(detectSource('  https://vimeo.com/76979871  ')).toBe('vimeo')
   })
 })
 
@@ -67,6 +67,6 @@ describe('the address an uploaded file is stored under', () => {
   })
 
   it('does not call an uploaded path an embed', () => {
-    expect(sourceOf('/media/00000000-0000-4000-8000-000000000001')).toBeUndefined()
+    expect(detectSource('/media/00000000-0000-4000-8000-000000000001')).toBeUndefined()
   })
 })

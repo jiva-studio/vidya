@@ -52,7 +52,7 @@ const list = ref<HTMLElement | null>(null)
 // comes with one. Neither is emitted on its own: they reach the server only
 // once an edit is made through them, so a lesson opened and closed again is
 // still an empty lesson.
-const seed = ref<LessonContent>(seeded())
+const seed = ref<LessonContent>(seedContent())
 
 const caretBlock = ref<BlockId | undefined>(undefined)
 const caretSection = ref<SectionId | undefined>(undefined)
@@ -65,7 +65,7 @@ useBlockSorting(list, onSectionReorder, '[data-section-handle]')
 
 /* -------------------------------- Helpers --------------------------------- */
 
-function seeded(): LessonContent {
+function seedContent(): LessonContent {
   const withSection = addSection({ ...props.content, sections: [] }, '')
   const section = withSection.sections[0]
   return insertBlockAfter(withSection, section.id, undefined, 'text')
@@ -125,7 +125,7 @@ function onBlockDuplicate(id: SectionId, blockId: BlockId) {
 
 function onBlockInsert(id: SectionId, afterId: BlockId | undefined, type: BlockType) {
   // The line the author asked from is empty, so it is the line they meant.
-  const blank = blankBlock(id, afterId)
+  const blank = findBlankBlock(id, afterId)
   if (blank) {
     caretBlock.value = blank.id
     caretSection.value = undefined
@@ -142,9 +142,9 @@ function onBlockInsert(id: SectionId, afterId: BlockId | undefined, type: BlockT
 // would have typed into: an empty one already there is that line, and opening a
 // second would leave a blank behind them.
 function onTailWrite(id: SectionId) {
-  const blocks = blocksOf(id)
+  const blocks = readBlocks(id)
   const last = blocks[blocks.length - 1]
-  const blank = blankBlock(id, last?.id)
+  const blank = findBlankBlock(id, last?.id)
 
   if (blank) {
     caretSection.value = undefined
@@ -164,20 +164,20 @@ function onBlockEnd(id: SectionId, blockId: BlockId, kept: string) {
 }
 
 function onBlockRemove(id: SectionId, blockId: BlockId) {
-  caretBlock.value = focusAfterRemoval(blocksOf(id), blockId)
+  caretBlock.value = focusAfterRemoval(readBlocks(id), blockId)
   caretSection.value = caretBlock.value ? undefined : id
   apply(removeBlock(shown.value, id, blockId))
 }
 
 /* -------------------------------- Helpers --------------------------------- */
 
-function blocksOf(id: SectionId): readonly LessonBlock[] {
+function readBlocks(id: SectionId): readonly LessonBlock[] {
   return shown.value.sections.find((section) => section.id === id)?.blocks ?? []
 }
 
 /** The block, when it is a text line nobody has typed into yet. */
-function blankBlock(id: SectionId, blockId: BlockId | undefined): TextBlock | undefined {
-  const block = blocksOf(id).find((current) => current.id === blockId)
+function findBlankBlock(id: SectionId, blockId: BlockId | undefined): TextBlock | undefined {
+  const block = readBlocks(id).find((current) => current.id === blockId)
   return block?.type === 'text' && block.content.length === 0 ? block : undefined
 }
 

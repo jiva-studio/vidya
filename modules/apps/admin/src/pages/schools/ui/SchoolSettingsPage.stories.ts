@@ -14,7 +14,7 @@ const FULL = ['schools:read', 'schools:update', 'roles:read'] as PermissionKey[]
 
 const roles = {
   items: [
-    { id: 'role-1', name: 'Student', description: 'Учится' },
+    { id: 'role-1', name: 'Student', description: 'Studies here' },
     { id: 'role-2', name: 'Teacher', description: 'Leads a group' },
   ],
 }
@@ -53,7 +53,7 @@ export const Empty: Story = {
 }
 
 export const Failed: Story = {
-  render: over({ [CONFIGS]: refusal(500, 'Настройки не читаются'), [ROLES]: roles }),
+  render: over({ [CONFIGS]: refusal(500, 'The settings cannot be read'), [ROLES]: roles }),
 }
 
 export const Denied: Story = {
@@ -61,7 +61,7 @@ export const Denied: Story = {
     {
       [CONFIGS]: { studentRoleIds: [] },
       [ROLES]: roles,
-      [`PATCH ${CONFIGS}`]: refusal(403, 'Недостаточно прав, чтобы менять настройки'),
+      [`PATCH ${CONFIGS}`]: refusal(403, 'Not enough rights to change the settings'),
     },
     ['schools:read', 'roles:read'] as PermissionKey[],
   ),

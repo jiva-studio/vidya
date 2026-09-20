@@ -25,7 +25,7 @@ interface FakeMediaGatewayOptions {
   clock: Clock
 }
 
-const kindOf = (type: string): MediaKind => {
+const detectKind = (type: string): MediaKind => {
   if (type.startsWith('video/')) return 'video'
   if (type.startsWith('audio/')) return 'audio'
   return 'image'
@@ -113,7 +113,7 @@ export class FakeMediaGateway implements MediaGateway {
     const tick = () => {
       if (request.signal?.aborted) return
       if (fails(request.file.name) && percent >= FailAtPercent) return stop('media-upload-failed')
-      if (percent >= 100) return resolve(this.keep(request.file))
+      if (percent >= 100) return resolve(this.store(request.file))
 
       percent = Math.min(100, percent + ProgressStep)
       request.onProgress?.(percent)
@@ -124,11 +124,11 @@ export class FakeMediaGateway implements MediaGateway {
     scheduled = this.clock.schedule(tick, TickMs)
   }
 
-  private keep(file: File): MediaRecord {
+  private store(file: File): MediaRecord {
     const id = asId<MediaId>(crypto.randomUUID())
     const record: MediaRecord = {
       id,
-      kind: kindOf(file.type),
+      kind: detectKind(file.type),
       url: `/media/${id}`,
       name: file.name,
       sizeBytes: file.size,

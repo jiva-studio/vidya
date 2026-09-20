@@ -7,7 +7,7 @@ import { useMediaGateway } from '@/entities/media'
 import { useToasts } from '@/shared/lib'
 import { MediaPickerDialog, useMediaUpload } from '@/features/pick-media'
 
-import { mediaSrc, sourceOf } from '../model/urls'
+import { mediaSrc, detectSource } from '../model/urls'
 import { mediaBlockClasses } from './MediaBlockEditor.styles'
 import MediaBlockEditorEmpty from './MediaBlockEditorEmpty.vue'
 import MediaBlockEditorFilled from './MediaBlockEditorFilled.vue'
@@ -36,7 +36,7 @@ const link = ref('')
 const refused = ref(false)
 
 const accept = computed(() => `${props.kind}/*`)
-const linkSource = computed(() => sourceOf(link.value))
+const linkSource = computed(() => detectSource(link.value))
 const uploading = computed(() => upload.status.value === 'uploading')
 const filled = computed(() => props.block.url.trim().length > 0)
 

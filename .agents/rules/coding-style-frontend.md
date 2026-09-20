@@ -84,7 +84,50 @@ The template must be purely declarative. The following patterns are strictly for
 
 ---
 
-## 3. Composable Naming & File Conventions
+## 3. Function Naming
+
+1. **A function is named with a verb**:
+   A name says what calling it does. A noun, an adjective or a participle names
+   the answer instead of the act, and only reads as a function because of the
+   file it happens to sit in.
+   ```ts
+   // FORBIDDEN
+   const keep = (file: File) => …          // a verb is missing
+   const kindOf = (type: string) => …      // a preposition is not a verb
+   const stamped = (sections) => …         // a participle names the result
+   const blankBlock = (id) => …            // a noun phrase
+
+   // REQUIRED
+   const storeFile = (file: File) => …
+   const detectKind = (type: string) => …
+   const stampSchema = (sections) => …
+   const findBlankBlock = (id) => …
+   ```
+2. **A predicate may read as one**: `isPublished`, `hasRight`, `canPublish`,
+   `fails`, `matches` — a verb in the third person or an `is`/`has`/`can` prefix.
+   A bare adjective (`publishable`) names a value, and belongs to a `computed`.
+3. **A value is not a function**: `computed`, `ref` and plain constants are the
+   place for noun names — `publishable`, `marked`, `chrome`, `titleClasses`.
+4. **A name is preferred to a comment that explains it**:
+   A docblock that exists to say what a call does is a name that was not chosen.
+   Rename first; keep the comment only for what a name cannot carry — a reason,
+   a constraint, a trade-off.
+   ```ts
+   // FORBIDDEN
+   /** The list owns focus: it alone knows which row a change left the author in. */
+   function focus(caret: AnswerCaret = 'end') { … }
+
+   /** Runs the action and keeps the browser out of the keystroke. */
+   function take(event: KeyboardEvent, act: () => void) { … }
+
+   // REQUIRED
+   function placeCaret(caret: AnswerCaret = 'end') { … }
+   function handleAndStop(event: KeyboardEvent, act: () => void) { … }
+   ```
+
+---
+
+## 4. Composable Naming & File Conventions
 
 1. **Exact 1-to-1 Match**:
    Every composable function MUST live in a file named identically to the composable:
@@ -102,7 +145,7 @@ The template must be purely declarative. The following patterns are strictly for
 
 ---
 
-## 4. Component File Structure & Sections
+## 5. Component File Structure & Sections
 
 Every Vue component (`*.vue`) in `@vidya/ui` must follow this exact section structure and comment banner style inside `<script setup lang="ts">`:
 
@@ -172,7 +215,7 @@ function formatLabel(val: string): string {
 
 ---
 
-## 5. Type Extraction & Component Exports
+## 6. Type Extraction & Component Exports
 
 Never declare inline complex props or emits in the `.vue` file.
 
@@ -202,7 +245,7 @@ Never declare inline complex props or emits in the `.vue` file.
 
 ---
 
-## 6. Tailwind & Styling Guidelines (No Monolithic Strings)
+## 7. Tailwind & Styling Guidelines (No Monolithic Strings)
 
 ### Style Extraction Rule: Extract Static Class Arrays and CVA to Adjacent `styles.ts`
 
@@ -221,7 +264,7 @@ To keep `<script setup>` clean and focused strictly on component logic and react
 
 ---
 
-## 7. Prettier, Linter & Gatekeeper Standards
+## 8. Prettier, Linter & Gatekeeper Standards
 
 - `semi: false`
 - `singleQuote: true`
@@ -240,7 +283,7 @@ To keep `<script setup>` clean and focused strictly on component logic and react
 
 ---
 
-## 8. Component Hierarchy & Directory Boundaries
+## 9. Component Hierarchy & Directory Boundaries
 
 1. **Top-Level Component Directories**:
    Every reusable UI component must live in its own directory directly under `libs/ui/src/components/<ComponentName>/` (e.g. `DiffAnnotator/`, `DiffRow/`, `DiffFloats/`, `DiffViewport/`).
@@ -254,7 +297,7 @@ To keep `<script setup>` clean and focused strictly on component logic and react
 
 ---
 
-## 9. Event Parameter Unification Principle
+## 10. Event Parameter Unification Principle
 
 Do NOT declare duplicate sibling events that differ only by scope, granularity, or a boolean flag:
 
@@ -270,7 +313,7 @@ Callers emit `@click="$emit('annotate', false)"` or `@click="$emit('annotate', t
 
 ---
 
-## 10. Strict Props & Emits Contract in Vue
+## 11. Strict Props & Emits Contract in Vue
 
 Every Vue SFC must adhere to strict type-based contracts:
 
@@ -282,7 +325,7 @@ Every Vue SFC must adhere to strict type-based contracts:
 
 ---
 
-## 11. Complexity & Nesting Limits
+## 12. Complexity & Nesting Limits
 
 To guarantee readable, maintainable, and testable code:
 
@@ -293,7 +336,7 @@ To guarantee readable, maintainable, and testable code:
 
 ---
 
-## 12. Non-Deterministic Environment Restrictions in Pure Logic
+## 13. Non-Deterministic Environment Restrictions in Pure Logic
 
 In pure computational layers (`model/`, `lib/`, `@vidya/domain`):
 
@@ -303,7 +346,7 @@ In pure computational layers (`model/`, `lib/`, `@vidya/domain`):
 
 ---
 
-## 13. Prohibition of Empty Catch Blocks
+## 14. Prohibition of Empty Catch Blocks
 
 Empty catch blocks (`try { ... } catch (err) {}`) are forbidden by AST linter:
 
@@ -311,7 +354,7 @@ Empty catch blocks (`try { ... } catch (err) {}`) are forbidden by AST linter:
 
 ---
 
-## 14. Comments
+## 15. Comments
 
 Comments follow the same rule as the backend — see
 [Comments](./coding-style-backend.md#6-comments). One line, a blank line above,

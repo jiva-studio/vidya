@@ -31,23 +31,23 @@ function onRight() {
 
 function onKey(event: KeyboardEvent) {
   if (event.altKey) return onReorderKey(event)
-  if (event.key === 'Enter') return take(event, () => emit('split', props.index))
+  if (event.key === 'Enter') return handleAndStop(event, () => emit('split', props.index))
   // An option still carrying text is being edited, not dismissed.
   if (event.key === 'Backspace' && !props.text)
-    return take(event, () => emit('collapse', props.index))
+    return handleAndStop(event, () => emit('collapse', props.index))
 
   // Up and down walk the quiz the way they walk any list of lines, so the
   // author reaches the question above and the next option below without
   // leaving the keyboard.
-  if (event.key === 'ArrowUp') return take(event, () => emit('step', props.index, -1))
-  if (event.key === 'ArrowDown') return take(event, () => emit('step', props.index, 1))
+  if (event.key === 'ArrowUp') return handleAndStop(event, () => emit('step', props.index, -1))
+  if (event.key === 'ArrowDown') return handleAndStop(event, () => emit('step', props.index, 1))
 }
 
 /* -------------------------------- Helpers --------------------------------- */
 
 function onReorderKey(event: KeyboardEvent) {
   const delta = reorderDelta(event.key)
-  if (delta) take(event, () => emit('move', props.index, delta))
+  if (delta) handleAndStop(event, () => emit('move', props.index, delta))
 }
 
 function reorderDelta(key: string): MoveDirection | undefined {
@@ -56,13 +56,12 @@ function reorderDelta(key: string): MoveDirection | undefined {
   return undefined
 }
 
-function take(event: KeyboardEvent, act: () => void) {
+function handleAndStop(event: KeyboardEvent, act: () => void) {
   event.preventDefault()
   act()
 }
 
-/** The list owns focus: it alone knows which row a change left the author in. */
-function focus(caret: AnswerCaret = 'end') {
+function placeCaret(caret: AnswerCaret = 'end') {
   const element = field.value?.$el
   if (!(element instanceof HTMLInputElement)) return
 
@@ -71,7 +70,7 @@ function focus(caret: AnswerCaret = 'end') {
   element.setSelectionRange(at, at)
 }
 
-defineExpose({ focus })
+defineExpose({ placeCaret })
 </script>
 
 <template>

@@ -41,7 +41,9 @@ export default meta
 type Story = StoryObj<typeof QuizBlockEditor>
 
 export const Default: Story = {
-  render: over(block('Что меняется на стыке слов?', ['Гласная', 'Согласная', 'Ударение'], 1)),
+  render: over(
+    block('What changes where two words meet?', ['A vowel', 'A consonant', 'The stress'], 1),
+  ),
 }
 
 export const Empty: Story = { render: over(block('', ['', ''])) }
@@ -50,15 +52,15 @@ export const WithExplanation: Story = {
   name: 'With an explanation',
   render: over(
     block(
-      'Что меняется на стыке слов?',
-      ['Гласная', 'Согласная', 'Ударение'],
+      'What changes where two words meet?',
+      ['A vowel', 'A consonant', 'The stress'],
       1,
-      'Сандхи касается согласной на границе слов.',
+      'Sandhi works on the consonant at a word boundary.',
     ),
   ),
 }
 
 export const Frozen: Story = {
   name: 'Read-only',
-  render: over(block('Что меняется на стыке слов?', ['Гласная', 'Согласная'], 1), true),
+  render: over(block('What changes where two words meet?', ['A vowel', 'A consonant'], 1), true),
 }

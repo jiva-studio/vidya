@@ -55,6 +55,24 @@ Leave nothing unwired. A new module that nothing imports, a handler nothing
 routes to, a component nothing renders — these read as complete and are not.
 Stage 0 of [`../review/SKILL.md`](../review/SKILL.md) rejects exactly this.
 
+### Names you choose in this phase
+
+A function is named with a verb: a name says what calling it does. `keep`,
+`kindOf`, `stamped`, `take` name the answer or nothing at all — `storeFile`,
+`detectKind`, `stampSchema`, `handleAndStop` name the act. A predicate may read
+as `isPublished`, `hasRight` or `fails`; a bare adjective names a value and
+belongs to a `computed`.
+
+Reach for the name before the comment. A docblock written to explain what a
+call does is a rename waiting to happen, and the name is read at every call
+while the docblock is read only where it is written. The full form of this is
+in [`../../rules/coding-style-frontend.md`](../../rules/coding-style-frontend.md),
+section 3.
+
+Everything you write is in English — code, comments, test names, the sample
+content in stories and fixtures. Russian belongs in `.ftl` bundles and in the
+tests that assert what those bundles render.
+
 ### Comments you write in this phase
 
 The full rule is [`../../rules/comments.md`](../../rules/comments.md). The four
@@ -72,6 +90,10 @@ things it forbids, because they are the four that keep happening:
 4. **Say why, not what.** What the code does is the code's job — if a comment is
    needed to explain that, the name is wrong. A comment exists for the constraint,
    the invariant, or the trade-off that the reader cannot see.
+5. **All the fields or none of them.** A type whose sixth field carries a
+   docblock and whose other five do not reads as if five were forgotten. Either
+   the field comments are worth writing for each, or what is worth saying goes
+   into the type's own docblock.
 
 ## Phase 4: Gatekeeper (strict)
 

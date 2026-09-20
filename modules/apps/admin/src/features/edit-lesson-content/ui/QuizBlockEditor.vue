@@ -50,7 +50,7 @@ watch(() => answers.value.length, land, { flush: 'post' })
 
 function onStep(index: number, delta: MoveDirection) {
   const next = index + delta
-  if (next >= 0 && next < answers.value.length) return rows.value[next]?.focus('end')
+  if (next >= 0 && next < answers.value.length) return rows.value[next]?.placeCaret('end')
 
   // Past the first or last option the caret leaves the list the same way it
   // leaves any other field: to whatever the lesson lays out next.
@@ -113,7 +113,7 @@ function land() {
   if (!target) return
 
   landing.value = null
-  rows.value[target.index]?.focus(target.caret)
+  rows.value[target.index]?.placeCaret(target.caret)
 }
 </script>
 

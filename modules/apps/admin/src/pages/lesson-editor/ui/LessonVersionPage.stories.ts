@@ -23,7 +23,7 @@ const content = {
       id: 's1',
       title: 'Alphabet',
       assessment: 'none',
-      blocks: [{ id: 'b1', type: 'text', content: '# Devanagari\n\nЧитаем **слева направо**.' }],
+      blocks: [{ id: 'b1', type: 'text', content: '# Devanagari\n\nRead it **left to right**.' }],
     },
   ],
 }

@@ -45,5 +45,5 @@ export const Empty: Story = { parameters: { route: { name: 'group-create' } }, r
 
 export const Failed: Story = {
   parameters: edit,
-  render: over({ [GROUP]: refusal(503, 'Группа сейчас не читается') }),
+  render: over({ [GROUP]: refusal(503, 'The group cannot be read right now') }),
 }

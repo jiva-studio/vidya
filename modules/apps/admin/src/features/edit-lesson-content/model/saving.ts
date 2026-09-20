@@ -48,7 +48,7 @@ const faulty = (block: LessonBlock): boolean => {
  * inserted and has not yet typed into would take the caret with it — so this
  * builds a new document and never touches the one it was handed.
  */
-export const prunedForSave = (content: LessonContent): LessonContent => ({
+export const pruneForSave = (content: LessonContent): LessonContent => ({
   schemaVersion: LessonContentSchemaVersion,
   sections: content.sections
     .map((section) => ({ ...section, blocks: section.blocks.filter(touched) }))
@@ -61,7 +61,7 @@ export const prunedForSave = (content: LessonContent): LessonContent => ({
  * Only publishing asks: marking a block while the author is still writing it
  * would fault every quiz between the question and its second option.
  */
-export const blockFaults = (content: LessonContent): BlockFault[] =>
+export const findBlockFaults = (content: LessonContent): BlockFault[] =>
   content.sections.flatMap((section, at) =>
     section.blocks
       .map((block, position) => ({ block, position }))
@@ -74,5 +74,5 @@ export const blockFaults = (content: LessonContent): BlockFault[] =>
       })),
   )
 
-export const invalidBlocks = (content: LessonContent): BlockId[] =>
-  blockFaults(content).map((fault) => fault.blockId)
+export const findInvalidBlocks = (content: LessonContent): BlockId[] =>
+  findBlockFaults(content).map((fault) => fault.blockId)

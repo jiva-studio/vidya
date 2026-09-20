@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkBlockUrl, sourceOf } from '../model/urls'
+import { checkBlockUrl, detectSource } from '../model/urls'
 
 /** Where a stored relative path would actually point once a browser resolves it. */
 const resolved = (path: string): string => new URL(path, 'https://school.example').origin
@@ -24,9 +24,9 @@ describe('every scheme a block may not carry', () => {
   })
 
   it('never derives a source for a scheme no block may carry', () => {
-    expect(sourceOf('javascript:alert(1)')).toBeUndefined()
-    expect(sourceOf('blob:https://school.example/9f2a')).toBeUndefined()
-    expect(sourceOf('data:text/html,<script>')).toBeUndefined()
+    expect(detectSource('javascript:alert(1)')).toBeUndefined()
+    expect(detectSource('blob:https://school.example/9f2a')).toBeUndefined()
+    expect(detectSource('data:text/html,<script>')).toBeUndefined()
   })
 })
 
@@ -60,7 +60,7 @@ describe('an authority smuggled into a relative path', () => {
 describe('addresses that parse but are not what they look like', () => {
   it('reads a single-slash http address as the host it really names', () => {
     expect(checkBlockUrl('url', 'https:/evil.example/x')).toBeUndefined()
-    expect(sourceOf('https:/evil.example/x')).toBe('url')
+    expect(detectSource('https:/evil.example/x')).toBe('url')
   })
 
   it('holds an embed to its own host however the link is dressed up', () => {

@@ -52,5 +52,5 @@ export const Empty: Story = { parameters: { route: { name: 'course-create' } }, 
 
 export const Failed: Story = {
   parameters: edit,
-  render: over({ [COURSE]: refusal(503, 'Курс сейчас не читается') }),
+  render: over({ [COURSE]: refusal(503, 'The course cannot be read right now') }),
 }

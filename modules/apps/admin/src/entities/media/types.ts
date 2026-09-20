@@ -5,11 +5,15 @@ export type MediaId = Id<'Media'>
 
 export type MediaKind = 'image' | 'video' | 'audio'
 
+/**
+ * A stored file, as the library lists it and a block refers to it.
+ *
+ * `url` is what a block stores: a path the server will serve, never a blob url,
+ * which would die with the tab that made it.
+ */
 export interface MediaRecord {
   id: MediaId
   kind: MediaKind
-
-  /** What a block stores: a path the server will serve, never a blob url. */
   url: string
   name: string
   sizeBytes: number

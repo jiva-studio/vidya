@@ -19,7 +19,7 @@ const FULL = ['courses:read', 'courses:create', 'courses:update'] as PermissionK
 
 const items = [
   { id: 'c1', name: 'Sanskrit from scratch', description: 'Alphabet, cases and sandhi' },
-  { id: 'c2', name: 'Bhagavad-gita', description: 'Читаем с комментарием' },
+  { id: 'c2', name: 'Bhagavad-gita', description: 'Read with the commentary' },
   { id: 'c3', name: 'Kirtan practice', description: '' },
 ]
 
@@ -47,7 +47,7 @@ export const Loading: Story = { render: over({ [COURSES]: pending() }) }
 export const Empty: Story = { render: over({ [COURSES]: { items: [] } }) }
 
 export const Failed: Story = {
-  render: over({ [COURSES]: refusal(503, 'Курсы сейчас не читаются') }),
+  render: over({ [COURSES]: refusal(503, 'The courses cannot be read right now') }),
 }
 
 export const Denied: Story = {

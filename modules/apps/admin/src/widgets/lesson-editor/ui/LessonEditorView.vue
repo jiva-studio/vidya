@@ -5,9 +5,9 @@ import { computed, onMounted, ref, watch } from 'vue'
 
 import type { BlockFault } from '@/features/edit-lesson-content'
 import {
-  blockFaults,
+  findBlockFaults,
   contentProblems,
-  prunedForSave,
+  pruneForSave,
   useLessonContentEditor,
 } from '@/features/edit-lesson-content'
 import { PublishDialog } from '@/features/publish-lesson'
@@ -101,7 +101,7 @@ function onSaveRetry() {
 }
 
 function onPublish() {
-  faults.value = blockFaults(editor.content.value)
+  faults.value = findBlockFaults(editor.content.value)
   const first = faults.value.at(0)
 
   if (first) reveal(first.sectionId)
@@ -146,7 +146,7 @@ async function send(content: LessonContent): Promise<boolean> {
   const version = versionDoc.version.value
   if (!version || frozen.value || blocked.value) return false
 
-  const stored = await draft.save(version.id, prunedForSave(content))
+  const stored = await draft.save(version.id, pruneForSave(content))
   if (stored) editor.markSaved(content)
   return stored
 }

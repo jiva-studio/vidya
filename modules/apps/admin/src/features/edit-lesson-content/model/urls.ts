@@ -102,7 +102,7 @@ export const mediaSrc = (source: BlockSource, url: string): string | undefined =
  * A host nobody recognises is a direct link and never an embed: promoting one
  * would put a page of somebody else's choosing in a frame beside the lesson.
  */
-export const sourceOf = (url: string): BlockSource | undefined => {
+export const detectSource = (url: string): BlockSource | undefined => {
   const target = parsed(url)
   if (!target) return undefined
   if (target.protocol !== 'http:' && target.protocol !== 'https:') return undefined

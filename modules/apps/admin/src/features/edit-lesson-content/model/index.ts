@@ -32,6 +32,6 @@ export {
   setRightAnswer,
 } from './quiz'
 export type { BlockFault } from './saving'
-export { blockFaults, invalidBlocks, prunedForSave } from './saving'
-export { checkBlockUrl, EmbedHosts, embedSrc, isEmbedSource, mediaSrc, sourceOf } from './urls'
+export { findBlockFaults, findInvalidBlocks, pruneForSave } from './saving'
+export { checkBlockUrl, detectSource, EmbedHosts, embedSrc, isEmbedSource, mediaSrc } from './urls'
 export { useLessonContentEditor } from './useLessonContentEditor'

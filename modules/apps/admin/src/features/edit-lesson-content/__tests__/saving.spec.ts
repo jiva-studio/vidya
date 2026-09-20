@@ -2,7 +2,7 @@ import type { BlockId, LessonBlock, LessonContent, SectionId } from '@vidya/doma
 import { LessonContentSchemaVersion } from '@vidya/domain'
 import { describe, expect, it } from 'vitest'
 
-import { invalidBlocks, prunedForSave } from '../model'
+import { findInvalidBlocks, pruneForSave } from '../model'
 
 const id = <TId>(value: string) => value as unknown as TId
 
@@ -33,7 +33,7 @@ const quiz = (
   }) as LessonBlock
 
 const kept = (content: LessonContent) =>
-  prunedForSave(content).sections.flatMap((section) => section.blocks.map((block) => block.id))
+  pruneForSave(content).sections.flatMap((section) => section.blocks.map((block) => block.id))
 
 describe('what reaches the server', () => {
   it('drops a text block holding nothing but whitespace', () => {
@@ -72,16 +72,16 @@ describe('what reaches the server', () => {
     const untouched = doc(text(' '))
     untouched.sections[0].title = ''
 
-    expect(prunedForSave(untouched).sections).toEqual([])
+    expect(pruneForSave(untouched).sections).toEqual([])
   })
 
   it('keeps a section the author named, even with nothing written under it', () => {
-    expect(prunedForSave(doc(text(' '))).sections).toHaveLength(1)
+    expect(pruneForSave(doc(text(' '))).sections).toHaveLength(1)
   })
 
   it('leaves the document it was handed untouched, so the caret keeps its block', () => {
     const before = doc(text(''), text('written'))
-    prunedForSave(before)
+    pruneForSave(before)
 
     expect(before.sections[0].blocks).toHaveLength(2)
   })
@@ -89,46 +89,48 @@ describe('what reaches the server', () => {
   it('stamps the schema version this build writes', () => {
     const stale = { ...doc(text('a')), schemaVersion: 0 }
 
-    expect(prunedForSave(stale).schemaVersion).toBe(LessonContentSchemaVersion)
+    expect(pruneForSave(stale).schemaVersion).toBe(LessonContentSchemaVersion)
   })
 })
 
 describe('what stops a version being published', () => {
   it('says nothing about a document that was only just started', () => {
-    expect(invalidBlocks(doc(text(''), image(''), quiz('', ['', ''])))).toEqual([])
+    expect(findInvalidBlocks(doc(text(''), image(''), quiz('', ['', ''])))).toEqual([])
   })
 
   it('never faults a text block, however it is written', () => {
-    expect(invalidBlocks(doc(text('# only a heading')))).toEqual([])
+    expect(findInvalidBlocks(doc(text('# only a heading')))).toEqual([])
   })
 
   it('faults a media block that was captioned but never given a link', () => {
-    expect(invalidBlocks(doc(image('', 'A temple courtyard')))).toEqual(['image'])
+    expect(findInvalidBlocks(doc(image('', 'A temple courtyard')))).toEqual(['image'])
   })
 
   it('faults a quiz with options but no question', () => {
-    expect(invalidBlocks(doc(quiz('', ['Krishna', 'Arjuna'])))).toEqual(['quiz'])
+    expect(findInvalidBlocks(doc(quiz('', ['Krishna', 'Arjuna'])))).toEqual(['quiz'])
   })
 
   it('faults a quiz that offers fewer than two answers to choose between', () => {
-    expect(invalidBlocks(doc(quiz('Who speaks?', ['Krishna', ' '])))).toEqual(['quiz'])
+    expect(findInvalidBlocks(doc(quiz('Who speaks?', ['Krishna', ' '])))).toEqual(['quiz'])
   })
 
   it('faults a quiz whose correct answer points at an option nobody filled in', () => {
-    expect(invalidBlocks(doc(quiz('Who speaks?', ['Krishna', 'Arjuna', ''], 2)))).toEqual(['quiz'])
+    expect(findInvalidBlocks(doc(quiz('Who speaks?', ['Krishna', 'Arjuna', ''], 2)))).toEqual([
+      'quiz',
+    ])
   })
 
   it('passes a quiz that asks something and marks a real answer', () => {
-    expect(invalidBlocks(doc(quiz('Who speaks?', ['Krishna', 'Arjuna'], 1)))).toEqual([])
+    expect(findInvalidBlocks(doc(quiz('Who speaks?', ['Krishna', 'Arjuna'], 1)))).toEqual([])
   })
 
   it('passes a media block once it has a link', () => {
-    expect(invalidBlocks(doc(image('https://example.org/a.png')))).toEqual([])
+    expect(findInvalidBlocks(doc(image('https://example.org/a.png')))).toEqual([])
   })
 
   it('reports every fault at once, in the order the author reads them', () => {
     const content = doc(quiz('Who speaks?', ['Krishna']), image('', 'later'))
 
-    expect(invalidBlocks(content)).toEqual(['quiz', 'image'])
+    expect(findInvalidBlocks(content)).toEqual(['quiz', 'image'])
   })
 })
