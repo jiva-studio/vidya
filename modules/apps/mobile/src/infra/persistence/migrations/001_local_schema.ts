@@ -192,8 +192,8 @@ async function createSyncTables(db: IDatabase): Promise<void> {
   // is exactly why the schema cannot afford foreign keys. A scope not yet
   // present starts at cursor 0, and that alone is what pulls a newly enrolled
   // course down in full. `checksum` is the server's summary to compare
-  // against; `removed_at` marks a scope that left without erasing what it
-  // brought.
+  // against; `removed_at` marks a scope that left, whose rows are erased with
+  // it.
   await db.execute(`
     CREATE TABLE IF NOT EXISTS sync_scopes (
       owner_id   TEXT    NOT NULL,

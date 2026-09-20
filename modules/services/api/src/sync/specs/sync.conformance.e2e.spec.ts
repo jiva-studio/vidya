@@ -208,7 +208,14 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
       const named = rejections.results.map((result) => result.reason)
 
       expect(named.every((reason) => domain.isSyncRejectionReason(reason))).toBe(true)
-      expect(new Set(named)).toEqual(new Set(domain.SyncRejectionReasons))
+      expect(new Set(named)).toEqual(new Set(domain.ServerRejectionReasons))
+
+      // The other half of the set is settled by the device with nothing sent
+      // and no answer coming. A fixture naming one would have this service
+      // claim a refusal it never makes.
+      for (const reason of domain.DeviceRejectionReasons) {
+        expect(named).not.toContain(reason)
+      }
     })
   })
 

@@ -50,7 +50,7 @@ export interface PageOutcome {
   /** Scopes the device had never heard of, now started at `0`. */
   readonly added: readonly SyncScopeRef[]
 
-  /** Scopes that left the caller's rights. Their data is untouched. */
+  /** Scopes that left the caller's rights. Their rows left with them. */
   readonly removed: readonly SyncScopeRef[]
 
   /** Scopes whose checksum disagrees with ours — one to refetch. */
@@ -82,12 +82,15 @@ export async function applyPage(deps: SyncEngineDeps, input: ApplyPageInput): Pr
   const grants = storableGrants(response)
   const added = grants.filter((scope) => !known.has(syncScopeKey(scope)))
   const restored = grants.filter((scope) => known.get(syncScopeKey(scope))?.removedAt != null)
-  const removed = removedScopes(before, grants, grants.length > 0)
+  const removed = removedScopes(before, grants)
 
   return deps.unitOfWork(async () => {
     for (const scope of added) await deps.state.addScope(scope)
     for (const scope of restored) await deps.state.restoreScope(scope)
-    for (const scope of removed) await deps.state.markScopeRemoved(scope, deps.now())
+    for (const scope of removed) {
+      await deps.state.purgeScope(scope)
+      await deps.state.markScopeRemoved(scope, deps.now())
+    }
 
     const rows = await applyRows(deps, input)
     const positions = nextPositions(response, known, rows.seen)
@@ -210,7 +213,7 @@ async function applyOne(
     pending.has(docKey(change.collection, change.docId)),
   )
 
-  return deps.apply.applyRemote(change.collection, merged, remote.hlc)
+  return deps.apply.applyRemote(change.collection, merged, remote.hlc, change.scope)
 }
 
 /** Record that a scope of this page is short a row this build did not store. */
@@ -299,18 +302,19 @@ function divergedScopes(
 /**
  * Scopes the device follows that the server no longer grants.
  *
- * Only computed when the answer actually carried a grant list this build can
- * read: an empty `scopes` is how a page says "nothing to report about rights",
- * and treating it as "you have been withdrawn from everything" would mark every
- * course gone. A list of nothing but scopes we cannot store says as little.
+ * `scopes` is mandatory on the wire and states the caller's rights as they
+ * stand, so an empty list is a member who holds nothing rather than a page
+ * with nothing to say. Read the other way, the loss of the *last* role is the
+ * one withdrawal that would never reach the device at all.
+ *
+ * The price is named: a build that cannot read a kind a newer server grants
+ * counts it as withdrawn and erases data the caller is entitled to. A new
+ * scope kind therefore ships behind a client version, never on its own.
  */
 function removedScopes(
   before: readonly SyncScopeState[],
   grants: readonly SyncScopeRef[],
-  reported: boolean,
 ): SyncScopeRef[] {
-  if (!reported) return []
-
   const granted = new Set(grants.map(syncScopeKey))
   return before
     .filter((scope) => scope.removedAt === null && !granted.has(syncScopeKey(scope.scope)))

@@ -1,12 +1,17 @@
 import type {
   IsoDateTime,
   ISyncStateRepository,
+  SyncCollection,
   SyncScopeKind,
   SyncScopeRef,
   SyncScopeState,
 } from '@vidya/domain'
+import { SyncCollections } from '@vidya/domain'
 
 import type { IDatabase } from '@/ports'
+
+import { projectionOf } from './collectionProjections'
+import { SCOPE_ID_COLUMN, SCOPE_KIND_COLUMN } from './rowWriter'
 
 /**
  * SQL adapter over `sync_state` and `sync_scopes`, implementing
@@ -137,11 +142,11 @@ export function createSqlSyncStateRepository(
     },
 
     /**
-     * Mark a scope gone, keeping every row it brought.
+     * Mark a scope gone.
      *
-     * This is the whole of "the student was withdrawn from a course" on the
-     * device. Nothing is deleted: reading what was downloaded is unconditional,
-     * and the enrolment row arrives with its own status to explain the screen.
+     * The last statement of a withdrawal: {@link purgeScope} has already taken
+     * the rows, and this is what the screens read to explain why they are
+     * empty and what keeps the scope out of the next pull.
      */
     markScopeRemoved: async (scope: SyncScopeRef, at: IsoDateTime) => {
       await db.execute(
@@ -151,12 +156,31 @@ export function createSqlSyncStateRepository(
     },
 
     /**
+     * Take a withdrawn scope's data off the device, in the caller's
+     * transaction: its rows, the server pointers those rows held, the unsent
+     * work written against them, and the position it stood at.
+     *
+     * Driven by the collection list rather than by a list written out here, so
+     * a collection added to it is erased the day it is added. There is no join
+     * anywhere: homework and block states legitimately sit on a device with no
+     * enrolment row at all, and erasing through one would leave them behind
+     * for good.
+     */
+    purgeScope: async (scope) => {
+      const owner = ownerId()
+      for (const collection of SyncCollections) {
+        await purgeCollection(db, collection, owner, scope)
+      }
+
+      await rewindScope(db, owner, scope)
+    },
+
+    /**
      * Take the removal mark off a scope granted again.
      *
-     * The position and the checksum are left exactly where they stand: the rows
-     * this scope brought were never deleted, so the device does not need them
-     * again — it needs what happened while it was away, which is precisely what
-     * the kept position asks for.
+     * Only the mark comes off. The position went back to `0` when the scope
+     * was purged, and that is what brings the whole of it down again: there is
+     * nothing left here to catch up from.
      */
     restoreScope: async (scope: SyncScopeRef) => {
       await db.execute(
@@ -173,12 +197,7 @@ export function createSqlSyncStateRepository(
      * we have just declared untrustworthy. One scope, never the database: a
      * diverged course must not cost the student every other course's content.
      */
-    resetScope: async (scope) => {
-      await db.execute(
-        'UPDATE sync_scopes SET cursor = 0, checksum = NULL WHERE owner_id = ? AND kind = ? AND id = ?',
-        [ownerId(), scope.kind, scope.id],
-      )
-    },
+    resetScope: (scope) => rewindScope(db, ownerId(), scope),
 
     getAckedSeq: () => readCounter('acked_seq'),
     setAckedSeq: (seq) => writeCounter('acked_seq', seq),
@@ -186,6 +205,45 @@ export function createSqlSyncStateRepository(
     getPushedOutboxId: () => readCounter('pushed_outbox_id'),
     setPushedOutboxId: (id) => writeCounter('pushed_outbox_id', id),
   }
+}
+
+/**
+ * Erase one collection's rows of a scope, and settle what they leave behind.
+ *
+ * The order is the whole of it. The unsent rows are settled and the server
+ * pointers dropped while the rows are still there to name them: run after the
+ * delete, both statements would match nothing, and the returning rows would be
+ * refused as stale by a pointer nothing had cleared.
+ */
+async function purgeCollection(
+  db: IDatabase,
+  collection: SyncCollection,
+  owner: string,
+  scope: SyncScopeRef,
+): Promise<void> {
+  const table = `"${projectionOf(collection).table}"`
+  const where = `owner_id = ? AND ${SCOPE_KIND_COLUMN} = ? AND ${SCOPE_ID_COLUMN} = ?`
+  const owned = `SELECT id FROM ${table} WHERE ${where}`
+  const params = [owner, scope.kind, scope.id]
+
+  await db.execute(
+    `UPDATE outbox SET status = 'rejected', reason = 'scopeRevoked'
+      WHERE owner_id = ? AND status = 'pending' AND collection = ? AND doc_id IN (${owned})`,
+    [owner, collection, ...params],
+  )
+  await db.execute(
+    `DELETE FROM sync_doc_hlc WHERE owner_id = ? AND collection = ? AND doc_id IN (${owned})`,
+    [owner, collection, ...params],
+  )
+  await db.execute(`DELETE FROM ${table} WHERE ${where}`, params)
+}
+
+/** Put a scope back to `0` and forget the summary of content it no longer has. */
+const rewindScope = async (db: IDatabase, owner: string, scope: SyncScopeRef): Promise<void> => {
+  await db.execute(
+    'UPDATE sync_scopes SET cursor = 0, checksum = NULL WHERE owner_id = ? AND kind = ? AND id = ?',
+    [owner, scope.kind, scope.id],
+  )
 }
 
 function toScopeState(row: ScopeRow): SyncScopeState {

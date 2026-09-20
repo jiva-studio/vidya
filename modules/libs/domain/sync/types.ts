@@ -143,7 +143,10 @@ export type EnrollmentSyncField = (typeof EnrollmentSyncFields)[number]
 /* -------------------------------------------------------------------------- */
 
 /**
- * Why the server refused one pushed row.
+ * Why one pushed row is finished without being taken.
+ *
+ * Split by who decides it: a device reason never appears on the wire, and a
+ * new one cannot be added without choosing a side.
  *
  * These live in the domain rather than in `@vidya/protocol` for the same reason
  * lesson content does: a reason is not only a wire value. The device stores it
@@ -154,7 +157,7 @@ export type EnrollmentSyncField = (typeof EnrollmentSyncFields)[number]
  * A refusal is a per-row state, never a failure of the batch: one rejected
  * answer must not hold up the video progress travelling beside it.
  */
-export const SyncRejectionReasons = [
+export const ServerRejectionReasons = [
   /** The collection replicates downward only — the client may not write it. */
   'readOnlyCollection',
 
@@ -177,8 +180,20 @@ export const SyncRejectionReasons = [
   'malformed',
 ] as const
 
+export type ServerRejectionReason = (typeof ServerRejectionReasons)[number]
+
+/** Refusals the device settles on its own, with nothing sent and no answer. */
+export const DeviceRejectionReasons = [
+  /** The scope the row belongs to left the caller's rights before it was sent. */
+  'scopeRevoked',
+] as const
+
+export type DeviceRejectionReason = (typeof DeviceRejectionReasons)[number]
+
+/** Every reason an outbox row can carry, whichever side decided it. */
+export const SyncRejectionReasons = [...ServerRejectionReasons, ...DeviceRejectionReasons] as const
+
 export type SyncRejectionReason = (typeof SyncRejectionReasons)[number]
 
 export const isSyncRejectionReason = (value: string): value is SyncRejectionReason =>
   (SyncRejectionReasons as readonly string[]).includes(value)
-

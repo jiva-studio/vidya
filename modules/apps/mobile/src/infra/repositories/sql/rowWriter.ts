@@ -1,4 +1,4 @@
-import type { SyncCollection, SyncPayload } from '@vidya/domain'
+import type { SyncCollection, SyncPayload, SyncScopeRef } from '@vidya/domain'
 
 import type { IDatabase, QueryValue, Row } from '@/ports'
 
@@ -43,25 +43,58 @@ export async function readSyncRow(db: IDatabase, ref: SyncRowRef): Promise<Row |
 }
 
 /**
- * Upsert the projected row.
+ * The columns holding the scope a row arrived on. Written from the envelope of
+ * the page that brought it and from nowhere else, so a local edit of a pulled
+ * row leaves them as the server addressed them.
+ */
+export const SCOPE_KIND_COLUMN = 'scope_kind'
+export const SCOPE_ID_COLUMN = 'scope_id'
+
+/**
+ * Upsert a row the pull brought, stamped with the scope that carried it.
  *
- * One statement for all six collections, because every synced table has the
+ * The scope is the envelope's. It cannot be recomputed from the row: the
+ * server addresses a course card to the school and a student's answer to the
+ * student, and a device that guessed from `school_id` or `course_id` would
+ * take the wrong rows off when a grant is withdrawn.
+ */
+export const writeScopedRow = (
+  db: IDatabase,
+  ref: SyncRowRef,
+  data: SyncPayload,
+  scope: SyncScopeRef,
+): Promise<void> =>
+  upsertRow(db, ref, data, { [SCOPE_KIND_COLUMN]: scope.kind, [SCOPE_ID_COLUMN]: scope.id })
+
+/**
+ * Upsert a row written here.
+ *
+ * The scope columns are not named, so a local edit of a pulled row keeps the
+ * provenance the pull recorded and a row written offline claims none: which
+ * grant carries a document is the server's to say, and guessing it here is the
+ * one thing the columns exist to avoid.
+ */
+export const writeSyncRow = (db: IDatabase, ref: SyncRowRef, data: SyncPayload): Promise<void> =>
+  upsertRow(db, ref, data, {})
+
+/**
+ * One statement for all eight collections, because every synced table has the
  * same primary key — `(owner_id, id)` — and the projection supplies the
  * columns. `owner_id` is prepended here and never comes off the wire: it is the
  * disk layout, not something a server gets to decide.
  */
-export async function writeSyncRow(
+async function upsertRow(
   db: IDatabase,
   ref: SyncRowRef,
   data: SyncPayload,
+  stamped: Record<string, string>,
 ): Promise<void> {
   const projection = projectionOf(ref.collection)
   const { columns, values } = payloadToRow(ref.collection, { ...data, id: ref.docId })
 
-  const allColumns = ['owner_id', ...columns]
+  const allColumns = ['owner_id', ...columns, ...Object.keys(stamped)]
   const placeholders = allColumns.map(() => '?').join(', ')
-  const assignments = columns
-    .filter((column) => column !== 'id')
+  const assignments = [...columns.filter((column) => column !== 'id'), ...Object.keys(stamped)]
     .map((column) => `${column} = excluded.${column}`)
     .join(', ')
 
@@ -69,7 +102,7 @@ export async function writeSyncRow(
     `INSERT INTO ${projection.table} (${allColumns.join(', ')})
      VALUES (${placeholders})
      ON CONFLICT(owner_id, id) DO UPDATE SET ${assignments}`,
-    [ref.owner, ...values] as QueryValue[],
+    [ref.owner, ...values, ...Object.values(stamped)] as QueryValue[],
   )
 }
 

@@ -2,11 +2,11 @@ import {
   hlcToString,
   type IsoDateTime,
   parseHlc,
+  type ServerRejectionReason,
   SYNC_DIRECTION,
   type SyncCollection,
   type SyncOp,
   type SyncPayload,
-  type SyncRejectionReason,
   type SyncScopeKey,
   syncScopeKey,
   type SyncScopeRef,
@@ -99,8 +99,15 @@ export class FakeSyncServer implements ISyncClient {
   /** Every call in order — 'pull' | 'push' | 'ack' — so a test can see the sequence. */
   readonly calls: string[] = []
 
-  /** Refuses a pushed row, to stage a per-row rejection. */
-  rejectIf: (change: PushChange) => SyncRejectionReason | null = () => null
+  /**
+   * Refuses a pushed row, to stage a per-row rejection.
+   *
+   * Narrowed to the server's half of the set: `scopeRevoked` is settled on the
+   * device with nothing sent, and a double able to answer with it is a double
+   * modelling something no server does — and one day feeding the device a
+   * refusal the wire cannot carry.
+   */
+  rejectIf: (change: PushChange) => ServerRejectionReason | null = () => null
 
   /**
    * The server's own wall clock, in unix milliseconds.

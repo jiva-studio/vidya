@@ -107,6 +107,8 @@ async function placeOnTheDevice(status: EnrollmentStatus): Promise<EnrollmentId>
       },
     },
     SERVER_HLC,
+    // An enrolment travels on the student's own scope, not the course's.
+    { kind: 'user', id: OWNER_ID },
   )
 
   return ENROLLMENT_ID

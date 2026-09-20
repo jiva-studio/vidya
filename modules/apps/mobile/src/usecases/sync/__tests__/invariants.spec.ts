@@ -158,7 +158,7 @@ describe('invariants a mutation walked through', () => {
     expect((await harness.row('homework', HOMEWORK_ID))!.text).toBe('written here, not sent yet')
   })
 
-  it('an answer carrying no grant list withdraws nothing', async () => {
+  it('an answer granting nothing withdraws everything', async () => {
     const server = new FakeSyncServer()
     let silent = false
     const client = withPullAnswer(server, (response) =>
@@ -178,12 +178,15 @@ describe('invariants a mutation walked through', () => {
     silent = true
     const result = await harness.engine.runner.run()
 
-    // An empty `scopes` says "nothing to report about rights". Reading it as
-    // "you have been withdrawn from everything" marks every course the student
-    // has gone, on a page that was only quiet.
-    expect(result.pull?.removed).toEqual([])
+    // `scopes` is the caller's rights as they stand now, and the field is
+    // mandatory: an empty one is not a quiet page, it is a member who holds
+    // nothing any more. Read as "nothing to report", the loss of the *last*
+    // role is the one withdrawal that never reaches the device at all.
+    expect(result.pull?.removed.map(syncScopeKey).sort()).toEqual(
+      [syncScopeKey(COURSE_SCOPE), syncScopeKey(USER_SCOPE)].sort(),
+    )
     const scopes = await harness.engine.state.listScopes()
-    expect(scopes.every((scope) => scope.removedAt === null)).toBe(true)
+    expect(scopes.every((scope) => scope.removedAt !== null)).toBe(true)
   })
 
   it('a position moves to what the answer says, past rows the device was not sent', async () => {

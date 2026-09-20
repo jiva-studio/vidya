@@ -14,6 +14,9 @@ import {
 } from './fakeSyncServer'
 import { type Harness, openHarness } from './harness'
 
+/** The catalogue's scope: `journal/projections.ts` addresses a course to it. */
+const SCHOOL_SCOPE = { kind: 'school', id: SCHOOL_ID } as const
+
 /**
  * Scope positions.
  *
@@ -46,7 +49,7 @@ describe('scope positions', () => {
     harness.server.journal({
       collection: 'courses',
       docId: COURSE_ID,
-      scope: COURSE_SCOPE,
+      scope: SCHOOL_SCOPE,
       data: course(COURSE_ID, 'Bhagavad-gita'),
     })
     harness.server.journal({
@@ -176,7 +179,7 @@ describe('scope positions', () => {
     expect(result.pull?.diverged).toEqual([])
   })
 
-  it('withdrawal marks the scope gone and keeps every downloaded row', async () => {
+  it('withdrawal marks the scope gone and takes the rows it brought', async () => {
     harness.server.journal({
       collection: 'enrollments',
       docId: ENROLLMENT_ID,
@@ -215,11 +218,14 @@ describe('scope positions', () => {
     const course = scopes.find((scope) => syncScopeKey(scope.scope) === syncScopeKey(COURSE_SCOPE))
     expect(course!.removedAt).not.toBeNull()
 
-    // Nothing was erased: the course and its lesson are still readable offline.
+    // What the scope brought goes with it: a student who has been withdrawn
+    // does not go on reading the lessons offline for ever (#41, AC-P43h). The
+    // course card is the school's catalogue and is not this scope's to take.
+    expect(await harness.engine.lessons.listByCourse(asId<CourseId>(COURSE_ID))).toHaveLength(0)
     expect(await harness.engine.courses.getById(asId<CourseId>(COURSE_ID))).not.toBeNull()
-    expect(await harness.engine.lessons.listByCourse(asId<CourseId>(COURSE_ID))).toHaveLength(1)
 
-    // And the screen has the status it needs to explain what happened.
+    // The enrolment is the student's own scope and stays, so the screen still
+    // has the status it needs to explain what happened.
     const enrollment = await harness.engine.enrollments.getById(asId<EnrollmentId>(ENROLLMENT_ID))
     expect(enrollment!.status).toBe('declined')
   })

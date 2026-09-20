@@ -3,6 +3,7 @@ import { migration_001_local_schema } from './001_local_schema'
 import { migration_002_schools } from './002_schools'
 import { migration_003_groups } from './003_groups'
 import { migration_004_enrollment_request_details } from './004_enrollment_request_details'
+import { migration_005_row_scope } from './005_row_scope'
 import type { Migration } from './types'
 
 /**
@@ -18,6 +19,7 @@ export const deviceMigrations: readonly Migration[] = [
   migration_002_schools,
   migration_003_groups,
   migration_004_enrollment_request_details,
+  migration_005_row_scope,
 ]
 
 export { migration_000_migrations_table } from './000_migrations_table'
@@ -25,5 +27,6 @@ export { migration_001_local_schema } from './001_local_schema'
 export { migration_002_schools } from './002_schools'
 export { migration_003_groups } from './003_groups'
 export { migration_004_enrollment_request_details } from './004_enrollment_request_details'
+export { migration_005_row_scope } from './005_row_scope'
 export { EmptyMigrationSetError, runMigrations, SchemaAheadOfCodeError } from './runMigrations'
 export type { Migration, UtcClock } from './types'

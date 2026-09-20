@@ -14,6 +14,7 @@ sync-rejection-kept-on-device = Ваша работа сохранена на у
 sync-rejection-readOnlyCollection = Такие записи нельзя отправлять из приложения.
 sync-rejection-notYourEnrollment = Ответ адресован чужой записи на курс.
 sync-rejection-enrollmentRevoked = Вы больше не записаны на этот курс.
+sync-rejection-scopeRevoked = Школа сняла с вас доступ, поэтому ответ не был отправлен.
 sync-rejection-unknownLessonVersion = Школа не знает версию урока, по которой написан ответ.
 sync-rejection-alreadyAccepted = Ответ уже принят, заменить его новым нельзя.
 sync-rejection-payloadTooLarge = Ответ слишком длинный, чтобы его отправить.

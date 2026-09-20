@@ -3,13 +3,17 @@ import { Course, Enrollment, LessonVersion } from '@vidya/entities'
 import { PushChange } from '@vidya/protocol'
 import { EntityManager } from 'typeorm'
 
-/** Why one row was refused. A value, not an exception: its neighbours still apply. */
+/**
+ * Why one row was refused. A value, not an exception: its neighbours still
+ * apply. Narrowed to the reasons the server decides, so a reason a device
+ * settles for itself cannot be answered with.
+ */
 export interface Rejection {
-  reason: domain.SyncRejectionReason
+  reason: domain.ServerRejectionReason
   detail: string
 }
 
-export const reject = (reason: domain.SyncRejectionReason, detail: string): Rejection => ({
+export const reject = (reason: domain.ServerRejectionReason, detail: string): Rejection => ({
   reason,
   detail,
 })
