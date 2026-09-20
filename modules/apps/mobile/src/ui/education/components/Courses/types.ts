@@ -4,7 +4,23 @@ export interface CourseCardProps {
   name: string
   description?: string | null
 
+  /** The course's own picture. Absent today; a cover in the palette stands in. */
+  coverUrl?: string | null
+
   /** Absent until the school's own row has arrived; the card draws without it. */
+  schoolName?: string
+
+  /** An external link, so it fails offline and is replaced by the initial. */
+  schoolLogoUrl?: string | null
+}
+
+export interface CourseCoverProps {
+  name: string
+
+  /** The course's own picture. Absent today; a tone of the palette stands in. */
+  coverUrl?: string | null
+
+  /** Absent until the school's own row has arrived; the cover draws without it. */
   schoolName?: string
 
   /** An external link, so it fails offline and is replaced by the initial. */

@@ -1,4 +1,5 @@
 export { default as BackfillProgress } from './BackfillProgress.vue'
 export { default as OfflineBanner } from './OfflineBanner.vue'
 export { default as RevokedEnrollmentNotice } from './RevokedEnrollmentNotice.vue'
+export { default as SignInAgainNotice } from './SignInAgainNotice.vue'
 export type * from './types'

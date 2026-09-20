@@ -9,6 +9,7 @@ import { Role, User, UserRole } from '@vidya/entities'
 
 import { MailerConfig } from '../configs'
 import { OtpController } from './controllers/otp.controller'
+import { ProfileController } from './controllers/profile.controller'
 import { TokensController } from './controllers/tokens.controller'
 import { UserAuthenticationController } from './controllers/user-authentication.controller'
 import { AuthService } from './services/auth.service'
@@ -43,7 +44,7 @@ import { RevokedTokensService } from './services/revokedTokens.service'
       inject: [MailerConfig.KEY],
     }),
   ],
-  controllers: [UserAuthenticationController, OtpController, TokensController],
+  controllers: [UserAuthenticationController, OtpController, TokensController, ProfileController],
   providers: [OtpService, AuthUsersService, AuthService, RevokedTokensService, RedisService],
 })
 export class AuthModule {}

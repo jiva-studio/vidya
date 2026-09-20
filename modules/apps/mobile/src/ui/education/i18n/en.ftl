@@ -1,6 +1,7 @@
 # Navigation
 tab-courses = Courses
 tab-my-enrollments = My courses
+tab-settings = Settings
 
 # Course catalogue
 courses-title = Courses

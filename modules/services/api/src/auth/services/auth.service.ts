@@ -25,7 +25,12 @@ export class AuthService {
    * @param permissions Permissions to save in the token (optional)
    * @returns Access and refresh tokens
    */
-  async generateTokens(userId: domain.UserId, permissions?: UserPermission[]): Promise<Tokens> {
+  /**
+   * Permissions are not optional: every path that mints a token carries them,
+   * and a token without them is one the guard has to go to the database for.
+   * Required here so a new caller cannot quietly reintroduce that.
+   */
+  async generateTokens(userId: domain.UserId, permissions: UserPermission[]): Promise<Tokens> {
     const accessToken = await this.jwtService.signAsync(
       {
         jti: uuidv4(),

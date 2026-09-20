@@ -8,6 +8,7 @@ import { SYNC_MAX_BATCH_BYTES } from '@vidya/protocol'
 import { useContainer } from 'class-validator'
 
 import { AppModule } from './app.module'
+import { corsOptionsFor } from './shared/cors'
 import { bootstrapMigrations } from './shared/migrations'
 
 async function bootstrap() {
@@ -19,7 +20,21 @@ async function bootstrap() {
   app.useBodyParser('json', { limit: SYNC_MAX_BATCH_BYTES })
 
   // Before anything is served: a half-migrated schema is worse than a slow start.
-  await bootstrapMigrations(app.get(ConfigService))
+  const configService = app.get(ConfigService)
+  await bootstrapMigrations(configService)
+
+  // The student app is cross-origin by construction: a native build speaks from
+  // `capacitor://localhost`, never from this domain, so without this it cannot
+  // reach the API at all and the failure surfaces as a missing header rather
+  // than as an error anyone can act on.
+  const origins = configService.get<string[]>('cors.origins')
+  app.enableCors(corsOptionsFor(origins))
+
+  if (!configService.get<boolean>('cors.configured')) {
+    console.warn(
+      'VIDYA_CORS_ORIGINS is unset; allowing the local stand only: ' + origins.join(', '),
+    )
+  }
 
   // TODO Use on development environment only
   const config = new DocumentBuilder()

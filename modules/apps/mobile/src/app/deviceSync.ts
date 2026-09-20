@@ -1,8 +1,10 @@
 import type { IDatabase } from '@/ports'
+import type { SyncEngine } from '@/usecases/sync'
 
 import { connectionStore, useConnections } from './connections'
 import { useOutboxView } from './outboxView'
 import { startSync } from './sync'
+import { useSyncStatus } from './syncStatus'
 
 /**
  * Starting the engines the app holds connections for, at launch.
@@ -16,11 +18,27 @@ import { startSync } from './sync'
  */
 export async function startDeviceSync(db: IDatabase): Promise<void> {
   const outbox = useOutboxView()
+  const status = useSyncStatus()
 
   for (const connection of useConnections().connections.value) {
     const started = await startSync({ db, connection, connections: connectionStore })
 
     outbox.track(connection.ownerId, started.engine.outbox)
+    if (await hasSynced(started.engine)) status.markFilled()
+
     void started.triggers.now()
   }
+}
+
+/**
+ * Whether this device has ever read anything from this server.
+ *
+ * A scope position is written only by a run that applied a page, and it
+ * outlives the launch it was written in — so its presence is the difference
+ * between "nothing has arrived yet" and "everything arrived last week". The
+ * screens ask a different question of each.
+ */
+export async function hasSynced(engine: SyncEngine): Promise<boolean> {
+  const scopes = await engine.state.listScopes()
+  return scopes.length > 0
 }

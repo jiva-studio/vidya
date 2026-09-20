@@ -29,6 +29,16 @@ export interface SyncStatus {
 
   runStarted(): void
   runFinished(result: SyncRunResult): void
+
+  /**
+   * Says the device is already filled, without a run having finished here.
+   *
+   * A launch that finds scope positions on the device is a launch after a
+   * first run that happened some other day: the courses are already there, and
+   * the screens must not cover them with "getting your courses ready" — least
+   * of all with no network, which is exactly when that promise cannot be kept.
+   */
+  markFilled(): void
 }
 
 export const useSyncStatus = createGlobalState((): SyncStatus => {
@@ -47,6 +57,10 @@ export const useSyncStatus = createGlobalState((): SyncStatus => {
     if (result.outcome === 'completed') firstRunCompleted.value = true
   }
 
+  const markFilled = () => {
+    firstRunCompleted.value = true
+  }
+
   return {
     syncing: computed(() => inFlight.value > 0),
     firstRunCompleted,
@@ -54,5 +68,6 @@ export const useSyncStatus = createGlobalState((): SyncStatus => {
     total,
     runStarted,
     runFinished,
+    markFilled,
   }
 })

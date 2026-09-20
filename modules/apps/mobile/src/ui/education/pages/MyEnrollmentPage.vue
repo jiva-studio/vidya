@@ -1,5 +1,10 @@
 <template>
-  <PageWithHeaderLayout :title="$t('my-enrollment-title')" :busy="busy" :has-data="loaded">
+  <PageWithHeaderLayout
+    :title="$t('my-enrollment-title')"
+    back-href="/education/my-enrollments"
+    :busy="busy"
+    :has-data="loaded"
+  >
     <EnrollmentReviewStatus
       v-if="enrollment && enrollment.status !== 'accepted'"
       :image="`enrollment/${enrollment.status}.webp`"

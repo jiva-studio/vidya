@@ -144,18 +144,22 @@ const nextUuid = (): string => {
 export const upcomingId = (): string =>
   `00000000-0000-4000-8000-${String(mintedIds.length + 1).padStart(12, '0')}`
 
+/** The schools waiting for a new sign-in; empty unless a test strands one. */
+export const awaitingSignIn = ref<readonly { baseUrl: string }[]>([])
+
 /**
  * The double for `@/app`, and the whole of what a screen may ask it for.
  *
  * There is no transport here and no name under which one could be fetched: a
- * client belongs to a connection, and a screen holds no connection. A screen
- * that reaches for one finds nothing, which is the invariant rather than a gap
- * in the double.
+ * client belongs to a connection, and a screen holds no connection of its own.
+ * What it may ask the registry is which of the student's schools have stopped
+ * accepting their sign-in, because that is what it has to say on the screen.
  */
 export const appDouble = {
   useRepositories: () => repositories,
   useSyncStatus: () => syncStatus,
   useOutboxView: () => outboxView,
+  useConnections: () => ({ awaitingSignIn }),
 }
 
 /** A controllable `@capacitor/network`, so a test can switch the radio off. */
@@ -343,6 +347,7 @@ export function resetLocalScreens(): void {
   syncStatus.firstRunCompleted.value = true
   syncStatus.done.value = 0
   syncStatus.total.value = 0
+  awaitingSignIn.value = []
 
   Object.assign(repositories, buildRepositories())
 }

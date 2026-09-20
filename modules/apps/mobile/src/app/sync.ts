@@ -75,6 +75,9 @@ export interface StartedSync {
 interface RunningSync extends StartedSync {
   readonly runs: DeviceRuns
   readonly ownerId: UserId
+
+  /** Takes the session a fresh sign-in produced, in place of the one it holds. */
+  adopt(connection: Connection): void
 }
 
 /**
@@ -90,6 +93,16 @@ export const connectionClient = (baseUrl: string, session: () => Session | undef
   httpClientFor({ baseUrl, session })
 
 const running = new Map<string, RunningSync>()
+
+/** A run that was not attempted, reported as the engine reports its own. */
+const deferred = (): SyncRunResult => ({
+  outcome: 'deferred',
+  push: null,
+  pull: null,
+  resynced: [],
+  retryAfterMs: null,
+  failure: null,
+})
 
 /**
  * The engine already listening for this server, when there is one.
@@ -114,9 +127,15 @@ export async function startSync(options: SyncSetupOptions): Promise<StartedSync>
   const existing = alreadyRunning(baseUrl, runs)
   if (existing !== undefined) {
     // The same identity on the same server: hand back the engine that is
-    // already listening. A different one signed in since: the old engine has
-    // to go before the new one takes its place.
-    if (existing.ownerId === options.connection.ownerId) return existing
+    // already listening, holding the session it has just been given — signing
+    // in again is how a stranded connection is repaired, and an engine that
+    // kept the dead token would strand it a second time. A different identity
+    // signed in since: the old engine has to go before the new one starts.
+    if (existing.ownerId === options.connection.ownerId) {
+      existing.adopt(options.connection)
+      return existing
+    }
+
     await stopSync(baseUrl)
   }
 
@@ -124,11 +143,17 @@ export async function startSync(options: SyncSetupOptions): Promise<StartedSync>
   // request rather than capturing the token it was built with.
   let session: Session = options.connection.session
 
+  // Read from the registry, not merely written to it: a connection whose
+  // renewal was refused has nothing to say to its server until somebody signs
+  // in again, and a run would be two requests spent to be told so twice.
+  let awaitingSignIn = options.connection.needsSignIn
+
   const http = connectionClient(baseUrl, () => session)
 
   const renew = async (): Promise<boolean> => {
     const renewed = await renewSession(http, session)
     if (renewed === null) {
+      awaitingSignIn = true
       await options.connections.update(baseUrl, { needsSignIn: true })
       return false
     }
@@ -154,9 +179,13 @@ export async function startSync(options: SyncSetupOptions): Promise<StartedSync>
 
   const started: RunningSync = {
     engine,
-    triggers: await listen(engine, runs),
+    triggers: await listen(engine, runs, () => awaitingSignIn),
     runs,
     ownerId: options.connection.ownerId,
+    adopt: (connection) => {
+      session = connection.session
+      awaitingSignIn = connection.needsSignIn
+    },
   }
 
   running.set(baseUrl, started)
@@ -204,11 +233,20 @@ async function renewSession(http: HttpClient, session: Session): Promise<Session
   }
 }
 
-async function listen(engine: SyncEngine, runs: DeviceRuns): Promise<SyncTriggers> {
+async function listen(
+  engine: SyncEngine,
+  runs: DeviceRuns,
+  awaitingSignIn: () => boolean,
+): Promise<SyncTriggers> {
   const status = useSyncStatus()
   let debounce: ReturnType<typeof setTimeout> | null = null
 
   const now = async (): Promise<SyncRunResult> => {
+    // Nothing is touched, which is what `deferred` means: the device keeps
+    // everything it has downloaded and stays readable, and the school waits
+    // for a sign-in rather than for a token that will never be accepted.
+    if (awaitingSignIn()) return deferred()
+
     status.runStarted()
     const result = await runs.run(() => engine.runner.run())
     status.runFinished(result)

@@ -1,6 +1,7 @@
 # Навигация
 tab-courses = Курсы
 tab-my-enrollments = Мои курсы
+tab-settings = Настройки
 
 # Каталог курсов
 courses-title = Курсы

@@ -1,5 +1,10 @@
 <template>
-  <PageWithHeaderLayout :title="$t('lesson-title')" :busy="busy" :has-data="loaded">
+  <PageWithHeaderLayout
+    :title="$t('lesson-title')"
+    :back-href="`/education/my-enrollments/${enrollmentId}`"
+    :busy="busy"
+    :has-data="loaded"
+  >
     <template #toolbar>
       <IonToolbar>
         <LessonSectionsList v-model="selected" :items="sectionViews" />

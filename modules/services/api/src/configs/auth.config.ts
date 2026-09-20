@@ -2,24 +2,12 @@ import { registerAs } from '@nestjs/config'
 
 export default registerAs('auth', () => ({
   /**
-   * Saves user permissions in the JWT token. This will allow
-   * to keep the permissions in the token itself and avoid
-   * querying the database for each request.
-   */
-  savePermissionsInJwtToken: process.env.VIDYA_AUTH_SAVE_PERMISSIONS_IN_JWT_TOKEN === 'true',
-
-  /**
-   * Time to live for the user permissions cache in seconds.
-   * Set to 0 to disable caching for development purposes
-   * for example.
+   * Time to live for the cached permissions of one user, in seconds. `0`
+   * disables the cache.
    *
-   * If `VIDYA_AUTH_SAVE_PERMISSIONS_IN_JWT_TOKEN` is set to `false`,
-   * then user permissions will be fetched from the database for each
-   * request and stored in cache for the specified time.
-   *
-   * If `VIDYA_AUTH_SAVE_PERMISSIONS_IN_JWT_TOKEN` is set to `true`,
-   * this will be ignored and user permissions will be stored in the
-   * JWT token itself.
+   * The cache is read when a token carries no permissions of its own, which is
+   * only a token minted by a build older than this one; see
+   * `AuthenticatedUserGuard`.
    */
   userPermissionsCacheTtl: parseInt(process.env.VIDYA_AUTH_USER_PERMISSIONS_CACHE_TTL ?? '0', 10),
 }))

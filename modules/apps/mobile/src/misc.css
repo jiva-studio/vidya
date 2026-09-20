@@ -1,0 +1,59 @@
+/* Chrome that Ionic draws raised, flattened to match the lectorium theme.
+ *
+ * Lectorium applies these per element — `FlatHeader` on every routed page,
+ * `--box-shadow: none` on every button it styles. We have one page layout and
+ * one button wrapper, so the same declarations are written once here instead.
+ */
+
+/* Material paints the header elevation as a box-shadow on the element and, in
+ * older versions, as a gradient ::after line; iOS draws a hairline under the
+ * last toolbar. `ion-no-border` on the element covers the shadow and the
+ * hairline, these cover the gradient. */
+ion-header.flat-header,
+ion-header.flat-header::after {
+  box-shadow: none !important;
+  background-image: none;
+}
+
+ion-header.flat-header::after {
+  display: none;
+}
+
+ion-toolbar {
+  --box-shadow: none;
+}
+
+/* The header fades into the page the way the tab bar does, so a list slides
+ * under it instead of stopping at a hard edge. The gradient sits on the
+ * element rather than on a toolbar, so a page with a second toolbar — a search
+ * field — gets one continuous fade rather than two. */
+ion-header.flat-header {
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--vidya-fade-bg-rgb), 1) 0%,
+    rgba(var(--vidya-fade-bg-rgb), 0.8) 65%,
+    rgba(var(--vidya-fade-bg-rgb), 0) 100%
+  );
+}
+
+ion-header.flat-header ion-toolbar {
+  --background: transparent;
+}
+
+/* Material raises a solid button off the page and lifts it again while it is
+ * pressed. Both live in the same variable. */
+ion-button,
+ion-fab-button {
+  --box-shadow: none;
+}
+
+/* A flat card that reads as a surface because it sits a shade off the page,
+ * not because it floats above it. `--ion-color-light` is the theme's own token
+ * for that shade — darker than the page in the light theme, lifted above it in
+ * the dark one. Set on the element rather than as a `:root` variable, so
+ * Ionic's own dark palette cannot land on top of it. */
+ion-card {
+  --background: var(--ion-color-light);
+
+  box-shadow: none;
+}

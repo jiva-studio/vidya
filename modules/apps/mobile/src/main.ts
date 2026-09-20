@@ -11,8 +11,11 @@ import '@ionic/vue/css/text-alignment.css'
 import '@ionic/vue/css/text-transformation.css'
 import '@ionic/vue/css/flex-utils.css'
 import '@ionic/vue/css/display.css'
+/* Ionic's own per-component dark adjustments, driven by the system setting */
+import '@ionic/vue/css/palettes/dark.system.css'
 /* Theme variables */
 import './theme.css'
+import './misc.css'
 import './lottie.css'
 
 import { IonicVue } from '@ionic/vue'

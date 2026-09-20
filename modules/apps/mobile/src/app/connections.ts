@@ -1,5 +1,5 @@
 import { createGlobalState } from '@vueuse/core'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { ownerIdAt, PreferencesConnectionStore } from '@/infra'
 import type { Connection, HttpClient, IConnectionStore, Session } from '@/ports'
@@ -31,43 +31,49 @@ export interface SignInToConnection {
   readonly session: Session
 }
 
-const store = new PreferencesConnectionStore()
+const persisted = new PreferencesConnectionStore()
 
 export const useConnections = createGlobalState(() => {
   const connections = ref<readonly Connection[]>([])
 
   const restore = async () => {
-    connections.value = await store.list()
+    connections.value = await persisted.list()
   }
 
   const signIn = async (input: SignInToConnection) => {
     const baseUrl = normaliseBaseUrl(input.baseUrl)
     const session = input.session
 
-    await store.add({
+    await connectionStore.add({
       baseUrl,
       ownerId: await ownerIdAt(baseUrl, session),
       session,
       needsSignIn: false,
     })
-
-    await restore()
   }
 
   const signOut = async (baseUrl: string) => {
     const address = normaliseBaseUrl(baseUrl)
 
     await stopSync(address)
-    await store.remove(address)
-    await restore()
+    await connectionStore.remove(address)
   }
 
-  const markNeedsSignIn = async (baseUrl: string) => {
-    await store.update(normaliseBaseUrl(baseUrl), { needsSignIn: true })
-    await restore()
-  }
+  const markNeedsSignIn = (baseUrl: string) =>
+    connectionStore.update(normaliseBaseUrl(baseUrl), { needsSignIn: true })
 
-  return { connections, restore, signIn, signOut, markNeedsSignIn }
+  /**
+   * The connections whose token the server has stopped accepting.
+   *
+   * A screen asks this to say "sign in to this school again" — and says it
+   * about one school rather than about the app: the others are still syncing,
+   * and everything already downloaded stays readable whatever this answers.
+   */
+  const awaitingSignIn = computed(() =>
+    connections.value.filter((connection) => connection.needsSignIn),
+  )
+
+  return { connections, awaitingSignIn, restore, signIn, signOut, markNeedsSignIn }
 })
 
 /**
@@ -94,5 +100,30 @@ export function clientForSignIn(baseUrl: string): HttpClient {
   return endSessionOn401(connectionClient(address, sessionAt), () => markNeedsSignIn(address))
 }
 
-/** The persisted registry, for the parts of the app that write to it directly. */
-export const connectionStore: IConnectionStore = store
+/**
+ * The one way the registry changes.
+ *
+ * Every write moves both halves: the rows that outlive the launch, and the
+ * list the screens are watching. The engine writes here too — a renewed
+ * session, a renewal the server refused — and a write that reached storage
+ * without reaching the list is a student told on the next launch that the
+ * school they are looking at wants them to sign in again.
+ */
+export const connectionStore: IConnectionStore = {
+  list: () => persisted.list(),
+
+  add: async (connection) => {
+    await persisted.add(connection)
+    await useConnections().restore()
+  },
+
+  update: async (baseUrl, changes) => {
+    await persisted.update(baseUrl, changes)
+    await useConnections().restore()
+  },
+
+  remove: async (baseUrl) => {
+    await persisted.remove(baseUrl)
+    await useConnections().restore()
+  },
+}

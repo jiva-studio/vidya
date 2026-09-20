@@ -11,6 +11,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DatabaseSuspendedError } from '@/ports'
 import {
+  COURSE_ID,
+  COURSE_SCOPE,
   ENROLLMENT_ID,
   HOMEWORK_ID,
   LESSON_VERSION_ID,
@@ -72,6 +74,7 @@ vi.mock('@capacitor/preferences', () => ({
 
 const { openTestDatabase } = await import('@/infra/persistence/testing')
 const { startSync, stopSync, WRITE_DEBOUNCE_MS } = await import('../sync')
+const { hasSynced } = await import('../deviceSync')
 const { NoConnectionError, useRepositories } = await import('../repositories')
 
 const SCHOOL_A = 'https://school-a.test'
@@ -198,6 +201,74 @@ describe('one engine per server', () => {
       vi.useRealTimers()
       await stopSync(SCHOOL_A)
     }
+  })
+
+  it('a device that has read from this server before says so before the first run', async () => {
+    const { db, connection, connections } = await wired()
+    const started = await startSync({ db, connection, connections })
+
+    // Nothing has ever arrived: the screens are owed "getting your courses
+    // ready" rather than an empty list.
+    expect(await hasSynced(started.engine)).toBe(false)
+
+    network.server(SCHOOL_A).sync.journal({
+      collection: 'courses',
+      docId: COURSE_ID,
+      scope: COURSE_SCOPE,
+      data: { id: COURSE_ID, schoolId: SCHOOL_ID, name: 'Bhagavad-gita', learningType: 'group' },
+    })
+    await started.triggers.now()
+
+    // A scope position outlives the launch that wrote it, so the next launch
+    // knows the courses are already on the device — even with no network to
+    // ask, which is exactly when the promise of a first run cannot be kept.
+    expect(await hasSynced(started.engine)).toBe(true)
+
+    await stopSync(SCHOOL_A)
+  })
+
+  it('a connection waiting for a sign-in does not go to the network at all', async () => {
+    const { db, connection, connections } = await wired()
+    const stranded = { ...connection, needsSignIn: true }
+
+    const started = await startSync({ db, connection: stranded, connections })
+    const result = await started.triggers.now()
+
+    // Two requests to be told twice that the token is dead is what the flag
+    // exists to prevent; the device stays readable meanwhile.
+    expect(result.outcome).toBe('deferred')
+    expect(network.requestsTo(SCHOOL_A)).toEqual([])
+
+    await stopSync(SCHOOL_A)
+  })
+
+  it('signing in again hands the running engine the new session', async () => {
+    const { db, connection, connections } = await wired()
+    const server = network.server(SCHOOL_A)
+
+    // Stranded, and holding a session the server will not accept.
+    const started = await startSync({
+      db,
+      connection: {
+        ...connection,
+        needsSignIn: true,
+        session: { accessToken: 'dead-access', refreshToken: 'dead-refresh' },
+      },
+      connections,
+    })
+    expect((await started.triggers.now()).outcome).toBe('deferred')
+
+    // The repair: the same person signs in to the same school again, and the
+    // engine already listening is the one that has to carry the new token.
+    const revived = await startSync({ db, connection, connections })
+
+    expect(revived).toBe(started)
+    expect((await revived.triggers.now()).outcome).toBe('completed')
+
+    const tokens = new Set(network.requestsTo(SCHOOL_A).map((request) => request.token))
+    expect([...tokens]).toEqual([server.accessToken])
+
+    await stopSync(SCHOOL_A)
   })
 
   it('the running engine is what the screens read through', async () => {
