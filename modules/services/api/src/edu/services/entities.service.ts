@@ -15,7 +15,10 @@ export abstract class EntitiesService<TEntity extends ObjectLiteral> {
     const entity = this.repository.create(request)
     const errors = await validate(entity, { forbidUnknownValues: false })
     if (errors.length == 0) {
-      return await this.repository.save(request)
+      // The built entity, not the request it came from: a default or a
+      // `@BeforeInsert` lives only on this one, so saving the other would
+      // write a row the validation above never inspected.
+      return await this.repository.save(entity)
     } else {
       // TODO: Catch error correctrly. Endpoint returns 500
       throw new ValidationError()
