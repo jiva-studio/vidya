@@ -35,6 +35,12 @@ export class FakeRedis {
   async del(key: string): Promise<void> {
     this.store.delete(key)
   }
+
+  async incr(key: string): Promise<number> {
+    const value = (Number(this.store.get(key)) || 0) + 1
+    this.store.set(key, String(value))
+    return value
+  }
 }
 
 export type AuthContext = {

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing'
 import { OtpConfig } from '@vidya/api/configs'
 import { RedisService } from '@vidya/api/shared/services'
-import { Otp, OtpStorageKey, OtpType } from '@vidya/protocol'
+import { Otp, OtpAttemptsStorageKey, OtpStorageKey, OtpType } from '@vidya/protocol'
 
 import { OtpService } from '../otp.service'
 
@@ -31,6 +31,16 @@ class FakeRedis {
 
   async del(key: string): Promise<void> {
     this.store.delete(key)
+    this.ttls.delete(key)
+  }
+
+  // Mirrors real INCR/EXPIRE semantics: atomic w.r.t. this fake's single
+  // thread, creates the key at 1, and arms the TTL only on that first call.
+  async incr(key: string, seconds: number): Promise<number> {
+    const value = (Number(this.store.get(key)) || 0) + 1
+    this.store.set(key, String(value))
+    if (value === 1) this.ttls.set(key, seconds)
+    return value
   }
 }
 
@@ -132,6 +142,56 @@ describe('OtpService', () => {
       const issued = await otp.generate(LOGIN, OtpType.Email)
 
       await expect(otp.validate('someone.else@example.com', issued.code)).resolves.toBeUndefined()
+    })
+
+    it('burns the code once five wrong guesses have been made', async () => {
+      const { otp } = await build({ alphabet: '0123456789', length: 6 })
+      const issued = await otp.generate(LOGIN, OtpType.Email)
+
+      for (let i = 0; i < 5; i++) {
+        await expect(otp.validate(LOGIN, 'wrong!')).resolves.toBeUndefined()
+      }
+
+      await expect(otp.validate(LOGIN, issued.code)).resolves.toBeUndefined()
+    })
+
+    it('still accepts the code after four wrong guesses', async () => {
+      const { otp } = await build({ alphabet: '0123456789', length: 6 })
+      const issued = await otp.generate(LOGIN, OtpType.Email)
+
+      for (let i = 0; i < 4; i++) {
+        await expect(otp.validate(LOGIN, 'wrong!')).resolves.toBeUndefined()
+      }
+
+      await expect(otp.validate(LOGIN, issued.code)).resolves.toEqual(issued)
+    })
+
+    it('clears the guess counter on success, so the next code starts with a full budget', async () => {
+      const { otp } = await build({ alphabet: '0123456789', length: 6 })
+      const first = await otp.generate(LOGIN, OtpType.Email)
+
+      await otp.validate(LOGIN, 'wrong!')
+      await otp.validate(LOGIN, 'wrong!')
+      await expect(otp.validate(LOGIN, first.code)).resolves.toEqual(first)
+
+      const second = await otp.generate(LOGIN, OtpType.Email)
+      for (let i = 0; i < 4; i++) {
+        await expect(otp.validate(LOGIN, 'wrong!')).resolves.toBeUndefined()
+      }
+
+      // Four wrong guesses against this code would have burned it already had
+      // the two from the previous code carried over.
+      await expect(otp.validate(LOGIN, second.code)).resolves.toEqual(second)
+    })
+
+    it('gives the guess counter the same TTL as the code it guards', async () => {
+      const { redis, otp } = await build({ alphabet: '0123456789', length: 6 })
+      await otp.generate(LOGIN, OtpType.Email)
+
+      await otp.validate(LOGIN, 'wrong!')
+
+      const attemptsKey = OtpAttemptsStorageKey(LOGIN)
+      expect(redis.ttls.get(attemptsKey)).toBe(redis.ttls.get(OtpStorageKey(LOGIN)))
     })
   })
 
