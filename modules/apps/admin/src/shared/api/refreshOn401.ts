@@ -1,5 +1,5 @@
 import { isUnauthorized } from './errors'
-import type { HttpClient, HttpQuery, RefreshOn401Options } from './types'
+import type { HttpClient, HttpQuery, RefreshOn401Options, RequestOptions } from './types'
 
 /**
  * Renews the session when the server stops accepting the access token.
@@ -57,8 +57,8 @@ export const refreshOn401 = (client: HttpClient, options: RefreshOn401Options): 
   }
 
   return {
-    get: <TResponse>(path: string, query?: HttpQuery) =>
-      guard(() => client.get<TResponse>(path, query)),
+    get: <TResponse>(path: string, query?: HttpQuery, options?: RequestOptions) =>
+      guard(() => client.get<TResponse>(path, query, options)),
     post: <TResponse>(path: string, body?: unknown) =>
       guard(() => client.post<TResponse>(path, body)),
     patch: <TResponse>(path: string, body?: unknown) =>

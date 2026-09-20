@@ -21,7 +21,12 @@ function onAdd() {
 </script>
 
 <template>
-  <button type="button" :class="boundaryClasses" :aria-label="$t('editor-section-add')" @click="onAdd">
+  <button
+    type="button"
+    :class="boundaryClasses"
+    :aria-label="$t('editor-section-add')"
+    @click="onAdd"
+  >
     <span :class="boundaryRuleClasses" />
     <span :class="boundaryLabelClasses">
       <Plus :class="boundaryIconClasses" />

@@ -103,8 +103,8 @@ function onTailKey(event: KeyboardEvent) {
   onTailWrite()
 }
 
-function onSplit(id: BlockId, head: string, tail: string) {
-  emit('block-split', props.section.id, id, head, tail)
+function onEnd(id: BlockId, kept: string) {
+  emit('block-end', props.section.id, id, kept)
 }
 </script>
 
@@ -134,7 +134,7 @@ function onSplit(id: BlockId, head: string, tail: string) {
           @update="onBlockUpdate"
           @insert="onBlockInsert(block.id, $event)"
           @insert-section="onSectionInsert"
-          @split="(head, tail) => onSplit(block.id, head, tail)"
+          @end="(kept) => onEnd(block.id, kept)"
           @move="onBlockMove(block.id, $event)"
           @duplicate="onBlockDuplicate(block.id)"
           @remove="onBlockRemove(block.id)"

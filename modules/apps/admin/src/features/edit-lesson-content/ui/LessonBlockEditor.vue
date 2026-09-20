@@ -60,8 +60,8 @@ function onEscape() {
   emit('escape')
 }
 
-function onSplit(head: string, tail: string) {
-  emit('split', head, tail)
+function onEnd(kept: string) {
+  emit('end', kept)
 }
 </script>
 
@@ -73,7 +73,7 @@ function onSplit(head: string, tail: string) {
     @update="onUpdate"
     @slash="onSlash"
     @escape="onEscape"
-    @split="onSplit"
+    @end="onEnd"
   />
   <ImageBlockEditor v-if="image" :block="image" :frozen="props.frozen" @update="onUpdate" />
   <VideoBlockEditor v-if="video" :block="video" :frozen="props.frozen" @update="onUpdate" />

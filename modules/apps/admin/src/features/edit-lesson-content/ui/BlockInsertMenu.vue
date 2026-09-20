@@ -7,12 +7,7 @@ import { useMenuKeys } from '../lib'
 
 import type { BlockType } from '../types'
 import { BlockTypes } from '../types'
-import {
-  menuClasses,
-  menuIconClasses,
-  menuItemClasses,
-  menuSeparatorClasses,
-} from './styles'
+import { menuClasses, menuIconClasses, menuItemClasses, menuSeparatorClasses } from './styles'
 import type { BlockInsertMenuEmits } from './types'
 
 /* --------------------------------- Events --------------------------------- */

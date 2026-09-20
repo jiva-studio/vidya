@@ -24,7 +24,6 @@ const columns = computed<TableColumn[]>(() => [
   { key: 'actions', label: $t('users-column-actions'), align: 'end' },
 ])
 
-
 const displayedRows = computed(() => {
   if (!search.value.trim()) return users.rows.value
   const query = search.value.trim().toLowerCase()

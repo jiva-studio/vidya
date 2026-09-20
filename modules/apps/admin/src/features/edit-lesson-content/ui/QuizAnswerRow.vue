@@ -4,10 +4,7 @@ import type { ComponentPublicInstance } from 'vue'
 import { ref } from 'vue'
 
 import type { MoveDirection } from '../types'
-import {
-  answerRowClasses,
-  answerTextClasses,
-} from './styles'
+import { answerRowClasses, answerTextClasses } from './styles'
 import type { AnswerCaret, QuizAnswerRowEmits, QuizAnswerRowProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -32,12 +29,12 @@ function onRight() {
   emit('right', props.index)
 }
 
-
 function onKey(event: KeyboardEvent) {
   if (event.altKey) return onReorderKey(event)
   if (event.key === 'Enter') return take(event, () => emit('split', props.index))
   // An option still carrying text is being edited, not dismissed.
-  if (event.key === 'Backspace' && !props.text) return take(event, () => emit('collapse', props.index))
+  if (event.key === 'Backspace' && !props.text)
+    return take(event, () => emit('collapse', props.index))
 
   // Up and down walk the quiz the way they walk any list of lines, so the
   // author reaches the question above and the next option below without

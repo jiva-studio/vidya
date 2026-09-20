@@ -293,7 +293,6 @@ describe('a lesson with nothing in it', () => {
   })
 })
 
-
 describe('the shape of what was written', () => {
   const written = () => {
     const details = {
@@ -327,5 +326,4 @@ describe('the shape of what was written', () => {
     expect(block?.textContent).toContain('# Letters and sounds')
     expect(block?.querySelector('h1')).toBeNull()
   })
-
 })

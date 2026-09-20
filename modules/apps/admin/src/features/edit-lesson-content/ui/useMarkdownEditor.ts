@@ -49,7 +49,7 @@ export const useMarkdownEditor = (options: MarkdownEditorOptions): MarkdownEdito
       // Enter breaks the line, as it does in any text. It ends the block only
       // when it is pressed on a blank line at the end of one — the way a writer
       // leaves a paragraph behind — and that blank line goes with it.
-      { key: 'Enter', run: onSplit },
+      { key: 'Enter', run: onEnd },
       ...historyKeymap,
       ...defaultKeymap,
     ]),
@@ -65,7 +65,7 @@ export const useMarkdownEditor = (options: MarkdownEditorOptions): MarkdownEdito
     return true
   }
 
-  function onSplit(): boolean {
+  function onEnd(): boolean {
     const state = view.value?.state
     if (!state) return false
 
@@ -74,7 +74,7 @@ export const useMarkdownEditor = (options: MarkdownEditorOptions): MarkdownEdito
     const leaving = at === state.doc.length && line.text.length === 0 && state.doc.lines > 1
     if (!leaving) return false
 
-    options.onSplit(state.doc.sliceString(0, Math.max(line.from - 1, 0)), '')
+    options.onEnd(state.doc.sliceString(0, Math.max(line.from - 1, 0)))
     return true
   }
 

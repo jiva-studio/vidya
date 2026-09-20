@@ -89,7 +89,7 @@ export interface SectionEditorEmits {
   'tail-write': [id: SectionId]
   'block-update': [id: SectionId, block: LessonBlock]
   'block-insert': [id: SectionId, afterId: BlockId | undefined, type: BlockType]
-  'block-split': [id: SectionId, blockId: BlockId, head: string, tail: string]
+  'block-end': [id: SectionId, blockId: BlockId, kept: string]
   'block-move': [id: SectionId, blockId: BlockId, delta: MoveDirection]
   'block-duplicate': [id: SectionId, blockId: BlockId]
   'block-remove': [id: SectionId, blockId: BlockId]

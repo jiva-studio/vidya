@@ -39,7 +39,6 @@ const breadcrumbs = computed(() => [
   { key: 'current', label: context.value.studentName ?? $t('homework-review-title') },
 ])
 
-
 /* ---------------------------------- Hooks --------------------------------- */
 
 onMounted(() => {

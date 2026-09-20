@@ -87,8 +87,8 @@ function onSection() {
   emit('insert-section')
 }
 
-function onSplit(head: string, tail: string) {
-  emit('split', head, tail)
+function onEnd(kept: string) {
+  emit('end', kept)
 }
 
 function onMove(delta: MoveDirection) {
@@ -189,7 +189,7 @@ function focusInside() {
         @update="onUpdate"
         @slash="onSlash"
         @escape="onEscape"
-        @split="onSplit"
+        @end="onEnd"
       />
     </div>
     <BlockInserter

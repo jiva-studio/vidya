@@ -152,24 +152,26 @@ export const insertBlockAfter = (
   })
 
 /**
- * Ends a text block at the caret and opens the rest as the block below it.
+ * Ends a text block at what the author has written, and opens an empty one below.
  *
- * Enter is how a document grows a paragraph, so it grows a block: the text the
- * caret was in front of goes with it rather than being left behind above.
+ * `kept` is the block without the blank line the author left at its end: that
+ * line was the gesture, not part of the text, and leaving it in would save a
+ * trailing newline into the lesson.
  */
-export const splitTextBlock = (
+export const endTextBlock = (
   content: LessonContent,
   sectionId: SectionId,
   blockId: BlockId,
-  head: string,
-  tail: string,
+  kept: string,
 ): LessonContent =>
   withBlocks(content, sectionId, (blocks) => {
     const source = blocks.find((block) => block.id === blockId)
     if (!source || source.type !== 'text') return [...blocks]
 
-    const next = blocks.map((block) => (block.id === blockId ? { ...source, content: head } : block))
-    next.splice(below(blocks, blockId), 0, { id: newBlockId(), type: 'text', content: tail })
+    const next = blocks.map((block) =>
+      block.id === blockId ? { ...source, content: kept } : block,
+    )
+    next.splice(below(blocks, blockId), 0, { id: newBlockId(), type: 'text', content: '' })
     return next
   })
 

@@ -96,16 +96,13 @@ export const menuHeadingClasses = [
 export const blockListClasses = ['flex flex-col']
 
 // A section that ends in a picture or a question has nowhere left to type, so
-// it is shown the empty line it is missing. It is drawn exactly as an empty
-// text block is drawn, because clicking it is what turns it into one.
-// The padding is a block's own: the line stands exactly where the block it
-// becomes will stand, so clicking it moves nothing on the page.
+// it is shown the empty line it is missing, drawn and padded exactly as an
+// empty text block is: clicking it turns it into one, and nothing moves.
 export const tailClasses = [
   'w-full border-0 bg-transparent px-0 py-[var(--space-1)] text-start cursor-text',
   'text-[length:var(--text-base)] text-[var(--color-text-muted)]',
   'focus-visible:outline-none',
 ]
-
 
 // Where one section ends and the next begins, which is where one piece of
 // homework ends and the next begins. It is drawn as the line it is; the offer

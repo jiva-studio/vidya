@@ -39,8 +39,6 @@ function onTab(value: string) {
   tab.value = value
 }
 
-
-
 function onPick(picked: PickedMedia) {
   hand(picked)
 }

@@ -29,7 +29,7 @@ export interface LessonBlockEditorEmits {
   update: [block: LessonBlock]
   slash: []
   escape: []
-  split: [head: string, tail: string]
+  end: [kept: string]
 }
 
 /** The gutter's two controls, and where each block sits among its neighbours. */
@@ -47,7 +47,7 @@ export interface LessonBlockFrameEmits {
   update: [block: LessonBlock]
   insert: [type: BlockType]
   'insert-section': []
-  split: [head: string, tail: string]
+  end: [kept: string]
   move: [delta: MoveDirection]
   duplicate: []
   remove: []
@@ -95,7 +95,7 @@ export interface MarkdownEditorOptions {
   onSlash: () => void
   onEscape: () => void
   onStep: (delta: MoveDirection) => boolean
-  onSplit: (head: string, tail: string) => void
+  onEnd: (kept: string) => void
 }
 
 export interface MarkdownEditor {
@@ -128,7 +128,7 @@ export interface TextBlockEditorEmits {
   update: [block: TextBlock]
   slash: []
   escape: []
-  split: [head: string, tail: string]
+  end: [kept: string]
 }
 
 /**

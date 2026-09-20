@@ -26,7 +26,7 @@ import {
   reorderSections,
   sectionBelow,
   setSectionAssessment,
-  splitTextBlock,
+  endTextBlock,
   updateBlock,
 } from '@/features/edit-lesson-content'
 
@@ -155,8 +155,8 @@ function onTailWrite(id: SectionId) {
   onBlockInsert(id, last?.id, 'text')
 }
 
-function onBlockSplit(id: SectionId, blockId: BlockId, head: string, tail: string) {
-  const next = splitTextBlock(shown.value, id, blockId, head, tail)
+function onBlockEnd(id: SectionId, blockId: BlockId, kept: string) {
+  const next = endTextBlock(shown.value, id, blockId, kept)
 
   caretBlock.value = blockBelow(next, id, blockId)
   caretSection.value = undefined
@@ -209,7 +209,7 @@ function apply(next: LessonContent) {
         @tail-write="onTailWrite"
         @block-update="onBlockUpdate"
         @block-insert="onBlockInsert"
-        @block-split="onBlockSplit"
+        @block-end="onBlockEnd"
         @block-move="onBlockMove"
         @block-duplicate="onBlockDuplicate"
         @block-remove="onBlockRemove"

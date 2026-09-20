@@ -15,6 +15,7 @@ export {
   duplicateBlock,
   EmbedHosts,
   embedSrc,
+  endTextBlock,
   insertBlockAfter,
   insertSectionAfter,
   invalidBlocks,
@@ -37,7 +38,6 @@ export {
   setQuestion,
   setRightAnswer,
   setSectionAssessment,
-  splitTextBlock,
   updateBlock,
   useLessonContentEditor,
 } from './model'

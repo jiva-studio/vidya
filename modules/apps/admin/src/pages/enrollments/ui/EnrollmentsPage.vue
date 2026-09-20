@@ -38,8 +38,6 @@ const columns = computed<TableColumn[]>(() => [
   { key: 'actions', label: $t('enrollments-column-actions'), align: 'end' },
 ])
 
-
-
 /* ---------------------------------- Hooks --------------------------------- */
 
 onMounted(() => {

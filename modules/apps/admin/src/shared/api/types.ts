@@ -3,8 +3,20 @@
 
 export type HttpQuery = Record<string, string | number | boolean | undefined>
 
+/** What a caller can say about one request beyond its address and its body. */
+export interface RequestOptions {
+  /**
+   * A read taken on the off-chance, whose failure the caller already handles.
+   *
+   * Names for the rows of a list are the case this exists for: the reader may
+   * not hold `users:read`, the screen shows the identifier instead, and a page
+   * of thirty must not raise thirty complaints about it.
+   */
+  readonly quiet?: boolean
+}
+
 export interface HttpClient {
-  get<TResponse>(path: string, query?: HttpQuery): Promise<TResponse>
+  get<TResponse>(path: string, query?: HttpQuery, options?: RequestOptions): Promise<TResponse>
   post<TResponse>(path: string, body?: unknown): Promise<TResponse>
   patch<TResponse>(path: string, body?: unknown): Promise<TResponse>
   delete(path: string): Promise<void>

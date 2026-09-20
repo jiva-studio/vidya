@@ -40,7 +40,6 @@ const rows = ref<InstanceType<typeof QuizAnswerRow>[]>([])
 // Where the caret belongs once the list the author changed has been re-rendered.
 const landing = ref<{ index: number; caret: AnswerCaret } | null>(null)
 
-
 /* --------------------------------- Hooks ---------------------------------- */
 
 // Post-flush, because the row to focus is one the re-render has just created or
@@ -48,7 +47,6 @@ const landing = ref<{ index: number; caret: AnswerCaret } | null>(null)
 watch(() => answers.value.length, land, { flush: 'post' })
 
 /* -------------------------------- Handlers -------------------------------- */
-
 
 function onStep(index: number, delta: MoveDirection) {
   const next = index + delta
@@ -120,11 +118,7 @@ function land() {
 </script>
 
 <template>
-  <div
-    ref="root"
-    :class="quizClasses"
-    :data-block-id="props.block.id"
-  >
+  <div ref="root" :class="quizClasses" :data-block-id="props.block.id">
     <Input
       :class="questionClasses"
       :model-value="props.block.question"

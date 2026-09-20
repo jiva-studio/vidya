@@ -127,9 +127,7 @@ export const answerTextClasses = bareInputClasses
 
 export const newAnswerClasses = `${bareInputClasses} text-[var(--color-text-muted)]`
 
-export const answerListClasses = [
-  'flex flex-col list-none m-0 p-0 ps-[var(--space-2)]',
-]
+export const answerListClasses = ['flex flex-col list-none m-0 p-0 ps-[var(--space-2)]']
 
 export const answerRowClasses = ['group/answer flex items-center gap-[var(--space-2)]']
 

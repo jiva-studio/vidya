@@ -37,7 +37,7 @@ watch(
       return
     }
     try {
-      const user = await userApi.get(asId<UserId>(id))
+      const user = await userApi.nameOf(asId<UserId>(id))
       profileName.value = user.name || user.email || undefined
       profileEmail.value = user.email || undefined
     } catch {

@@ -7,6 +7,7 @@ export {
   blockBelow,
   convertBlock,
   duplicateBlock,
+  endTextBlock,
   insertBlockAfter,
   insertSectionAfter,
   moveBlock,
@@ -18,7 +19,6 @@ export {
   reorderSections,
   sectionBelow,
   setSectionAssessment,
-  splitTextBlock,
   updateBlock,
 } from './edits'
 export {

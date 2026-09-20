@@ -47,6 +47,7 @@ export const fakeHttpClient = (answers: FakeAnswers = {}) => {
   const client: HttpClient = {
     get: (<TResponse>(path: string, query?: HttpQuery) =>
       record({ method: 'GET', path, query }) as Promise<TResponse>) as HttpClient['get'],
+    // The options a caller passes are the announcer's business, not the fake's.
     post: (<TResponse>(path: string, body?: unknown) =>
       record({ method: 'POST', path, body }) as Promise<TResponse>) as HttpClient['post'],
     patch: (<TResponse>(path: string, body?: unknown) =>

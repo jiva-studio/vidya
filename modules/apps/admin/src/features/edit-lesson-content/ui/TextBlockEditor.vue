@@ -30,13 +30,13 @@ const editor = useMarkdownEditor({
   onSlash: onSlash,
   onEscape: onEscape,
   onStep: onStep,
-  onSplit: onSplit,
+  onEnd: onEnd,
 })
 
-// The author holds the markdown itself, highlighted where it is typed. Swapping
-// it for the rendered text whenever the caret left changed the block's height
-// under the pointer, and a line that moves while you reach for it is worse than
-// one that never pretends to be the finished page.
+// The author holds the markdown itself, highlighted where it is typed: a block
+// that rendered itself whenever the caret left would change height under the
+// pointer, and a line that moves while you reach for it is worse than one that
+// never pretends to be the finished page.
 const empty = computed(() => !filled.value)
 
 /* -------------------------------- Handlers -------------------------------- */
@@ -50,8 +50,8 @@ function onStep(delta: MoveDirection): boolean {
   return surface ? stepToNeighbourField(surface, delta) : false
 }
 
-function onSplit(head: string, tail: string) {
-  emit('split', head, tail)
+function onEnd(kept: string) {
+  emit('end', kept)
 }
 
 function onSlash() {

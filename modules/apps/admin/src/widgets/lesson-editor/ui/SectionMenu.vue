@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import type { LessonSection } from '@vidya/domain'
 import { Button, Popover } from '@vidya/ui'
-import { ArrowDown, ArrowUp, Ban, Check, GraduationCap, MoreHorizontal, Trash2, Wand2 } from 'lucide-vue-next'
+import {
+  ArrowDown,
+  ArrowUp,
+  Ban,
+  Check,
+  GraduationCap,
+  MoreHorizontal,
+  Trash2,
+  Wand2,
+} from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { MoveDirection } from '@/features/edit-lesson-content'
@@ -115,7 +124,10 @@ function onAssessment(assessment: LessonSection['assessment']) {
       >
         <component :is="choice.icon" :class="menuIconClasses" />
         {{ $t(choice.label) }}
-        <Check :class="menuCheckClasses" :data-on="choice.value === props.assessment || undefined" />
+        <Check
+          :class="menuCheckClasses"
+          :data-on="choice.value === props.assessment || undefined"
+        />
       </Button>
     </div>
   </Popover>

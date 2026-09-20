@@ -26,7 +26,6 @@ const names = ref(new Map<SchoolId, string>())
 const loading = ref(false)
 const error = ref<string | undefined>(undefined)
 
-
 /* ---------------------------------- Hooks --------------------------------- */
 
 onMounted(() => {

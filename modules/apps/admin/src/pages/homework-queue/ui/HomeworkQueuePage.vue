@@ -27,7 +27,6 @@ const columns = computed<TableColumn[]>(() => [
   { key: 'submitted', label: $t('homework-column-submitted') },
 ])
 
-
 /* ---------------------------------- Hooks --------------------------------- */
 
 onMounted(() => {

@@ -1,5 +1,5 @@
 import { HttpError, isUnauthorized, OfflineError } from './errors'
-import type { Failure, FailureSink, HttpClient, HttpQuery } from './types'
+import type { Failure, FailureSink, HttpClient, HttpQuery, RequestOptions } from './types'
 
 /** What a screen shows for a failure, as a Fluent key rather than a sentence. */
 const Messages: Record<number, string> = {
@@ -41,13 +41,10 @@ export const reportFailure: FailureSink = (failure) => sink(failure)
 /**
  * Reports every failed request to one place, and lets it through unchanged.
  *
- * Callers still catch what they must act on — a form that marks its own field,
- * a save that offers to retry. What they no longer do is decide whether the
- * operator is told at all: that answer was different on every screen, and on
- * most of them it was a line of red text somewhere down the page.
- *
- * A 401 says nothing: the session is being renewed under the caller, and an
- * expiry that fixed itself is not news.
+ * A caller still catches what it must act on — a form marks its own field, a
+ * save offers to retry — but whether the operator is told at all is settled
+ * here rather than screen by screen. A 401 says nothing: the session is being
+ * renewed under the caller, and an expiry that fixed itself is not news.
  */
 export const announceFailures = (client: HttpClient, report: FailureSink): HttpClient => {
   const watched = async <TResult>(call: () => Promise<TResult>): Promise<TResult> => {
@@ -60,8 +57,10 @@ export const announceFailures = (client: HttpClient, report: FailureSink): HttpC
   }
 
   return {
-    get: <TResponse>(path: string, query?: HttpQuery) =>
-      watched(() => client.get<TResponse>(path, query)),
+    get: <TResponse>(path: string, query?: HttpQuery, options?: RequestOptions) =>
+      options?.quiet
+        ? client.get<TResponse>(path, query, options)
+        : watched(() => client.get<TResponse>(path, query, options)),
     post: <TResponse>(path: string, body?: unknown) =>
       watched(() => client.post<TResponse>(path, body)),
     patch: <TResponse>(path: string, body?: unknown) =>
