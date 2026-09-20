@@ -7,6 +7,7 @@ import {
   Inject,
   NotImplementedException,
   Post,
+  UseGuards,
 } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import {
@@ -19,8 +20,36 @@ import {
 import { MailerService } from '@nestjs-modules/mailer'
 import * as dto from '@vidya/api/auth/dto'
 import { OtpService } from '@vidya/api/auth/services'
-import { MailerConfig } from '@vidya/api/configs'
+import { normalizeLogin } from '@vidya/api/auth/utils'
+import { MailerConfig, throttlerSettings } from '@vidya/api/configs'
+import { KeyedThrottlerGuard } from '@vidya/api/shared/throttling'
 import { Routes } from '@vidya/protocol'
+
+/**
+ * Keyed by the normalised destination *and* by IP — see
+ * `user-authentication.controller.ts` for why both. This is the limit that
+ * actually closes the OTP brute force: `otp.service.ts` burns a code after
+ * five wrong guesses, but deletes the guess counter along with it, so
+ * without a cap on how often a *new* code can be requested, the attacker
+ * just asks for another one and gets a fresh budget of five. Three new
+ * codes an hour caps the whole attack at fifteen guesses an hour per
+ * destination, not fifteen a minute.
+ */
+const otpThrottle = throttlerSettings().otp
+const OTP_THROTTLE = KeyedThrottlerGuard([
+  {
+    name: 'auth:otp:destination',
+    limit: otpThrottle.destinationLimit,
+    windowMs: otpThrottle.windowMs,
+    value: (req) => normalizeLogin(req.body?.destination) as string | undefined,
+  },
+  {
+    name: 'auth:otp:ip',
+    limit: otpThrottle.ipLimit,
+    windowMs: otpThrottle.windowMs,
+    value: (req) => req.ip,
+  },
+])
 
 @Controller()
 @ApiTags('🎟️ Authentication :: One-Time Password')
@@ -37,6 +66,7 @@ export class OtpController {
   /* -------------------------------------------------------------------------- */
 
   @Post(Routes().otp.root())
+  @UseGuards(OTP_THROTTLE)
   @HttpCode(200)
   @ApiOperation({
     summary: 'Generates OTP and sends it to the user',

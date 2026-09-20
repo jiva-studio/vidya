@@ -6,11 +6,15 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger'
+import { Throttle } from '@nestjs/throttler'
 import * as dto from '@vidya/api/auth/dto'
 import { AuthService, AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
+import { throttlerSettings } from '@vidya/api/configs'
 import { AuditLogService } from '@vidya/api/shared/services'
 import { Routes } from '@vidya/protocol'
 import { Request } from 'express'
+
+const refreshThrottle = throttlerSettings().refresh
 
 @Controller()
 @ApiTags('🔐 Authentication')
@@ -28,6 +32,10 @@ export class TokensController {
 
   @Post(Routes().auth.tokens.refresh())
   @HttpCode(200)
+  // No login in the body to key on — the token being presented is the whole
+  // point of the check — so this stays on the global guard's default policy,
+  // just overridden to the tighter count an unlimited forgery attempt calls for.
+  @Throttle({ default: { limit: refreshThrottle.limit, ttl: refreshThrottle.windowMs } })
   @ApiOperation({
     summary: 'Refreshes access token',
     operationId: 'auth::tokens::refresh',

@@ -76,7 +76,9 @@ describe('/auth', () => {
       .expect(501)
 
     expect(ctx.mail.messages).toHaveLength(0)
-    expect(ctx.redis.store.size).toBe(0)
+    // No code was minted. Asserted against the OTP keys rather than the whole
+    // store, which the throttler also writes to.
+    expect([...ctx.redis.store.keys()].filter((key) => key.startsWith('otp:'))).toEqual([])
   })
 
   it('rejects a request with no destination', () => {
@@ -168,11 +170,14 @@ describe('/auth', () => {
     await wrongGuess('Bob@Example.com  ')
     await wrongGuess('bob@example.com')
 
-    // The budget is spent, so even the real code is refused now.
+    // The budget is spent, so even the real code would be refused now — but
+    // this is also this login's sixth sign-in attempt inside the throttle's
+    // own window, and that guard runs before the OTP is ever checked, so the
+    // caller never gets far enough to learn which of the two turned it away.
     return request(server())
       .post(routes.auth.signIn('otp'))
       .send({ login: 'bob@example.com', otp: code })
-      .expect(401)
+      .expect(429)
   })
 
   /* -------------------------------------------------------------------------- */

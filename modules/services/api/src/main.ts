@@ -24,6 +24,13 @@ async function bootstrap() {
   const hstsEnabled = configService.get<boolean>('securityHeaders.hstsEnabled')
   app.use(securityHeaders({ hstsEnabled }))
 
+  // Per-IP throttling reads `req.ip`, which only reflects the real caller once
+  // Express is told how many proxy hops to trust in front of it — otherwise
+  // every request behind a load balancer arrives as the load balancer's own
+  // IP, and the per-IP limits count every caller behind it as one. See
+  // `configs/trust-proxy.config.ts` for what a deployment sets.
+  app.set('trust proxy', configService.get('trustProxy.setting'))
+
   // Before anything is served: a half-migrated schema is worse than a slow start.
   await bootstrapMigrations(configService)
 

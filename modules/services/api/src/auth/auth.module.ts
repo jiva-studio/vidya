@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { MailerModule } from '@nestjs-modules/mailer'
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/adapters/handlebars.adapter'
 import { AuditLogService, RedisService } from '@vidya/api/shared/services'
+import { RedisThrottlerStorageModule } from '@vidya/api/shared/throttling'
 import { AuditLog, Role, User, UserRole } from '@vidya/entities'
 
 import { MailerConfig } from '../configs'
@@ -21,6 +22,7 @@ import { RevokedTokensService } from './services/revokedTokens.service'
   imports: [
     TypeOrmModule.forFeature([User, Role, UserRole, AuditLog]),
     JwtModule.register({ global: true }),
+    RedisThrottlerStorageModule,
     MailerModule.forRootAsync({
       useFactory: (config: ConfigType<typeof MailerConfig>) => ({
         transport: {
