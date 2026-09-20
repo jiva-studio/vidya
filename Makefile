@@ -158,6 +158,11 @@ export VIDYA_ADMIN_PORT   := 7811
 export VIDYA_SB_PORT      := 7812
 export VIDYA_API_URL      := http://localhost:7810
 
+# Query logging defaults to off (see db.config.ts); set explicitly here so
+# local dev keeps seeing SQL in the console instead of relying on a default
+# that production needs to be off.
+export VIDYA_DB_LOGGING   := true
+
 dev-up:
 	$(COMPOSE) up -d
 	@echo ""

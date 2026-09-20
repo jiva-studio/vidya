@@ -8,5 +8,9 @@ export default registerAs('db', () => ({
   password: process.env.VIDYA_DB_PASSWORD || 'postgres',
   database: process.env.VIDYA_DB_DATABASE || 'postgres',
   schema: process.env.VIDYA_DB_SCHEMA || 'public',
-  logging: (process.env.VIDYA_DB_LOGGING ?? 'true') === 'true',
+  // Off by default: TypeORM's query log includes bound parameters, so an
+  // unset variable would otherwise ship every email, name, and homework
+  // answer that passes through a query into the application log. Dev turns
+  // it on explicitly (see modules/Makefile).
+  logging: process.env.VIDYA_DB_LOGGING === 'true',
 }))
