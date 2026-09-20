@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing'
 import { OtpConfig } from '@vidya/api/configs'
+import DefaultOtpConfig from '@vidya/api/configs/otp.config'
 import { RedisService } from '@vidya/api/shared/services'
 import { Otp, OtpAttemptsStorageKey, OtpStorageKey, OtpType } from '@vidya/protocol'
 
@@ -91,6 +92,19 @@ describe('OtpService', () => {
       for (let i = 0; i < 200; i++) seen.add((await otp.generate(LOGIN, OtpType.Email)).code)
 
       expect([...seen].sort()).toEqual(['A', 'B'])
+    })
+
+    it('draws from the production default — an 8-digit numeric code', async () => {
+      // Guards the entropy the default config promises: 6 digits at 300s TTL
+      // was walkable, 8 is a hundredfold harder even if a rate limiter fails.
+      const { otp } = await build(DefaultOtpConfig())
+
+      for (let i = 0; i < 200; i++) {
+        const { code } = await otp.generate(LOGIN, OtpType.Email)
+
+        expect(code).toHaveLength(8)
+        expect(code).toMatch(/^[0-9]{8}$/)
+      }
     })
 
     it('does not issue the same code twice in a row', async () => {

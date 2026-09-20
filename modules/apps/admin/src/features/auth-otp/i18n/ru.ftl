@@ -1,6 +1,6 @@
 auth-title = Вход в Vidya
 auth-email-label = Электронная почта
-auth-email-hint = Пришлём код из шести цифр
+auth-email-hint = Пришлём код из восьми цифр
 auth-email-submit = Отправить код
 auth-email-sending = Отправляем…
 

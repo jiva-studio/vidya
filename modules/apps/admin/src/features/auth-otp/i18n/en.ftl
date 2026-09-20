@@ -1,6 +1,6 @@
 auth-title = Sign in to Vidya
 auth-email-label = Email
-auth-email-hint = We will send a six-digit code
+auth-email-hint = We will send an eight-digit code
 auth-email-submit = Send the code
 auth-email-sending = Sending…
 
