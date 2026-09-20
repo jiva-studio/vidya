@@ -185,3 +185,39 @@ export const clickOverlay = async (label: string): Promise<void> => {
   control.click()
   await flushPromises()
 }
+
+/**
+ * Opens the insert menu the way an author does: a slash on an empty line.
+ *
+ * There is no button for it any more — the menu hangs off the line being
+ * typed in, so a test reaches it through the text surface rather than through
+ * chrome that is no longer drawn.
+ */
+export const openInsertMenu = async (root: Element): Promise<void> => {
+  const tail = [...root.querySelectorAll<HTMLElement>('button')].find((node) =>
+    accessibleName(node).startsWith('Lesson text'),
+  )
+
+  tail?.click()
+  await flushPromises()
+
+  const surfaces = root.querySelectorAll<HTMLElement>('.cm-content')
+  const surface = surfaces[surfaces.length - 1]
+  if (!surface) throw new Error('the section offers no empty line to type into')
+
+  surface.focus()
+  surface.dispatchEvent(new KeyboardEvent('keydown', { key: '/', bubbles: true }))
+  await flushPromises()
+}
+
+/** Opens a section from the boundary below the one on screen. */
+export const addSection = async (wrapper: { element: Element }): Promise<void> => {
+  const boundary = [...wrapper.element.querySelectorAll<HTMLElement>('button')].find(
+    (node) => accessibleName(node) === 'Add section',
+  )
+
+  if (!boundary) throw new Error('no boundary to open a section from')
+
+  boundary.click()
+  await flushPromises()
+}

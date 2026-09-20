@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { CommandMenu } from '@vidya/ui'
-import { useFluent } from 'fluent-vue'
-import { computed, ref } from 'vue'
+import { Button } from '@vidya/ui'
+import { CircleHelp, Image, Menu, Music, Type, Video } from 'lucide-vue-next'
+import { ref } from 'vue'
+
+import { useMenuKeys } from '../lib'
 
 import type { BlockType } from '../types'
 import { BlockTypes } from '../types'
+import {
+  menuClasses,
+  menuIconClasses,
+  menuItemClasses,
+  menuSeparatorClasses,
+} from './styles'
 import type { BlockInsertMenuEmits } from './types'
 
 /* --------------------------------- Events --------------------------------- */
@@ -13,38 +21,41 @@ const emit = defineEmits<BlockInsertMenuEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
-const { $t } = useFluent()
+const icons = { text: Type, image: Image, video: Video, audio: Music, quiz: CircleHelp }
 
-const term = ref('')
+const root = ref<HTMLElement | null>(null)
 
-const items = computed(() =>
-  BlockTypes.map((value) => ({ value, label: $t(`editor-block-${value}`) })),
-)
+/* --------------------------------- Hooks ---------------------------------- */
+
+const { onKey } = useMenuKeys(root)
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onSelect(value: string) {
-  emit('pick', value as BlockType)
+function onSelect(value: BlockType) {
+  emit('pick', value)
 }
 
-function onTerm(next: string) {
-  term.value = next
-}
-
-function onClose() {
-  emit('close')
+function onSection() {
+  emit('section')
 }
 </script>
 
 <template>
-  <CommandMenu
-    :items="items"
-    :term="term"
-    :label="$t('editor-block-add')"
-    :placeholder="$t('editor-block-search')"
-    :empty-label="$t('editor-block-none')"
-    @select="onSelect"
-    @update:term="onTerm"
-    @close="onClose"
-  />
+  <div ref="root" :class="menuClasses" @keydown="onKey">
+    <Button
+      v-for="type in BlockTypes"
+      :key="type"
+      variant="ghost"
+      :class="menuItemClasses"
+      @click="onSelect(type)"
+    >
+      <component :is="icons[type]" :class="menuIconClasses" />
+      {{ $t(`editor-block-${type}`) }}
+    </Button>
+    <div :class="menuSeparatorClasses" />
+    <Button variant="ghost" :class="menuItemClasses" @click="onSection">
+      <Menu :class="menuIconClasses" />
+      {{ $t('editor-block-section') }}
+    </Button>
+  </div>
 </template>

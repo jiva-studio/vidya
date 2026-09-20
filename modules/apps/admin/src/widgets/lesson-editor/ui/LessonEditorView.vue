@@ -52,7 +52,6 @@ const frozen = computed(() => versionDoc.version.value?.status === 'published')
 const problems = computed(() => contentProblems(editor.content.value))
 const blocked = computed(() => problems.value.length > 0)
 const noticed = computed(() => blocked.value || faults.value.length > 0)
-const actionError = computed(() => draft.error.value ?? publishing.error.value)
 
 /* --------------------------------- Hooks ---------------------------------- */
 
@@ -87,6 +86,10 @@ function onRedo() {
 
 function onBack() {
   emit('back')
+}
+
+function onRename(title: string) {
+  emit('rename', title)
 }
 
 function onRetry() {
@@ -164,7 +167,7 @@ function reveal(id: SectionId) {
       :busy="publishing.busy.value"
       :publishable="publishable"
       :blocked="blocked"
-      :error="actionError && $t(actionError)"
+      @rename="onRename"
       @back="onBack"
       @save="onSave"
       @retry="onSaveRetry"
@@ -176,7 +179,7 @@ function reveal(id: SectionId) {
     <FailureState
       v-else-if="versionDoc.error.value"
       :title="$t('state-error-title')"
-      :description="$t(versionDoc.error.value)"
+      :description="$t('state-error')"
       :retry-label="$t('editor-retry')"
       @retry="onRetry"
     />

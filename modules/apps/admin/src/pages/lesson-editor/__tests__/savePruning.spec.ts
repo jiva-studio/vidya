@@ -1,12 +1,11 @@
 import type { LessonContent } from '@vidya/domain'
-import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { addMessages, locale } from '@/shared/i18n'
 
 import { messages } from '../i18n'
 import { contentOf, draftOf, sectionOf, textBlock } from './documents'
-import { accessibleName, clickOverlay, openEditor, saveDraft, VERSIONS } from './harness'
+import { clickOverlay, openEditor, openInsertMenu, saveDraft, VERSIONS } from './harness'
 
 addMessages(messages)
 locale.value = 'en'
@@ -19,15 +18,7 @@ const blocksOn = (wrapper: { element: Element }) => [
 
 /** Adds a block of `kind` below the one the author is in, and types nothing into it. */
 const insertBlank = async (wrapper: { element: Element }, kind: string) => {
-  const block = wrapper.element.querySelector('[data-block-id="b1"]')
-  if (!block) throw new Error('no block to insert below')
-
-  block.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
-  await flushPromises()
-  ;[...block.querySelectorAll('button')]
-    .find((node) => accessibleName(node) === 'Add block')
-    ?.click()
-  await flushPromises()
+  await openInsertMenu(wrapper.element)
   await clickOverlay(kind)
 }
 

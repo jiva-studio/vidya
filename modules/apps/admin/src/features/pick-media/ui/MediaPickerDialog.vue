@@ -6,7 +6,6 @@ import { computed, ref } from 'vue'
 import type { PickedMedia } from '@/entities/media'
 
 import MediaLibraryPanel from './MediaLibraryPanel.vue'
-import MediaLinkPanel from './MediaLinkPanel.vue'
 import MediaUploadPanel from './MediaUploadPanel.vue'
 import type { MediaPickerDialogEmits, MediaPickerDialogProps } from '../types'
 import { MediaPickerTabs } from '../types'
@@ -15,8 +14,6 @@ import { MediaPickerTabs } from '../types'
 
 const props = withDefaults(defineProps<MediaPickerDialogProps>(), {
   open: false,
-  link: '',
-  source: undefined,
 })
 
 /* --------------------------------- Events --------------------------------- */
@@ -42,13 +39,7 @@ function onTab(value: string) {
   tab.value = value
 }
 
-function onLink(link: string) {
-  emit('update:link', link)
-}
 
-function onLinkSubmit() {
-  if (props.source) hand({ url: props.link.trim(), source: props.source })
-}
 
 function onPick(picked: PickedMedia) {
   hand(picked)
@@ -83,14 +74,6 @@ function hand(picked: PickedMedia) {
       </TabsPanel>
       <TabsPanel value="library">
         <MediaLibraryPanel :kind="props.kind" @pick="onPick" />
-      </TabsPanel>
-      <TabsPanel value="link">
-        <MediaLinkPanel
-          :link="props.link"
-          :source="props.source"
-          @update:link="onLink"
-          @submit="onLinkSubmit"
-        />
       </TabsPanel>
     </Tabs>
   </Dialog>

@@ -68,6 +68,32 @@ const withBlocks = (
 export const addSection = (content: LessonContent, title: string): LessonContent =>
   stamped([...content.sections, { id: newSectionId(), title, blocks: [], assessment: 'none' }])
 
+/** Opens a section directly below `afterId`, or at the end when there is none. */
+export const insertSectionAfter = (
+  content: LessonContent,
+  afterId: SectionId | undefined,
+): LessonContent => {
+  const next = [...content.sections]
+  const at = next.findIndex((section) => section.id === afterId)
+
+  next.splice(at < 0 ? next.length : at + 1, 0, {
+    id: newSectionId(),
+    title: '',
+    blocks: [],
+    assessment: 'none',
+  })
+  return stamped(next)
+}
+
+/** The id the section opened below `afterId` was given, for the caret to follow. */
+export const sectionBelow = (
+  content: LessonContent,
+  afterId: SectionId | undefined,
+): SectionId | undefined => {
+  const at = content.sections.findIndex((section) => section.id === afterId)
+  return at < 0 ? content.sections[content.sections.length - 1]?.id : content.sections[at + 1]?.id
+}
+
 export const renameSection = (
   content: LessonContent,
   sectionId: SectionId,
@@ -125,6 +151,28 @@ export const insertBlockAfter = (
     return next
   })
 
+/**
+ * Ends a text block at the caret and opens the rest as the block below it.
+ *
+ * Enter is how a document grows a paragraph, so it grows a block: the text the
+ * caret was in front of goes with it rather than being left behind above.
+ */
+export const splitTextBlock = (
+  content: LessonContent,
+  sectionId: SectionId,
+  blockId: BlockId,
+  head: string,
+  tail: string,
+): LessonContent =>
+  withBlocks(content, sectionId, (blocks) => {
+    const source = blocks.find((block) => block.id === blockId)
+    if (!source || source.type !== 'text') return [...blocks]
+
+    const next = blocks.map((block) => (block.id === blockId ? { ...source, content: head } : block))
+    next.splice(below(blocks, blockId), 0, { id: newBlockId(), type: 'text', content: tail })
+    return next
+  })
+
 /** The id the block inserted below `afterId` was given, for the caret to follow. */
 export const blockBelow = (
   content: LessonContent,
@@ -136,6 +184,23 @@ export const blockBelow = (
 
   return at < 0 ? blocks[blocks.length - 1]?.id : blocks[at + 1]?.id
 }
+
+/**
+ * Turns a block into one of another kind, in its place and under its own id.
+ *
+ * Asking for a picture from the line you are standing on is asking for that
+ * line to become one: a second block below would leave the empty line behind
+ * and put the caret somewhere the author did not point at.
+ */
+export const convertBlock = (
+  content: LessonContent,
+  sectionId: SectionId,
+  blockId: BlockId,
+  type: BlockType,
+): LessonContent =>
+  withBlocks(content, sectionId, (blocks) =>
+    blocks.map((block) => (block.id === blockId ? { ...createBlock(type), id: blockId } : block)),
+  )
 
 /** A copy of the block, carrying its content but never its identity. */
 export const duplicateBlock = (

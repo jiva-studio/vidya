@@ -29,6 +29,7 @@ export interface LessonBlockEditorEmits {
   update: [block: LessonBlock]
   slash: []
   escape: []
+  split: [head: string, tail: string]
 }
 
 /** The gutter's two controls, and where each block sits among its neighbours. */
@@ -45,6 +46,8 @@ export interface LessonBlockFrameProps extends Frozen, Placed {
 export interface LessonBlockFrameEmits {
   update: [block: LessonBlock]
   insert: [type: BlockType]
+  'insert-section': []
+  split: [head: string, tail: string]
   move: [delta: MoveDirection]
   duplicate: []
   remove: []
@@ -63,13 +66,13 @@ export interface BlockHandleEmits {
 }
 
 export interface BlockInserterProps {
-  label: string
   open?: boolean
 }
 
 export interface BlockInserterEmits {
   'update:open': [open: boolean]
   pick: [type: BlockType]
+  section: []
 }
 
 export type BlockMenuProps = Placed
@@ -82,7 +85,7 @@ export interface BlockMenuEmits {
 
 export interface BlockInsertMenuEmits {
   pick: [type: BlockType]
-  close: []
+  section: []
 }
 
 export interface MarkdownEditorOptions {
@@ -91,6 +94,8 @@ export interface MarkdownEditorOptions {
   onChange: (text: string) => void
   onSlash: () => void
   onEscape: () => void
+  onStep: (delta: MoveDirection) => boolean
+  onSplit: (head: string, tail: string) => void
 }
 
 export interface MarkdownEditor {
@@ -123,6 +128,7 @@ export interface TextBlockEditorEmits {
   update: [block: TextBlock]
   slash: []
   escape: []
+  split: [head: string, tail: string]
 }
 
 /**
@@ -224,8 +230,8 @@ export interface QuizAnswerRowProps extends Frozen {
 export interface QuizAnswerRowEmits {
   text: [index: number, text: string]
   right: [index: number]
-  remove: [index: number]
   split: [index: number]
   collapse: [index: number]
   move: [index: number, delta: MoveDirection]
+  step: [index: number, delta: MoveDirection]
 }

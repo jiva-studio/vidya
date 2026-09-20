@@ -3,6 +3,7 @@ import type { LessonBlock } from '@vidya/domain'
 import { useFluent } from 'fluent-vue'
 import { computed, nextTick, ref, watch } from 'vue'
 
+import { atFieldEdge, stepToNeighbourField } from '../lib'
 import type { BlockType, MoveDirection } from '../types'
 import BlockHandle from './BlockHandle.vue'
 import BlockInserter from './BlockInserter.vue'
@@ -81,6 +82,15 @@ function onPick(type: BlockType) {
   emit('insert', type)
 }
 
+function onSection() {
+  dismiss()
+  emit('insert-section')
+}
+
+function onSplit(head: string, tail: string) {
+  emit('split', head, tail)
+}
+
 function onMove(delta: MoveDirection) {
   dismiss()
   emit('move', delta)
@@ -100,6 +110,18 @@ function onUpdate(block: LessonBlock) {
   emit('update', block)
 }
 
+// Only what the block left unhandled: an editor that moved its own caret has
+// already said the key was for it.
+function onKey(event: KeyboardEvent) {
+  if (event.defaultPrevented) return
+
+  const delta = arrowDelta(event.key)
+  if (!delta || !atFieldEdge(event.target, delta)) return
+  if (event.target instanceof HTMLElement && stepToNeighbourField(event.target, delta)) {
+    event.preventDefault()
+  }
+}
+
 function onSlash() {
   insertOpen.value = true
 }
@@ -109,6 +131,12 @@ function onEscape() {
 }
 
 /* -------------------------------- Helpers --------------------------------- */
+
+function arrowDelta(key: string): MoveDirection | undefined {
+  if (key === 'ArrowUp') return -1
+  if (key === 'ArrowDown') return 1
+  return undefined
+}
 
 // The gutter goes down with the menu it opened. An overlay hands focus back to
 // the button it was opened from as it closes, and this block is no longer where
@@ -134,11 +162,13 @@ function focusInside() {
 <template>
   <div
     :data-block-id="props.block.id"
+    data-block-frame
     :class="blockFrameClasses"
     @mouseenter="onEnter"
     @mouseleave="onLeave"
     @focusin="onFocusIn"
     @focusout="onFocusOut"
+    @keydown="onKey"
   >
     <div v-if="chrome" :class="gutterClasses">
       <BlockHandle
@@ -151,12 +181,6 @@ function focusInside() {
         @duplicate="onDuplicate"
         @remove="onRemove"
       />
-      <BlockInserter
-        :open="insertOpen"
-        :label="$t('editor-block-add')"
-        @update:open="onInsertOpen"
-        @pick="onPick"
-      />
     </div>
     <div ref="body" tabindex="-1" :class="blockBodyClasses">
       <LessonBlockEditor
@@ -165,7 +189,15 @@ function focusInside() {
         @update="onUpdate"
         @slash="onSlash"
         @escape="onEscape"
+        @split="onSplit"
       />
     </div>
+    <BlockInserter
+      v-if="!props.frozen"
+      :open="insertOpen"
+      @update:open="onInsertOpen"
+      @pick="onPick"
+      @section="onSection"
+    />
   </div>
 </template>

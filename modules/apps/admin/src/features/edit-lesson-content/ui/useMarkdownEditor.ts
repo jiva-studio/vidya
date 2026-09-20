@@ -5,6 +5,7 @@ import { EditorState } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import { onBeforeUnmount, ref, watch } from 'vue'
 
+import type { MoveDirection } from '../types'
 import type { MarkdownEditor, MarkdownEditorOptions } from './types'
 
 /**
@@ -24,14 +25,31 @@ export const useMarkdownEditor = (options: MarkdownEditorOptions): MarkdownEdito
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
     history(),
     EditorView.lineWrapping,
+    EditorView.theme({
+      '&': { outline: 'none' },
+      '&.cm-focused': { outline: 'none' },
+      '.cm-content': { padding: '0', fontFamily: 'inherit', fontSize: 'inherit' },
+      '.cm-line': { padding: '0' },
+      '.cm-scroller': { fontFamily: 'inherit', lineHeight: 'inherit' },
+    }),
     // The surface is reached by Tab and by the caret handoff from a deleted
     // block, and an editable region without a tab stop answers to neither.
     EditorView.contentAttributes.of({ tabindex: '0' }),
     keymap.of([
-      // The author is offered the menu but still types the character: closing
-      // the menu has to leave the line exactly as they typed it.
+      // On an empty line the slash is the command and not a character: it opens
+      // the menu, the line stays empty — so picking a kind turns this block
+      // into it — and the key is reported as handled, which is also what keeps
+      // Firefox from taking it for Quick Find.
       { key: '/', run: onSlash },
       { key: 'Escape', run: onEscape },
+      // Before the default binding, which would keep the caret on the edge line
+      // it already sits on and report the key as handled.
+      { key: 'ArrowUp', run: () => onExit(-1) },
+      { key: 'ArrowDown', run: () => onExit(1) },
+      // Enter breaks the line, as it does in any text. It ends the block only
+      // when it is pressed on a blank line at the end of one — the way a writer
+      // leaves a paragraph behind — and that blank line goes with it.
+      { key: 'Enter', run: onSplit },
       ...historyKeymap,
       ...defaultKeymap,
     ]),
@@ -44,7 +62,29 @@ export const useMarkdownEditor = (options: MarkdownEditorOptions): MarkdownEdito
   function onSlash(): boolean {
     if (!isBlankStart()) return false
     options.onSlash()
-    return false
+    return true
+  }
+
+  function onSplit(): boolean {
+    const state = view.value?.state
+    if (!state) return false
+
+    const at = state.selection.main.head
+    const line = state.doc.lineAt(at)
+    const leaving = at === state.doc.length && line.text.length === 0 && state.doc.lines > 1
+    if (!leaving) return false
+
+    options.onSplit(state.doc.sliceString(0, Math.max(line.from - 1, 0)), '')
+    return true
+  }
+
+  function onExit(delta: MoveDirection): boolean {
+    const state = view.value?.state
+    if (!state) return false
+
+    const line = state.doc.lineAt(state.selection.main.head)
+    const edge = delta < 0 ? line.number === 1 : line.number === state.doc.lines
+    return edge ? options.onStep(delta) : false
   }
 
   function onEscape(): boolean {

@@ -7,6 +7,7 @@ import { refusal } from '@/shared/testing'
 
 import { messages } from '../i18n'
 import {
+  addSection,
   AWAY_PATH,
   clickText,
   EDITOR_PATH,
@@ -71,18 +72,23 @@ describe('opening a lesson', () => {
     expect(statuses(wrapper)).toContain('Draft')
   })
 
-  it('renders the lesson text through the sanitising markdown chain', async () => {
+  it('shows the markdown the author typed, not a rendering of it', async () => {
     const { wrapper } = await openEditor(draftAnswers())
 
-    expect(wrapper.html()).toContain('<strong>world</strong>')
+    expect(wrapper.text()).toContain('**world**')
+    expect(wrapper.html()).not.toContain('<strong>world</strong>')
   })
 
-  it('shows the reason a refusal gave rather than a generic error', async () => {
-    const { wrapper } = await openEditor({
+  it('reports the reason a refusal gave, and keeps it off the screen', async () => {
+    const { wrapper, http } = await openEditor({
       [`GET ${VERSIONS}`]: refusal(403, 'User does not have permission'),
     })
 
-    expect(plain(wrapper.text())).toContain('No access.')
+    expect(http.failures).toContainEqual({
+      key: 'failure-forbidden',
+      reason: 'User does not have permission',
+    })
+    expect(plain(wrapper.text())).not.toContain('User does not have permission')
   })
 })
 
@@ -90,7 +96,7 @@ describe('saving', () => {
   it('sends the whole document in one PATCH', async () => {
     const { wrapper, http } = await openEditor(draftAnswers())
 
-    await clickText(wrapper, 'Add section')
+    await addSection(wrapper)
     await saveDraft()
 
     const writes = http.calls.filter((call) => call.method === 'PATCH')
@@ -108,7 +114,7 @@ describe('saving', () => {
 
     // An empty lesson opens with a section to type into, so a section nobody
     // touched would otherwise reach the server every time the editor was opened.
-    await clickText(wrapper, 'Add section')
+    await addSection(wrapper)
     await saveDraft()
 
     const body = http.calls.find((call) => call.method === 'PATCH')?.body as {
@@ -118,16 +124,20 @@ describe('saving', () => {
     expect(body.content.sections).toHaveLength(1)
   })
 
-  it('shows the reason the server gave when the save is refused', async () => {
-    const { wrapper } = await openEditor({
+  it('reports the reason a refused save gave, and says the draft is not saved', async () => {
+    const { wrapper, http } = await openEditor({
       ...draftAnswers(),
       [`PATCH ${VERSIONS}/v1`]: refusal(409, 'Version v1 is published and cannot be edited.'),
     })
 
-    await clickText(wrapper, 'Add section')
+    await addSection(wrapper)
     await saveDraft()
 
-    expect(plain(wrapper.text())).toContain('Version v1 is published and cannot be edited.')
+    expect(http.failures).toContainEqual({
+      key: 'failure-conflict',
+      reason: 'Version v1 is published and cannot be edited.',
+    })
+    expect(plain(wrapper.text())).not.toContain('Version v1 is published')
     expect(statuses(wrapper)).toContain('Not saved')
   })
 
@@ -164,7 +174,7 @@ describe('saving', () => {
 
     // Saving strips what this build did not model, and the stripped block is
     // one a student has already answered against.
-    await clickText(wrapper, 'Add section')
+    await addSection(wrapper)
     await saveDraft()
 
     expect(http.calls.filter((call) => call.method === 'PATCH')).toHaveLength(0)
@@ -225,7 +235,7 @@ describe('leaving with unsaved edits', () => {
   it('asks before navigating away, and stays put until answered', async () => {
     const { wrapper, router } = await openEditor(draftAnswers())
 
-    await clickText(wrapper, 'Add section')
+    await addSection(wrapper)
     void router.push(AWAY_PATH)
     await flushPromises()
 
@@ -283,14 +293,6 @@ describe('a lesson with nothing in it', () => {
   })
 })
 
-/** The ancestor that carries the rules the rendered markdown is shaped by. */
-const shaping = (node: Element | null | undefined): Element | undefined => {
-  for (let at = node ?? undefined; at; at = at.parentElement ?? undefined) {
-    if (/\[&_h1\]:text-/.test(at.className)) return at
-  }
-
-  return undefined
-}
 
 describe('the shape of what was written', () => {
   const written = () => {
@@ -317,25 +319,13 @@ describe('the shape of what was written', () => {
     return { ...draftAnswers(), [`GET ${VERSIONS}/v1`]: details }
   }
 
-  it('renders a heading as a heading and a paragraph as a paragraph', async () => {
+  it('keeps the heading markers the author typed rather than rendering them', async () => {
     const { wrapper } = await openEditor(written())
 
-    // Scoped to the block: the page's own title is an `h1` as well.
     const block = wrapper.element.querySelector('[data-block-id="b1"]')
 
-    expect(block?.querySelector('h1')?.textContent).toBe('Letters and sounds')
-    expect(block?.querySelector('p')?.textContent).toBe('A paragraph under it.')
+    expect(block?.textContent).toContain('# Letters and sounds')
+    expect(block?.querySelector('h1')).toBeNull()
   })
 
-  it('sizes a heading apart from the text around it', async () => {
-    const { wrapper } = await openEditor(written())
-
-    // jsdom computes no styles, so the rule itself is the evidence: the
-    // container sets one size for its own text and a larger one for a heading.
-    const rendered = shaping(wrapper.element.querySelector('[data-block-id="b1"] h1'))
-
-    expect(rendered).toBeDefined()
-    expect(rendered?.className).toMatch(/text-\[length:var\(--text-base\)\]/)
-    expect(rendered?.className).toMatch(/\[&_h1\]:text-\[length:var\(--text-lg\)\]/)
-  })
 })

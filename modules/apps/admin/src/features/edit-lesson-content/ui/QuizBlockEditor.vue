@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { Input, Textarea } from '@vidya/ui'
-import { useSortable } from '@vueuse/integrations/useSortable'
-import type { SortableEvent } from 'sortablejs'
 import { computed, nextTick, ref, watch } from 'vue'
 
+import { stepToNeighbourField } from '../lib'
 import type { MoveDirection } from '../types'
 import {
-  addAnswer,
   insertAnswer,
   moveAnswer,
   removeAnswer,
@@ -16,13 +14,7 @@ import {
   setRightAnswer,
 } from '../model'
 import QuizAnswerRow from './QuizAnswerRow.vue'
-import {
-  answerListClasses,
-  explanationClasses,
-  newAnswerClasses,
-  questionClasses,
-  quizClasses,
-} from './styles'
+import { answerListClasses, explanationClasses, questionClasses, quizClasses } from './styles'
 import type { AnswerCaret, QuizBlockEditorEmits, QuizBlockEditorProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -39,22 +31,15 @@ const answers = computed(() => props.block.answers)
 const group = computed(() => `quiz-${props.block.id}`)
 
 const list = ref<HTMLElement | null>(null)
-const rows = ref<InstanceType<typeof QuizAnswerRow>[]>([])
+const root = ref<HTMLElement | null>(null)
 
-// The quiet row below the list; it holds what was typed only until the option
-// it became takes over, which is the same tick.
-const draft = ref('')
+// The line about why the answer is right is for the author while they are in
+// the block; a reader of the document should not be told it is missing.
+const rows = ref<InstanceType<typeof QuizAnswerRow>[]>([])
 
 // Where the caret belongs once the list the author changed has been re-rendered.
 const landing = ref<{ index: number; caret: AnswerCaret } | null>(null)
 
-// The list is never mutated in place: the drop is reported and the new block
-// comes back down as a prop, so the right answer is recomputed in one place.
-useSortable(list, answers, {
-  disabled: props.frozen,
-  handle: '[data-answer-grip]',
-  onUpdate: (event: SortableEvent) => onDrop(event.oldIndex, event.newIndex),
-})
 
 /* --------------------------------- Hooks ---------------------------------- */
 
@@ -63,6 +48,17 @@ useSortable(list, answers, {
 watch(() => answers.value.length, land, { flush: 'post' })
 
 /* -------------------------------- Handlers -------------------------------- */
+
+
+function onStep(index: number, delta: MoveDirection) {
+  const next = index + delta
+  if (next >= 0 && next < answers.value.length) return rows.value[next]?.focus('end')
+
+  // Past the first or last option the caret leaves the list the same way it
+  // leaves any other field: to whatever the lesson lays out next.
+  const active = document.activeElement
+  if (active instanceof HTMLElement) stepToNeighbourField(active, delta)
+}
 
 function onQuestion(question: string) {
   emit('update', setQuestion(props.block, question))
@@ -102,14 +98,6 @@ function onMoveAnswer(index: number, delta: MoveDirection) {
   onDrop(index, index + delta)
 }
 
-/** The quiet row is an option the moment it carries anything. */
-function onDraft(text: string) {
-  const at = answers.value.length
-  draft.value = ''
-  landing.value = { index: at, caret: 'end' }
-  emit('update', setAnswer(addAnswer(props.block), at, text))
-}
-
 /* -------------------------------- Helpers --------------------------------- */
 
 /** A reorder leaves the list the same length, so it asks for the re-render itself. */
@@ -132,7 +120,11 @@ function land() {
 </script>
 
 <template>
-  <div :class="quizClasses" :data-block-id="props.block.id">
+  <div
+    ref="root"
+    :class="quizClasses"
+    :data-block-id="props.block.id"
+  >
     <Input
       :class="questionClasses"
       :model-value="props.block.question"
@@ -140,6 +132,15 @@ function land() {
       :placeholder="$t('editor-quiz-question-placeholder')"
       :aria-label="$t('editor-quiz-question-label')"
       @update:model-value="onQuestion"
+    />
+    <Textarea
+      :class="explanationClasses"
+      :rows="1"
+      :model-value="props.block.explanation ?? ''"
+      :readonly="props.frozen"
+      :placeholder="$t('editor-quiz-explanation-placeholder')"
+      :aria-label="$t('editor-quiz-explanation-label')"
+      @update:model-value="onExplanation"
     />
     <ul ref="list" :class="answerListClasses">
       <QuizAnswerRow
@@ -156,25 +157,9 @@ function land() {
         @remove="onRemoveAnswer"
         @split="onSplit"
         @collapse="onCollapse"
+        @step="onStep"
         @move="onMoveAnswer"
       />
     </ul>
-    <Input
-      v-if="!props.frozen"
-      :class="newAnswerClasses"
-      :model-value="draft"
-      :placeholder="$t('editor-quiz-answer-add')"
-      :aria-label="$t('editor-quiz-answer-add')"
-      @update:model-value="onDraft"
-    />
-    <Textarea
-      :class="explanationClasses"
-      :rows="2"
-      :model-value="props.block.explanation ?? ''"
-      :readonly="props.frozen"
-      :placeholder="$t('editor-quiz-explanation-placeholder')"
-      :aria-label="$t('editor-quiz-explanation-label')"
-      @update:model-value="onExplanation"
-    />
   </div>
 </template>

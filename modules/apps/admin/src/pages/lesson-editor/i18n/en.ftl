@@ -1,6 +1,8 @@
 # Texts for the lesson editor. Owned by T5.
 
 editor-title = Lesson editor
+editor-title-label = Lesson title
+editor-title-placeholder = Untitled lesson
 editor-publish = Publish
 editor-new-revision = New version
 editor-retry = Try again
@@ -42,10 +44,11 @@ editor-section-remove-cancel = Keep it
 
 editor-homework-placeholder = Is work asked for?
 editor-homework-label = Homework
-editor-homework-none = Not asked for
-editor-homework-auto = Asked for, marked automatically
-editor-homework-teacher = Asked for, a teacher marks it
+editor-homework-none = No
+editor-homework-auto = Marked automatically
+editor-homework-teacher = A teacher marks it
 editor-homework-note = There is no separate assignment field — write what you ask for in the section text
+editor-homework-needs-quiz = Nothing to mark automatically: the section has no questions
 
 # Blocks
 
@@ -53,6 +56,7 @@ editor-block-text = Text
 editor-block-video = Video
 editor-block-audio = Audio
 editor-block-quiz = Quiz
+editor-block-section = Section
 editor-block-add = Add block
 editor-block-up = Move the { $block } block up
 editor-block-down = Move the { $block } block down
@@ -66,7 +70,7 @@ editor-block-unknown-body = It cannot be edited here, and while it is in the les
 editor-text-label = Lesson text
 editor-text-edit = Edit this text
 editor-text-hint = Markdown: # heading, **bold**, *italic*, - list, [link](https://example.org), > quote
-editor-text-placeholder = Write the lesson text here.
+editor-text-placeholder = Lesson text, or “/” to insert a block
 
 editor-source-placeholder = Choose a source
 editor-source-label = Source
@@ -165,9 +169,6 @@ media-upload-cancelled = The upload was stopped.
 media-unavailable = Files cannot be stored yet.
 editor-block-image = Image
 editor-block-menu = Block options
-editor-block-add-here = Add a block here
-editor-block-search = Search for a block
-editor-block-none = No block of that name
 editor-section-menu = Section options
 editor-move-up = Move up
 editor-move-down = Move down

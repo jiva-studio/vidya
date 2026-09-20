@@ -1,13 +1,22 @@
 <script setup lang="ts">
-import type { BlockId, LessonBlock, LessonContent, LessonSection, SectionId } from '@vidya/domain'
+import type {
+  BlockId,
+  LessonBlock,
+  LessonContent,
+  LessonSection,
+  SectionId,
+  TextBlock,
+} from '@vidya/domain'
 import { computed, ref } from 'vue'
 
 import type { BlockType, MoveDirection } from '@/features/edit-lesson-content'
 import {
   addSection,
   blockBelow,
+  convertBlock,
   duplicateBlock,
   insertBlockAfter,
+  insertSectionAfter,
   moveBlock,
   moveSection,
   removeBlock,
@@ -15,13 +24,16 @@ import {
   renameSection,
   reorderBlocks,
   reorderSections,
+  sectionBelow,
   setSectionAssessment,
+  splitTextBlock,
   updateBlock,
 } from '@/features/edit-lesson-content'
 
 import { focusAfterRemoval, useBlockSorting } from '../lib'
+import SectionBoundary from './SectionBoundary.vue'
 import SectionEditor from './SectionEditor.vue'
-import { addSectionClasses, documentClasses } from './styles'
+import { documentClasses } from './styles'
 import type { LessonDocumentEmits, LessonDocumentProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -61,10 +73,11 @@ function seeded(): LessonContent {
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onSectionAdd() {
-  const next = addSection(shown.value, '')
+function onSectionAdd(afterId: SectionId | undefined) {
+  const next = insertSectionAfter(shown.value, afterId)
 
-  caretSection.value = next.sections[next.sections.length - 1]?.id
+  caretSection.value = sectionBelow(next, afterId)
+  caretBlock.value = undefined
   apply(next)
 }
 
@@ -111,21 +124,62 @@ function onBlockDuplicate(id: SectionId, blockId: BlockId) {
 }
 
 function onBlockInsert(id: SectionId, afterId: BlockId | undefined, type: BlockType) {
+  // The line the author asked from is empty, so it is the line they meant.
+  const blank = blankBlock(id, afterId)
+  if (blank) {
+    caretBlock.value = blank.id
+    caretSection.value = undefined
+    return apply(convertBlock(shown.value, id, blank.id, type))
+  }
+
   const next = insertBlockAfter(shown.value, id, afterId, type)
   caretBlock.value = blockBelow(next, id, afterId)
   caretSection.value = undefined
   apply(next)
 }
 
-function onBlockRemove(id: SectionId, blockId: BlockId) {
-  const blocks = shown.value.sections.find((section) => section.id === id)?.blocks ?? []
+// The line an author asks for by clicking below the last block is the one they
+// would have typed into: an empty one already there is that line, and opening a
+// second would leave a blank behind them.
+function onTailWrite(id: SectionId) {
+  const blocks = blocksOf(id)
+  const last = blocks[blocks.length - 1]
+  const blank = blankBlock(id, last?.id)
 
-  caretBlock.value = focusAfterRemoval(blocks, blockId)
+  if (blank) {
+    caretSection.value = undefined
+    caretBlock.value = blank.id
+    return
+  }
+
+  onBlockInsert(id, last?.id, 'text')
+}
+
+function onBlockSplit(id: SectionId, blockId: BlockId, head: string, tail: string) {
+  const next = splitTextBlock(shown.value, id, blockId, head, tail)
+
+  caretBlock.value = blockBelow(next, id, blockId)
+  caretSection.value = undefined
+  apply(next)
+}
+
+function onBlockRemove(id: SectionId, blockId: BlockId) {
+  caretBlock.value = focusAfterRemoval(blocksOf(id), blockId)
   caretSection.value = caretBlock.value ? undefined : id
   apply(removeBlock(shown.value, id, blockId))
 }
 
 /* -------------------------------- Helpers --------------------------------- */
+
+function blocksOf(id: SectionId): readonly LessonBlock[] {
+  return shown.value.sections.find((section) => section.id === id)?.blocks ?? []
+}
+
+/** The block, when it is a text line nobody has typed into yet. */
+function blankBlock(id: SectionId, blockId: BlockId | undefined): TextBlock | undefined {
+  const block = blocksOf(id).find((current) => current.id === blockId)
+  return block?.type === 'text' && block.content.length === 0 ? block : undefined
+}
 
 // Every edit is made against what is on screen, which is the seeded section
 // until the author writes something; from that first edit on, the document the
@@ -137,29 +191,30 @@ function apply(next: LessonContent) {
 </script>
 
 <template>
-  <div ref="list" :class="documentClasses">
-    <SectionEditor
-      v-for="(section, index) in shown.sections"
-      :key="section.id"
-      :section="section"
-      :frozen="props.frozen"
-      :first="index === 0"
-      :last="index === shown.sections.length - 1"
-      :autofocus="section.id === caretSection"
-      :caret="caretBlock"
-      @rename="onRename"
-      @assessment="onAssessment"
-      @move="onSectionMove"
-      @reorder="onBlockReorder"
-      @remove="onSectionRemove"
-      @block-update="onBlockUpdate"
-      @block-insert="onBlockInsert"
-      @block-move="onBlockMove"
-      @block-duplicate="onBlockDuplicate"
-      @block-remove="onBlockRemove"
-    />
-    <button v-if="!props.frozen" type="button" :class="addSectionClasses" @click="onSectionAdd">
-      {{ $t('editor-section-add') }}
-    </button>
+  <div ref="list" data-lesson-document :class="documentClasses">
+    <template v-for="(section, index) in shown.sections" :key="section.id">
+      <SectionEditor
+        :section="section"
+        :frozen="props.frozen"
+        :first="index === 0"
+        :last="index === shown.sections.length - 1"
+        :autofocus="section.id === caretSection"
+        :caret="caretBlock"
+        @rename="onRename"
+        @assessment="onAssessment"
+        @move="onSectionMove"
+        @reorder="onBlockReorder"
+        @remove="onSectionRemove"
+        @section-insert="onSectionAdd"
+        @tail-write="onTailWrite"
+        @block-update="onBlockUpdate"
+        @block-insert="onBlockInsert"
+        @block-split="onBlockSplit"
+        @block-move="onBlockMove"
+        @block-duplicate="onBlockDuplicate"
+        @block-remove="onBlockRemove"
+      />
+      <SectionBoundary v-if="!props.frozen" @add="onSectionAdd(section.id)" />
+    </template>
   </div>
 </template>

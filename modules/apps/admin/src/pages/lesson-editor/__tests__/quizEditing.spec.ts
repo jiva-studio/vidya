@@ -107,7 +107,10 @@ describe('removing an option from the keyboard', () => {
 })
 
 describe('what a quiz row carries', () => {
-  it('offers the correct-answer control, the text and a way to remove the row', async () => {
+  // An option is a line of the question, so it carries what a line carries: the
+  // mark that says it is the right one, and the text. Emptying it removes it,
+  // which is why there is no control for that.
+  it('offers the correct-answer control and the text, and nothing else', async () => {
     const { wrapper } = await open()
     const rows = wrapper.element.querySelectorAll('[data-block-id="q1"] [data-answer-index]')
 
@@ -116,9 +119,7 @@ describe('what a quiz row carries', () => {
     const first = rows[0]
     expect(first.querySelector('input[type="radio"], [role="radio"]')).not.toBeNull()
     expect(first.querySelector('input[type="text"]')).not.toBeNull()
-    expect(
-      [...first.querySelectorAll('button')].some((node) => accessibleName(node).includes('Remove')),
-    ).toBe(true)
+    expect(first.querySelectorAll('button')).toHaveLength(0)
   })
 
   it('keeps the same option correct after the author typed into another', async () => {

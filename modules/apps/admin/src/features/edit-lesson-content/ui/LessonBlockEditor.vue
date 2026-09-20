@@ -59,6 +59,10 @@ function onSlash() {
 function onEscape() {
   emit('escape')
 }
+
+function onSplit(head: string, tail: string) {
+  emit('split', head, tail)
+}
 </script>
 
 <template>
@@ -69,6 +73,7 @@ function onEscape() {
     @update="onUpdate"
     @slash="onSlash"
     @escape="onEscape"
+    @split="onSplit"
   />
   <ImageBlockEditor v-if="image" :block="image" :frozen="props.frozen" @update="onUpdate" />
   <VideoBlockEditor v-if="video" :block="video" :frozen="props.frozen" @update="onUpdate" />

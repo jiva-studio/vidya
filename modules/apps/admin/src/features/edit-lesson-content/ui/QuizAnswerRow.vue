@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import { IconButton, Input } from '@vidya/ui'
-import { GripVertical, X } from 'lucide-vue-next'
+import { Input } from '@vidya/ui'
 import type { ComponentPublicInstance } from 'vue'
 import { ref } from 'vue'
 
 import type { MoveDirection } from '../types'
 import {
-  answerActionsClasses,
-  answerGripClasses,
   answerRowClasses,
   answerTextClasses,
-  iconClasses,
 } from './styles'
 import type { AnswerCaret, QuizAnswerRowEmits, QuizAnswerRowProps } from './types'
 
@@ -36,15 +32,18 @@ function onRight() {
   emit('right', props.index)
 }
 
-function onRemove() {
-  emit('remove', props.index)
-}
 
 function onKey(event: KeyboardEvent) {
   if (event.altKey) return onReorderKey(event)
   if (event.key === 'Enter') return take(event, () => emit('split', props.index))
   // An option still carrying text is being edited, not dismissed.
-  if (event.key === 'Backspace' && !props.text) take(event, () => emit('collapse', props.index))
+  if (event.key === 'Backspace' && !props.text) return take(event, () => emit('collapse', props.index))
+
+  // Up and down walk the quiz the way they walk any list of lines, so the
+  // author reaches the question above and the next option below without
+  // leaving the keyboard.
+  if (event.key === 'ArrowUp') return take(event, () => emit('step', props.index, -1))
+  if (event.key === 'ArrowDown') return take(event, () => emit('step', props.index, 1))
 }
 
 /* -------------------------------- Helpers --------------------------------- */
@@ -80,9 +79,6 @@ defineExpose({ focus })
 
 <template>
   <li :class="answerRowClasses" :data-answer-index="props.index">
-    <span v-if="!props.frozen" data-answer-grip :class="answerGripClasses" aria-hidden="true">
-      <GripVertical :class="iconClasses" />
-    </span>
     <input
       type="radio"
       :name="props.name"
@@ -101,14 +97,5 @@ defineExpose({ focus })
       @update:model-value="onText"
       @keydown="onKey"
     />
-    <span v-if="!props.frozen" :class="answerActionsClasses">
-      <IconButton
-        :label="$t('editor-quiz-answer-remove', { number: props.index + 1 })"
-        variant="danger"
-        @click="onRemove"
-      >
-        <X :class="iconClasses" />
-      </IconButton>
-    </span>
   </li>
 </template>

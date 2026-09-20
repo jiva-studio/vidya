@@ -7,7 +7,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Toaster } from '@vidya/ui'
 import { provide } from 'vue'
 
-import { getLesson } from '@/entities/lesson'
+import { getLesson, renameLesson } from '@/entities/lesson'
 import { useHttp } from '@/shared/api'
 import { createToasts, toastsKey } from '@/shared/lib'
 import { LessonEditorView } from '@/widgets/lesson-editor'
@@ -45,6 +45,19 @@ onMounted(async () => {
 
 /* -------------------------------- Handlers -------------------------------- */
 
+// The name is saved as it is typed, like the document below it. A failure
+// leaves what the author wrote on screen; the next keystroke tries again.
+async function onRename(next: string) {
+  title.value = next
+
+  try {
+    await renameLesson(http, lessonId, next)
+  } catch {
+    // The heading keeps what was typed: the lesson is still open and still
+    // editable, and an error here must not take the words away.
+  }
+}
+
 function onBack() {
   void router.push({ name: 'lessons', params: { courseId } })
 }
@@ -52,7 +65,7 @@ function onBack() {
 
 <template>
   <section :class="pageClasses">
-    <LessonEditorView :lesson-id="lessonId" :title="title" @back="onBack" />
+    <LessonEditorView :lesson-id="lessonId" :title="title" @back="onBack" @rename="onRename" />
     <Toaster :toasts="toasts.items.value" @dismiss="toasts.dismiss" />
   </section>
 </template>

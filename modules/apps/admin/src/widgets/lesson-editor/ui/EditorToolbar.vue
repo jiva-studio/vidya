@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Breadcrumbs, Button, PageHeader } from '@vidya/ui'
+import { Breadcrumbs, Button, Input, PageHeader } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
 
-import { toolbarErrorClasses, toolbarStatusClasses } from './styles'
+import { titleClasses, toolbarErrorClasses, toolbarStatusClasses } from './styles'
 import type { EditorToolbarEmits, EditorToolbarProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -50,6 +50,10 @@ function onBreadcrumb() {
   emit('back')
 }
 
+function onTitle(title: string) {
+  emit('rename', title)
+}
+
 function onRetry() {
   emit('retry')
 }
@@ -67,6 +71,16 @@ function onRevision() {
   <PageHeader :title="props.title ?? $t('editor-title')">
     <template #breadcrumbs>
       <Breadcrumbs :items="breadcrumbs" @select="onBreadcrumb" />
+    </template>
+    <template #title>
+      <Input
+        :class="titleClasses"
+        :model-value="props.title ?? ''"
+        :readonly="props.frozen"
+        :placeholder="$t('editor-title-placeholder')"
+        :aria-label="$t('editor-title-label')"
+        @update:model-value="onTitle"
+      />
     </template>
     <template #actions>
       <span :class="toolbarStatusClasses">{{ state }}</span>

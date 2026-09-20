@@ -5,8 +5,10 @@ export {
   addBlock,
   addSection,
   blockBelow,
+  convertBlock,
   duplicateBlock,
   insertBlockAfter,
+  insertSectionAfter,
   moveBlock,
   moveSection,
   removeBlock,
@@ -14,7 +16,9 @@ export {
   renameSection,
   reorderBlocks,
   reorderSections,
+  sectionBelow,
   setSectionAssessment,
+  splitTextBlock,
   updateBlock,
 } from './edits'
 export {

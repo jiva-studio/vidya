@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import { stepToNeighbourField } from '../lib'
+import type { MoveDirection } from '../types'
 import MarkdownText from './MarkdownText.vue'
-import { placeholderClasses, sourceClasses, sourceTuckedClasses, textStackClasses } from './styles'
+import { placeholderClasses, sourceClasses, textStackClasses } from './styles'
 import type { TextBlockEditorEmits, TextBlockEditorProps } from './types'
 import { useMarkdownEditor } from './useMarkdownEditor'
 
@@ -27,21 +29,29 @@ const editor = useMarkdownEditor({
   onChange: onContent,
   onSlash: onSlash,
   onEscape: onEscape,
+  onStep: onStep,
+  onSplit: onSplit,
 })
 
-// Reading and writing are the same block seen from two sides: the source is
-// what the author is holding, the rendering is what the student will read.
-const reading = computed(() => !editor.focused.value)
-
-// The source is tucked away rather than unmounted while it is being read: an
-// element behind `display: none` cannot take focus, and the caret has to be
-// able to land here from a click, from a deletion and from the block above.
-const sourceStateClasses = computed(() => (reading.value ? sourceTuckedClasses : sourceClasses))
+// The author holds the markdown itself, highlighted where it is typed. Swapping
+// it for the rendered text whenever the caret left changed the block's height
+// under the pointer, and a line that moves while you reach for it is worse than
+// one that never pretends to be the finished page.
+const empty = computed(() => !filled.value)
 
 /* -------------------------------- Handlers -------------------------------- */
 
 function onContent(text: string) {
   emit('update', { ...props.block, content: text })
+}
+
+function onStep(delta: MoveDirection): boolean {
+  const surface = host.value?.querySelector<HTMLElement>('.cm-content')
+  return surface ? stepToNeighbourField(surface, delta) : false
+}
+
+function onSplit(head: string, tail: string) {
+  emit('split', head, tail)
 }
 
 function onSlash() {
@@ -60,10 +70,7 @@ function onWrite() {
 <template>
   <MarkdownText v-if="props.frozen" :markdown="content" />
   <div v-else :class="textStackClasses" @click="onWrite">
-    <MarkdownText v-show="reading && filled" :markdown="content" />
-    <p v-show="reading && !filled" :class="placeholderClasses">
-      {{ $t('editor-text-placeholder') }}
-    </p>
-    <div ref="host" :class="sourceStateClasses" />
+    <p v-show="empty" :class="placeholderClasses">{{ $t('editor-text-placeholder') }}</p>
+    <div ref="host" :class="sourceClasses" />
   </div>
 </template>

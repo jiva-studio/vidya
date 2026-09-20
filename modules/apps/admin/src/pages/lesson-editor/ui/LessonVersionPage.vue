@@ -65,7 +65,7 @@ function onRetry() {
     <FailureState
       v-else-if="document.error.value"
       :title="$t('state-error-title')"
-      :description="$t(document.error.value)"
+      :description="$t('state-error')"
       :retry-label="$t('action-retry')"
       @retry="onRetry"
     />

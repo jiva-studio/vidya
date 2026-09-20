@@ -8,8 +8,7 @@ import { LessonBlockFrame } from '@/features/edit-lesson-content'
 
 import { anchorOf, useBlockSorting } from '../lib'
 import SectionHeader from './SectionHeader.vue'
-import SectionInsertBar from './SectionInsertBar.vue'
-import { blockListClasses, sectionClasses } from './styles'
+import { blockListClasses, sectionClasses, tailClasses } from './styles'
 import type { SectionEditorEmits, SectionEditorProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -32,7 +31,13 @@ const list = ref<HTMLElement | null>(null)
 
 const anchor = computed(() => anchorOf(props.section.id))
 const name = computed(() => props.section.title.trim() || $t('editor-section-untitled'))
-const last = computed(() => props.section.blocks[props.section.blocks.length - 1]?.id)
+
+// Only when the section does not already end in one: the empty text block shows
+// this same line itself, and two of them would be two invitations to one place.
+const tail = computed(() => {
+  const last = props.section.blocks[props.section.blocks.length - 1]
+  return !props.frozen && !(last?.type === 'text' && last.content.length === 0)
+})
 
 /* --------------------------------- Hooks ---------------------------------- */
 
@@ -80,8 +85,26 @@ function onBlockInsert(id: BlockId | undefined, type: BlockType) {
   emit('block-insert', props.section.id, id, type)
 }
 
-function onTailInsert(type: BlockType) {
-  onBlockInsert(last.value, type)
+function onSectionInsert() {
+  emit('section-insert', props.section.id)
+}
+
+function onTailWrite() {
+  emit('tail-write', props.section.id)
+}
+
+// The line is a button until it is written in, and a slash on a button is a
+// browser command: Firefox opens Quick Find with it. It belongs to the line the
+// click would have opened, so it opens that line instead of reaching the chrome.
+function onTailKey(event: KeyboardEvent) {
+  if (event.key !== '/') return
+
+  event.preventDefault()
+  onTailWrite()
+}
+
+function onSplit(id: BlockId, head: string, tail: string) {
+  emit('block-split', props.section.id, id, head, tail)
 }
 </script>
 
@@ -98,22 +121,34 @@ function onTailInsert(type: BlockType) {
       @move="onMove"
       @remove="onRemove"
     />
-    <div ref="list" :class="blockListClasses">
-      <LessonBlockFrame
-        v-for="(block, index) in props.section.blocks"
-        :key="block.id"
-        :block="block"
-        :frozen="props.frozen"
-        :first="index === 0"
-        :last="index === props.section.blocks.length - 1"
-        :autofocus="block.id === props.caret"
-        @update="onBlockUpdate"
-        @insert="onBlockInsert(block.id, $event)"
-        @move="onBlockMove(block.id, $event)"
-        @duplicate="onBlockDuplicate(block.id)"
-        @remove="onBlockRemove(block.id)"
-      />
+    <div :class="blockListClasses">
+      <div ref="list" :class="blockListClasses">
+        <LessonBlockFrame
+          v-for="(block, index) in props.section.blocks"
+          :key="block.id"
+          :block="block"
+          :frozen="props.frozen"
+          :first="index === 0"
+          :last="index === props.section.blocks.length - 1"
+          :autofocus="block.id === props.caret"
+          @update="onBlockUpdate"
+          @insert="onBlockInsert(block.id, $event)"
+          @insert-section="onSectionInsert"
+          @split="(head, tail) => onSplit(block.id, head, tail)"
+          @move="onBlockMove(block.id, $event)"
+          @duplicate="onBlockDuplicate(block.id)"
+          @remove="onBlockRemove(block.id)"
+        />
+      </div>
+      <button
+        v-if="tail"
+        type="button"
+        :class="tailClasses"
+        @click="onTailWrite"
+        @keydown="onTailKey"
+      >
+        {{ $t('editor-text-placeholder') }}
+      </button>
     </div>
-    <SectionInsertBar v-if="!props.frozen" @pick="onTailInsert" />
   </section>
 </template>

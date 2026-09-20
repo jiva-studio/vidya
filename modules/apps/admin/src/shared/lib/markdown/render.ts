@@ -1,6 +1,11 @@
 import { InlineLexer, Marked } from '@ts-stack/markdown'
 import DOMPurify from 'dompurify'
 
+// A single newline is a line break, as the author typed it. Markdown's rule
+// that two are needed comes from typesetting prose, and a lesson is written by
+// someone watching the screen rather than setting a page.
+Marked.setOptions({ breaks: true })
+
 /**
  * Lesson text, as the student will see it.
  *

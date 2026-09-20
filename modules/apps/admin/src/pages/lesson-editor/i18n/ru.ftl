@@ -1,6 +1,8 @@
 # Тексты редактора урока. Владелец — T5.
 
 editor-title = Редактор урока
+editor-title-label = Название урока
+editor-title-placeholder = Урок без названия
 editor-publish = Опубликовать
 editor-new-revision = Новая версия
 editor-retry = Повторить
@@ -42,10 +44,11 @@ editor-section-remove-cancel = Оставить
 
 editor-homework-placeholder = Нужна ли работа?
 editor-homework-label = Домашняя работа
-editor-homework-none = Не задаётся
-editor-homework-auto = Задаётся, проверяется автоматически
-editor-homework-teacher = Задаётся, проверяет преподаватель
+editor-homework-none = Нет
+editor-homework-auto = Проверяется автоматически
+editor-homework-teacher = Проверяет преподаватель
 editor-homework-note = Отдельного поля для задания нет — сформулируйте его в тексте секции
+editor-homework-needs-quiz = Проверять автоматически нечего: в секции нет вопросов
 
 # Блоки
 
@@ -53,6 +56,7 @@ editor-block-text = Текст
 editor-block-video = Видео
 editor-block-audio = Аудио
 editor-block-quiz = Вопрос
+editor-block-section = Секция
 editor-block-add = Добавить блок
 editor-block-up = Переместить блок «{ $block }» выше
 editor-block-down = Переместить блок «{ $block }» ниже
@@ -66,7 +70,7 @@ editor-block-unknown-body = Здесь его не отредактироват�
 editor-text-label = Текст урока
 editor-text-edit = Редактировать текст
 editor-text-hint = Markdown: # заголовок, **жирный**, *курсив*, - список, [ссылка](https://example.org), > цитата
-editor-text-placeholder = Наберите текст урока здесь.
+editor-text-placeholder = Текст урока, или «/» чтобы вставить блок
 
 editor-source-placeholder = Выберите источник
 editor-source-label = Источник
@@ -165,9 +169,6 @@ media-upload-cancelled = Загрузка остановлена.
 media-unavailable = Файлы пока негде хранить.
 editor-block-image = Изображение
 editor-block-menu = Действия с блоком
-editor-block-add-here = Добавить блок здесь
-editor-block-search = Найти блок
-editor-block-none = Блок с таким названием не найден
 editor-section-menu = Действия с разделом
 editor-move-up = Вверх
 editor-move-down = Вниз

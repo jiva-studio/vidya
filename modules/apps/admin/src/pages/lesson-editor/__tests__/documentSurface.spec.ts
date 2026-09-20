@@ -9,6 +9,7 @@ import {
   accessibleName,
   clickOverlay,
   openEditor,
+  openInsertMenu,
   overlayControl,
   overlayControls,
 } from './harness'
@@ -16,7 +17,6 @@ import {
 addMessages(messages)
 locale.value = 'en'
 
-const InsertLabel = 'Add block'
 const MenuLabel = 'Block options'
 
 const lesson = () =>
@@ -54,21 +54,21 @@ describe('the controls a block offers', () => {
     expect(controlsOn(wrapper, 'b1')).toEqual([])
   })
 
-  it('offers exactly a menu and an insert when the pointer reaches it', async () => {
+  it('offers exactly one control when the pointer reaches it', async () => {
     const { wrapper } = await open()
 
     await hover(wrapper, 'b1')
 
-    expect(controlsOn(wrapper, 'b1').sort()).toEqual([InsertLabel, MenuLabel].sort())
+    expect(controlsOn(wrapper, 'b1')).toEqual([MenuLabel])
   })
 
-  it('offers the same two when the keyboard walks into it instead', async () => {
+  it('offers the same one when the keyboard walks into it instead', async () => {
     const { wrapper } = await open()
 
     block(wrapper, 'b1').dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
     await flushPromises()
 
-    expect(controlsOn(wrapper, 'b1').sort()).toEqual([InsertLabel, MenuLabel].sort())
+    expect(controlsOn(wrapper, 'b1')).toEqual([MenuLabel])
   })
 
   it('leaves the other blocks bare while one is hovered', async () => {
@@ -83,41 +83,37 @@ describe('the controls a block offers', () => {
 describe('adding a block', () => {
   const openInsert = async () => {
     const opened = await open()
-    await hover(opened.wrapper, 'b1')
-    const insert = [...block(opened.wrapper, 'b1').querySelectorAll('button')].find(
-      (node) => accessibleName(node) === InsertLabel,
-    )
-    insert?.click()
-    await flushPromises()
+    await openInsertMenu(opened.wrapper.element)
     return opened
   }
 
-  it('offers every kind this build can author', async () => {
+  it('offers every kind this build can author, and a section', async () => {
     await openInsert()
 
     const offered = overlayControls().map(accessibleName)
 
-    expect(offered).toEqual(expect.arrayContaining(['Text', 'Image', 'Video', 'Audio', 'Quiz']))
+    expect(offered).toEqual(
+      expect.arrayContaining(['Text', 'Image', 'Video', 'Audio', 'Quiz', 'Section']),
+    )
   })
 
-  it('puts the chosen kind directly below the block the author was in', async () => {
+  // The line the menu was called from is empty, so it is the line that becomes
+  // the chosen kind: a second block would leave that empty line behind.
+  it('turns the line it was called from into the chosen kind', async () => {
     const { wrapper } = await openInsert()
 
     await clickOverlay('Image')
 
-    const order = orderOf(wrapper)
-    expect(order).toHaveLength(3)
-    expect(order[0]).toBe('b1')
-    expect(order[2]).toBe('b2')
+    expect(orderOf(wrapper)).toEqual(['b1', 'b2'])
+    expect(block(wrapper, 'b2').textContent).toContain('Add an image')
   })
 
   it('leaves the caret in what it just added', async () => {
     const { wrapper } = await openInsert()
 
-    await clickOverlay('Text')
+    await clickOverlay('Quiz')
 
-    const added = orderOf(wrapper)[1] as string
-    expect(block(wrapper, added).contains(document.activeElement)).toBe(true)
+    expect(block(wrapper, 'b2').contains(document.activeElement)).toBe(true)
   })
 })
 

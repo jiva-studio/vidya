@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Popover } from '@vidya/ui'
-import { Plus } from 'lucide-vue-next'
+import { useFluent } from 'fluent-vue'
 
 import type { BlockType } from '../types'
 import BlockInsertMenu from './BlockInsertMenu.vue'
-import { gutterButtonClasses, iconClasses } from './styles'
+import { insertAnchorClasses } from './styles'
 import type { BlockInserterEmits, BlockInserterProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -15,37 +15,36 @@ const props = withDefaults(defineProps<BlockInserterProps>(), { open: false })
 
 const emit = defineEmits<BlockInserterEmits>()
 
+/* --------------------------------- State ---------------------------------- */
+
+const { $t } = useFluent()
+
 /* -------------------------------- Handlers -------------------------------- */
 
 function onOpen(open: boolean) {
   emit('update:open', open)
 }
 
-function onEnter() {
-  emit('update:open', true)
-}
-
 function onPick(type: BlockType) {
   emit('pick', type)
 }
 
-function onClose() {
-  emit('update:open', false)
+function onSection() {
+  emit('section')
 }
 </script>
 
 <template>
-  <Popover :open="props.open" :label="props.label" side="left" @update:open="onOpen">
+  <Popover
+    :open="props.open"
+    :label="$t('editor-block-add')"
+    side="bottom"
+    align="start"
+    @update:open="onOpen"
+  >
     <template #trigger>
-      <button
-        type="button"
-        :aria-label="props.label"
-        :class="gutterButtonClasses"
-        @keydown.enter.prevent="onEnter"
-      >
-        <Plus :class="iconClasses" />
-      </button>
+      <span :class="insertAnchorClasses" aria-hidden="true" />
     </template>
-    <BlockInsertMenu @pick="onPick" @close="onClose" />
+    <BlockInsertMenu @pick="onPick" @section="onSection" />
   </Popover>
 </template>

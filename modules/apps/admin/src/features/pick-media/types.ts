@@ -1,5 +1,3 @@
-import type { BlockSource } from '@vidya/domain'
-
 import type { MediaKind, MediaRecord, PickedMedia } from '@/entities/media'
 
 /** The three ways a file reaches a block, in the order the dialog offers them. */
@@ -10,15 +8,10 @@ export interface MediaPickerDialogProps {
   open?: boolean
   kind: MediaKind
   accept: string
-
-  /** The link being typed, and what the block's own rules make of it. */
-  link?: string
-  source?: BlockSource
 }
 
 export interface MediaPickerDialogEmits {
   'update:open': [open: boolean]
-  'update:link': [link: string]
   pick: [picked: PickedMedia]
 }
 
@@ -37,16 +30,6 @@ export interface MediaLibraryPanelProps {
 
 export interface MediaLibraryPanelEmits {
   pick: [picked: PickedMedia]
-}
-
-export interface MediaLinkPanelProps {
-  link: string
-  source?: BlockSource
-}
-
-export interface MediaLinkPanelEmits {
-  'update:link': [link: string]
-  submit: []
 }
 
 export interface MediaLibraryTileProps {

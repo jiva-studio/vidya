@@ -27,6 +27,7 @@ export interface LessonEditorViewProps {
 
 export interface LessonEditorViewEmits {
   back: []
+  rename: [title: string]
 }
 
 export interface EditorToolbarProps {
@@ -42,6 +43,7 @@ export interface EditorToolbarProps {
 }
 
 export interface EditorToolbarEmits {
+  rename: [title: string]
   back: []
   save: []
   retry: []
@@ -83,8 +85,11 @@ export interface SectionEditorEmits {
   move: [id: SectionId, delta: MoveDirection]
   reorder: [id: SectionId, from: number, to: number]
   remove: [id: SectionId]
+  'section-insert': [afterId: SectionId]
+  'tail-write': [id: SectionId]
   'block-update': [id: SectionId, block: LessonBlock]
   'block-insert': [id: SectionId, afterId: BlockId | undefined, type: BlockType]
+  'block-split': [id: SectionId, blockId: BlockId, head: string, tail: string]
   'block-move': [id: SectionId, blockId: BlockId, delta: MoveDirection]
   'block-duplicate': [id: SectionId, blockId: BlockId]
   'block-remove': [id: SectionId, blockId: BlockId]
@@ -105,6 +110,9 @@ export interface SectionHeaderEmits {
 
 export interface SectionMenuProps extends Placed {
   label: string
+  assessment: LessonSection['assessment']
+  /** Automatic marking has nothing to mark in a section without a question. */
+  gradable: boolean
 }
 
 export interface SectionMenuEmits {
@@ -113,8 +121,8 @@ export interface SectionMenuEmits {
   remove: []
 }
 
-export interface SectionInsertBarEmits {
-  pick: [type: BlockType]
+export interface SectionBoundaryEmits {
+  add: []
 }
 
 export interface ContentProblemsNoticeProps {
