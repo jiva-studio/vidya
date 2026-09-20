@@ -65,6 +65,16 @@ describe('POST /sync/push: a place a student already asked for', () => {
   const results = async (changes: Partial<protocol.PushChange>[], token = ctx.tokens.student) =>
     ((await push(token, changes).expect(200)).body as protocol.PushResponse).results
 
+  /** What another device of the same student reads back. */
+  const pull = async (deviceId: string): Promise<protocol.PullResponse> =>
+    (
+      await request(app.getHttpServer())
+        .post(routes.pull())
+        .auth(ctx.tokens.student, { type: 'bearer' })
+        .send({ deviceId, cursors: {} })
+        .expect(200)
+    ).body as protocol.PullResponse
+
   const reasonOf = (result: protocol.PushResult) => (result as protocol.PushRejected).reason
 
   /** A request for a place, as the device writes it into its own table. */
@@ -211,7 +221,47 @@ describe('POST /sync/push: a place a student already asked for', () => {
     const [result] = await results([change])
 
     expect(reasonOf(result)).toBe('malformed')
+
+    // Over the ceiling is a shape the school cannot read, not a row too big to
+    // carry: `payloadTooLarge` would send the device looking for a size to cut.
+    expect(JSON.stringify(result)).not.toContain('payloadTooLarge')
+
+    // And it says where the ceiling is, so the student is told how many ranges
+    // to leave rather than that their week is unreadable.
+    expect((result as protocol.PushRejected).detail).toContain(String(domain.MAX_TIME_RANGES))
     expect(await stored(change.docId)).toBeNull()
+  })
+
+  it('refuses a preferred group the school has never heard of', async () => {
+    const change = asks(ctx.theirs.course.id, { data: { preferredGroupId: uuid() } })
+
+    const [result] = await results([change])
+
+    expect(reasonOf(result)).toBe('malformed')
+    expect(await stored(change.docId)).toBeNull()
+  })
+
+  it('refuses a preferred group that is not named with a uuid', async () => {
+    const change = asks(ctx.theirs.course.id, { data: { preferredGroupId: 'the morning one' } })
+
+    const [result] = await results([change])
+
+    expect(reasonOf(result)).toBe('malformed')
+    expect(await stored(change.docId)).toBeNull()
+  })
+
+  it('carries the times a request asked for back to the student other device', async () => {
+    const change = asks(ctx.theirs.course.id, { data: { preferredTimes: EVENING } })
+
+    await results([change])
+
+    const page = await pull('device-2b7c9e01')
+    const row = page.changes.find(
+      (candidate) => candidate.collection === 'enrollments' && candidate.docId === change.docId,
+    )
+
+    expect(row).toBeDefined()
+    expect(row.data.preferredTimes).toEqual(EVENING)
   })
 
   it('refuses a preferred group that belongs to another course', async () => {
@@ -222,6 +272,20 @@ describe('POST /sync/push: a place a student already asked for', () => {
 
     expect(reasonOf(result)).toBe('malformed')
     expect(await stored(change.docId)).toBeNull()
+  })
+
+  it('keeps a request whose preferred group has been retired', async () => {
+    const retired = await groupOn(ctx.theirs.course.id, 'inactive')
+    const change = asks(ctx.theirs.course.id, { data: { preferredGroupId: retired.id } })
+
+    const [result] = await results([change])
+
+    expect(result.status).toBe('accepted')
+
+    const enrollment = await stored(change.docId)
+
+    expect(enrollment.status).toBe('pending')
+    expect(enrollment.preferredGroupId).toBe(retired.id)
   })
 
   it('keeps a request whose preferred group has closed its intake', async () => {
@@ -403,6 +467,98 @@ describe('POST /sync/push: a place a student already asked for', () => {
 
     expect(enrollment.status).toBe('accepted')
     expect(enrollment.archivedByStudentAt ?? null).toBeNull()
+  })
+
+  it('takes an emptied stamp on a finished row as the undoing of putting it away', async () => {
+    const row = await decided('declined')
+
+    await results([carries(row, { archivedByStudentAt: new Date(NOW - 20_000).toISOString() })])
+
+    expect((await stored(row.id)).archivedByStudentAt).not.toBeNull()
+
+    const [result] = await results([
+      carries(row, { archivedByStudentAt: null }, { outboxId: 8, hlc: hlc(NOW - 5_000, 2) }),
+    ])
+
+    expect(result.status).toBe('accepted')
+
+    const enrollment = await stored(row.id)
+
+    expect(enrollment.archivedByStudentAt ?? null).toBeNull()
+    expect(enrollment.status).toBe('declined')
+  })
+
+  it('leaves the stamp where it is when a push says nothing about it', async () => {
+    const row = await decided('declined')
+
+    await results([carries(row, { archivedByStudentAt: new Date(NOW - 20_000).toISOString() })])
+
+    const stamped = (await stored(row.id)).archivedByStudentAt
+
+    // An absent key and a key holding `null` are two different sentences: the
+    // first has nothing to say about the stamp, the second empties it.
+    const [result] = await results([
+      carries(row, { comment: 'still interested' }, { outboxId: 9, hlc: hlc(NOW - 4_000, 3) }),
+    ])
+
+    expect(result.status).toBe('accepted')
+    expect((await stored(row.id)).archivedByStudentAt).toEqual(stamped)
+  })
+
+  /* --------------------------- one batch, two writes -------------------------- */
+
+  it('applies a request and the cancellation behind it, sent as one batch', async () => {
+    const ask = asks(ctx.theirs.course.id)
+    const leave = asks(ctx.theirs.course.id, {
+      docId: ask.docId,
+      outboxId: 2,
+      hlc: hlc(NOW - 50_000),
+      data: {
+        status: 'withdrawn',
+        archivedByStudentAt: new Date(NOW - 50_000).toISOString(),
+      },
+    })
+
+    const [asked, left] = await results([ask, leave])
+
+    expect([asked.status, left.status]).toEqual(['accepted', 'accepted'])
+
+    const enrollment = await stored(ask.docId)
+
+    expect(enrollment.status).toBe('withdrawn')
+    expect(enrollment.archivedByStudentAt).not.toBeNull()
+  })
+
+  it('lands a departure sent under a name the server answered with another', async () => {
+    const online = asks(ctx.theirs.course.id)
+    await results([online])
+
+    // A second device names the same place itself: the request resolves onto
+    // the row already there, and the departure behind it travels under a name
+    // the server never took. It is the same place either way, and a student
+    // who has left has left.
+    const ask = asks(ctx.theirs.course.id, { outboxId: 3, hlc: hlc(NOW - 40_000) })
+    const leave = asks(ctx.theirs.course.id, {
+      docId: ask.docId,
+      outboxId: 4,
+      hlc: hlc(NOW - 30_000),
+      data: {
+        status: 'withdrawn',
+        archivedByStudentAt: new Date(NOW - 30_000).toISOString(),
+      },
+    })
+
+    const [asked, left] = await results([ask, leave])
+
+    expect(asked).toMatchObject({ status: 'accepted', serverDocId: online.docId })
+    expect(left).toMatchObject({ status: 'accepted', serverDocId: online.docId })
+
+    const rows = await storedFor(ctx.theirs.course.id)
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0].id).toBe(online.docId)
+    expect(rows[0].status).toBe('withdrawn')
+    expect(rows[0].archivedByStudentAt).not.toBeNull()
   })
 
   /* ------------------------------ what it costs ------------------------------ */

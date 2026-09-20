@@ -86,11 +86,18 @@ export const walk = (node: ts.Node, visit: (node: ts.Node) => void): void => {
   node.forEachChild((child) => walk(child, visit))
 }
 
-/** The members of `['a', 'b']`, with or without a trailing `as const`. */
-export const stringMembersOf = (node?: ts.Node): string[] | undefined => {
+const arrayOf = (node?: ts.Node): ts.ArrayLiteralExpression | undefined => {
   let value = node
   while (value && ts.isAsExpression(value)) value = value.expression
   if (!value || !ts.isArrayLiteralExpression(value) || value.elements.length === 0) return undefined
+
+  return value
+}
+
+/** The members of `['a', 'b']`, with or without a trailing `as const`. */
+export const stringMembersOf = (node?: ts.Node): string[] | undefined => {
+  const value = arrayOf(node)
+  if (!value) return undefined
 
   const members: string[] = []
   for (const element of value.elements) {
@@ -99,6 +106,50 @@ export const stringMembersOf = (node?: ts.Node): string[] | undefined => {
   }
 
   return members
+}
+
+const propertyOf = (element: ts.ObjectLiteralElementLike, name: string): boolean =>
+  element.name !== undefined && ts.isIdentifier(element.name) && element.name.text === name
+
+/** The `key` of every member of `[{ key: 'a', … }, { key: 'b', … }]`. */
+const keyMembersOf = (node?: ts.Node): string[] | undefined => {
+  const value = arrayOf(node)
+  if (!value) return undefined
+
+  const members: string[] = []
+  for (const element of value.elements) {
+    if (!ts.isObjectLiteralExpression(element)) return undefined
+
+    const key = element.properties.find((property) => propertyOf(property, 'key'))
+    if (!key || !ts.isPropertyAssignment(key) || !ts.isStringLiteral(key.initializer))
+      return undefined
+    members.push(key.initializer.text)
+  }
+
+  return members
+}
+
+/**
+ * The names a list holds, read from the module that declares it.
+ *
+ * Either the list is of strings, or every member carries a `key` — both shapes
+ * are a set of names a screen turns into one locale key each.
+ */
+export const listMembersOf = (path: string, name: string): string[] | undefined => {
+  if (!existsSync(path)) return undefined
+
+  const file = parseSource(path, readFileSync(path, 'utf8'))
+
+  for (const statement of file.statements) {
+    if (!ts.isVariableStatement(statement)) continue
+
+    for (const declaration of statement.declarationList.declarations) {
+      if (!ts.isIdentifier(declaration.name) || declaration.name.text !== name) continue
+      return stringMembersOf(declaration.initializer) ?? keyMembersOf(declaration.initializer)
+    }
+  }
+
+  return undefined
 }
 
 /** The lifecycle lists, read from their one home rather than imported. */

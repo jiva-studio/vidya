@@ -4,18 +4,31 @@
  * `$t(`enrollment-status-${status}`)` names one key per lifecycle state, and
  * nothing in the build knows that. A state added to the domain and forgotten in
  * a bundle reaches the screen as its own identifier.
+ *
+ * The list is either one of the domain's lifecycles or any other list of names
+ * a module declares — a preset, a tab, a menu entry. Both are read where they
+ * live, so no name is written down twice.
  */
 
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { allSources, bundleOwning, domainUnions, shortPath } from './sources.ts'
+import {
+  allSources,
+  bundleOwning,
+  domainUnions,
+  listMembersOf,
+  MODULES,
+  shortPath,
+} from './sources.ts'
 
 interface DynamicKey {
   prefix: string
   /** The lifecycle list the key spans; absent for a state machine of its own. */
   union?: string
-  /** States the screen deliberately never names. */
+  /** A list elsewhere that names the keys, as `<path>#<export>`. */
+  list?: string
+  /** Names the screen deliberately never uses. */
   except?: string[]
 }
 
@@ -33,6 +46,12 @@ const DYNAMIC_KEYS: DynamicKey[] = [
 
   // Whether the draft is being saved: the editor's own three states.
   { prefix: 'editor-status-' },
+
+  {
+    prefix: 'time-preset-',
+    list: 'apps/mobile/src/ui/education/model/timeRanges.ts#TIME_RANGE_PRESETS',
+  },
+  { prefix: 'weekday-short-', list: 'libs/domain/preferredTimes.ts#Weekdays' },
 ]
 
 const TEMPLATE_KEY = /`([a-z][a-z0-9]*(?:-[a-z0-9]+)*-)\$\{([^`{}]*)\}([a-z0-9-]*)`/g
@@ -66,6 +85,16 @@ const usesIn = (path: string): Use[] => {
   return uses
 }
 
+/** The names a key spans, or the reason the guard cannot read them. */
+const membersFor = (entry: DynamicKey, unions: Map<string, string[]>): string[] | string => {
+  if (entry.union) {
+    return unions.get(entry.union) ?? `${entry.union} is not a list in libs/domain/lifecycle.ts.`
+  }
+
+  const [path, name] = (entry.list ?? '').split('#')
+  return listMembersOf(join(MODULES, path), name ?? '') ?? `${entry.list} is not a list of names.`
+}
+
 const missingFor = (use: Use, entry: DynamicKey, union: string[]): string[] => {
   const bundle = bundleOwning(use.path)
   if (!bundle) return [`no i18n bundle owns ${shortPath(use.path)}`]
@@ -96,15 +125,15 @@ export const checkLocaleKeys = (): string[] => {
       continue
     }
 
-    if (!entry.union) continue
+    if (!entry.union && !entry.list) continue
 
-    const union = unions.get(entry.union)
-    if (!union) {
-      failures.push(`${where}: ${entry.union} is not a list in libs/domain/lifecycle.ts.`)
+    const members = membersFor(entry, unions)
+    if (typeof members === 'string') {
+      failures.push(`${where}: ${members}`)
       continue
     }
 
-    for (const missing of missingFor(use, entry, union)) failures.push(`${where}: ${missing}`)
+    for (const missing of missingFor(use, entry, members)) failures.push(`${where}: ${missing}`)
   }
 
   return failures

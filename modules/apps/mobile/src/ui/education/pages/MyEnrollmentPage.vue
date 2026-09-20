@@ -17,6 +17,7 @@
     >
       <RevokedEnrollmentNotice v-if="ending" :reason="ending" :course-name="courseName" />
       <IonNote v-if="groupClosed">{{ $t('enrollment-group-closed') }}</IonNote>
+      <IonNote v-if="groupDeleted">{{ $t('enrollment-group-deleted') }}</IonNote>
       <EnrollmentRejectionNotice v-if="rejection" :reason="rejection" />
     </EnrollmentReviewStatus>
 
@@ -133,6 +134,16 @@ const groupClosed = computed(() => {
   const asked = data.value.preferredGroup
   return enrollment.value?.status === 'pending' && asked !== null && !isRecruiting(asked.status)
 })
+
+// The row the student asked for has left the collection: the school deleted
+// the group, which is different news from a group that merely stopped taking
+// students.
+const groupDeleted = computed(
+  () =>
+    enrollment.value?.status === 'pending' &&
+    enrollment.value.preferredGroupId !== null &&
+    data.value.preferredGroup === null,
+)
 
 const rejection = computed(() =>
   outbox.state('enrollments', props.enrollmentId) === 'rejected'

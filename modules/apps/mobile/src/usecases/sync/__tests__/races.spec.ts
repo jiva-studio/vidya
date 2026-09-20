@@ -147,6 +147,60 @@ describe('two devices of one student', () => {
     expect(onePosition).toBe(twoPosition)
     expect(onePosition).toBeGreaterThan(0)
   })
+
+  /**
+   * The same row put away on one handset and brought back on the other.
+   *
+   * `archivedByStudentAt` is the student's own field on both devices, so the
+   * two writes meet with nothing to arbitrate them but their stamps. The later
+   * one stands, and it stands on both — there is no rule here beyond that.
+   */
+  it('both phones take the later word on whether a row was put away', async () => {
+    const { one, two, server } = await twoDevices()
+
+    server.journal({
+      collection: 'enrollments',
+      docId: ENROLLMENT_ID,
+      scope: USER_SCOPE,
+      data: {
+        id: ENROLLMENT_ID,
+        schoolId: SCHOOL_ID,
+        courseId: COURSE_ID,
+        studentId: STUDENT_ID,
+        groupId: null,
+        status: 'declined',
+        decidedById: null,
+        decidedAt: '2026-01-05T00:00:00.000Z',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        preferredGroupId: null,
+        preferredTimes: null,
+        comment: null,
+        archivedByStudentAt: '2026-01-06T00:00:00.000Z',
+      },
+    })
+
+    await one.engine.runner.run()
+    await two.engine.runner.run()
+
+    const place = asId<EnrollmentId>(ENROLLMENT_ID)
+
+    one.nowMs = 1_789_689_600_000
+    two.nowMs = 1_789_689_700_000
+
+    await one.engine.enrollments.unarchive(place)
+    await two.engine.enrollments.archive(place)
+
+    await one.engine.runner.run()
+    await two.engine.runner.run()
+    await one.engine.runner.run()
+    await two.engine.runner.run()
+
+    const later = new Date(two.nowMs).toISOString()
+
+    expect((await one.engine.enrollments.getById(place))!.archivedByStudentAt).toBe(later)
+    expect((await two.engine.enrollments.getById(place))!.archivedByStudentAt).toBe(later)
+    expect(await one.engine.enrollments.list()).toEqual([])
+  })
 })
 
 describe('races inside one device', () => {

@@ -83,6 +83,48 @@ describe('/edu/enrollments', () => {
   })
 
   /* -------------------------------------------------------------------------- */
+  /*                            What a request carries                          */
+  /* -------------------------------------------------------------------------- */
+
+  const askFor = (preferredTimes: unknown) =>
+    request(app.getHttpServer())
+      .post(routes.create())
+      .auth(ctx.tokens.student, { type: 'bearer' })
+      .send({ courseId: ctx.courseId, preferredTimes })
+
+  const rangesOf = (count: number) =>
+    Array.from({ length: count }, (_, index) => ({
+      days: ['mon'],
+      startMinute: index * 60,
+      endMinute: index * 60 + 30,
+    }))
+
+  it('takes a set of ranges the school can read', async () => {
+    // The refusals below have to be the rule speaking, not the route.
+    const response = await askFor({
+      timeZone: 'Asia/Kolkata',
+      ranges: [{ days: ['sat', 'sun'], startMinute: 420, endMinute: 660 }],
+    }).expect(201)
+
+    expect(response.body.id).toBeDefined()
+  })
+
+  it('refuses a preferred range that ends before it starts', () =>
+    askFor({
+      timeZone: 'Asia/Kolkata',
+      ranges: [{ days: ['mon'], startMinute: 660, endMinute: 420 }],
+    }).expect(400))
+
+  it('refuses a preferred range that ends the minute it starts', () =>
+    askFor({
+      timeZone: 'Asia/Kolkata',
+      ranges: [{ days: ['mon'], startMinute: 660, endMinute: 660 }],
+    }).expect(400))
+
+  it('refuses more ranges than a week holds', () =>
+    askFor({ timeZone: 'Asia/Kolkata', ranges: rangesOf(9) }).expect(400))
+
+  /* -------------------------------------------------------------------------- */
   /*                                 Moderation                                 */
   /* -------------------------------------------------------------------------- */
 

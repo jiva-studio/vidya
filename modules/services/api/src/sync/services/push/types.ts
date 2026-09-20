@@ -71,8 +71,18 @@ export interface PushApplier {
     context: PushRowContext,
   ): Promise<PreparedRow | Rejection>
 
-  /** Whether the stored row may still be written by its student. */
-  editable(manager: EntityManager, change: PushChange): Promise<Rejection | null>
+  /**
+   * Whether the row this push acts on may still be written by its student.
+   *
+   * That row is not always the one `change.docId` names: a collection may
+   * resolve a name the server never learned onto the row it does hold, and the
+   * checks belong on the row that will actually be written.
+   */
+  editable(
+    manager: EntityManager,
+    change: PushChange,
+    context: PushRowContext,
+  ): Promise<Rejection | null>
 
   /**
    * Writes the row through the ORM, so the journal subscriber sees it, and

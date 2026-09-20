@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { FluentBundle } from '@fluent/bundle'
 import { IonAlert } from '@ionic/vue'
 import type { EnrollmentStatus, SyncRejectionReason } from '@vidya/domain'
 import type { VueWrapper } from '@vue/test-utils'
@@ -9,6 +10,7 @@ vi.mock('@capacitor/network', async () => (await import('./localScreens')).capac
 
 import { RevokedEnrollmentNotice, SyncRejectionNotice } from '@/ui/sync'
 
+import resources from '../i18n'
 import MyEnrollmentPage from '../pages/MyEnrollmentPage.vue'
 import {
   aCourse,
@@ -140,6 +142,88 @@ describe('a request still waiting for its answer', () => {
     const wrapper = await waitingFor('pending')
 
     expect(wrapper.text()).not.toMatch(/no longer taking students/i)
+  })
+
+  it('names only the closure when the group is still there and closed', async () => {
+    const wrapper = await waitingFor('active')
+
+    expect(wrapper.text()).toMatch(/no longer taking students/i)
+    expect(wrapper.text()).not.toMatch(/does not exist any more/i)
+  })
+
+  it('explains that the group the student asked for is gone', async () => {
+    // The wish outlives the group: the request still names one the school has
+    // since deleted, and no row answers to it.
+    seed.enrollments.push(anEnrollment({ status: 'pending', preferredGroupId: GROUP_ID }))
+
+    const wrapper = await openEnrollment()
+
+    expect(wrapper.text()).toMatch(/does not exist any more/i)
+    expect(wrapper.text()).not.toMatch(/no longer taking students/i)
+  })
+
+  it('says nothing about a group when the request asked for none', async () => {
+    seed.enrollments.push(anEnrollment({ status: 'pending', preferredGroupId: null }))
+
+    const wrapper = await openEnrollment()
+
+    expect(wrapper.text()).not.toMatch(/does not exist any more/i)
+    expect(wrapper.text()).not.toMatch(/no longer taking students/i)
+  })
+
+  it('says nothing about the group once the request has been answered', async () => {
+    // The wish is history the moment there is a decision, and the school has
+    // already said where the student stands.
+    seed.enrollments.push(anEnrollment({ status: 'declined', preferredGroupId: GROUP_ID }))
+
+    const wrapper = await openEnrollment()
+
+    expect(wrapper.text()).not.toMatch(/does not exist any more/i)
+    expect(wrapper.text()).not.toMatch(/no longer taking students/i)
+  })
+})
+
+/**
+ * Two pieces of news, and two sentences.
+ *
+ * A group that closed its intake and a group that no longer exists ask the
+ * student for the same thing — wait — but they are not the same fact, and one
+ * text for both is a screen that has stopped saying which happened.
+ */
+describe('the words for a group that is no longer an option', () => {
+  const KEYS = ['enrollment-group-closed', 'enrollment-group-deleted'] as const
+  const LOCALES = ['en', 'ru'] as const
+
+  const bundleFor = (locale: (typeof LOCALES)[number]): FluentBundle => {
+    const bundle = new FluentBundle(locale, { useIsolating: false })
+    resources[locale].forEach((resource) => bundle.addResource(resource))
+
+    return bundle
+  }
+
+  const textOf = (bundle: FluentBundle, key: string): string => {
+    const message = bundle.getMessage(key)
+
+    return message?.value ? bundle.formatPattern(message.value) : ''
+  }
+
+  it('has both of them in every language', () => {
+    for (const locale of LOCALES) {
+      const bundle = bundleFor(locale)
+      const missing = KEYS.filter((key) => !bundle.hasMessage(key))
+
+      expect([locale, missing]).toEqual([locale, []])
+    }
+  })
+
+  it('does not say the same thing twice', () => {
+    for (const locale of LOCALES) {
+      const bundle = bundleFor(locale)
+      const [closed, deleted] = KEYS.map((key) => textOf(bundle, key))
+
+      expect(closed).not.toBe('')
+      expect([locale, deleted]).not.toEqual([locale, closed])
+    }
   })
 })
 

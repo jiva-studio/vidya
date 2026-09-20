@@ -74,7 +74,7 @@ export const enrollmentsApplier: PushApplier = {
       return reject('malformed', 'a request names itself with a uuid')
     }
 
-    const existing = await find(manager, change)
+    const existing = await targetOf(manager, change, context)
 
     if (!mayWrite(existing, change.data, context.userId)) {
       return reject('notYourEnrollment', 'a device may only ask for a place of its own')
@@ -99,8 +99,12 @@ export const enrollmentsApplier: PushApplier = {
    * brought back to life — would otherwise fail an invariant with `malformed`,
    * and a `malformed` row keeps its local copy over the server's for good.
    */
-  async editable(manager: EntityManager, change: PushChange): Promise<Rejection | null> {
-    const existing = await find(manager, change)
+  async editable(
+    manager: EntityManager,
+    change: PushChange,
+    context: PushRowContext,
+  ): Promise<Rejection | null> {
+    const existing = await targetOf(manager, change, context)
 
     if (!existing) return checkNames(change.data)
 
@@ -113,11 +117,11 @@ export const enrollmentsApplier: PushApplier = {
     prepared: PreparedRow,
     context: PushRowContext,
   ): Promise<string> {
-    const stored = await find(manager, change)
+    const target = await targetOf(manager, change, context)
 
-    if (stored) return write(manager, stored, prepared.body)
+    if (target) return write(manager, target, prepared.body)
 
-    const live = await locate(manager, prepared, context)
+    const live = await liveOn(manager, prepared.course.id, context.userId)
 
     // The same request under a second name: a student who asked from two
     // devices has one place, under the name the first of them gave it.
@@ -222,11 +226,19 @@ const checkWishes = async (
   data: domain.SyncPayload | null,
 ): Promise<Rejection | null> => checkTimes(data) ?? (await checkGroup(manager, course, data))
 
+const countRanges = (times: unknown): number => {
+  const ranges = (times as { ranges?: unknown } | null)?.ranges
+
+  return Array.isArray(ranges) ? ranges.length : 0
+}
+
 /**
  * A set of ranges the school can read, or none at all.
  *
  * Nothing is salvaged from a body that fails: a half-understood wish written
- * into the row would be a request the student never made.
+ * into the row would be a request the student never made. Too many ranges is
+ * told apart from a shape nobody can read, because a student can act on a
+ * limit and cannot act on 'unreadable'.
  */
 const checkTimes = (data: domain.SyncPayload | null): Rejection | null => {
   const times = data?.preferredTimes
@@ -234,6 +246,10 @@ const checkTimes = (data: domain.SyncPayload | null): Rejection | null => {
   if (times === undefined || times === null) return null
 
   if (domain.isValidPreferredTimes(times)) return null
+
+  if (countRanges(times) > domain.MAX_TIME_RANGES) {
+    return reject('malformed', `a request asks for at most ${domain.MAX_TIME_RANGES} time ranges`)
+  }
 
   return reject('malformed', 'the times asked for are not a set of ranges')
 }
@@ -292,20 +308,26 @@ const checkKnowledge = (
   return reject('alreadyAccepted', 'the school has answered since this row left the device')
 }
 
-/**
- * A push that is not a new request, naming a row the server does not hold.
- *
- * Within one batch a device can have its first row resolved onto a place the
- * server already stores, and send the second under a name the server never
- * learns. Creating a place for it would invent a request nobody made;
- * `alreadyAccepted` is the one answer that makes the device take the server's
- * row, learn its real name and act on it again.
- */
-const checkNames = (data: domain.SyncPayload | null): Rejection | null => {
+/** Whether this push only asks for a place, rather than acting on one it has. */
+const isNewRequest = (data: domain.SyncPayload | null): boolean => {
   const status = data?.status
   const finished = typeof status === 'string' && !domain.isLive(status as domain.EnrollmentStatus)
 
-  if (!finished && (data?.archivedByStudentAt ?? null) === null) return null
+  return !finished && (data?.archivedByStudentAt ?? null) === null
+}
+
+/**
+ * A push that is not a new request, on a pair holding no live place at all.
+ *
+ * Within one batch a device can have its first row resolved onto a place the
+ * server already stores, and send the second under a name the server never
+ * learns. That one lands on the live place of the pair; with no live place to
+ * land on, creating one would invent a request nobody made, and
+ * `alreadyAccepted` is the one answer that makes the device take the server's
+ * rows and act again.
+ */
+const checkNames = (data: domain.SyncPayload | null): Rejection | null => {
+  if (isNewRequest(data)) return null
 
   return reject('alreadyAccepted', 'the place this row speaks of is not the one the server holds')
 }
@@ -331,19 +353,42 @@ const checkPutAway = (existing: Enrollment, data: domain.SyncPayload | null): Re
  * finished ones are a history the student may add to, and writing onto one of
  * them would restate an answer the school has already given.
  */
-const locate = async (
+const liveOn = async (
   manager: EntityManager,
-  prepared: PreparedRow,
-  context: PushRowContext,
+  courseId: unknown,
+  studentId: domain.UserId,
 ): Promise<Enrollment | null> =>
-  manager.findOne(Enrollment, {
-    where: {
-      courseId: prepared.course.id,
-      studentId: context.userId,
-      status: In([...domain.LiveEnrollmentStatuses]),
-    },
-    order: { createdAt: 'DESC' },
-  })
+  isUuid(courseId)
+    ? manager.findOne(Enrollment, {
+        where: {
+          courseId: domain.asId<domain.CourseId>(courseId),
+          studentId,
+          status: In([...domain.LiveEnrollmentStatuses]),
+        },
+        order: { createdAt: 'DESC' },
+      })
+    : null
+
+/**
+ * The row this push acts on.
+ *
+ * A request is written under the name the device gave it. Anything that follows
+ * acts on a place that already exists, so a name the server never learned — the
+ * device's own, when the request reached the server under another one — resolves
+ * to the live place of the same course and student. Nothing is created that way:
+ * a pair with no live row is left unresolved, and refused.
+ */
+const targetOf = async (
+  manager: EntityManager,
+  change: PushChange,
+  context: PushRowContext,
+): Promise<Enrollment | null> => {
+  const stored = await find(manager, change)
+
+  if (stored || isNewRequest(change.data)) return stored
+
+  return liveOn(manager, change.data?.courseId, context.userId)
+}
 
 /**
  * What the device actually asked for.

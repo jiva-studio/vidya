@@ -8,7 +8,7 @@ import type {
   SyncPayload,
   SyncScopeRef,
 } from '@vidya/domain'
-import { asId, isSyncRejectionReason, SyncCollections, syncScopeKey } from '@vidya/domain'
+import { asId, isLive, isSyncRejectionReason, SyncCollections, syncScopeKey } from '@vidya/domain'
 import type { ISyncClient } from '@vidya/usecases'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -668,3 +668,98 @@ function payloadFor(collection: string): SyncPayload {
 
   return payload as SyncPayload
 }
+
+/**
+ * A cancellation written offline, and a place taken away while it waited.
+ *
+ * The two meet on the next run: the school answered after the device wrote, so
+ * the cancellation is refused and the device takes the server's row. That row
+ * says `revoked` and carries no stamp — the school emptied it with the same
+ * write that took the place — so the student sees why their access went, and
+ * is the one who decides when it leaves their list.
+ */
+describe('a cancellation that crossed the school taking the place back', () => {
+  const REVOKED_AT = '2026-02-01T10:00:00.000Z'
+
+  const enrolment = (fields: SyncPayload): SyncPayload => ({
+    id: ENROLLMENT_ID,
+    schoolId: SCHOOL_ID,
+    courseId: COURSE_ID,
+    studentId: STUDENT_ID,
+    groupId: null,
+    decidedById: null,
+    decidedAt: null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    preferredGroupId: null,
+    preferredTimes: null,
+    comment: null,
+    archivedByStudentAt: null,
+    ...fields,
+  })
+
+  let harness: Harness
+
+  beforeEach(async () => {
+    harness = await openHarness()
+    harness.server.journal({
+      collection: 'enrollments',
+      docId: ENROLLMENT_ID,
+      scope: USER_SCOPE,
+      data: enrolment({ status: 'pending' }),
+    })
+    harness.server.grant(SCHOOL_SCOPE)
+    await harness.engine.runner.run()
+
+    // Offline: the student takes the request back, and it leaves their list.
+    await harness.engine.enrollments.withdraw(asId<EnrollmentId>(ENROLLMENT_ID))
+    expect(await harness.engine.enrollments.list()).toHaveLength(0)
+
+    // The school answered first, so the cancellation was written behind its
+    // back — and the place, with the role that came with it, is gone.
+    harness.server.rejectIf = (change) =>
+      change.collection === 'enrollments' ? 'alreadyAccepted' : null
+    harness.server.journal({
+      collection: 'enrollments',
+      docId: ENROLLMENT_ID,
+      scope: USER_SCOPE,
+      data: enrolment({ status: 'revoked', decidedAt: REVOKED_AT, archivedByStudentAt: null }),
+    })
+    harness.server.revoke(SCHOOL_SCOPE)
+  })
+
+  it('shows the place as taken back rather than as cancelled', async () => {
+    await harness.engine.runner.run()
+
+    const listed = await harness.engine.enrollments.list()
+    expect(listed.map((row) => row.id)).toEqual([ENROLLMENT_ID])
+    expect(listed[0]!.status).toBe('revoked')
+  })
+
+  it('leaves the row for the student to put away themselves', async () => {
+    await harness.engine.runner.run()
+
+    // No stamp means the list has no reason to hide it, and the swipe offers
+    // putting it away rather than cancelling a request that no longer exists.
+    const row = await harness.engine.enrollments.getById(asId<EnrollmentId>(ENROLLMENT_ID))
+
+    expect(row!.archivedByStudentAt).toBeNull()
+    expect(isLive(row!.status)).toBe(false)
+  })
+
+  it('settles the refused cancellation instead of sending it again', async () => {
+    await harness.engine.runner.run()
+
+    const rows = await harness.outboxOf(OWNER)
+
+    expect(rows.map((row) => row.status)).toEqual(['rejected'])
+    expect(rows[0]!.reason as string).toBe('alreadyAccepted')
+    expect(await harness.engine.outbox.listUnsettled({ ownerId: OWNER })).toEqual([])
+  })
+
+  it('takes the school catalogue off the device all the same', async () => {
+    await harness.engine.runner.run()
+
+    expect(await countOf(harness.db, 'courses')).toBe(0)
+    expect(await countOf(harness.db, 'schools')).toBe(0)
+  })
+})

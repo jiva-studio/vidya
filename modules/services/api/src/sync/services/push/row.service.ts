@@ -187,7 +187,7 @@ export class SyncPushRowService {
     // and a resend after a dropped connection must cost nothing.
     if (stamped.repeat) return accepted(change, stamped.hlc, false)
 
-    const frozen = await applier.editable(manager, change)
+    const frozen = await applier.editable(manager, change, context)
 
     if (frozen) return rejected(change, frozen)
 

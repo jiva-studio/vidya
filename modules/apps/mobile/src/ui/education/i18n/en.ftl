@@ -83,6 +83,9 @@ enrollment-removed-undo = Undo
 # A group that closed while the request was waiting
 enrollment-group-closed = The group you asked for is no longer taking students. The school will look for another one for you.
 
+# The group was deleted while the request was waiting
+enrollment-group-deleted = The group you asked for does not exist any more. The school will look for another one for you.
+
 # What the school would not take
 enrollment-rejection-retry = Your answer is still on this device — send it again.
 enrollment-rejection-settled = The school has already accepted and marked this work, so your change will not reach the school.
