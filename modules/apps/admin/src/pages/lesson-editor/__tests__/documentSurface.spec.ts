@@ -223,3 +223,58 @@ describe('a version nobody can change', () => {
     expect(wrapper.text()).toContain('First words')
   })
 })
+
+describe('the edges of the document', () => {
+  const fieldsOf = (wrapper: { element: Element }) => [
+    ...wrapper.element.querySelectorAll<HTMLElement>('.cm-content, textarea, input[type="text"]'),
+  ]
+
+  const arrow = async (node: HTMLElement, key: 'ArrowUp' | 'ArrowDown') => {
+    node.focus()
+    node.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
+    await flushPromises()
+  }
+
+  it('keeps the caret where it is at the last field of the last section', async () => {
+    const { wrapper } = await open()
+    const last = fieldsOf(wrapper).at(-1) as HTMLElement
+
+    await arrow(last, 'ArrowDown')
+
+    expect(document.activeElement).toBe(last)
+  })
+
+  it('keeps the caret where it is at the first field of the first section', async () => {
+    const { wrapper } = await open()
+    const [first] = fieldsOf(wrapper)
+
+    await arrow(first, 'ArrowUp')
+
+    expect(document.activeElement).toBe(first)
+  })
+})
+
+describe('a section with nothing in it', () => {
+  const emptySection = () => contentOf(sectionOf('s1', 'The alphabet', []))
+
+  it('offers the line to write the first block into', async () => {
+    const { wrapper } = await openEditor(draftOf(emptySection(), 'draft'))
+    const root = wrapper.element as Element
+
+    const tail = [...root.querySelectorAll('button')].find((node) =>
+      accessibleName(node).startsWith('Lesson text'),
+    )
+
+    expect(tail).toBeDefined()
+  })
+
+  it('opens exactly one block when that line is clicked', async () => {
+    const { wrapper } = await openEditor(draftOf(emptySection(), 'draft'))
+    const root = wrapper.element as Element
+
+    await openInsertMenu(root)
+    await clickOverlay('Text')
+
+    expect(root.querySelectorAll('[data-block-frame]')).toHaveLength(1)
+  })
+})

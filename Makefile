@@ -1,6 +1,7 @@
 .PHONY: install \
         check check-package typecheck lint lint-fix format format-check \
         test test-package test-postgres-required test-postgres \
+        coverage coverage-package \
         mutate-diff mutate-full \
         api-build api-run api-test \
         db-start db-schema-drop db-migrate db-testdb-drop \
@@ -72,6 +73,21 @@ test-postgres-required:
 # slower; run it by hand or on a schedule, not per change.
 test-postgres:
 	./scripts/vidya-test-suite-run postgres
+
+# ---------------------------------------------------------------------------
+# Coverage
+#
+# What the suites never looked at, per workspace. It is a map of blind spots,
+# not a score: nothing fails on a threshold here, because a number that must be
+# met is a number that gets met by testing the easy half. Reports land in each
+# package's own `coverage/`.
+# ---------------------------------------------------------------------------
+
+coverage:
+	./scripts/vidya-coverage-run
+
+coverage-package:
+	./scripts/vidya-coverage-run $(PKG)
 
 # ---------------------------------------------------------------------------
 # Mutation testing

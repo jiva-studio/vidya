@@ -37,6 +37,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@types/sortablejs": "^1.15.9",
     "@vitejs/plugin-vue": "^6.0.9",
+    "@vitest/coverage-v8": "^5.0.1",
     "@vue/test-utils": "^2.5.1",
     "jsdom": "^27.4.0",
     "steiger": "^0.6.0",
