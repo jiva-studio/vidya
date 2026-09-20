@@ -15,7 +15,7 @@ describe('/edu/lessons/:lessonId/versions', () => {
     ctx = await createContext(app)
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app.close()
   })
 

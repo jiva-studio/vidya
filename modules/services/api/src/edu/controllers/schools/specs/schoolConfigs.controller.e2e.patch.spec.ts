@@ -15,7 +15,7 @@ describe('/edu/schools/:id/config', () => {
     ctx = await createContext(app)
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app.close()
   })
 

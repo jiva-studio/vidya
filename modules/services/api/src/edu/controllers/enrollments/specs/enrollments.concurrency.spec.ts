@@ -25,7 +25,7 @@ describeOnPostgres('/edu/enrollments under concurrency', () => {
     ctx = await createContext(app)
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app.close()
   })
 

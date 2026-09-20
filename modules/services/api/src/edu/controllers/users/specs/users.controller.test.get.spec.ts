@@ -18,6 +18,10 @@ describe('UsersController', () => {
     ctr = app.get(UsersController)
   })
 
+  afterEach(async () => {
+    await app.close()
+  })
+
   function expectUsers(res: dto.GetUsersResponse, users: entities.User[]) {
     expect(res).toHaveProperty('items')
     expect(res.items).toHaveLength(users.length)
