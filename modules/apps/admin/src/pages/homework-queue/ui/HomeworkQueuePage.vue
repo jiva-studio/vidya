@@ -27,7 +27,6 @@ const columns = computed<TableColumn[]>(() => [
   { key: 'submitted', label: $t('homework-column-submitted') },
 ])
 
-const errorText = computed(() => queue.error.value && $t(queue.error.value))
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -71,7 +70,7 @@ function asWork(row: TableRowData): HomeworkRow {
       :columns="columns"
       :rows="queue.rows.value"
       :loading="queue.loading.value"
-      :error="errorText"
+      :error="queue.error.value ? $t('state-error') : undefined"
       :empty-title="$t('homework-empty-title')"
       :empty-description="$t('homework-empty-body')"
       :retry-label="$t('action-retry')"

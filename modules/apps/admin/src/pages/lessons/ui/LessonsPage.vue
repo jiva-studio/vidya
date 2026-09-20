@@ -83,7 +83,7 @@ function onRetry() {
     <LessonsTable
       :rows="lessons.rows.value"
       :loading="lessons.loading.value"
-      :error="lessons.error.value && $t(lessons.error.value)"
+      :error="lessons.error.value ? $t('state-error') : undefined"
       :can-create="canCreate"
       :can-edit="canEdit"
       @retry="onRetry"

@@ -56,3 +56,16 @@ export const addMessages = (messages: LocaleMessages): void => {
 }
 
 addMessages({ en: enMessages, ru: ruMessages })
+
+/**
+ * One message, formatted outside a component.
+ *
+ * Almost everything is translated in a template through `$t`. What is not is
+ * the text of something announced by a layer with no template of its own — a
+ * failed request, reported from the transport.
+ */
+export const translate = (key: string): string => {
+  const bundle = bundles[locale.value]
+  const message = bundle.getMessage(key)
+  return message?.value ? bundle.formatPattern(message.value) : key
+}

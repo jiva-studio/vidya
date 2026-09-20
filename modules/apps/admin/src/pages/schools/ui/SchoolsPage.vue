@@ -30,7 +30,6 @@ const columns = computed<TableColumn[]>(() => [
   { key: 'actions', label: $t('schools-column-actions'), align: 'end' },
 ])
 
-const errorText = computed(() => (schools.error.value ? $t(schools.error.value) : undefined))
 const emptyActionLabel = computed(() => (canCreate.value ? $t('schools-create') : undefined))
 
 const displayedRows = computed(() => {
@@ -93,7 +92,7 @@ function asSchool(row: TableRowData): SchoolRow {
       :columns="columns"
       :rows="displayedRows"
       :loading="schools.loading.value"
-      :error="errorText"
+      :error="schools.error.value ? $t('state-error') : undefined"
       :empty-title="$t('schools-empty-title')"
       :empty-description="$t('schools-empty-body')"
       :empty-action-label="emptyActionLabel"

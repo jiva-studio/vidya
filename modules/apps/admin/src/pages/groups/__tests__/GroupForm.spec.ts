@@ -130,8 +130,8 @@ describe('GroupFormPage', () => {
     expect(page.text()).toContain('The course cannot be changed once the group exists')
   })
 
-  it('shows the reason a save was refused', async () => {
-    const { page } = await open('/groups/new', {
+  it('reports the reason a save was refused, and keeps it out of the form', async () => {
+    const { page, transport } = await open('/groups/new', {
       [COURSES]: courses,
       [`POST ${GROUPS}`]: refusal(409, 'That group name is taken'),
     })
@@ -147,6 +147,9 @@ describe('GroupFormPage', () => {
     await page.get('form').trigger('submit')
     await flushPromises()
 
-    expect(page.text()).toContain('That group name is taken')
+    expect(transport.failures).toEqual([
+      { key: 'failure-conflict', reason: 'That group name is taken' },
+    ])
+    expect(page.text()).not.toContain('That group name is taken')
   })
 })

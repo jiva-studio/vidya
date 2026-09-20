@@ -42,3 +42,14 @@ page-not-found-title = Page not found
 page-not-found-body = Check the address — it may have a typo.
 page-not-found-back = Back to the dashboard
 state-nothing-matches = Nothing found
+
+# Failed requests. One toast, wherever the request was made from.
+
+failure-offline = The server could not be reached
+failure-server = The server could not carry out the request
+failure-forbidden = You are not allowed to do this
+failure-missing = This is no longer there
+failure-conflict = Someone changed this first
+failure-rejected = The server did not accept the data
+failure-too-many = Too often — wait a moment
+failure-unknown = Something went wrong

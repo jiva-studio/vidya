@@ -15,6 +15,14 @@ export interface FetchHttpClientOptions {
   readonly accessToken: () => string | undefined
 }
 
+/** A failure as the operator will read it: a Fluent key, and the server's words. */
+export interface Failure {
+  readonly key: string
+  readonly reason?: string
+}
+
+export type FailureSink = (failure: Failure) => void
+
 export interface RefreshOn401Options {
   /** Trades the stored refresh token for a new session. `false` means it could not. */
   readonly refresh: () => Promise<boolean>

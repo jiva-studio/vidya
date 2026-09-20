@@ -2,7 +2,7 @@
 import type { SchoolId } from '@vidya/domain'
 import { Badge, EmptyState, FailureState, Skeleton } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import { useSchoolApi } from '@/entities/school'
 import { reasonOf } from '@/shared/lib'
@@ -26,7 +26,6 @@ const names = ref(new Map<SchoolId, string>())
 const loading = ref(false)
 const error = ref<string | undefined>(undefined)
 
-const errorText = computed(() => (error.value ? $t(error.value) : undefined))
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -70,7 +69,7 @@ function nameOf(id: SchoolId): string {
   <FailureState
     v-else-if="error"
     :title="$t('state-error-title')"
-    :description="errorText ?? $t('state-error')"
+    :description="$t('state-error')"
     :retry-label="$t('action-retry')"
     @retry="onRetry"
   />

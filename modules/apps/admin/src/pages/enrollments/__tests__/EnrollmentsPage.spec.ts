@@ -217,7 +217,7 @@ describe('EnrollmentsPage', () => {
     )
 
     expect(page.find('[role="alert"]').text()).not.toContain('База недоступна')
-    expect(page.find('[role="alert"]').text()).toContain('Сервер не смог это выполнить')
+    expect(page.find('[role="alert"]').text()).toContain('Не получилось. Попробуйте ещё раз.')
 
     await click(page, 'Повторить')
 

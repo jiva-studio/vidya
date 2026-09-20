@@ -91,7 +91,7 @@ describe('RolesPage', () => {
     const alert = page.find('[role="alert"]').text()
 
     expect(alert).not.toContain('The database is away')
-    expect(alert).toContain('Сервер не смог')
+    expect(alert).toContain('Не получилось. Попробуйте ещё раз.')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
     await retry?.trigger('click')

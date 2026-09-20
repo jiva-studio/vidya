@@ -14,6 +14,9 @@ describe('FetchHttpClient', () => {
 
   const lastCall = () => fetchMock.mock.calls.at(-1) as [string, RequestInit]
 
+  /** The transport carries headers as `Headers`, which has no own properties. */
+  const sentHeader = (name: string) => new Headers(lastCall()[1].headers).get(name)
+
   beforeEach(() => {
     token = undefined
     fetchMock = vi.fn(async () => json({ ok: true }))
@@ -40,15 +43,13 @@ describe('FetchHttpClient', () => {
     token = 'header.payload.signature'
     await client().get('/edu/courses')
 
-    expect(lastCall()[1].headers).toMatchObject({
-      authorization: 'Bearer header.payload.signature',
-    })
+    expect(sentHeader('authorization')).toBe('Bearer header.payload.signature')
   })
 
   it('sends no authorization header when there is no token', async () => {
     await client().get('/edu/courses')
 
-    expect(lastCall()[1].headers).not.toHaveProperty('authorization')
+    expect(sentHeader('authorization')).toBeNull()
   })
 
   it('reads the token at call time rather than at construction', async () => {
@@ -56,7 +57,7 @@ describe('FetchHttpClient', () => {
     token = 'later'
     await http.get('/edu/courses')
 
-    expect(lastCall()[1].headers).toMatchObject({ authorization: 'Bearer later' })
+    expect(sentHeader('authorization')).toBe('Bearer later')
   })
 
   it('does not try to parse a 204 as JSON', async () => {
@@ -88,7 +89,7 @@ describe('FetchHttpClient', () => {
   })
 
   it('turns a transport failure into an OfflineError, not an HttpError', async () => {
-    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
 
     const error = (await client()
       .get('/edu/courses')
@@ -100,10 +101,33 @@ describe('FetchHttpClient', () => {
 
   it('sends a JSON content type only when there is a body', async () => {
     await client().post('/auth/signout')
-    expect(lastCall()[1].headers).not.toHaveProperty('content-type')
+    expect(sentHeader('content-type')).toBeNull()
 
     await client().post('/auth/signout', { refreshToken: 'r' })
-    expect(lastCall()[1].headers).toMatchObject({ 'content-type': 'application/json' })
+    expect(sentHeader('content-type')).toBe('application/json')
     expect(lastCall()[1].body).toBe('{"refreshToken":"r"}')
+  })
+
+  it('asks again when a read fails on the way, and answers with what it got', async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+
+    await expect(client().get('/edu/courses')).resolves.toEqual({ ok: true })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('asks again when the server answers that it is unavailable', async () => {
+    fetchMock.mockResolvedValueOnce(json({ message: 'restarting' }, 503))
+
+    await expect(client().get('/edu/courses')).resolves.toEqual({ ok: true })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  // A write that timed out may well have been carried out: repeating it is how
+  // a student is enrolled twice.
+  it('never repeats a write on its own', async () => {
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
+
+    await expect(client().post('/edu/courses', { name: 'A' })).rejects.toBeInstanceOf(OfflineError)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })

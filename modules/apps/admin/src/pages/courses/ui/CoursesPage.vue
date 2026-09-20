@@ -66,7 +66,7 @@ function onClear() {
     <CoursesTable
       :rows="displayedItems"
       :loading="courses.loading.value"
-      :error="courses.error.value && $t(courses.error.value)"
+      :error="courses.error.value ? $t('state-error') : undefined"
       :can-create="canCreate"
       :can-edit="canEdit"
       @retry="onRetry"

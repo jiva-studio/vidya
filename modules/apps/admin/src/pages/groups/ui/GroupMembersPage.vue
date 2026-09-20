@@ -53,7 +53,7 @@ function onRetry() {
     <GroupMembers
       :rows="roster.members.value"
       :loading="roster.loading.value"
-      :error="roster.error.value && $t(roster.error.value)"
+      :error="roster.error.value ? $t('state-error') : undefined"
       @retry="onRetry"
     />
   </section>

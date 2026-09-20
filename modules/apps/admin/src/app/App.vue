@@ -4,7 +4,10 @@ import { asId } from '@vidya/domain'
 import { computed, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
+import { Toaster } from '@vidya/ui'
+
 import { useUserApi } from '@/entities/user'
+import { useToasts } from '@/shared/lib'
 import { useSession } from '@/shared/session'
 import { AccountMenu } from '@/widgets/account-menu'
 import { AppShell } from '@/widgets/app-shell'
@@ -19,6 +22,7 @@ const route = useRoute()
 const router = useRouter()
 const session = useSession()
 const userApi = useUserApi()
+const toasts = useToasts()
 
 const groups = sectionMenu()
 const profileName = ref<string | undefined>(undefined)
@@ -69,4 +73,5 @@ function onSignOut() {
     <RouterView />
   </AppShell>
   <RouterView v-else />
+  <Toaster :toasts="toasts.items.value" @dismiss="toasts.dismiss" />
 </template>

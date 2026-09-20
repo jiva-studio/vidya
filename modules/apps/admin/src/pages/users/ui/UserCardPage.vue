@@ -40,7 +40,6 @@ const loading = ref(false)
 const error = ref<string | undefined>(undefined)
 
 const title = computed(() => user.value?.name ?? $t('users-card-title'))
-const errorText = computed(() => (error.value ? $t(error.value) : undefined))
 const breadcrumbs = computed(() => [
   { key: 'users', label: $t('users-title') },
   { key: 'current', label: title.value },
@@ -93,7 +92,7 @@ async function load(): Promise<void> {
     <FailureState
       v-else-if="error"
       :title="$t('state-error-title')"
-      :description="errorText ?? $t('state-error')"
+      :description="$t('state-error')"
       :retry-label="$t('action-retry')"
       @retry="onRetry"
     />

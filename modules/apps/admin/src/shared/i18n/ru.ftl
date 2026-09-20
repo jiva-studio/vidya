@@ -41,3 +41,14 @@ page-not-found-title = Страница не найдена
 page-not-found-body = Проверьте адрес — возможно, в нём опечатка.
 page-not-found-back = На главную
 state-nothing-matches = Ничего не найдено
+
+# Провалы запросов. Показываются одним тостом, где бы запрос ни случился.
+
+failure-offline = Не удалось связаться с сервером
+failure-server = Сервер не смог выполнить запрос
+failure-forbidden = Это действие вам не разрешено
+failure-missing = Этого уже нет
+failure-conflict = Кто-то успел изменить это раньше
+failure-rejected = Сервер не принял данные
+failure-too-many = Слишком часто — подождите немного
+failure-unknown = Что-то пошло не так

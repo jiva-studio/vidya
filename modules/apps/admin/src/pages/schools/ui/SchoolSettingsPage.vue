@@ -51,7 +51,6 @@ const options = computed<SelectOption[]>(() =>
   available.value.map((role) => ({ value: role.id, label: role.name })),
 )
 const chosen = computed(() => new Set<RoleId>(studentRoleIds.value))
-const errorText = computed(() => (error.value ? $t(error.value) : undefined))
 const loadFailed = computed(() => Boolean(error.value) && available.value.length === 0)
 
 /* ---------------------------------- Hooks --------------------------------- */
@@ -125,7 +124,7 @@ async function load(): Promise<void> {
     <FailureState
       v-else-if="loadFailed"
       :title="$t('state-error-title')"
-      :description="errorText ?? $t('state-error')"
+      :description="$t('state-error')"
       :retry-label="$t('action-retry')"
       @retry="onRetry"
     />
@@ -149,7 +148,6 @@ async function load(): Promise<void> {
         :submit-label="$t('action-save')"
         :cancel-label="$t('action-cancel')"
         :busy="busy"
-        :error="errorText"
         @submit="onSubmit"
         @cancel="onCancel"
       />

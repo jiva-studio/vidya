@@ -30,7 +30,6 @@ const title = computed(() =>
   props.id ? $t('schools-form-edit-title') : $t('schools-form-create-title'),
 )
 const nameError = computed(() => (invalid.value ? $t('schools-form-name-required') : undefined))
-const errorText = computed(() => (error.value ? $t(error.value) : undefined))
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -97,7 +96,6 @@ async function send(): Promise<void> {
         :submit-label="$t('action-save')"
         :cancel-label="$t('action-cancel')"
         :busy="busy"
-        :error="errorText"
         @submit="onSubmit"
         @cancel="onCancel"
       />
