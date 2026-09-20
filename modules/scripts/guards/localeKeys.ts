@@ -7,9 +7,9 @@
  */
 
 import { existsSync, readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 
-import { allSources, domainUnions, MODULES, shortPath } from './sources.ts'
+import { allSources, bundleOwning, domainUnions, shortPath } from './sources.ts'
 
 interface DynamicKey {
   prefix: string
@@ -39,17 +39,6 @@ const TEMPLATE_KEY = /`([a-z][a-z0-9]*(?:-[a-z0-9]+)*-)\$\{([^`{}]*)\}([a-z0-9-]
 
 const LANGUAGES = ['ru', 'en'] as const
 
-const bundleOf = (path: string): string | undefined => {
-  let directory = dirname(path)
-
-  while (directory.startsWith(MODULES)) {
-    if (existsSync(join(directory, 'i18n', 'en.ftl'))) return join(directory, 'i18n')
-    directory = dirname(directory)
-  }
-
-  return undefined
-}
-
 const keysIn = (bundle: string, language: string): Set<string> => {
   const path = join(bundle, `${language}.ftl`)
   if (!existsSync(path)) return new Set()
@@ -78,7 +67,7 @@ const usesIn = (path: string): Use[] => {
 }
 
 const missingFor = (use: Use, entry: DynamicKey, union: string[]): string[] => {
-  const bundle = bundleOf(use.path)
+  const bundle = bundleOwning(use.path)
   if (!bundle) return [`no i18n bundle owns ${shortPath(use.path)}`]
 
   const wanted = union.filter((state) => !entry.except?.includes(state))

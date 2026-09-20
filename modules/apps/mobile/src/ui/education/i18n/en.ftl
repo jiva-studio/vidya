@@ -11,11 +11,34 @@ courses-empty = No courses here yet
 # Course
 course-enroll = Enroll
 course-open-enrollment = Open my course
+course-groups-title = Groups taking students
 
 # Enrolling
 enroll-title = Enroll
 enroll-moderated = Your request goes to the school. You will be placed in a group once one is running.
+enroll-group-title = Group
+enroll-group-hint = Choose the group you would like to join. Leave it be if none of them suits.
+enroll-time-title = Time
+enroll-time-hint = Say when it would suit you to study. We will look for a time that suits everyone in the group.
+enroll-comment-title = Comment
+enroll-comment-label = Anything else the school should know
 enroll-failed = The request could not be sent. Check your connection and try again.
+
+# Time a student offers
+time-preset-weekend-morning = Weekends before 11:00
+time-preset-weekday-morning = Weekdays before 9:00
+time-preset-weekday-evening = Weekdays after 18:00
+time-preset-any-time = Any time
+time-range-custom = My own
+time-range-every-day = Every day
+time-range-remove = Remove the interval
+weekday-short-mon = Mon
+weekday-short-tue = Tue
+weekday-short-wed = Wed
+weekday-short-thu = Thu
+weekday-short-fri = Fri
+weekday-short-sat = Sat
+weekday-short-sun = Sun
 
 # Request sent
 enroll-completed-congratulations = Congratulations!

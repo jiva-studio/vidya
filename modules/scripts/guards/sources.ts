@@ -6,8 +6,8 @@
  * and a finding can name a line the reader can open.
  */
 
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 
 import ts from 'typescript'
 
@@ -45,6 +45,18 @@ export const allSources = (areas: string[] = AREAS): string[] =>
   areas.flatMap((area) => sourcesIn(join(MODULES, area)))
 
 export const shortPath = (path: string): string => path.slice(MODULES.length + 1)
+
+/** The i18n bundle a file belongs to — the nearest one above it, if any. */
+export const bundleOwning = (path: string): string | undefined => {
+  let directory = dirname(path)
+
+  while (directory.startsWith(MODULES)) {
+    if (existsSync(join(directory, 'i18n', 'en.ftl'))) return join(directory, 'i18n')
+    directory = dirname(directory)
+  }
+
+  return undefined
+}
 
 const blanked = (text: string): string => text.replace(/[^\n]/g, ' ')
 

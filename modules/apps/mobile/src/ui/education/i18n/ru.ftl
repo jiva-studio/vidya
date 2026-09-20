@@ -11,11 +11,34 @@ courses-empty = Курсов пока нет
 # Курс
 course-enroll = Записаться
 course-open-enrollment = Перейти к моему курсу
+course-groups-title = Группы, которые набирают
 
 # Запись на курс
 enroll-title = Записаться
 enroll-moderated = Заявка уйдёт в школу. Группу назначат, когда подходящая наберётся.
+enroll-group-title = Группа
+enroll-group-hint = Выберите группу, к которой хотите присоединиться. Если ни одна не подходит, оставьте пустым.
+enroll-time-title = Время
+enroll-time-hint = Укажите, когда вам удобно заниматься. Мы подберём время так, чтобы оно подошло всей группе.
+enroll-comment-title = Комментарий
+enroll-comment-label = Что ещё стоит знать школе
 enroll-failed = Заявку не удалось отправить. Проверьте соединение и попробуйте ещё раз.
+
+# Время, которое предлагает студент
+time-preset-weekend-morning = Выходные до 11:00
+time-preset-weekday-morning = Будние дни до 9:00
+time-preset-weekday-evening = Будние дни после 18:00
+time-preset-any-time = Любое время
+time-range-custom = Свой вариант
+time-range-every-day = Любой день
+time-range-remove = Убрать интервал
+weekday-short-mon = Пн
+weekday-short-tue = Вт
+weekday-short-wed = Ср
+weekday-short-thu = Чт
+weekday-short-fri = Пт
+weekday-short-sat = Сб
+weekday-short-sun = Вс
 
 # Заявка отправлена
 enroll-completed-congratulations = Поздравляем!

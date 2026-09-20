@@ -42,6 +42,8 @@ export const ENROLLMENT_ID = asId<EnrollmentId>('4a7e2c96-0d13-4b58-9f26-3c8b1a5
 export const SECTION_ID = asId<SectionId>('8e0b3d17-5a92-4c46-bf81-72d4e6c09a35')
 export const HOMEWORK_ID = asId<HomeworkId>('1c5f9a83-2e47-4d60-8b39-06a7d2e14f58')
 export const GROUP_ID = asId<GroupId>('d3f8a1b6-5e29-4c07-b84d-6a1f0e7c2953')
+export const OTHER_GROUP_ID = asId<GroupId>('0b4c7d29-8f15-4e63-a907-5d2b1c8e4f60')
+export const THIRD_GROUP_ID = asId<GroupId>('6e9a0c58-3d71-4b24-8f05-7c3e1a9d6b82')
 /* -------------------------------------------------------------------------- */
 /*                                   Fixtures                                 */
 /* -------------------------------------------------------------------------- */

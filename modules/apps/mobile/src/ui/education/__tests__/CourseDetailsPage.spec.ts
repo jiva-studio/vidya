@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFile } from 'node:fs/promises'
+
 import type { EnrollmentStatus } from '@vidya/domain'
 import { EnrollmentStatuses, parseIsoDateTime } from '@vidya/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -9,15 +11,18 @@ vi.mock('@capacitor/network', async () => (await import('./localScreens')).capac
 import CourseDetailsPage from '../pages/CourseDetailsPage.vue'
 import {
   aCourse,
+  aGroup,
   anEnrollment,
   aSchool,
   COURSE_ID,
   ENROLLMENT_ID,
   mountPage,
   navigations,
+  OTHER_GROUP_ID,
   resetLocalScreens,
   seed,
   settle,
+  THIRD_GROUP_ID,
 } from './localScreens'
 
 /**
@@ -118,5 +123,84 @@ describe('a course knows whether the student already has a place', () => {
     await settle()
 
     expect(wrapper.text()).toContain('Enroll')
+  })
+})
+
+/**
+ * A course shows the groups it is taking students for, and nothing else.
+ *
+ * Which groups those are is the repository's answer, not the screen's: two
+ * screens ask the same question, and a predicate written into both of them is
+ * two predicates that will one day disagree.
+ *
+ * The card is a name and a description. A group still recruiting has no date to
+ * start on — it is stamped when recruitment closes — so a card that prints one
+ * either prints an empty line or a date that means the opposite of what a
+ * student reads into it.
+ */
+describe('the groups a course is taking students for', () => {
+  const aGroupCourse = () => seed.courses.splice(0, 1, aCourse({ learningType: 'group' }))
+
+  it('names the ones still recruiting, with what they say about themselves', async () => {
+    aGroupCourse()
+    seed.groups.push(aGroup())
+
+    const wrapper = await openCourse()
+    await settle()
+
+    expect(wrapper.text()).toContain('Tuesday evenings')
+    expect(wrapper.text()).toContain('Two hours a week, online.')
+  })
+
+  it('leaves out the ones that have stopped taking students', async () => {
+    aGroupCourse()
+    seed.groups.push(
+      aGroup({ id: OTHER_GROUP_ID, name: 'Closed Mondays', status: 'active' }),
+      aGroup({ id: THIRD_GROUP_ID, name: 'Finished Fridays', status: 'inactive' }),
+    )
+
+    const wrapper = await openCourse()
+    await settle()
+
+    expect(wrapper.text()).not.toContain('Closed Mondays')
+    expect(wrapper.text()).not.toContain('Finished Fridays')
+  })
+
+  it('prints no date on a group that has not started', async () => {
+    aGroupCourse()
+    seed.groups.push(aGroup({ startsAt: parseIsoDateTime('2026-10-01T09:00:00.000Z') }))
+
+    const wrapper = await openCourse()
+    await settle()
+
+    expect(wrapper.text()).toContain('Tuesday evenings')
+    expect(wrapper.text()).not.toMatch(/2026/)
+  })
+
+  it('says nothing about groups on a course taught one student at a time', async () => {
+    seed.courses.splice(0, 1, aCourse({ learningType: 'individual' }))
+    seed.groups.push(aGroup())
+
+    const wrapper = await openCourse()
+    await settle()
+
+    expect(wrapper.text()).not.toContain('Tuesday evenings')
+  })
+})
+
+/**
+ * Neither screen spells out which groups are open.
+ *
+ * A status compared in a template is the filter living in a second place, and
+ * the second place is the one nobody edits when the meaning of a status
+ * changes — which it already has once.
+ */
+describe('the screens that read groups', () => {
+  const SCREENS = ['../pages/CourseDetailsPage.vue', '../pages/EnrollPage.vue']
+
+  it.each(SCREENS)('names no group status of its own in %s', async (screen) => {
+    const source = await readFile(new URL(screen, import.meta.url), 'utf8')
+
+    expect(source).not.toMatch(/'(pending|active|inactive)'/)
   })
 })
