@@ -6,7 +6,24 @@ has to prove before it hands the band over.
 
 ---
 
-## 1. Roles
+---
+
+## 1. Prior art before the plan
+
+No plan is written, and no plan is reviewed, before someone has looked outside
+this repository. Before a spec is drafted and before a spec or a design is
+grilled, search the web for how the problem is already solved: what the
+established approach is, where the field has moved, and which failure modes
+other people have already paid for.
+
+The result is a short **Prior art** block — three to six sources, recent, each
+with a link and one line on what it says — and it opens the plan, above the
+options. A spec or a review that does not carry one is not ready to be read.
+
+Its job is to constrain the options, not to decorate them: name the approach
+being adopted, and name the one being rejected together with the reason.
+
+## 2. Roles
 
 ### Test agent
 
@@ -36,7 +53,7 @@ has to prove before it hands the band over.
 
 ---
 
-## 2. When to split the band
+## 3. When to split the band
 
 Split across agents where the cost of a mistake is high and an independent
 checker earns its overhead:
@@ -55,7 +72,7 @@ surface as a corrupted row on someone's device three syncs later cannot.
 
 ---
 
-## 3. What is frozen first
+## 4. What is frozen first
 
 **The contract — types and fixtures — is written by one agent before any
 implementation starts.** It is the shape every other agent codes against.
@@ -70,7 +87,7 @@ Once it is in:
 
 ---
 
-## 4. What an agent must prove before handing over
+## 5. What an agent must prove before handing over
 
 Not "I believe it works". Evidence, in the handover:
 
@@ -89,7 +106,7 @@ than the defect.
 
 ---
 
-## 5. What stays with the human
+## 6. What stays with the human
 
 An agent does not decide these alone. It prepares the change, explains it, and
 asks:
