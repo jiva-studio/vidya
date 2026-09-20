@@ -25,17 +25,19 @@ import {
  *
  * Keyed by the domain's own list rather than spelled out beside the cases, so
  * a state added there has to be answered here instead of quietly sitting out
- * the run.
+ * the run. Only a live place is one to open: a finished request is history, and
+ * the course is open to be asked for again.
  */
 const OPENS_THE_PLACE: Record<EnrollmentStatus, boolean> = {
   pending: true,
   accepted: true,
-  declined: true,
-  revoked: true,
+  declined: false,
+  revoked: false,
   withdrawn: false,
 }
 
 const held = EnrollmentStatuses.filter((status) => OPENS_THE_PLACE[status])
+const finished = EnrollmentStatuses.filter((status) => !OPENS_THE_PLACE[status])
 
 const openCourse = () => mountPage(CourseDetailsPage, { id: COURSE_ID })
 
@@ -78,6 +80,16 @@ describe('a course knows whether the student already has a place', () => {
 
     expect(wrapper.text()).toContain('Open my course')
     expect(wrapper.text()).not.toContain('Enroll')
+  })
+
+  it.each(finished)('offers to enrol again when the only place is %s', async (status) => {
+    seed.enrollments.push(anEnrollment({ status }))
+
+    const wrapper = await openCourse()
+    await settle()
+
+    expect(wrapper.text()).toContain('Enroll')
+    expect(wrapper.text()).not.toContain('Open my course')
   })
 
   it('opens the place it found rather than the enrolment form', async () => {

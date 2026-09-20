@@ -129,7 +129,7 @@ describe('asking to join a course', () => {
   it('writes the request to the device', async () => {
     await pressEnrol()
 
-    expect(await repositories.enrollments.getByCourse(COURSE_ID)).toMatchObject({
+    expect(await repositories.enrollments.getLiveByCourse(COURSE_ID)).toMatchObject({
       courseId: COURSE_ID,
       status: 'pending',
     })
@@ -168,7 +168,7 @@ describe('asking to join a course', () => {
  *
  * The server keys a place by course and student, so a second document was never
  * going to become a second place there. The harm is local and immediate:
- * `getByCourse` answers with the newest row, so a fresh `pending` hides an
+ * `getLiveByCourse` answers with the newest live row, so a fresh `pending` hides an
  * accepted place, and a student who is already studying is told they are
  * waiting to be let in.
  *
@@ -190,14 +190,16 @@ describe('asking to join a course', () => {
 const STOPS_A_SECOND_REQUEST: Record<EnrollmentStatus, boolean> = {
   pending: true,
   accepted: true,
-  declined: true,
-  revoked: true,
+  declined: false,
+  revoked: false,
   withdrawn: false,
 }
 
 const alreadyHeld = EnrollmentStatuses.filter(
   (status) => status !== 'pending' && STOPS_A_SECOND_REQUEST[status],
 )
+
+const finished = EnrollmentStatuses.filter((status) => !STOPS_A_SECOND_REQUEST[status])
 
 describe('asking twice for the same course', () => {
   it('writes one request when the button is tapped twice before it can disable itself', async () => {
@@ -242,6 +244,18 @@ describe('asking twice for the same course', () => {
     expect(navigations.at(-1)).toEqual({ name: 'my-enrollment', params: { id: held } })
   })
 
+  it.each(finished)('asks again when the course holds only a %s request', async (status) => {
+    // A finished request is history, and history holds no place: the second
+    // request is a new row rather than a rewrite of the old one.
+    const held = await placeOnTheDevice(status)
+
+    await pressEnrol()
+
+    const live = await repositories.enrollments.getLiveByCourse(COURSE_ID)
+    expect(live?.id).not.toBe(held)
+    expect(live?.status).toBe('pending')
+  })
+
   it('sends a student with no place to the confirmation instead', async () => {
     await pressEnrol()
 
@@ -252,8 +266,8 @@ describe('asking twice for the same course', () => {
   })
 
   it('lets a student who withdrew their own request make it again', async () => {
-    // Withdrawal is a tombstone, and the reads skip tombstones. Without that,
-    // a student who changed their mind could never change it back.
+    // A finished request holds no place, so the screen does not find one.
+    // Without that, a student who changed their mind could never change it back.
     const withdrawn = await placeOnTheDevice('pending')
     await repositories.enrollments.withdraw(withdrawn)
 

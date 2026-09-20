@@ -109,10 +109,10 @@ async function upsertRow(
 /**
  * Apply a delete.
  *
- * A collection with a tombstone column keeps its row and is marked — a
- * withdrawn enrolment and an unpublished version are decisions the student has
- * to be able to see explained. A collection without one loses the
- * row. Neither branch reaches another table.
+ * A collection with a tombstone column keeps its row and is marked — an
+ * unpublished version is a decision the student has to be able to see
+ * explained. A collection without one loses the row. Neither branch reaches
+ * another table.
  */
 export async function deleteSyncRow(db: IDatabase, ref: SyncRowRef, now: UtcClock): Promise<void> {
   const projection = projectionOf(ref.collection)

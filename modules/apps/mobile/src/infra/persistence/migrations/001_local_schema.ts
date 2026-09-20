@@ -82,9 +82,8 @@ async function createContentTables(db: IDatabase): Promise<void> {
 
 /** The student's own rows: written here, pushed up, decided upstream. */
 async function createStudentTables(db: IDatabase): Promise<void> {
-  // `deleted_at` records that the enrolment was withdrawn. It does not erase
-  // anything: what was downloaded stays on the device and stays readable, and
-  // only the server decides whether a later push is accepted.
+  // `deleted_at` has no writer: a request that ends says so in its status, and
+  // the server has no such column for enrolments at all.
   await db.execute(`
     CREATE TABLE IF NOT EXISTS enrollments (
       id             TEXT NOT NULL,

@@ -2,6 +2,7 @@ import type {
   IBlockStateRepository,
   ICourseRepository,
   IEnrollmentRepository,
+  IGroupRepository,
   IHomeworkRepository,
   ILessonRepository,
   ILessonVersionRepository,
@@ -40,6 +41,7 @@ export interface DeviceRepositories {
   readonly courses: ICourseRepository
   readonly lessons: ILessonRepository
   readonly lessonVersions: ILessonVersionRepository
+  readonly groups: IGroupRepository
   readonly enrollments: IEnrollmentRepository
   readonly homework: IHomeworkRepository
   readonly blockStates: IBlockStateRepository
@@ -69,6 +71,9 @@ export function useRepositories(): DeviceRepositories {
     get lessonVersions() {
       return started()?.engine.lessonVersions ?? emptyDevice.lessonVersions
     },
+    get groups() {
+      return started()?.engine.groups ?? emptyDevice.groups
+    },
     get enrollments() {
       const running = started()
       if (running === undefined) return emptyDevice.enrollments
@@ -77,6 +82,8 @@ export function useRepositories(): DeviceRepositories {
         ...running.engine.enrollments,
         request: announcing(running.engine.enrollments.request, running.triggers),
         withdraw: announcing(running.engine.enrollments.withdraw, running.triggers),
+        archive: announcing(running.engine.enrollments.archive, running.triggers),
+        unarchive: announcing(running.engine.enrollments.unarchive, running.triggers),
       }
     },
     get homework() {
@@ -131,12 +138,15 @@ const emptyDevice: DeviceRepositories = {
   courses: { list: async () => [], getById: async () => null },
   lessons: { listByCourse: async () => [], getById: async () => null },
   lessonVersions: { getById: async () => null, getPublished: async () => null },
+  groups: { listRecruitingByCourse: async () => [], getById: async () => null },
   enrollments: {
     list: async () => [],
     getById: async () => null,
-    getByCourse: async () => null,
+    getLiveByCourse: async () => null,
     request: refuse,
     withdraw: refuse,
+    archive: refuse,
+    unarchive: refuse,
   },
   homework: {
     getById: async () => null,

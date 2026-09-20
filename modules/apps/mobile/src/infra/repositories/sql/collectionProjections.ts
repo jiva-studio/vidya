@@ -59,11 +59,13 @@ export interface CollectionProjection {
    * The column a `delete` sets instead of removing the row, or `null` when the
    * collection has no tombstone and a delete really removes it.
    *
-   * Only `enrollments` and `lesson_versions` carry one: a withdrawn
-   * enrolment and an unpublished version are decisions that must stay visible.
-   * A tombstone never cascades here — an unpublished version does not take the
-   * homework written against it with it, or a student's work would vanish
-   * because an editor tidied up.
+   * Only `enrollments` and `lesson_versions` carry one, and only
+   * `lesson_versions` has a writer: an unpublished version is a decision that
+   * must stay visible. The enrolments column is written by nobody — a request
+   * that ends says so in its status — and it stands as the shape of the
+   * predicate rather than as a path anything takes. A tombstone never cascades
+   * here — an unpublished version does not take the homework written against
+   * it with it, or a student's work would vanish because an editor tidied up.
    */
   readonly tombstone: string | null
 }

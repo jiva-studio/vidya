@@ -43,7 +43,7 @@ const router = useIonRouter()
 const { data, busy, loaded } = useLocalData(
   async () => ({
     course: await repositories.courses.getById(props.id),
-    enrollment: await repositories.enrollments.getByCourse(props.id),
+    enrollment: await repositories.enrollments.getLiveByCourse(props.id),
   }),
   { course: null, enrollment: null },
   { watching: [() => props.id] },

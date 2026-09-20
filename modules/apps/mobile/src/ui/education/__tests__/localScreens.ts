@@ -1,19 +1,6 @@
 import { FluentBundle } from '@fluent/bundle'
-import type {
-  BlockId,
-  CourseId,
-  EnrollmentId,
-  GroupId,
-  HomeworkId,
-  LessonId,
-  LessonVersionId,
-  SchoolId,
-  SectionId,
-  SyncCollection,
-  SyncRejectionReason,
-  UserId,
-} from '@vidya/domain'
-import { asId, isRecruiting, parseIsoDateTime } from '@vidya/domain'
+import type { SyncCollection, SyncRejectionReason } from '@vidya/domain'
+import { isLive, isRecruiting } from '@vidya/domain'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { createFluentVue } from 'fluent-vue'
 import { type Component, ref } from 'vue'
@@ -47,6 +34,8 @@ import { education } from '@/usecases'
 
 import { routes } from '../routes'
 
+export * from './localFixtures'
+
 /**
  * A device with data on it, and the screens mounted against it.
  *
@@ -55,20 +44,6 @@ import { routes } from '../routes'
  * module double for `@/app` offers no HTTP client at all. A screen that reaches
  * for one fails loudly instead of quietly passing on a fake.
  */
-
-/* -------------------------------------------------------------------------- */
-/*                                 Identities                                 */
-/* -------------------------------------------------------------------------- */
-
-export const OWNER_ID = asId<UserId>('7b3d5e90-1c44-4a2b-8f61-2d9e0c4a5b73')
-export const SCHOOL_ID = asId<SchoolId>('5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915')
-export const COURSE_ID = asId<CourseId>('b6d40e27-8c31-4a95-b7f2-0e5a1d38c624')
-export const LESSON_ID = asId<LessonId>('2f8c1a45-6b90-4d3e-a172-9c5b0e4d7183')
-export const VERSION_ID = asId<LessonVersionId>('9d1e7b02-4c65-4f88-b3a7-1e6d2c9a0f47')
-export const ENROLLMENT_ID = asId<EnrollmentId>('4a7e2c96-0d13-4b58-9f26-3c8b1a5e70d4')
-export const SECTION_ID = asId<SectionId>('8e0b3d17-5a92-4c46-bf81-72d4e6c09a35')
-export const HOMEWORK_ID = asId<HomeworkId>('1c5f9a83-2e47-4d60-8b39-06a7d2e14f58')
-export const GROUP_ID = asId<GroupId>('d3f8a1b6-5e29-4c07-b84d-6a1f0e7c2953')
 
 /* -------------------------------------------------------------------------- */
 /*                                  The device                                */
@@ -241,109 +216,6 @@ export async function settle(): Promise<void> {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                   Fixtures                                 */
-/* -------------------------------------------------------------------------- */
-
-export const aSchool = (overrides: Partial<LocalSchool> = {}): LocalSchool => ({
-  id: SCHOOL_ID,
-  name: 'School of Devotion',
-  logoUrl: 'https://cdn.example.org/logos/devotion.png',
-  description: 'Scripture, kirtan and practice.',
-  ...overrides,
-})
-
-export const aCourse = (overrides: Partial<LocalCourse> = {}): LocalCourse => ({
-  id: COURSE_ID,
-  schoolId: SCHOOL_ID,
-  name: 'Sanskrit for beginners',
-  description: 'The alphabet, sandhi and the first verses.',
-  learningType: 'individual',
-  ...overrides,
-})
-
-export const aLesson = (overrides: Partial<LocalLesson> = {}): LocalLesson => ({
-  id: LESSON_ID,
-  schoolId: SCHOOL_ID,
-  courseId: COURSE_ID,
-  lessonNumber: 1,
-  title: 'The alphabet',
-  ...overrides,
-})
-
-export const aLessonVersion = (
-  overrides: Partial<LocalLessonVersion> = {},
-): LocalLessonVersion => ({
-  id: VERSION_ID,
-  schoolId: SCHOOL_ID,
-  lessonId: LESSON_ID,
-  version: 1,
-  status: 'published',
-  publishedAt: parseIsoDateTime('2026-09-18T07:20:00.000Z'),
-  content: {
-    schemaVersion: 1,
-    sections: [
-      {
-        id: SECTION_ID,
-        title: 'Letters',
-        assessment: 'teacher',
-        blocks: [{ id: asId<BlockId>('blk-1'), type: 'text', content: 'The vowels come first.' }],
-      },
-    ],
-  },
-  ...overrides,
-})
-
-export const anEnrollment = (overrides: Partial<LocalEnrollment> = {}): LocalEnrollment => ({
-  id: ENROLLMENT_ID,
-  schoolId: SCHOOL_ID,
-  courseId: COURSE_ID,
-  groupId: null,
-  studentId: OWNER_ID,
-  status: 'accepted',
-  decidedById: null,
-  decidedAt: null,
-  createdAt: parseIsoDateTime('2026-09-18T07:20:00.000Z'),
-  deletedAt: null,
-  ...overrides,
-})
-
-/**
- * One group of a course, as the device holds it.
- *
- * Recruiting by default, because that is the state every enrolment screen is
- * about: a group still taking students. A closed one is `status: 'active'` with
- * the instant recruitment closed on it — the date records the fact, the status
- * decides (decision 14).
- */
-export const aGroup = (overrides: Partial<LocalGroup> = {}): LocalGroup => ({
-  id: GROUP_ID,
-  schoolId: SCHOOL_ID,
-  courseId: COURSE_ID,
-  name: 'Tuesday evenings',
-  description: 'Two hours a week, online.',
-  startsAt: null,
-  status: 'pending',
-  ...overrides,
-})
-
-export const aHomework = (overrides: Partial<LocalHomework> = {}): LocalHomework => ({
-  id: HOMEWORK_ID,
-  schoolId: SCHOOL_ID,
-  enrollmentId: ENROLLMENT_ID,
-  lessonVersionId: VERSION_ID,
-  sectionId: SECTION_ID,
-  status: 'pending',
-  text: 'The vowels are a, aa, i.',
-  grade: null,
-  answeredSupersededVersion: false,
-  reviewedById: null,
-  submittedAt: parseIsoDateTime('2026-09-18T08:00:00.000Z'),
-  reviewedAt: null,
-  createdAt: parseIsoDateTime('2026-09-18T07:59:00.000Z'),
-  ...overrides,
-})
-
-/* -------------------------------------------------------------------------- */
 /*                                    Reset                                   */
 /* -------------------------------------------------------------------------- */
 
@@ -385,27 +257,27 @@ const notWritten = (): never => {
 /**
  * Enrolments the way the SQL repository hands them over, method by method.
  *
- * A double is worth having only where it answers what the real one answers, and
- * the three readers here do not agree with each other. `list` and `getByCourse`
- * go through `readSyncRows`, which drops tombstones — but they order opposite
- * ways, `created_at ASC` for the list the student reads and `DESC` for the
- * lookup, and the newest-first lookup is exactly what a second request would
- * have exploited. `getById` goes through `readSyncRow`, which has no tombstone
- * clause at all: a withdrawn place asked for by name is a live row carrying
- * `deletedAt`, and a double that answered `null` there would hide from the
- * screens the one case they exist to explain.
+ * The three readers answer different questions. `list` hides what the student
+ * put away, and only that. `getLiveByCourse` hides nothing and looks for the
+ * row that still holds a place, newest first when two of them do. `getById`
+ * filters nothing: a row asked for by name is the one case the screens exist
+ * to explain.
  */
-const undeleted = (): LocalEnrollment[] =>
-  seed.enrollments.filter((item) => item.deletedAt === null)
-
-const byCreatedAt = (rows: LocalEnrollment[], direction: 'asc' | 'desc'): LocalEnrollment[] =>
-  rows
-    .slice()
+const byCreatedAt = (direction: 'asc' | 'desc'): LocalEnrollment[] =>
+  seed.enrollments
+    .filter((item) => item.deletedAt === null)
     .sort((a, b) =>
       direction === 'asc'
         ? a.createdAt.localeCompare(b.createdAt)
         : b.createdAt.localeCompare(a.createdAt),
     )
+
+/** Hidden once the student put a finished row away. No instant is compared. */
+const visibleToStudent = (row: LocalEnrollment) =>
+  !(row.archivedByStudentAt !== null && !isLive(row.status))
+
+/** The rows that still hold a place, newest first. */
+const listLive = () => byCreatedAt('desc').filter((item) => isLive(item.status))
 
 function buildRepositories(): LocalRepositories {
   return {
@@ -435,12 +307,14 @@ function buildRepositories(): LocalRepositories {
     },
 
     enrollments: {
-      list: async () => byCreatedAt(undeleted(), 'asc'),
+      list: async () => byCreatedAt('asc').filter(visibleToStudent),
       getById: async (id) => seed.enrollments.find((item) => item.id === id) ?? null,
-      getByCourse: async (courseId) =>
-        byCreatedAt(undeleted(), 'desc').find((item) => item.courseId === courseId) ?? null,
+      getLiveByCourse: async (courseId) =>
+        listLive().find((item) => item.courseId === courseId) ?? null,
       request: notWritten,
       withdraw: notWritten,
+      archive: notWritten,
+      unarchive: notWritten,
     },
 
     groups: {

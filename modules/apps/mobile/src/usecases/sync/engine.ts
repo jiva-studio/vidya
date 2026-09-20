@@ -20,6 +20,7 @@ import {
   createSqlBlockStateRepository,
   createSqlCourseRepository,
   createSqlEnrollmentRepository,
+  createSqlGroupRepository,
   createSqlHomeworkRepository,
   createSqlLessonRepository,
   createSqlLessonVersionRepository,
@@ -36,6 +37,7 @@ import {
   type ICourseRepository,
   type IDatabase,
   type IEnrollmentRepository,
+  type IGroupRepository,
   type IHomeworkRepository,
   type ILessonRepository,
   type ILessonVersionRepository,
@@ -53,7 +55,7 @@ import {
  * mistake is a compile error in one place rather than a behaviour that differs
  * between two call sites.
  *
- * The four read-only content repositories are returned undecorated: they
+ * The five read-only content repositories are returned undecorated: they
  * replicate downward only and the device never writes them. The three writable
  * ones come back wrapped, and nothing hands out the unwrapped versions — a
  * local write that skipped the journal would never be sent, and the student
@@ -102,6 +104,7 @@ export interface SyncEngine {
   readonly courses: ICourseRepository
   readonly lessons: ILessonRepository
   readonly lessonVersions: ILessonVersionRepository
+  readonly groups: IGroupRepository
 
   /** Journaled: every write appends an outbox row in the same transaction. */
   readonly enrollments: IEnrollmentRepository
@@ -172,6 +175,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     courses: createSqlCourseRepository({ db, ownerId }),
     lessons: createSqlLessonRepository({ db, ownerId }),
     lessonVersions: createSqlLessonVersionRepository({ db, ownerId }),
+    groups: createSqlGroupRepository({ db, ownerId }),
     ...journaled,
     outbox,
     apply,

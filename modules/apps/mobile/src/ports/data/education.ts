@@ -13,6 +13,7 @@ import type {
   LessonId,
   LessonVersionId,
   LessonVersionStatus,
+  PreferredTimes,
   SchoolId,
   SectionId,
   UserId,
@@ -102,6 +103,21 @@ export interface LocalGroup {
   readonly status: GroupStatus
 }
 
+/**
+ * One request for a place, and what became of it.
+ *
+ * `groupId`, `decidedById` and `decidedAt` are the school's answer;
+ * `preferredGroupId`, `preferredTimes` and `comment` are what the student
+ * asked for, and they stay as asked whatever the school decides.
+ *
+ * `archivedByStudentAt` is the student putting a finished request out of their
+ * own list. It is never optional: an absent key means "leave the field alone"
+ * to the merge, so "not put away" has to be an explicit `null`.
+ *
+ * `deletedAt` has no writer left on either side — the server has no such
+ * column for enrolments and the device stopped writing one when withdrawal
+ * became a status.
+ */
 export interface LocalEnrollment {
   readonly id: EnrollmentId
   readonly schoolId: SchoolId
@@ -112,9 +128,11 @@ export interface LocalEnrollment {
   readonly decidedById: UserId | null
   readonly decidedAt: IsoDateTime | null
   readonly createdAt: IsoDateTime
-
-  /** Set when the enrolment was withdrawn. The downloaded course stays. */
   readonly deletedAt: IsoDateTime | null
+  readonly preferredGroupId: GroupId | null
+  readonly preferredTimes: PreferredTimes | null
+  readonly comment: string | null
+  readonly archivedByStudentAt: IsoDateTime | null
 }
 
 export interface LocalHomework {
@@ -205,25 +223,54 @@ export interface ILessonVersionRepository {
 /*                            The student's own rows                          */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * What a screen hands over to ask for a place.
+ *
+ * `studentId` defaults to the identity the device writes under, which on a
+ * phone is the student. The three preferences are what the student would like
+ * and not what they are given: the school reads them and answers with a group
+ * of its own choosing.
+ */
 export interface NewEnrollmentRequest {
   readonly id: EnrollmentId
   readonly schoolId: SchoolId
   readonly courseId: CourseId
-
-  /** Defaults to the identity the device writes under, which on a phone is the student. */
   readonly studentId?: UserId
+  readonly preferredGroupId?: GroupId
+  readonly preferredTimes?: PreferredTimes
+  readonly comment?: string
 }
 
 export interface IEnrollmentRepository {
+  /** What the student's list shows: everything they have not put away. */
   list(): Promise<readonly LocalEnrollment[]>
-  getById(id: EnrollmentId): Promise<LocalEnrollment | null>
-  getByCourse(courseId: CourseId): Promise<LocalEnrollment | null>
 
-  /** Ask to join a course. Local and immediate; the school answers later. */
+  getById(id: EnrollmentId): Promise<LocalEnrollment | null>
+
+  /**
+   * The request that still holds a place on the course, or `null`.
+   *
+   * A course carries a history of requests — asked for, turned down, asked for
+   * again — so the newest row is not the one a screen means.
+   */
+  getLiveByCourse(courseId: CourseId): Promise<LocalEnrollment | null>
+
+  /**
+   * Ask to join a course. Local and immediate; the school answers later.
+   *
+   * A new row every time: an earlier request that ended stays where it is, and
+   * the two are read apart by their status.
+   */
   request(input: NewEnrollmentRequest): Promise<LocalEnrollment>
 
-  /** Withdraw the request. Journaled as a tombstone; downloads are kept. */
+  /** Hand the request back. Ends it and puts it away; downloads are kept. */
   withdraw(id: EnrollmentId): Promise<LocalEnrollment>
+
+  /** Put a finished request out of the student's list. */
+  archive(id: EnrollmentId): Promise<LocalEnrollment>
+
+  /** Bring it back. The emptied stamp travels as an explicit `null`. */
+  unarchive(id: EnrollmentId): Promise<LocalEnrollment>
 }
 
 export interface SaveHomeworkAnswer extends HomeworkAnswerKey {
