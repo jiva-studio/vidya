@@ -7,6 +7,7 @@ import {
   Homework,
   Lesson,
   LessonVersion,
+  School,
   SyncScopeKind,
 } from '@vidya/entities'
 import { EntityManager } from 'typeorm'
@@ -61,10 +62,31 @@ const enrollmentTarget = async (
   return { scopeId: enrollment.studentId, schoolId: entity.schoolId }
 }
 
+/** The school's own row: what a device draws a school by before any course of it. */
+const schools: CollectionProjection<School> = {
+  collection: 'schools',
+  scopeKind: 'school',
+  target: async (school) => ({ scopeId: school.id, schoolId: school.id }),
+  project: (school) => ({
+    id: school.id,
+    name: school.name,
+    logoUrl: school.logoUrl ?? null,
+    description: school.description ?? null,
+  }),
+}
+
+/**
+ * A course is addressed to its school, not to itself.
+ *
+ * The catalogue is what a member of the school may read without holding a place
+ * on anything, and the course scope carries only what an enrolled student gets.
+ * Journalling the card to both would give one document two versions racing on
+ * their clocks, and the card would flicker between them.
+ */
 const courses: CollectionProjection<Course> = {
   collection: 'courses',
-  scopeKind: 'course',
-  target: async (course) => ({ scopeId: course.id, schoolId: course.schoolId }),
+  scopeKind: 'school',
+  target: async (course) => ({ scopeId: course.schoolId, schoolId: course.schoolId }),
   project: (course) => ({
     id: course.id,
     schoolId: course.schoolId,
@@ -193,6 +215,7 @@ const blockStates: CollectionProjection<BlockState> = {
  * `SYNCED_ENTITIES`.
  */
 export const COLLECTION_PROJECTIONS: Record<string, CollectionProjection<any>> = {
+  School: schools,
   Course: courses,
   Lesson: lessons,
   LessonVersion: lessonVersions,

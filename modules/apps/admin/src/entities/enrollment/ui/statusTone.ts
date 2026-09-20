@@ -11,10 +11,12 @@ export const enrollmentTones: Record<EnrollmentStatus, BadgeTone> = {
   pending: 'warning',
   accepted: 'success',
   declined: 'neutral',
+  revoked: 'neutral',
 }
 
 export const enrollmentLabels: Record<EnrollmentStatus, string> = {
   pending: 'enrollment-status-pending',
   accepted: 'enrollment-status-accepted',
   declined: 'enrollment-status-declined',
+  revoked: 'enrollment-status-revoked',
 }

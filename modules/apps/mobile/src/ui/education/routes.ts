@@ -1,6 +1,8 @@
 import type * as domain from '@vidya/domain'
 import type { RouteRecordRaw } from 'vue-router'
 
+import { tabRoutes as settingsTabRoutes } from '@/ui/settings'
+
 import EducationIndexPage from './EducationIndexPage.vue'
 
 export const routes: Array<RouteRecordRaw> = [
@@ -41,6 +43,7 @@ export const routes: Array<RouteRecordRaw> = [
           id: route.params.id,
         }),
       },
+      ...settingsTabRoutes,
       {
         name: 'my-enrollments',
         path: 'my-enrollments',

@@ -1,61 +1,91 @@
 import initSqlJs, { type SqlJsStatic } from 'sql.js'
+// The browser build's own binary, taken from the bundle. sql.js asks for its
+// wasm by bare filename, which a page resolves against its own address: the
+// dev server answers that with `index.html`, and sql.js's fallback is
+// `sql.js.org`, which answers 404. Either way the app opens with no database
+// and says so on a screen — and neither shows up in a test, because under Node
+// the file sits next to the module and is found without being asked for.
+import sqlWasmUrl from 'sql.js/dist/sql-wasm-browser.wasm?url'
 
 import type { IDatabase, IPersistence } from '@/ports'
 
+import {
+  hasIndexedDb,
+  type ImageStorage,
+  type ImageStore,
+  indexedDbImages,
+  inMemoryImages,
+} from './imageStorage'
 import { createSqlJsDatabase } from './sqlJsDatabase'
 
-/**
- * Where a closed database's bytes wait for the next `open` of the same name.
- *
- * Reopening a name and getting the previous image back is what lets a test
- * stage a process restart: run migrations, close, open again, and assert that
- * the second run changed nothing.
- */
-export type ImageStore = Map<string, Uint8Array>
+export type { ImageStore } from './imageStorage'
 
 /** Optional wiring; the defaults are what a test wants. */
 export interface SqlJsPersistenceOptions {
   /**
-   * Where images live between opens. Pass one in to inspect or seed the bytes;
-   * omit it and each factory gets a private store.
+   * Where images live between opens. Pass one in to inspect or seed the bytes
+   * — and to keep a test out of the browser's storage, which the default uses
+   * when there is one.
    */
   images?: ImageStore
-
-  /** Where the sql.js wasm binary is. Node resolves it on its own. */
-  locateFile?: (file: string) => string
 }
 
 /**
- * A {@link IPersistence} backed by `sql.js`, for tests.
+ * A {@link IPersistence} backed by `sql.js`: everywhere that is not a handset.
  *
  * It gives real SQLite semantics — transactions, rollback, constraints,
  * `PRAGMA foreign_key_list` — with no device, no emulator and no build step.
  * The Capacitor adapter is the one that ships; this one is how what ships is
- * checked.
+ * checked, and it is also what the web build runs on.
  *
- * Databases are held as in-memory images rather than files, so a test never
- * touches the filesystem and two tests can never see each other's rows.
+ * The image is held wherever the platform can keep it: in IndexedDB in a
+ * browser, so a reload finds the student's courses where they left them, and
+ * in memory anywhere else, so a test never touches storage and two tests can
+ * never see each other's rows.
  */
 export function useSqlJsPersistence(options: SqlJsPersistenceOptions = {}): IPersistence {
-  const images: ImageStore = options.images ?? new Map()
+  const images = storageFor(options)
   let engine: Promise<SqlJsStatic> | null = null
 
   // Initialising sql.js compiles the wasm module, which is slow enough to be
   // worth doing once per factory rather than once per open.
+  //
+  // Which binary to point at depends on which of sql.js's two builds is
+  // loaded, and the presence of a Node process is what decides that. Under
+  // Node — the tests, whether they run in `node` or in `jsdom` — sql.js reads
+  // its own file from disk and a URL meant for a page would send it looking
+  // for something that is not there. In a browser it fetches, and the only
+  // address that answers is the one the bundler emitted.
   function loadEngine(): Promise<SqlJsStatic> {
-    engine ??= initSqlJs(options.locateFile ? { locateFile: options.locateFile } : undefined)
+    const underNode = typeof process !== 'undefined'
+    engine ??= initSqlJs(underNode ? undefined : { locateFile: () => sqlWasmUrl })
+
     return engine
   }
 
   return {
     async open(dbName: string): Promise<IDatabase> {
       const SQL = await loadEngine()
-      const image = images.get(dbName)
+
+      // SQLite is brought up from the stored file, or empty when there is none
+      // — a first launch, or a browser that has nowhere to keep one.
+      const image = await images.read(dbName)
       const db = image ? new SQL.Database(image) : new SQL.Database()
 
-      return createSqlJsDatabase(db, async (data) => {
-        images.set(dbName, data)
-      })
+      return createSqlJsDatabase(db, (data) => images.write(dbName, data))
     },
   }
+}
+
+/**
+ * Storage a test asked for, the browser's own, or memory.
+ *
+ * A passed-in map wins, so a test says where its bytes go. Otherwise the
+ * browser's storage is used when there is one: the app opens its database
+ * through a fresh factory on every launch, and only a store outside the
+ * process can carry an image from one launch to the next.
+ */
+function storageFor(options: SqlJsPersistenceOptions): ImageStorage {
+  if (options.images) return inMemoryImages(options.images)
+  return hasIndexedDb() ? indexedDbImages() : inMemoryImages(new Map())
 }

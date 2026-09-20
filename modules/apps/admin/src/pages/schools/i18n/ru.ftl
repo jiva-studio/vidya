@@ -17,6 +17,11 @@ schools-form-edit-title = Школа
 schools-form-name = Название
 schools-form-name-hint = До 32 символов. Например: Школа Бхакти-шастр
 schools-form-name-required = Укажите название.
+schools-form-logo = Логотип
+schools-form-logo-hint = https://example.org/logo.png
+schools-form-logo-invalid = Нужна ссылка, начинающаяся с http:// или https://
+schools-form-description = Описание
+schools-form-description-hint = Коротко о школе — это увидят студенты в каталоге
 
 schools-settings-title = Настройки школы
 schools-settings-default-role = Роль нового студента

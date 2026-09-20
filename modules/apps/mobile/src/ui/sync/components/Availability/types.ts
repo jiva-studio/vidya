@@ -14,6 +14,15 @@ export interface BackfillProgressProps {
   total: number
 }
 
+export interface SignInAgainNoticeProps {
+  /** How many of the student's schools are waiting for a new sign-in. */
+  schools: number
+}
+
+export interface SignInAgainNoticeEmits {
+  'sign-in': []
+}
+
 export interface RevokedEnrollmentNoticeProps {
   courseName: string
 

@@ -1,12 +1,12 @@
 <template>
   <EnrollmentsListItem
     v-for="item in items"
-    :id="item.enrollment.id"
-    :key="item.enrollment.id"
-    :course-name="item.course.name"
-    :group-name="item.group?.name"
-    :status="item.enrollment.status"
-    @click="() => onEnrollmentClicked(item.enrollment.id)"
+    :id="item.id"
+    :key="item.id"
+    :course-name="item.courseName"
+    :group-name="item.groupName"
+    :status="item.status"
+    @click="() => onEnrollmentClicked(item.id)"
   />
 </template>
 

@@ -3,6 +3,7 @@ import { ConfigModule, ConfigType } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import {
   AuthConfig,
+  CorsConfig,
   DbConfig,
   JwtConfig,
   MailerConfig,
@@ -21,6 +22,7 @@ import { SyncModule } from './sync/sync.module'
     ConfigModule.forRoot({
       isGlobal: true,
       load: [
+        CorsConfig,
         DbConfig,
         OtpConfig,
         RedisConfig,

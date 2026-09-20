@@ -3,9 +3,10 @@
     <IonTabs>
       <IonRouterOutlet />
 
-      <template #bottom>
-        <EducationTabBar />
-      </template>
+      <!-- `slot` rather than a named slot of IonTabs: `ion-tabs` is a custom
+           element whose bar is placed by the real slot attribute, and the Vue
+           wrapper renders nothing but its default slot. -->
+      <EducationTabBar slot="bottom" />
     </IonTabs>
   </IonPage>
 </template>

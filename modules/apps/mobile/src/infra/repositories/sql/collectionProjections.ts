@@ -10,7 +10,7 @@ import type { QueryValue, Row } from '@/ports'
  * payload, the apply repository turns an incoming payload into a row, and the
  * reading repositories turn a row back into a payload. Wire field names are the
  * camelCase ones of `@vidya/protocol`; column names are the snake_case ones of
- * migration `001_local_schema`. Nothing else translates between the two.
+ * the device migrations. Nothing else translates between the two.
  *
  * A column exists here only when the wire carries its field. The two exceptions
  * are structural: `school_id` is folded in from the envelope by
@@ -77,6 +77,21 @@ const EMPTY = { fallback: '' } as const
 
 export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionProjection>> =
   Object.freeze({
+    schools: {
+      collection: 'schools',
+      table: 'schools',
+      tombstone: null,
+      columns: [
+        text('id', 'id', KEY),
+        // A school row is its own school. The envelope carries the field for
+        // every collection alike, so it is projected like every other one.
+        text('school_id', 'schoolId', { ...KEY, ...EMPTY }),
+        text('name', 'name', EMPTY),
+        text('logo_url', 'logoUrl'),
+        text('description', 'description'),
+      ],
+    },
+
     courses: {
       collection: 'courses',
       table: 'courses',

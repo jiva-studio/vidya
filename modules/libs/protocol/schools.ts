@@ -9,9 +9,14 @@ import * as crud from './crud'
 export type SchoolDetails = {
   id: domain.SchoolId
   name: string
+
+  /** External link; the bytes are never stored, so offline a device shows the initial. */
+  logoUrl: string | null
+
+  description: string | null
 }
 
-export type SchoolSummary = Pick<SchoolDetails, 'id' | 'name'>
+export type SchoolSummary = Pick<SchoolDetails, 'id' | 'name' | 'logoUrl'>
 
 /* -------------------------------------------------------------------------- */
 /*                                   Create                                   */

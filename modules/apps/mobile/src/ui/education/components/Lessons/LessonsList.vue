@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LessonSummary } from '@vidya/protocol'
+import type { LessonId } from '@vidya/domain'
 
 import LessonsListItem from './LessonsListItem.vue'
 import { WithListHeader } from '@/design'
@@ -27,7 +27,7 @@ const emit = defineEmits<LessonsListEmits>()
 /*                                  Handlers                                  */
 /* -------------------------------------------------------------------------- */
 
-function onLessonClicked(lessonId: LessonSummary['id']) {
+function onLessonClicked(lessonId: LessonId) {
   emit('click', lessonId)
 }
 </script>

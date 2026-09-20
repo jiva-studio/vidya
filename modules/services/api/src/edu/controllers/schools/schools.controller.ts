@@ -105,6 +105,8 @@ export class SchoolsController {
     // Create new school
     const entity = await this.schoolCreationService.createNewSchool(auth.userId, {
       name: request.name,
+      logoUrl: request.logoUrl ?? null,
+      description: request.description ?? null,
     })
 
     // Return created school response
@@ -137,7 +139,10 @@ export class SchoolsController {
     }
 
     // Update school
-    school = await this.schoolsService.updateOneBy({ id }, { name: request.name })
+    school = await this.schoolsService.updateOneBy(
+      { id },
+      { name: request.name, logoUrl: request.logoUrl, description: request.description },
+    )
 
     // Return updated school response
     return toSchoolDetails(school)

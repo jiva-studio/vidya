@@ -175,11 +175,11 @@ describe('sync journal', () => {
   /* ------------------------------- -------------------------------- */
 
   describe('the scope comes from the projection table', () => {
-    it('addresses course-side collections to their course', async () => {
+    it('addresses a course to its school and its content to the course', async () => {
       const courses = await journalFor(ds, 'courses')
       const lessons = await journalFor(ds, 'lessons')
 
-      expect(courses[0]).toMatchObject({ scope_kind: 'course', scope_id: ctx.course.id })
+      expect(courses[0]).toMatchObject({ scope_kind: 'school', scope_id: ctx.school.id })
       expect(lessons[0]).toMatchObject({ scope_kind: 'course', scope_id: ctx.course.id })
     })
 

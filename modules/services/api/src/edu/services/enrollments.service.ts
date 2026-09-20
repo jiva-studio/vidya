@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { EnrollmentStatus } from '@vidya/domain'
 import * as domain from '@vidya/domain'
 import { Course, Enrollment } from '@vidya/entities'
-import { Repository } from 'typeorm'
+import { EntityManager, In, Repository } from 'typeorm'
 
 import { Scope, ScopedEntitiesService } from './entities.service'
 import { GroupsService } from './groups.service'
@@ -16,11 +16,39 @@ import { LessonsService } from './lessons.service'
 import { LessonVersionsService } from './lessonVersions.service'
 import { scopedBySchool } from './scoped-by-school'
 
+export type ModerationStatus = Extract<EnrollmentStatus, 'accepted' | 'declined'>
+
 export type ModerationDecision = {
-  status: Extract<EnrollmentStatus, 'accepted' | 'declined'>
+  status: ModerationStatus
   groupId?: domain.GroupId
   decidedById: domain.UserId
 }
+
+/**
+ * What a school may decide about a place, keyed by the state it is leaving.
+ *
+ * `revoked` reopens, and only into `accepted`: the school took the place back,
+ * so the school can hand it back — a student who paid late is put where they
+ * were rather than made to apply again, which the unique index would refuse
+ * anyway. There is no open request there to refuse, hence no way back to
+ * `declined`.
+ *
+ * `declined` is empty and stays empty. A refusal on the merits is an answer,
+ * not a pause; reversing it is a new request, not a second answer to the old.
+ */
+const MODERATION: Readonly<Record<EnrollmentStatus, readonly ModerationStatus[]>> = Object.freeze({
+  pending: ['accepted', 'declined'],
+  accepted: [],
+  declined: [],
+  revoked: ['accepted'],
+})
+
+/** What a revocation takes back; a refusal was never a place to begin with. */
+const REVOCABLE: EnrollmentStatus[] = ['pending', 'accepted']
+
+/** Postgres reports a broken UNIQUE constraint as SQLSTATE 23505. */
+const isUniqueViolation = (error: unknown): boolean =>
+  (error as { code?: string })?.code === '23505'
 
 /**
  * A student's place on a course, and how a school decides who gets one.
@@ -29,10 +57,6 @@ export type ModerationDecision = {
  * before any suitable group exists and waits in the queue until one does, which
  * is why `groupId` stays empty rather than the request being held back.
  */
-/** Postgres reports a broken UNIQUE constraint as SQLSTATE 23505. */
-const isUniqueViolation = (error: unknown): boolean =>
-  (error as { code?: string })?.code === '23505'
-
 @Injectable()
 export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope> {
   constructor(
@@ -127,10 +151,40 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
     }
   }
 
-  /** Accept or decline. A request is decided once. */
+  /**
+   * Takes back every place this student holds in the school, decided or still
+   * asked for. A place is what belonging to the school bought, so it does not
+   * outlive the belonging; a refusal stays refused, being nothing to take back.
+   *
+   * The rows are saved one at a time on purpose. The journal is written by an
+   * entity subscriber, so a bulk `UPDATE` would move the table and reach no
+   * device: the scope cursor would walk past a change that was never written
+   * down. `manager` is the caller's transaction, so the places and whatever
+   * ended the membership commit or roll back together.
+   */
+  async revokePlacesIn(
+    studentId: domain.UserId,
+    schoolId: domain.SchoolId,
+    manager: EntityManager,
+  ): Promise<void> {
+    const places = await manager.findBy(Enrollment, {
+      studentId,
+      schoolId,
+      status: In(REVOCABLE),
+    })
+
+    for (const place of places) {
+      place.status = 'revoked'
+      await manager.save(place)
+    }
+  }
+
+  /** Accept or decline a request, or give back a place the school took away. */
   async moderate(enrollment: Enrollment, decision: ModerationDecision): Promise<Enrollment> {
-    if (enrollment.status !== 'pending') {
-      throw new ConflictException(`Enrollment ${enrollment.id} has already been decided`)
+    if (!MODERATION[enrollment.status].includes(decision.status)) {
+      throw new ConflictException(
+        `Enrollment ${enrollment.id} cannot go from ${enrollment.status} to ${decision.status}`,
+      )
     }
 
     if (decision.groupId) {

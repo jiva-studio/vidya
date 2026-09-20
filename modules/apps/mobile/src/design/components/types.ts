@@ -10,6 +10,8 @@ export interface AsyncButtonEmits {
 
 export interface PageToolbarProps {
   title: string
+  /** Where the back button leads with no stack behind it; `null` leaves it out. */
+  backHref?: string | null
 }
 
 export interface StepsWizardProps {

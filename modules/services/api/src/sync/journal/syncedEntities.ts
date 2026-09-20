@@ -1,4 +1,12 @@
-import { BlockState, Course, Enrollment, Homework, Lesson, LessonVersion } from '@vidya/entities'
+import {
+  BlockState,
+  Course,
+  Enrollment,
+  Homework,
+  Lesson,
+  LessonVersion,
+  School,
+} from '@vidya/entities'
 
 /**
  * The entities that reach devices.
@@ -13,6 +21,7 @@ import { BlockState, Course, Enrollment, Homework, Lesson, LessonVersion } from 
  * syncs, and an entity absent from this list is absent from the journal.
  */
 export const SYNCED_ENTITIES = [
+  School,
   Course,
   Lesson,
   LessonVersion,

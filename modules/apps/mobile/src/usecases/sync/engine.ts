@@ -24,6 +24,7 @@ import {
   createSqlLessonRepository,
   createSqlLessonVersionRepository,
   createSqlOutboxRepository,
+  createSqlSchoolRepository,
   createSqlSyncApplyRepository,
   createSqlSyncStateRepository,
   requiredFields,
@@ -38,6 +39,7 @@ import {
   type IHomeworkRepository,
   type ILessonRepository,
   type ILessonVersionRepository,
+  type ISchoolRepository,
 } from '@/ports'
 
 /**
@@ -51,7 +53,7 @@ import {
  * mistake is a compile error in one place rather than a behaviour that differs
  * between two call sites.
  *
- * The three read-only content repositories are returned undecorated: they
+ * The four read-only content repositories are returned undecorated: they
  * replicate downward only and the device never writes them. The three writable
  * ones come back wrapped, and nothing hands out the unwrapped versions — a
  * local write that skipped the journal would never be sent, and the student
@@ -96,6 +98,7 @@ export interface SyncEngine {
   pull(): Promise<PullAndMergeResult>
   push(): Promise<PushLocalResult>
 
+  readonly schools: ISchoolRepository
   readonly courses: ICourseRepository
   readonly lessons: ILessonRepository
   readonly lessonVersions: ILessonVersionRepository
@@ -165,6 +168,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     runner,
     pull: () => pullAndMerge(engineDeps, pullOptions),
     push: () => pushLocal(engineDeps),
+    schools: createSqlSchoolRepository({ db, ownerId }),
     courses: createSqlCourseRepository({ db, ownerId }),
     lessons: createSqlLessonRepository({ db, ownerId }),
     lessonVersions: createSqlLessonVersionRepository({ db, ownerId }),

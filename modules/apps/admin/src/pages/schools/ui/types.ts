@@ -28,6 +28,18 @@ export interface SchoolNameFieldProps {
   disabled?: boolean
 }
 
+/** The logo travels as a link, so the box holds an address and not a file. */
+export interface SchoolLogoFieldProps {
+  modelValue: string
+  error?: string
+  disabled?: boolean
+}
+
+export interface SchoolAboutFieldProps {
+  modelValue: string
+  disabled?: boolean
+}
+
 export interface DefaultRoleFieldProps {
   modelValue: string
   options: { value: string; label: string }[]

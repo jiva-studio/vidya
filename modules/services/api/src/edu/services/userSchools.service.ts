@@ -4,12 +4,15 @@ import * as domain from '@vidya/domain'
 import { Role, School, User } from '@vidya/entities'
 import { In, Repository } from 'typeorm'
 
+import { RolesService } from './roles.service'
+
 @Injectable()
 export class UserSchoolsService {
   constructor(
     @InjectRepository(School) private readonly schools: Repository<School>,
     @InjectRepository(Role) private readonly roles: Repository<Role>,
     @InjectRepository(User) private readonly users: Repository<User>,
+    private readonly rolesService: RolesService,
   ) {}
 
   /**
@@ -50,5 +53,17 @@ export class UserSchoolsService {
       user.roles.push(studentDefaultRole)
       await transactionalEntityManager.save(user)
     })
+  }
+
+  /**
+   * Take a user's membership of one school back.
+   *
+   * The work is `RolesService`'s, and deliberately so: taking a role away is
+   * what ends a membership, and it happens from several places. A second
+   * implementation here would be a second place to forget that the places the
+   * role carried go with it.
+   */
+  async removeUser(userId: domain.UserId, schoolId: domain.SchoolId): Promise<void> {
+    await this.rolesService.setRolesForUserWithin(userId, [], [schoolId])
   }
 }

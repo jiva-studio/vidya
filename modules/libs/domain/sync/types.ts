@@ -15,6 +15,7 @@
  * A collection absent from this list does not sync at all.
  */
 export const SyncCollections = [
+  'schools',
   'courses',
   'lessons',
   'lesson_versions',

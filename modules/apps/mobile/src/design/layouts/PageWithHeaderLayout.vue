@@ -1,11 +1,15 @@
 <template>
   <IonPage>
-    <IonHeader>
-      <PageToolbar :title="title" />
+    <IonHeader class="flat-header ion-no-border">
+      <PageToolbar :title="title" :back-href="backHref" />
       <slot name="toolbar" />
     </IonHeader>
 
     <IonContent :fullscreen="true" :class="{ 'ion-padding': hasPadding }">
+      <!-- Above the loading/error/empty chain rather than inside it: what a
+           notice has to say is usually the reason the page is empty. -->
+      <slot name="notice" />
+
       <LoadingSpinner v-if="showSpinner" />
       <slot v-else-if="error" name="error">
         <IonNote class="page-state">{{ error }}</IonNote>
@@ -14,6 +18,8 @@
         <IonNote class="page-state">{{ emptyText }}</IonNote>
       </slot>
       <slot v-else />
+
+      <div class="reserved-space" aria-hidden="true" />
     </IonContent>
   </IonPage>
 </template>
@@ -29,6 +35,7 @@ import type { PageWithHeaderLayoutProps } from './types'
 /* --------------------------------- Props ---------------------------------- */
 
 const props = withDefaults(defineProps<PageWithHeaderLayoutProps>(), {
+  backHref: '/education/courses',
   hasPadding: false,
   busy: false,
   hasData: false,
@@ -44,6 +51,10 @@ const showSpinner = computed(() => props.busy && !props.hasData)
 </script>
 
 <style scoped>
+.reserved-space {
+  height: var(--vidya-page-reserved-space, 0px);
+}
+
 .page-state {
   display: block;
   padding: 2rem 1rem;

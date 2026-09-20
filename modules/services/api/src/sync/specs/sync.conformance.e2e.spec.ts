@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 import { INestApplication } from '@nestjs/common'
 import { createTestingApp } from '@vidya/api/edu/shared'
@@ -20,8 +20,16 @@ import { createSyncContext, SECTION_ID, SyncContext } from './context'
  *
  * The fixtures are read from disk rather than imported: they are data shared
  * with another package, not a module of this one.
+ *
+ * The package is asked where it lives instead of being counted to in `..`
+ * segments. A mutation run copies this service into a sandbox several levels
+ * deeper, and a fixed depth resolves to a directory that does not exist there.
  */
-const FIXTURES = join(__dirname, '../../../../../libs/protocol/__fixtures__/sync')
+const FIXTURES = join(
+  dirname(require.resolve('@vidya/protocol/package.json')),
+  '__fixtures__',
+  'sync',
+)
 
 const fixture = <T>(name: string): T =>
   JSON.parse(readFileSync(join(FIXTURES, `${name}.json`), 'utf8')) as T
@@ -274,6 +282,7 @@ describe('sync conformance: the wire fixtures over HTTP', () => {
           deviceId: DEVICE,
           cursors: {
             [`user:${ctx.student.id}`]: 999_999,
+            [`school:${ctx.schoolId}`]: 999_999,
             [`course:${ctx.mine.course.id}`]: 999_999,
           },
         }).expect(200)

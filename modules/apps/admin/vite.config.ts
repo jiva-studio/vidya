@@ -23,8 +23,11 @@ export default defineConfig({
     port,
     strictPort: true,
 
-    // The API enables no CORS, so the browser must see one origin. Everything
-    // under /api is forwarded to it and the prefix is stripped on the way.
+    // Kept for the shape it gives the dev build, not because it is required:
+    // the API allows this origin by name now. Everything under /api is
+    // forwarded to it and the prefix is stripped on the way, so the console
+    // talks to one origin here and to a real domain in production without the
+    // client code knowing the difference.
     proxy: {
       '/api': {
         target: apiUrl,

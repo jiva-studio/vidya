@@ -1,5 +1,6 @@
 import { migration_000_migrations_table } from './000_migrations_table'
 import { migration_001_local_schema } from './001_local_schema'
+import { migration_002_schools } from './002_schools'
 import type { Migration } from './types'
 
 /**
@@ -12,9 +13,11 @@ import type { Migration } from './types'
 export const deviceMigrations: readonly Migration[] = [
   migration_000_migrations_table,
   migration_001_local_schema,
+  migration_002_schools,
 ]
 
 export { migration_000_migrations_table } from './000_migrations_table'
 export { migration_001_local_schema } from './001_local_schema'
+export { migration_002_schools } from './002_schools'
 export { EmptyMigrationSetError, runMigrations, SchemaAheadOfCodeError } from './runMigrations'
 export type { Migration, UtcClock } from './types'

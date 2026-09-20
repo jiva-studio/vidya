@@ -7,12 +7,15 @@ import { reasonOf } from '@/shared/lib'
 type Decision = Extract<EnrollmentStatus, 'accepted' | 'declined'>
 
 /**
- * Accepting and declining a request, from the row it is in.
+ * Deciding a request from the row it is in, and giving back a place taken away.
  *
  * A request is decided once: the server answers a second decision with 409, so
- * neither of these is offered back as an undo. Declining is put behind a
+ * a refusal is not offered back as an undo. Declining is put behind a
  * confirmation that names the consequence instead, which is the honest reading
  * of an action that cannot be taken back.
+ *
+ * `accept` carries the one reversal the server does allow — a revoked place
+ * returning to `accepted` — which is why it needs no call of its own.
  */
 export const useModerateEnrollment = () => {
   const api = useEnrollmentApi()

@@ -9,8 +9,15 @@
 export const LessonVersionStatuses = ['draft', 'published'] as const
 export type LessonVersionStatus = (typeof LessonVersionStatuses)[number]
 
-/** Enrolment is moderated: a request is reviewed before it grants access. */
-export const EnrollmentStatuses = ['pending', 'accepted', 'declined'] as const
+/**
+ * Enrolment is moderated: a request is reviewed before it grants access.
+ *
+ * `revoked` is the school taking a place back — losing the school role revokes
+ * every place and every open request it carried. `declined` is the answer to a
+ * request the school refused on its merits, and it stays that way: the two read
+ * differently to a student.
+ */
+export const EnrollmentStatuses = ['pending', 'accepted', 'declined', 'revoked'] as const
 export type EnrollmentStatus = (typeof EnrollmentStatuses)[number]
 
 /**

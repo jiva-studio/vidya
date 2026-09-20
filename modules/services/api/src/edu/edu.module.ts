@@ -108,5 +108,6 @@ import {
     IsUserExistConstraint,
     IsSchoolExistConstraint,
   ],
+  exports: [UserSchoolsService],
 })
 export class EduModule {}

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
+import { SchoolMembershipModule } from '@vidya/api/schoolMembership.module'
 import { RedisService } from '@vidya/api/shared/services'
 import { Enrollment, Role, User, UserRole } from '@vidya/entities'
 
@@ -30,7 +31,12 @@ import {
  * at boot or nothing is journalled and nothing complains.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Enrollment, User, Role, UserRole])],
+  imports: [
+    // Answers `SCHOOL_MEMBERSHIP`, the one thing a scope grant needs and this
+    // context cannot work out on its own.
+    SchoolMembershipModule,
+    TypeOrmModule.forFeature([Enrollment, User, Role, UserRole]),
+  ],
   controllers: [SyncController],
   providers: [
     // What the authentication guard needs to read a token, as `EduModule`

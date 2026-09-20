@@ -65,6 +65,7 @@ describe('sync scopes, checksums and the acknowledged position', () => {
 
   const own = (): domain.SyncScopeRef => ({ kind: 'user', id: ctx.student.id })
   const mine = (): domain.SyncScopeRef => ({ kind: 'course', id: ctx.mine.course.id })
+  const school = (): domain.SyncScopeRef => ({ kind: 'school', id: ctx.schoolId })
 
   /* ------------------------------- ------------------------------- */
 
@@ -111,7 +112,11 @@ describe('sync scopes, checksums and the acknowledged position', () => {
       const body = (await pull().expect(200)).body as protocol.PullResponse
 
       expect(Object.keys(body.checksums).sort()).toEqual(
-        [domain.syncScopeKey(own()), domain.syncScopeKey(mine())].sort(),
+        [
+          domain.syncScopeKey(own()),
+          domain.syncScopeKey(mine()),
+          domain.syncScopeKey(school()),
+        ].sort(),
       )
     })
 

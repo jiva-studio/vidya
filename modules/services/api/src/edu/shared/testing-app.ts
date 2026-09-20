@@ -20,8 +20,16 @@ export type TestingOverride = {
   useValue: any
 }
 
+/**
+ * Applied to the app between creation and `init()`, for the few things that are
+ * bootstrap's rather than a module's — CORS is the one there is. After `init()`
+ * it is too late: the middleware stack is already built.
+ */
+export type TestingBootstrap = (app: NestExpressApplication) => void
+
 export const createTestingApp = async (
   overrides: readonly TestingOverride[] = [],
+  bootstrap?: TestingBootstrap,
 ): Promise<INestApplication> => {
   let builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(DataSource)
@@ -46,6 +54,7 @@ export const createTestingApp = async (
   // refuses a sync batch before any handler sees it, and the suite would be
   // testing a limit production does not have.
   app.useBodyParser('json', { limit: SYNC_MAX_BATCH_BYTES })
+  bootstrap?.(app)
   useContainer(app.select(AppModule), { fallbackOnErrors: true })
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
   await app.init()

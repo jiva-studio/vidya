@@ -1,23 +1,24 @@
 import { type HttpClient, type HttpQuery, isUnauthorized } from '@/ports'
 
 /**
- * Ends the session the moment the server stops accepting its token.
+ * Acts the moment a server stops accepting the token it was given.
  *
- * Without this a student with an expired token sees "sign in again" on every
- * screen and has no way to do it: the stored session still looks valid, so the
- * router's guard keeps letting them through to screens that cannot load. The
- * decorator sits here rather than in the adapter because the adapter is not
- * allowed to know that a session exists.
+ * What "acts" means belongs to the caller, and since the app talks to several
+ * servers it is never a global sign-out: a client is built for one connection,
+ * and a refusal is that connection's state. Marking it as needing a new
+ * sign-in leaves every other school running and leaves everything already on
+ * the device readable — a token governs the network, not the disk.
+ *
+ * The decorator sits here rather than in the adapter because the adapter is
+ * not allowed to know that a connection exists. The sync engine is not wrapped
+ * in it at all: a run renews its own token and defers if it cannot.
  */
-export const endSessionOn401 = (
-  client: HttpClient,
-  endSession: () => Promise<void>,
-): HttpClient => {
+export const endSessionOn401 = (client: HttpClient, onRefused: () => Promise<void>): HttpClient => {
   const guard = async <TResult>(call: () => Promise<TResult>): Promise<TResult> => {
     try {
       return await call()
     } catch (error) {
-      if (isUnauthorized(error)) await endSession()
+      if (isUnauthorized(error)) await onRefused()
       throw error
     }
   }

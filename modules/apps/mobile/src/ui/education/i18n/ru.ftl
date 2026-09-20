@@ -1,6 +1,7 @@
 # Навигация
 tab-courses = Курсы
 tab-my-enrollments = Мои курсы
+tab-settings = Настройки
 
 # Каталог курсов
 courses-title = Курсы
@@ -9,6 +10,7 @@ courses-empty = Курсов пока нет
 
 # Курс
 course-enroll = Записаться
+course-open-enrollment = Перейти к моему курсу
 
 # Запись на курс
 enroll-title = Записаться
@@ -32,11 +34,14 @@ enrollment-pending = Заявка на рассмотрении
 enrollment-pending-summary = Школа рассмотрит её в ближайшее время.
 enrollment-declined = Заявка отклонена
 enrollment-declined-summary = Причина не указана.
+enrollment-revoked = Место отозвано
+enrollment-revoked-summary = Школа прекратила вашу запись на курс. Всё уже скачанное остаётся доступным.
 
 # Статус записи в списке
 enrollment-status-pending = На рассмотрении
 enrollment-status-accepted = Принято
 enrollment-status-declined = Отклонено
+enrollment-status-revoked = Отозвано
 enrollment-no-group-yet = Ожидает группу
 
 # Урок

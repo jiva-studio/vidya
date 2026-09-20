@@ -1,9 +1,9 @@
 <template>
   <PageWithHeaderLayout
     :title="$t('lesson-title')"
+    :back-href="`/education/my-enrollments/${enrollmentId}`"
     :busy="busy"
     :has-data="loaded"
-    :error="errorMessage"
   >
     <template #toolbar>
       <IonToolbar>
@@ -11,33 +11,49 @@
       </IonToolbar>
     </template>
 
-    <LessonSectionView
-      v-if="selectedSection"
-      :blocks="selectedSection.blocks"
-      :states="blockStates"
-      @change="onBlockStateChanged"
-    />
+    <LessonContentGate :content-schema-version="contentSchemaVersion">
+      <LessonSectionView
+        v-if="selectedSection"
+        :blocks="selectedSection.blocks"
+        :states="blockStates"
+        @change="onBlockStateChanged"
+      />
 
-    <HomeworkAnswer
-      v-if="selectedSection && selectedSection.assessment !== 'none'"
-      :status="selectedHomework?.status ?? 'open'"
-      :answer="answer"
-      @submit="onHomeworkSubmitted"
-    />
+      <SubmittedHomeworkItem
+        v-if="submitted"
+        :answer-text="submitted.text"
+        :state="submissionState"
+        :reason="rejectionReason"
+        :lesson-title="lessonTitle"
+      />
+
+      <HomeworkAnswer
+        v-else-if="isAssessed"
+        :status="selectedHomework?.status ?? 'open'"
+        :answer="selectedHomework?.text"
+        @submit="onHomeworkSubmitted"
+      />
+    </LessonContentGate>
   </PageWithHeaderLayout>
 </template>
 
 <script lang="ts" setup>
 import type { BlockId, SectionId } from '@vidya/domain'
+import { toIsoDateTime } from '@vidya/domain'
 import type { LessonBlockState } from '@vidya/protocol'
 import { IonToolbar } from '@ionic/vue'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
-import { useApi } from '@/app'
+import { useOutboxView, useRepositories } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
-import { useFailureMessage, useRemoteData } from '@/shared'
+import type { LocalBlockState, LocalHomework, LocalLesson, LocalLessonVersion } from '@/ports'
+import { isHomeworkEditable } from '@/ports'
+import { useLocalData } from '@/shared'
 import { HomeworkAnswer, LessonSectionsList, LessonSectionView } from '@/ui/education'
+import type { SubmissionState } from '@/ui/sync'
+import { LessonContentGate, SubmittedHomeworkItem } from '@/ui/sync'
 import { education } from '@/usecases'
+
 import type { LessonPageProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -46,29 +62,18 @@ const props = defineProps<LessonPageProps>()
 
 /* --------------------------------- State ---------------------------------- */
 
-const api = useApi()
+const repositories = useRepositories()
+const outbox = useOutboxView()
 const selected = ref(0)
-const answer = ref<string | undefined>(undefined)
 
-const { data, busy, loaded, failure, reload } = useRemoteData(
-  async () => {
-    const version = await education.getPublishedLessonVersion(api, props.lessonId)
-    if (!version) return undefined
+const { data, busy, loaded, reload } = useLocalData(readLesson, emptyLesson(), {
+  watching: [() => props.enrollmentId, () => props.lessonId],
+})
 
-    const [states, homework] = await Promise.all([
-      education.listBlockStates(api, props.enrollmentId, version.id),
-      education.listHomeworkOfEnrollment(api, props.enrollmentId),
-    ])
-    return { version, states, homework }
-  },
-  undefined,
-  { watching: [() => props.enrollmentId, () => props.lessonId] },
-)
-
-const errorMessage = useFailureMessage(failure)
-
-const sections = computed(() => data.value?.version.content.sections ?? [])
+const lessonTitle = computed(() => data.value.lesson?.title)
+const sections = computed(() => data.value.version?.content.sections ?? [])
 const selectedSection = computed(() => sections.value[selected.value])
+const contentSchemaVersion = computed(() => data.value.version?.content.schemaVersion ?? 1)
 
 // The strip is a row of labels; everything else about a section is read from
 // the section itself once it is the selected one.
@@ -78,59 +83,102 @@ const sectionViews = computed(() =>
 
 const blockStates = computed(
   () =>
-    Object.fromEntries(
-      (data.value?.states ?? []).map((state) => [state.blockId, state.state]),
-    ) as Record<BlockId, LessonBlockState>,
+    Object.fromEntries(data.value.states.map((state) => [state.blockId, state.state])) as Record<
+      BlockId,
+      LessonBlockState
+    >,
+)
+
+const isAssessed = computed(
+  () => selectedSection.value !== undefined && selectedSection.value.assessment !== 'none',
 )
 
 const selectedHomework = computed(() =>
   selectedSection.value ? homeworkFor(selectedSection.value.id) : undefined,
 )
 
-/* --------------------------------- Hooks ---------------------------------- */
+// Where an answer has got to is part of the answer. Once it has been handed in
+// it is no longer a box to type in: it is the work, with the state it is in and
+// the school's reason if the school would not take it.
+const submitted = computed(() =>
+  selectedHomework.value && !isHomeworkEditable(selectedHomework.value.status)
+    ? selectedHomework.value
+    : undefined,
+)
 
-// The list answers with summaries, and a summary does not carry the text the
-// student already wrote. Without this, work returned for revision opens on an
-// empty box and the student retypes it.
-watch(
-  () => selectedHomework.value?.id,
-  async (homeworkId) => {
-    answer.value = undefined
-    if (!homeworkId) return
-    try {
-      answer.value = (await education.getHomework(api, homeworkId)).text
-    } catch {
-      // The section still opens; the box is simply empty, as it was before.
-      answer.value = undefined
-    }
-  },
-  { immediate: true },
+const submissionState = computed<SubmissionState>(() =>
+  submitted.value ? outbox.state('homework', submitted.value.id) : 'accepted',
+)
+
+const rejectionReason = computed(() =>
+  submitted.value ? outbox.reason('homework', submitted.value.id) : undefined,
 )
 
 /* -------------------------------- Handlers -------------------------------- */
 
 async function onBlockStateChanged(blockId: BlockId, state: LessonBlockState) {
-  const version = data.value?.version
+  const version = data.value.version
   if (!version) return
-  await education.saveBlockState(api, { lessonVersionId: version.id, blockId, state })
+
+  const existing = data.value.states.find((item) => item.blockId === blockId)
+
+  await repositories.blockStates.save({
+    id: existing?.id ?? education.newBlockStateId(),
+    schoolId: version.schoolId,
+    enrollmentId: props.enrollmentId,
+    lessonVersionId: version.id,
+    blockId,
+    state,
+  })
 }
 
 async function onHomeworkSubmitted(text: string) {
-  const version = data.value?.version
+  const version = data.value.version
   const section = selectedSection.value
   if (!version || !section) return
 
-  await education.submitHomework(api, {
+  const saved = await repositories.homework.saveAnswer({
+    id: selectedHomework.value?.id ?? education.newHomeworkId(),
+    schoolId: version.schoolId,
+    enrollmentId: props.enrollmentId,
     lessonVersionId: version.id,
     sectionId: section.id,
     text,
   })
+
+  await repositories.homework.submit(saved.id, toIsoDateTime(new Date()))
   await reload()
 }
 
 /* -------------------------------- Helpers --------------------------------- */
 
+/** What the page draws before the reads come back, and when a piece is absent. */
+interface LessonView {
+  lesson: LocalLesson | null
+  version: LocalLessonVersion | null
+  states: readonly LocalBlockState[]
+  homework: readonly LocalHomework[]
+}
+
+function emptyLesson(): LessonView {
+  return { lesson: null, version: null, states: [], homework: [] }
+}
+
+async function readLesson(): Promise<LessonView> {
+  const lesson = await repositories.lessons.getById(props.lessonId)
+  const version = await repositories.lessonVersions.getPublished(props.lessonId)
+
+  if (version === null) return { ...emptyLesson(), lesson }
+
+  return {
+    lesson,
+    version,
+    states: await repositories.blockStates.listByLessonVersion(props.enrollmentId, version.id),
+    homework: await repositories.homework.listByEnrollment(props.enrollmentId),
+  }
+}
+
 function homeworkFor(sectionId: SectionId) {
-  return data.value?.homework.find((item) => item.sectionId === sectionId)
+  return data.value.homework.find((item) => item.sectionId === sectionId)
 }
 </script>

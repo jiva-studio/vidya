@@ -140,8 +140,10 @@ export function createSqlJsDatabase(db: Database, persist: PersistSink): IDataba
     },
 
     async close(): Promise<void> {
-      // Flush anything queued before tearing the database down, or the last
-      // write is dropped. A failed persist must still let us close.
+      // Flush anything queued, and anything written outside a transaction that
+      // nothing has exported yet, or the last write is dropped. A failed
+      // persist must still let us close.
+      if (dirty) void scheduleSave()
       await savePromise.catch(() => undefined)
       db.close()
     },

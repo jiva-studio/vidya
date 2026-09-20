@@ -45,3 +45,13 @@ sync-offline-title = Working offline
 sync-offline-text = You can read everything you have downloaded and write answers. They go out when the connection is back.
 sync-online-syncing = Syncing…
 sync-online-synced = Up to date
+
+# A school that stopped accepting this sign-in
+sync-sign-in-again-title = Sign in again
+sync-sign-in-again-text =
+    { $schools ->
+        [one] This school stopped accepting your sign-in. Until you sign in again, new lessons and courses will not arrive and applications will not be sent.
+       *[other] { $schools } of your schools stopped accepting your sign-in. Until you sign in again, new lessons and courses from them will not arrive and applications will not be sent.
+    }
+sync-sign-in-again-downloaded-stays = Everything already downloaded opens and reads as usual.
+sync-sign-in-again-action = Sign in again

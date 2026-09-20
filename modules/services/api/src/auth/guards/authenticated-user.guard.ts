@@ -46,10 +46,13 @@ export class AuthenticatedUserGuard implements CanActivate {
         throw new UnauthorizedException()
       }
 
-      // A token minted before the permissions claim existed still has to resolve them.
-      const userPermissions = accessToken.permissions
-        ? accessToken.permissions
-        : await this.usersService.getUserPermissions(accessToken.sub)
+      // Every path that mints a token now puts the permissions in it, so this
+      // resolves only a token the previous build issued — for as long as one
+      // can still be valid, which is one access-token lifetime after a deploy.
+      // Dropping it would answer 403 to everyone holding one, so it goes when
+      // that window has passed and not before.
+      const userPermissions =
+        accessToken.permissions ?? (await this.usersService.getUserPermissions(accessToken.sub))
       request.accessToken = {
         ...accessToken,
         permissions: userPermissions,

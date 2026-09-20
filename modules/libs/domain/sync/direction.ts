@@ -20,6 +20,7 @@ export const SyncDirections = ['down', 'up', 'both'] as const
 export type SyncDirection = (typeof SyncDirections)[number]
 
 export const SYNC_DIRECTION: Readonly<Record<SyncCollection, SyncDirection>> = Object.freeze({
+  schools: 'down',
   courses: 'down',
   lessons: 'down',
   lesson_versions: 'down',

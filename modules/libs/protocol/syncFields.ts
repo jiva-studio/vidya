@@ -4,6 +4,7 @@ import type { CourseDetails } from './courses'
 import type { EnrollmentDetails } from './enrollments'
 import type { BlockStateDetails, HomeworkDetails } from './homework'
 import type { LessonDetails, LessonVersionDetails } from './lessons'
+import type { SchoolDetails } from './schools'
 
 /**
  * The fields each collection carries in a sync payload.
@@ -26,6 +27,9 @@ import type { LessonDetails, LessonVersionDetails } from './lessons'
  */
 export const SYNC_WIRE_FIELDS: Readonly<Record<domain.SyncCollection, readonly string[]>> =
   Object.freeze({
+    // The row is its own school, so the envelope's `schoolId` restates `id`.
+    schools: ['id', 'name', 'logoUrl', 'description'] satisfies readonly (keyof SchoolDetails)[],
+
     courses: [
       'id',
       'schoolId',

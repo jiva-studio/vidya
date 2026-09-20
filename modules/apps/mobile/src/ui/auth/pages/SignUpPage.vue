@@ -30,10 +30,6 @@
       </IonCheckbox>
     </IonList>
 
-    <IonNote v-if="error" color="danger">
-      {{ error }}
-    </IonNote>
-
     <AsyncButton expand="block" :disabled="!canSubmit" :busy="busy" @click="onSignUpButtonClicked">
       {{ $t('sign-up') }}
     </AsyncButton>
@@ -41,46 +37,66 @@
 </template>
 
 <script lang="ts" setup>
-import { IonCheckbox, IonInput, IonList, IonNote, IonPage, useIonRouter } from '@ionic/vue'
-import { useFluent } from 'fluent-vue'
+import { IonCheckbox, IonInput, IonList, IonPage, useIonRouter } from '@ionic/vue'
 import { computed, ref } from 'vue'
 
-import { useApi } from '@/app'
+import { clientForSignIn } from '@/app'
+import { config as environment } from '@/config'
 import { AsyncButton } from '@/design'
+import { useAuthToast } from '@/ui/auth/composables/useAuthToast'
 import { auth } from '@/usecases'
 
 /* --------------------------------- State ---------------------------------- */
 
-const api = useApi()
+const client = clientForSignIn(environment.apiBaseUrl)
 const router = useIonRouter()
-const fluent = useFluent()
+const toast = useAuthToast()
 
 const name = ref('')
 const phoneNumber = ref('')
 const conditionsAccepted = ref(false)
 const busy = ref(false)
-const error = ref<string | undefined>(undefined)
 
 const canSubmit = computed(() => name.value.trim().length > 0 && conditionsAccepted.value)
 
 /* -------------------------------- Handlers -------------------------------- */
 
 async function onSignUpButtonClicked() {
+  if (busy.value) return
+
   busy.value = true
-  error.value = undefined
+  try {
+    if (!(await saveDetails())) return
+    router.navigate({ name: 'courses' }, 'root', 'replace')
+  } finally {
+    busy.value = false
+  }
+}
+
+/* -------------------------------- Helpers --------------------------------- */
+
+/**
+ * Send the details up, and say whether they arrived.
+ *
+ * Both calls are guarded together because both end the same way for the person
+ * in front of the form: nothing of what they typed is stored. Navigation is
+ * outside the guard — it comes after the details are safe, and a failure to
+ * move screens is not a failure to save.
+ */
+async function saveDetails(): Promise<boolean> {
   try {
     // The profile the token belongs to is the one being filled in, so its id
     // comes from the server rather than from anything the form holds.
-    const profile = await auth.getProfile(api)
-    await auth.updateProfile(api, profile.userId, {
+    const profile = await auth.getProfile(client)
+    await auth.updateProfile(client, profile.userId, {
       name: name.value,
       phone: phoneNumber.value || undefined,
     })
-    router.navigate({ name: 'courses' }, 'root', 'replace')
+
+    return true
   } catch {
-    error.value = fluent.$t('could-not-save')
-  } finally {
-    busy.value = false
+    await toast.show('could-not-save')
+    return false
   }
 }
 </script>
