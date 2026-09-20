@@ -34,4 +34,21 @@ export class RedisService {
   async del(key: string): Promise<void> {
     await this.redis.del(key)
   }
+
+  /**
+   * Atomically increments the counter at `key` and returns the new value,
+   * creating it at 1 if absent.
+   *
+   * `INCR` never sets a TTL by itself. Arming one only when the result is 1 —
+   * rather than on every call, or via `EXPIRE ... NX` — costs the extra round
+   * trip exactly once, on the increment that creates the key, and never resets
+   * the TTL that later increments are meant to share.
+   */
+  async incr(key: string, seconds: number): Promise<number> {
+    const value = await this.redis.incr(key)
+    if (value === 1) {
+      await this.redis.expire(key, seconds)
+    }
+    return value
+  }
 }

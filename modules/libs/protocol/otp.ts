@@ -6,6 +6,13 @@
 export const OtpStorageKey = (login: string) => `otp:${login}`
 
 /**
+ * Returns the key for counting failed OTP guesses in Redis for a given login
+ * @param login Login of the user the guesses are being counted for
+ * @returns Key for storing the OTP attempt counter in Redis
+ */
+export const OtpAttemptsStorageKey = (login: string) => `otp:attempts:${login}`
+
+/**
  * Type of the destination to send the OTP to.
  */
 export enum OtpType {
