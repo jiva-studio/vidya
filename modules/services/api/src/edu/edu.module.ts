@@ -17,6 +17,7 @@ import {
   UserSchoolsService,
   UsersService,
 } from '@vidya/api/edu/services'
+import { PermissionsCacheEvictionModule } from '@vidya/api/permissionsCacheEviction.module'
 import { RedisService } from '@vidya/api/shared/services'
 import {
   BlockState,
@@ -68,6 +69,10 @@ import {
       Homework,
       BlockState,
     ]),
+    // Answers `PERMISSIONS_CACHE_EVICTION`, the one instruction a role or
+    // school-ownership change needs to give `auth` and cannot carry out on
+    // its own.
+    PermissionsCacheEvictionModule,
   ],
   controllers: [
     RolesController,

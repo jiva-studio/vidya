@@ -1,8 +1,9 @@
-import { ForbiddenException, Injectable } from '@nestjs/common'
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { PERMISSIONS_CACHE_EVICTION, PermissionsCacheEviction } from '@vidya/api/edu/ports'
 import * as domain from '@vidya/domain'
 import { Role, UserRole } from '@vidya/entities'
-import { EntityManager, FindOptionsWhere, In, Repository } from 'typeorm'
+import { DeepPartial, EntityManager, FindOptionsWhere, In, Repository } from 'typeorm'
 
 import { EnrollmentsService } from './enrollments.service'
 import { Scope, ScopedEntitiesService } from './entities.service'
@@ -13,6 +14,7 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
     @InjectRepository(Role) repository: Repository<Role>,
     @InjectRepository(UserRole) private userRolesRepo: Repository<UserRole>,
     private readonly enrollments: EnrollmentsService,
+    @Inject(PERMISSIONS_CACHE_EVICTION) private readonly permissionsCache: PermissionsCacheEviction,
   ) {
     super(repository, (query, scope) => {
       // FindOptionsWhere<Role> does not surface the entity's own fields, hence the cast.
@@ -119,6 +121,18 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
         rolesToRemove.map((userRole) => userRole.roleId),
         roleIds,
       )
+
+      // Last statement in the transaction, same shape as the membership close
+      // above: a throw earlier in this callback skips it, so a rolled-back
+      // change never evicts. Redis has no part in the Postgres transaction
+      // though, so this still runs before the surrounding COMMIT actually
+      // lands — if the process dies in that narrow gap, the entry is evicted
+      // for a change that never became durable. The next read just re-derives
+      // permissions from the (unchanged) database, so that failure mode is a
+      // wasted recompute, never a stale grant.
+      if (rolesToAssign.length > 0 || rolesToRemove.length > 0) {
+        await this.permissionsCache.evict([userId])
+      }
     })
   }
 
@@ -144,6 +158,44 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
       for (const holder of holders) {
         await this.closeMembershipIfEnded(manager, holder, role.schoolId)
       }
+
+      // The one query above already has every holder; evicting from that list
+      // rather than querying again keeps this at one query, not N. Positioned
+      // last for the same reason `setRolesForUser` places its eviction last —
+      // see the comment there for the honest limit on how "inside the
+      // transaction" is read when the cache is not.
+      if (holders.length > 0) {
+        await this.permissionsCache.evict(holders)
+      }
+    })
+  }
+
+  /**
+   * Updates a role, and forgets the cached permissions of everyone who holds
+   * it.
+   *
+   * Overridden rather than inherited from `EntitiesService.updateOneBy`
+   * because a role's permissions are a fact about every user who holds it, not
+   * about the row alone — and the base method, shared by every other entity in
+   * this hierarchy, has no business knowing that.
+   */
+  async updateOneBy(query: FindOptionsWhere<Role>, request: DeepPartial<Role>): Promise<Role> {
+    return await this.repository.manager.transaction(async (manager) => {
+      const entity = await manager.findOneBy(Role, query)
+      const updated = await manager.save(Role, manager.merge(Role, entity, request))
+
+      const holders = (await manager.findBy(UserRole, { roleId: updated.id })).map(
+        (userRole) => userRole.userId,
+      )
+
+      // Same shape and the same honest limit as `deleteOneBy`: one query for
+      // every holder, evicted last, and safe against a crash in the tiny gap
+      // before Redis and the transaction's COMMIT ever agree.
+      if (holders.length > 0) {
+        await this.permissionsCache.evict(holders)
+      }
+
+      return updated
     })
   }
 
