@@ -1,3 +1,4 @@
+export * from './permission-grant.validation'
 export * from './permissions.validation'
 export * from './role.validation'
 export * from './school.validation'

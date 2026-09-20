@@ -16,6 +16,7 @@ import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { RoleExistsPipe } from '@vidya/api/edu/pipes'
 import { RolesService } from '@vidya/api/edu/services'
+import { assertPermissionsGrantable } from '@vidya/api/edu/validations'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
 import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
@@ -110,6 +111,9 @@ export class RolesController {
       throw new ForbiddenException('User does not have permission')
     }
 
+    // Refuse to grant a permission the caller does not hold in this school
+    assertPermissionsGrantable(request.permissions, request.schoolId, auth.permissions)
+
     // Create role
     const entity = await this.rolesService.create({
       name: request.name,
@@ -140,6 +144,14 @@ export class RolesController {
       })
     ) {
       throw new ForbiddenException('User does not have permission')
+    }
+
+    // Refuse to grant a permission the caller does not hold in this school.
+    // Checked against the caller's own permissions, never the role's previous
+    // ones — otherwise removing one permission and adding another becomes a
+    // way around it.
+    if (request.permissions) {
+      assertPermissionsGrantable(request.permissions, role.schoolId, auth.permissions)
     }
 
     // Update role
