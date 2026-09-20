@@ -6,8 +6,10 @@ import type { RouteLocationNamedRaw, RouteLocationRaw } from 'vue-router'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { installSectionMessages, sectionRoutes } from '../src/app/sections'
+import { FakeMediaGateway, mediaGatewayKey } from '../src/entities/media'
 import { setAppRouter } from '../src/shared/access'
 import { fluent } from '../src/shared/i18n'
+import { systemClock } from '../src/shared/lib'
 import { STORY_SCHOOL } from '../src/shared/testing'
 
 /**
@@ -45,6 +47,10 @@ setup((app) => {
   if (app.config.globalProperties.$router) return
   app.use(fluent)
   app.use(router)
+
+  // A block holding a file asks for storage the moment it renders, and a story
+  // that does not provide one throws instead of drawing.
+  app.provide(mediaGatewayKey, new FakeMediaGateway({ clock: systemClock }))
 })
 
 // A screen in the application sits inside the shell's content area, which gives

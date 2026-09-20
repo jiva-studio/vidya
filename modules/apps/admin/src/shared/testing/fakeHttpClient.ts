@@ -1,5 +1,5 @@
-import type { HttpClient, HttpQuery } from '../api'
-import { HttpError } from '../api'
+import type { Failure, HttpClient, HttpQuery } from '../api'
+import { announceFailures, HttpError } from '../api'
 import type { FakeAnswer, FakeAnswers, RecordedCall } from './types'
 
 const matches = (path: string, key: string): boolean => {
@@ -47,6 +47,7 @@ export const fakeHttpClient = (answers: FakeAnswers = {}) => {
   const client: HttpClient = {
     get: (<TResponse>(path: string, query?: HttpQuery) =>
       record({ method: 'GET', path, query }) as Promise<TResponse>) as HttpClient['get'],
+    // The options a caller passes are the announcer's business, not the fake's.
     post: (<TResponse>(path: string, body?: unknown) =>
       record({ method: 'POST', path, body }) as Promise<TResponse>) as HttpClient['post'],
     patch: (<TResponse>(path: string, body?: unknown) =>
@@ -58,7 +59,14 @@ export const fakeHttpClient = (answers: FakeAnswers = {}) => {
 
   const callsTo = (path: string) => calls.filter((call) => call.path === path)
 
-  return { client, calls, callsTo }
+  // Wrapped the way the application wraps it, so a test sees what an operator
+  // would be told: the screens no longer show a failure themselves.
+  const failures: Failure[] = []
+  const announced = announceFailures(client, (failure) => {
+    failures.push(failure)
+  })
+
+  return { client: announced, calls, callsTo, failures }
 }
 
 /** A refusal with a body, for the tests and stories that show the server's reason. */

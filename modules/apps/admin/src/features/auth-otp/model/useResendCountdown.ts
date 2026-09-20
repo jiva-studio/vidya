@@ -1,5 +1,8 @@
 import { computed, onScopeDispose, ref } from 'vue'
 
+import type { Clock, Scheduled } from '@/shared/lib'
+import { systemClock } from '@/shared/lib'
+
 /**
  * How long until another code may be asked for.
  *
@@ -10,25 +13,28 @@ import { computed, onScopeDispose, ref } from 'vue'
  */
 export const CODE_LIFETIME_SECONDS = 300
 
-export const useResendCountdown = () => {
+export const useResendCountdown = (clock: Clock = systemClock) => {
   const remaining = ref(0)
-  let timer: ReturnType<typeof setInterval> | undefined
+  let scheduled: Scheduled | undefined
 
   const stop = () => {
-    if (timer === undefined) return
-    clearInterval(timer)
-    timer = undefined
+    scheduled?.cancel()
+    scheduled = undefined
   }
 
+  // One second at a time rather than an interval: the port schedules a single
+  // piece of work, and a countdown that re-arms itself stops on the tick that
+  // reaches zero instead of on the one after it.
   const tick = () => {
     remaining.value -= 1
-    if (remaining.value <= 0) stop()
+    if (remaining.value > 0) scheduled = clock.schedule(tick, 1000)
+    else stop()
   }
 
   const start = (seconds: number = CODE_LIFETIME_SECONDS) => {
     stop()
     remaining.value = seconds
-    timer = setInterval(tick, 1000)
+    if (seconds > 0) scheduled = clock.schedule(tick, 1000)
   }
 
   const canResend = computed(() => remaining.value <= 0)

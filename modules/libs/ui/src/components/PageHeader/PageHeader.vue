@@ -23,7 +23,8 @@ const props = withDefaults(defineProps<PageHeaderProps>(), {
     <slot name="breadcrumbs" />
     <div :class="rowClasses">
       <div :class="headingsClasses">
-        <h1 :class="titleClasses">{{ props.title }}</h1>
+        <slot v-if="$slots.title" name="title" />
+        <h1 v-else :class="titleClasses">{{ props.title }}</h1>
         <p v-if="props.description" :class="descriptionClasses">{{ props.description }}</p>
       </div>
       <div v-if="$slots.actions" :class="actionsClasses">

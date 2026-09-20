@@ -22,7 +22,7 @@ export const useWorkContext = (work: Ref<HomeworkDetails | undefined>) => {
   const lookup = useEnrollmentLookup()
   const directory = useDirectory()
   const users = useUserApi()
-  const people = useStudentNames(async (id) => (await users.get(id)).name)
+  const people = useStudentNames(async (id) => (await users.nameOf(id)).name)
   const lesson = useAnsweredLesson()
 
   const enrolment = computed(() =>

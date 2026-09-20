@@ -4,15 +4,34 @@ export { contentProblems } from './contentProblems'
 export {
   addBlock,
   addSection,
+  blockBelow,
+  convertBlock,
+  duplicateBlock,
+  endTextBlock,
+  insertBlockAfter,
+  insertSectionAfter,
   moveBlock,
   moveSection,
   removeBlock,
   removeSection,
   renameSection,
+  reorderBlocks,
+  reorderSections,
+  sectionBelow,
   setSectionAssessment,
   updateBlock,
 } from './edits'
-export { addAnswer, removeAnswer, setAnswer, setQuestion, setRightAnswer } from './quiz'
-export { renderMarkdown } from './renderMarkdown'
-export { checkBlockUrl, EmbedHosts, embedSrc, isEmbedSource, mediaSrc } from './urls'
+export {
+  addAnswer,
+  insertAnswer,
+  moveAnswer,
+  removeAnswer,
+  setAnswer,
+  setExplanation,
+  setQuestion,
+  setRightAnswer,
+} from './quiz'
+export type { BlockFault } from './saving'
+export { findBlockFaults, findInvalidBlocks, pruneForSave } from './saving'
+export { checkBlockUrl, detectSource, EmbedHosts, embedSrc, isEmbedSource, mediaSrc } from './urls'
 export { useLessonContentEditor } from './useLessonContentEditor'

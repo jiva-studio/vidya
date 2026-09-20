@@ -44,17 +44,39 @@ export default defineConfig([
     //   `entities/homework` is read by that one workplace because a piece of
     //   work is shown in exactly one place — a domain noun does not become part
     //   of a widget by being read from a single one.
+    //
+    // `entities/media` and `features/pick-media` are the same case: media is a
+    // domain noun with one reader today, and picking a file is an action of the
+    // operator offered by the one screen that authors lessons.
     files: [
       './src/entities/homework/**',
+      './src/entities/media/**',
       './src/features/assign-group/**',
       './src/features/edit-lesson-content/**',
       './src/features/switch-language/**',
       './src/features/grade-homework/**',
       './src/features/manage-user-roles/**',
       './src/features/moderate-enrollment/**',
+      './src/features/pick-media/**',
       './src/features/publish-lesson/**',
       './src/widgets/lesson-editor/**',
     ],
     rules: { 'fsd/insignificant-slice': 'off' },
+  },
+  {
+    // One cross-slice import, named rather than allowed in general:
+    //
+    //   the media block's empty state offers "choose from the library", and
+    //   that dialog is `features/pick-media` — the block cannot open it without
+    //   reaching the slice that is the dialog. The two ways out both cost more
+    //   than they buy: a second injection port beside `mediaGatewayKey`, whose
+    //   only job is to hand one component to another, or a dialog threaded as a
+    //   slot from the widget through the section, the block list and the block
+    //   frame, which is four levels of prop-passing for one button.
+    //
+    // The rule stays on everywhere else, so the next cross-import is still
+    // reported.
+    files: ['./src/features/edit-lesson-content/ui/MediaBlockEditor.vue'],
+    rules: { 'fsd/forbidden-imports': 'off' },
   },
 ])

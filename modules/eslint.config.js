@@ -91,6 +91,10 @@ export default tseslint.config(
       complexity: ['error', 10],
       'max-depth': ['error', 3],
 
+      // A chain of ternaries is a table written as an expression: the reader
+      // has to run it to learn which case is which. Write the table.
+      'no-nested-ternary': 'error',
+
       // An empty catch silently swallows a failure; say why or handle it.
       'no-empty': ['error', { allowEmptyCatch: false }],
 
@@ -226,6 +230,17 @@ export default tseslint.config(
       'vue/custom-event-name-casing': ['error', 'kebab-case'],
       'vue/attribute-hyphenation': ['error', 'always'],
       'max-lines': ['error', { max: 350, skipBlankLines: true, skipComments: true }],
+
+      // A chain of ternaries is a table written as an expression: the reader
+      // has to run it to learn which case is which. Write the table.
+      'no-nested-ternary': 'error',
+      'vue/no-restricted-syntax': [
+        'error',
+        {
+          selector: 'ConditionalExpression ConditionalExpression',
+          message: 'Nested ternary: use a lookup table or an early return.',
+        },
+      ],
     },
   },
 

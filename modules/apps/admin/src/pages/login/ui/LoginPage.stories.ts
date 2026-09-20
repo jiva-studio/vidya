@@ -31,5 +31,5 @@ export const Default: Story = { render: over({ [OTP]: { success: true }, [SIGN_I
 export const Loading: Story = { render: over({ [OTP]: pending() }) }
 
 export const Failed: Story = {
-  render: over({ [OTP]: new HttpError(500, OTP, { message: 'Почта сейчас не отправляется' }) }),
+  render: over({ [OTP]: new HttpError(500, OTP, { message: 'Mail cannot be sent right now' }) }),
 }

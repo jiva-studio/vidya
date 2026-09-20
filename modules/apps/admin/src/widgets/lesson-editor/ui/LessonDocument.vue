@@ -1,23 +1,39 @@
 <script setup lang="ts">
-import type { BlockId, LessonBlock, LessonSection, SectionId } from '@vidya/domain'
-import { AlertDialog, Button, EmptyState } from '@vidya/ui'
-import { ref } from 'vue'
+import type {
+  BlockId,
+  LessonBlock,
+  LessonContent,
+  LessonSection,
+  SectionId,
+  TextBlock,
+} from '@vidya/domain'
+import { computed, ref } from 'vue'
 
 import type { BlockType, MoveDirection } from '@/features/edit-lesson-content'
 import {
-  addBlock,
   addSection,
+  blockBelow,
+  convertBlock,
+  duplicateBlock,
+  insertBlockAfter,
+  insertSectionAfter,
   moveBlock,
   moveSection,
   removeBlock,
   removeSection,
   renameSection,
+  reorderBlocks,
+  reorderSections,
+  sectionBelow,
   setSectionAssessment,
+  endTextBlock,
   updateBlock,
 } from '@/features/edit-lesson-content'
 
+import { focusAfterRemoval, useBlockSorting } from '../lib'
+import SectionBoundary from './SectionBoundary.vue'
 import SectionEditor from './SectionEditor.vue'
-import { addSectionClasses, documentClasses } from './styles'
+import { documentClasses } from './styles'
 import type { LessonDocumentEmits, LessonDocumentProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -30,112 +46,175 @@ const emit = defineEmits<LessonDocumentEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
-// The section just appended, so the caret lands in its title instead of leaving
-// the author to hunt for the thing they asked for.
-const fresh = ref<SectionId | undefined>(undefined)
+const list = ref<HTMLElement | null>(null)
 
-const removing = ref<SectionId | undefined>(undefined)
-const confirmOpen = ref(false)
+// A lesson with nothing in it still needs a line to type into, so the section
+// comes with one. Neither is emitted on its own: they reach the server only
+// once an edit is made through them, so a lesson opened and closed again is
+// still an empty lesson.
+const seed = ref<LessonContent>(seedContent())
+
+const caretBlock = ref<BlockId | undefined>(undefined)
+const caretSection = ref<SectionId | undefined>(undefined)
+
+const shown = computed(() => (props.content.sections.length > 0 ? props.content : seed.value))
+
+/* --------------------------------- Hooks ---------------------------------- */
+
+useBlockSorting(list, onSectionReorder, '[data-section-handle]')
+
+/* -------------------------------- Helpers --------------------------------- */
+
+function seedContent(): LessonContent {
+  const withSection = addSection({ ...props.content, sections: [] }, '')
+  const section = withSection.sections[0]
+  return insertBlockAfter(withSection, section.id, undefined, 'text')
+}
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onSectionAdd() {
-  const next = addSection(props.content, '')
-  fresh.value = next.sections[next.sections.length - 1]?.id
-  emit('update:content', next)
+function onSectionAdd(afterId: SectionId | undefined) {
+  const next = insertSectionAfter(shown.value, afterId)
+
+  caretSection.value = sectionBelow(next, afterId)
+  caretBlock.value = undefined
+  apply(next)
 }
 
 function onRename(id: SectionId, title: string) {
-  emit('update:content', renameSection(props.content, id, title))
+  apply(renameSection(shown.value, id, title))
 }
 
 function onAssessment(id: SectionId, assessment: LessonSection['assessment']) {
-  emit('update:content', setSectionAssessment(props.content, id, assessment))
+  apply(setSectionAssessment(shown.value, id, assessment))
 }
 
 function onSectionMove(id: SectionId, delta: MoveDirection) {
-  emit('update:content', moveSection(props.content, id, delta))
+  apply(moveSection(shown.value, id, delta))
+}
+
+function onSectionReorder(from: number, to: number) {
+  apply(reorderSections(shown.value, from, to))
 }
 
 function onSectionRemove(id: SectionId) {
-  removing.value = id
-  confirmOpen.value = true
-}
+  const at = shown.value.sections.findIndex((section) => section.id === id)
+  const next = shown.value.sections[at + 1] ?? shown.value.sections[at - 1]
 
-// The pending id is not cleared by the dialog closing: the overlay and the
-// confirm button both close it, and which of the two events lands first is
-// reka's business rather than a rule this screen may depend on.
-function onRemoveConfirm() {
-  const id = removing.value
-  confirmOpen.value = false
-  if (!id) return
-  emit('update:content', removeSection(props.content, id))
-}
-
-function onRemoveCancel() {
-  confirmOpen.value = false
-}
-
-function onConfirmOpen(open: boolean) {
-  confirmOpen.value = open
-}
-
-function onBlockAdd(id: SectionId, type: BlockType) {
-  emit('update:content', addBlock(props.content, id, type))
+  caretSection.value = next?.id
+  apply(removeSection(shown.value, id))
 }
 
 function onBlockUpdate(id: SectionId, block: LessonBlock) {
-  emit('update:content', updateBlock(props.content, id, block))
+  apply(updateBlock(shown.value, id, block))
 }
 
 function onBlockMove(id: SectionId, blockId: BlockId, delta: MoveDirection) {
-  emit('update:content', moveBlock(props.content, id, blockId, delta))
+  apply(moveBlock(shown.value, id, blockId, delta))
+}
+
+function onBlockReorder(id: SectionId, from: number, to: number) {
+  apply(reorderBlocks(shown.value, id, from, to))
+}
+
+function onBlockDuplicate(id: SectionId, blockId: BlockId) {
+  const next = duplicateBlock(shown.value, id, blockId)
+  caretBlock.value = blockBelow(next, id, blockId)
+  apply(next)
+}
+
+function onBlockInsert(id: SectionId, afterId: BlockId | undefined, type: BlockType) {
+  // The line the author asked from is empty, so it is the line they meant.
+  const blank = findBlankBlock(id, afterId)
+  if (blank) {
+    caretBlock.value = blank.id
+    caretSection.value = undefined
+    return apply(convertBlock(shown.value, id, blank.id, type))
+  }
+
+  const next = insertBlockAfter(shown.value, id, afterId, type)
+  caretBlock.value = blockBelow(next, id, afterId)
+  caretSection.value = undefined
+  apply(next)
+}
+
+// The line an author asks for by clicking below the last block is the one they
+// would have typed into: an empty one already there is that line, and opening a
+// second would leave a blank behind them.
+function onTailWrite(id: SectionId) {
+  const blocks = readBlocks(id)
+  const last = blocks[blocks.length - 1]
+  const blank = findBlankBlock(id, last?.id)
+
+  if (blank) {
+    caretSection.value = undefined
+    caretBlock.value = blank.id
+    return
+  }
+
+  onBlockInsert(id, last?.id, 'text')
+}
+
+function onBlockEnd(id: SectionId, blockId: BlockId, kept: string) {
+  const next = endTextBlock(shown.value, id, blockId, kept)
+
+  caretBlock.value = blockBelow(next, id, blockId)
+  caretSection.value = undefined
+  apply(next)
 }
 
 function onBlockRemove(id: SectionId, blockId: BlockId) {
-  emit('update:content', removeBlock(props.content, id, blockId))
+  caretBlock.value = focusAfterRemoval(readBlocks(id), blockId)
+  caretSection.value = caretBlock.value ? undefined : id
+  apply(removeBlock(shown.value, id, blockId))
+}
+
+/* -------------------------------- Helpers --------------------------------- */
+
+function readBlocks(id: SectionId): readonly LessonBlock[] {
+  return shown.value.sections.find((section) => section.id === id)?.blocks ?? []
+}
+
+/** The block, when it is a text line nobody has typed into yet. */
+function findBlankBlock(id: SectionId, blockId: BlockId | undefined): TextBlock | undefined {
+  const block = readBlocks(id).find((current) => current.id === blockId)
+  return block?.type === 'text' && block.content.length === 0 ? block : undefined
+}
+
+// Every edit is made against what is on screen, which is the seeded section
+// until the author writes something; from that first edit on, the document the
+// parent holds is the one being changed.
+function apply(next: LessonContent) {
+  seed.value = next
+  emit('update:content', next)
 }
 </script>
 
 <template>
-  <div :class="documentClasses">
-    <EmptyState
-      v-if="props.content.sections.length === 0"
-      :title="$t('editor-sections-empty-title')"
-      :description="$t('editor-sections-empty-body')"
-    />
-    <SectionEditor
-      v-for="(section, index) in props.content.sections"
-      :key="section.id"
-      :section="section"
-      :index="index"
-      :count="props.content.sections.length"
-      :frozen="props.frozen"
-      :autofocus="section.id === fresh"
-      @rename="onRename"
-      @assessment="onAssessment"
-      @move="onSectionMove"
-      @remove="onSectionRemove"
-      @block-add="onBlockAdd"
-      @block-update="onBlockUpdate"
-      @block-move="onBlockMove"
-      @block-remove="onBlockRemove"
-    />
-    <div v-if="!props.frozen" :class="addSectionClasses">
-      <Button variant="secondary" full-width @click="onSectionAdd">
-        {{ $t('editor-section-add') }}
-      </Button>
-    </div>
-    <AlertDialog
-      :open="confirmOpen"
-      :title="$t('editor-section-remove-title')"
-      :description="$t('editor-section-remove-body')"
-      :confirm-label="$t('editor-section-remove-submit')"
-      :cancel-label="$t('editor-section-remove-cancel')"
-      destructive
-      @confirm="onRemoveConfirm"
-      @cancel="onRemoveCancel"
-      @update:open="onConfirmOpen"
-    />
+  <div ref="list" data-lesson-document :class="documentClasses">
+    <template v-for="(section, index) in shown.sections" :key="section.id">
+      <SectionEditor
+        :section="section"
+        :frozen="props.frozen"
+        :first="index === 0"
+        :last="index === shown.sections.length - 1"
+        :autofocus="section.id === caretSection"
+        :caret="caretBlock"
+        @rename="onRename"
+        @assessment="onAssessment"
+        @move="onSectionMove"
+        @reorder="onBlockReorder"
+        @remove="onSectionRemove"
+        @section-insert="onSectionAdd"
+        @tail-write="onTailWrite"
+        @block-update="onBlockUpdate"
+        @block-insert="onBlockInsert"
+        @block-end="onBlockEnd"
+        @block-move="onBlockMove"
+        @block-duplicate="onBlockDuplicate"
+        @block-remove="onBlockRemove"
+      />
+      <SectionBoundary v-if="!props.frozen" @add="onSectionAdd(section.id)" />
+    </template>
   </div>
 </template>

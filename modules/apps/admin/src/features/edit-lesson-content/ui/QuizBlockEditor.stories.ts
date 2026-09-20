@@ -5,12 +5,18 @@ import { ref } from 'vue'
 
 import QuizBlockEditor from './QuizBlockEditor.vue'
 
-const block = (question: string, answers: string[], rightAnswer = 0): QuizBlock => ({
+const block = (
+  question: string,
+  answers: string[],
+  rightAnswer = 0,
+  explanation?: string,
+): QuizBlock => ({
   id: asId<BlockId>('b1'),
   type: 'quiz',
   question,
   answers,
   rightAnswer,
+  explanation,
 })
 
 const over =
@@ -35,12 +41,26 @@ export default meta
 type Story = StoryObj<typeof QuizBlockEditor>
 
 export const Default: Story = {
-  render: over(block('Что меняется на стыке слов?', ['Гласная', 'Согласная', 'Ударение'], 1)),
+  render: over(
+    block('What changes where two words meet?', ['A vowel', 'A consonant', 'The stress'], 1),
+  ),
 }
 
 export const Empty: Story = { render: over(block('', ['', ''])) }
 
+export const WithExplanation: Story = {
+  name: 'With an explanation',
+  render: over(
+    block(
+      'What changes where two words meet?',
+      ['A vowel', 'A consonant', 'The stress'],
+      1,
+      'Sandhi works on the consonant at a word boundary.',
+    ),
+  ),
+}
+
 export const Frozen: Story = {
-  name: 'Frozen',
-  render: over(block('Что меняется на стыке слов?', ['Гласная', 'Согласная'], 1), true),
+  name: 'Read-only',
+  render: over(block('What changes where two words meet?', ['A vowel', 'A consonant'], 1), true),
 }

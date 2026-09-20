@@ -77,7 +77,7 @@ export const Loading: Story = { render: over({ ...world, [ENROLLMENTS]: pending(
 export const Empty: Story = { render: over({ ...world, [ENROLLMENTS]: { items: [] } }) }
 
 export const Failed: Story = {
-  render: over({ ...world, [ENROLLMENTS]: refusal(500, 'Заявки сейчас не читаются') }),
+  render: over({ ...world, [ENROLLMENTS]: refusal(500, 'The requests cannot be read right now') }),
 }
 
 export const Denied: Story = {

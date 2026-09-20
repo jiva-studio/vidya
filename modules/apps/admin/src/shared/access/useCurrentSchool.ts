@@ -57,7 +57,7 @@ const schoolOf = (raw: string | string[] | undefined): SchoolId | undefined =>
  *
  * A screen addressed by an identifier shows one record of one school — one
  * course, one role, one lesson — and that record is not in the school being
- * moved to, so its section's index is where the work continues (AC-6).
+ * moved to, so its section's index is where the work continues.
  */
 const sameScreenIn = (
   from: RouteLocationNormalizedLoaded,

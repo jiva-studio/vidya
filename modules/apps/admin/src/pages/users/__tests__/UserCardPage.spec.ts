@@ -128,13 +128,14 @@ describe('UserCardPage', () => {
     expect(page.text()).toContain('Teacher')
   })
 
-  it('shows the reason the server gave and offers another attempt', async () => {
+  it('reports the reason the server gave, and offers another attempt', async () => {
     const { transport, page } = await mountPage({
       ...card,
       [USER]: refusal(404, 'No such person'),
     })
 
-    expect(page.find('[role="alert"]').text()).toContain('No such person')
+    expect(transport.failures).toContainEqual({ key: 'failure-missing', reason: 'No such person' })
+    expect(page.find('[role="alert"]').text()).not.toContain('No such person')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
     await retry?.trigger('click')

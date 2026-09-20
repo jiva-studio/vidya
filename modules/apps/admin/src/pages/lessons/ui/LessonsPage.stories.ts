@@ -33,7 +33,7 @@ const versions = (lessonId: string, entries: [number, string][]) => ({
 
 const world: FakeAnswers = {
   [LESSONS]: {
-    items: [lesson('l1', 1, 'Alphabet'), lesson('l2', 2, 'Сандхи'), lesson('l3', 3, 'Падежи')],
+    items: [lesson('l1', 1, 'Alphabet'), lesson('l2', 2, 'Sandhi'), lesson('l3', 3, 'Cases')],
   },
   [`${LESSONS}/l1/versions`]: versions('l1', [[1, 'published']]),
   [`${LESSONS}/l2/versions`]: versions('l2', [
@@ -75,7 +75,7 @@ export const Empty: Story = {
 
 export const Failed: Story = {
   parameters: route,
-  render: over({ ...world, [LESSONS]: refusal(503, 'Уроки сейчас не читаются') }),
+  render: over({ ...world, [LESSONS]: refusal(503, 'The lessons cannot be read right now') }),
 }
 
 export const Denied: Story = {

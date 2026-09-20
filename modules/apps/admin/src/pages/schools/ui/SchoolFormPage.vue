@@ -36,7 +36,6 @@ const title = computed(() =>
 )
 const nameError = computed(() => (invalid.value ? $t('schools-form-name-required') : undefined))
 const logoError = computed(() => (badLogo.value ? $t('schools-form-logo-invalid') : undefined))
-const errorText = computed(() => (error.value ? $t(error.value) : undefined))
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -132,7 +131,6 @@ async function send(): Promise<void> {
         :submit-label="$t('action-save')"
         :cancel-label="$t('action-cancel')"
         :busy="busy"
-        :error="errorText"
         @submit="onSubmit"
         @cancel="onCancel"
       />

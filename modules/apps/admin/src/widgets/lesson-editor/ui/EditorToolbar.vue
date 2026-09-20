@@ -1,22 +1,21 @@
 <script setup lang="ts">
-import { Badge, Breadcrumbs, Button, PageHeader, Tabs } from '@vidya/ui'
+import { Breadcrumbs, Button, Input, PageHeader } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
 
-import { toolbarActionsClasses, toolbarErrorClasses, toolbarFactsClasses } from './styles'
-import type { EditorMode, EditorToolbarEmits, EditorToolbarProps } from './types'
+import { titleClasses, toolbarErrorClasses, toolbarStatusClasses } from './styles'
+import type { EditorToolbarEmits, EditorToolbarProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
 const props = withDefaults(defineProps<EditorToolbarProps>(), {
   title: undefined,
   version: undefined,
-  mode: 'write',
   frozen: false,
   dirty: false,
-  saving: false,
+  status: 'idle',
   busy: false,
-  canPublish: false,
+  publishable: false,
   blocked: false,
   error: undefined,
 })
@@ -29,38 +28,34 @@ const emit = defineEmits<EditorToolbarEmits>()
 
 const { $t } = useFluent()
 
-const stateTone = computed(() => (props.frozen ? 'success' : 'warning'))
-const stateKey = computed(() => (props.frozen ? 'editor-state-published' : 'editor-state-draft'))
+const failed = computed(() => props.status === 'failed')
 
+// One word, where three coloured pills used to be: what is happening to the
+// draft, or — while nothing is — which version is open.
+const state = computed(() =>
+  props.status === 'idle'
+    ? $t(props.frozen ? 'editor-state-published' : 'editor-state-draft')
+    : $t(`editor-status-${props.status}`),
+)
+
+// The path to the lesson. Its name is the heading below, not a crumb as well.
 const breadcrumbs = computed(() => [
-  { key: 'courses', label: $t('courses-title') || $t('nav-courses') || 'Courses' },
-  { key: 'lessons', label: $t('lessons-title') || 'Lessons' },
-  { key: 'current', label: props.title ?? $t('editor-title') },
-])
-
-const modes = computed(() => [
-  { value: 'write', label: $t('editor-mode-write') },
-  { value: 'read', label: $t('editor-mode-read') },
+  { key: 'courses', label: $t('nav-courses') },
+  { key: 'lessons', label: $t('lessons-title') },
 ])
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onBreadcrumb(key: string) {
-  if (key === 'courses' || key === 'lessons') {
-    emit('back')
-  }
-}
-
-function onMode(mode: string) {
-  emit('update:mode', mode as EditorMode)
-}
-
-function onBack() {
+function onBreadcrumb() {
   emit('back')
 }
 
-function onSave() {
-  emit('save')
+function onTitle(title: string) {
+  emit('rename', title)
+}
+
+function onRetry() {
+  emit('retry')
 }
 
 function onPublish() {
@@ -77,37 +72,29 @@ function onRevision() {
     <template #breadcrumbs>
       <Breadcrumbs :items="breadcrumbs" @select="onBreadcrumb" />
     </template>
-    <template #actions>
-      <Tabs
-        :model-value="props.mode"
-        :items="modes"
-        variant="segmented"
-        :label="$t('editor-mode-label')"
-        @update:model-value="onMode"
+    <template #title>
+      <Input
+        :class="titleClasses"
+        :model-value="props.title ?? ''"
+        :readonly="props.frozen"
+        :placeholder="$t('editor-title-placeholder')"
+        :aria-label="$t('editor-title-label')"
+        @update:model-value="onTitle"
       />
-      <span :class="toolbarFactsClasses">
-        <Badge v-if="props.version" :tone="stateTone">
-          {{ $t(stateKey, { version: props.version }) }}
-        </Badge>
-        <Badge v-if="props.dirty" tone="info">{{ $t('editor-unsaved') }}</Badge>
-      </span>
-      <span :class="toolbarActionsClasses">
-        <Button variant="ghost" @click="onBack">{{ $t('editor-back') }}</Button>
-        <Button v-if="props.frozen" :busy="props.busy" @click="onRevision">
-          {{ $t('editor-new-revision') }}
-        </Button>
-        <Button v-if="!props.frozen" :busy="props.saving" :disabled="props.blocked" @click="onSave">
-          {{ $t('editor-save') }}
-        </Button>
-        <Button
-          v-if="!props.frozen && props.canPublish"
-          variant="secondary"
-          :disabled="props.blocked"
-          @click="onPublish"
-        >
-          {{ $t('editor-publish') }}
-        </Button>
-      </span>
+    </template>
+    <template #actions>
+      <span :class="toolbarStatusClasses">{{ state }}</span>
+      <Button v-if="failed" variant="ghost" @click="onRetry">{{ $t('editor-save-retry') }}</Button>
+      <Button v-if="props.frozen" :busy="props.busy" @click="onRevision">
+        {{ $t('editor-new-revision') }}
+      </Button>
+      <Button
+        v-if="!props.frozen && props.publishable"
+        :disabled="props.blocked"
+        @click="onPublish"
+      >
+        {{ $t('editor-publish') }}
+      </Button>
       <span v-if="props.error" :class="toolbarErrorClasses" role="alert">{{ props.error }}</span>
     </template>
   </PageHeader>

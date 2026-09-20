@@ -1,7 +1,7 @@
 import type { BlockSource, LessonBlock, LessonContent } from '@vidya/domain'
 
 /** The block kinds this build knows how to author and render. */
-export const BlockTypes = ['text', 'video', 'audio', 'quiz'] as const
+export const BlockTypes = ['text', 'image', 'video', 'audio', 'quiz'] as const
 export type BlockType = (typeof BlockTypes)[number]
 
 /** Sources an operator may pick today. `upload` is absent: there is no storage yet. */

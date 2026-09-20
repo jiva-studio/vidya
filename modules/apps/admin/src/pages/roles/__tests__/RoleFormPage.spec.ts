@@ -230,14 +230,17 @@ describe('RoleFormPage', () => {
     })
   })
 
-  it('shows the reason the server gave instead of a generic failure', async () => {
-    const { page } = await mountForm({
+  it('reports the reason the server gave, and keeps it out of the form', async () => {
+    const { page, transport } = await mountForm({
       'POST /edu/roles': refusal(409, 'A role with this name already exists'),
     })
 
     await page.find('input[name="name"]').setValue('Teacher')
     await save(page)
 
-    expect(page.text()).toContain('A role with this name already exists')
+    expect(transport.failures).toEqual([
+      { key: 'failure-conflict', reason: 'A role with this name already exists' },
+    ])
+    expect(page.text()).not.toContain('A role with this name already exists')
   })
 })

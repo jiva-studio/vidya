@@ -1,7 +1,7 @@
 import { LessonContent, StudentLessonContent } from '@vidya/protocol'
 
-/** The one field of lesson content a student may never be handed. */
-const WITHHELD_FROM_STUDENTS = 'rightAnswer'
+/** The fields of lesson content a student may never be handed. */
+const WITHHELD_FROM_STUDENTS: readonly string[] = ['rightAnswer', 'explanation']
 
 /**
  * Drops the withheld field wherever it appears in the document.
@@ -17,7 +17,7 @@ const strip = (value: unknown): unknown => {
   const out: Record<string, unknown> = {}
 
   for (const [key, nested] of Object.entries(value)) {
-    if (key !== WITHHELD_FROM_STUDENTS) out[key] = strip(nested)
+    if (!WITHHELD_FROM_STUDENTS.includes(key)) out[key] = strip(nested)
   }
 
   return out

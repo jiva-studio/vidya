@@ -3,7 +3,7 @@ import { createTestingApp } from '@vidya/api/edu/shared'
 import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
 
-import { Context, createContext, RIGHT_ANSWER } from './publishedContext'
+import { Context, createContext, EXPLANATION, RIGHT_ANSWER } from './publishedContext'
 
 /**
  * Walks anything the server sent and collects every path where the forbidden
@@ -109,10 +109,18 @@ describe('/edu/lessons/:lessonId/versions/published', () => {
     expect(JSON.stringify(response.body)).not.toContain('rightAnswer')
   })
 
+  it('withholds the explanation as well, because prose gives the answer away too', async () => {
+    const response = await get(ctx.lessonId, ctx.tokens.student).expect(200)
+
+    expect(pathsOf('explanation', response.body)).toEqual([])
+    expect(JSON.stringify(response.body)).not.toContain(EXPLANATION)
+  })
+
   it('withholds it from staff on this route too, so one client cannot leak it', async () => {
     const response = await get(ctx.lessonId, ctx.tokens.teacher).expect(200)
 
     expect(pathsOf('rightAnswer', response.body)).toEqual([])
+    expect(pathsOf('explanation', response.body)).toEqual([])
   })
 
   it('still serves the question and the options, so the quiz remains answerable', async () => {
@@ -128,9 +136,14 @@ describe('/edu/lessons/:lessonId/versions/published', () => {
   it('proves the test would see the key if it were there', () => {
     // A guard on the guard: the walk above finds nothing only because nothing
     // is there, not because it looks in the wrong place.
-    const withKey = { content: { sections: [{ blocks: [{ rightAnswer: RIGHT_ANSWER }] }] } }
+    const withKey = {
+      content: {
+        sections: [{ blocks: [{ rightAnswer: RIGHT_ANSWER, explanation: EXPLANATION }] }],
+      },
+    }
 
     expect(pathsOf('rightAnswer', withKey)).toEqual(['$.content.sections[0].blocks[0].rightAnswer'])
+    expect(pathsOf('explanation', withKey)).toEqual(['$.content.sections[0].blocks[0].explanation'])
   })
 
   /* -------------------------------------------------------------------------- */
@@ -148,5 +161,6 @@ describe('/edu/lessons/:lessonId/versions/published', () => {
     const quiz = body.content.sections[0].blocks[1] as protocol.QuizBlock
 
     expect(quiz.rightAnswer).toBe(RIGHT_ANSWER)
+    expect(quiz.explanation).toBe(EXPLANATION)
   })
 })

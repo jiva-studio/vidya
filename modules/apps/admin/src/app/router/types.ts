@@ -15,7 +15,7 @@ declare module 'vue-router' {
      * The index screen of the section this one belongs to.
      *
      * A screen showing one record of one school cannot stay open when the
-     * school changes, so the shell sends the operator here instead (AC-6).
+     * school changes, so the shell sends the operator here instead.
      */
     section?: string
 

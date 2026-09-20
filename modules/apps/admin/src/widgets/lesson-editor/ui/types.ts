@@ -10,10 +10,14 @@ import type {
   VideoBlock,
 } from '@vidya/domain'
 
-import type { BlockType, ContentProblem, MoveDirection } from '@/features/edit-lesson-content'
+import type {
+  BlockFault,
+  BlockType,
+  ContentProblem,
+  MoveDirection,
+} from '@/features/edit-lesson-content'
 
-/** Writing the lesson, or reading it the way a student will. */
-export type EditorMode = 'write' | 'read'
+import type { AutosaveStatus } from '../model'
 
 export interface LessonEditorViewProps {
   lessonId: LessonId
@@ -23,27 +27,28 @@ export interface LessonEditorViewProps {
 
 export interface LessonEditorViewEmits {
   back: []
+  rename: [title: string]
 }
 
 export interface EditorToolbarProps {
   title?: string
   version?: number
-  mode?: EditorMode
   frozen?: boolean
   dirty?: boolean
-  saving?: boolean
+  status?: AutosaveStatus
   busy?: boolean
-  canPublish?: boolean
+  publishable?: boolean
   blocked?: boolean
   error?: string
 }
 
 export interface EditorToolbarEmits {
+  rename: [title: string]
   back: []
   save: []
+  retry: []
   publish: []
   revision: []
-  'update:mode': [mode: EditorMode]
 }
 
 export interface LessonOutlineProps {
@@ -59,27 +64,70 @@ export interface LessonDocumentEmits {
   'update:content': [content: LessonContent]
 }
 
-export interface SectionEditorProps {
+/** Where a section sits among its neighbours, so its menu can stop at the ends. */
+interface Placed {
+  first?: boolean
+  last?: boolean
+}
+
+export interface SectionEditorProps extends Placed {
   section: LessonSection
-  index: number
-  count: number
   frozen?: boolean
   autofocus?: boolean
+
+  /** The block the caret belongs in, when it is one of this section's. */
+  caret?: BlockId
 }
 
 export interface SectionEditorEmits {
   rename: [id: SectionId, title: string]
   assessment: [id: SectionId, assessment: LessonSection['assessment']]
   move: [id: SectionId, delta: MoveDirection]
+  reorder: [id: SectionId, from: number, to: number]
   remove: [id: SectionId]
-  'block-add': [id: SectionId, type: BlockType]
+  'section-insert': [afterId: SectionId]
+  'tail-write': [id: SectionId]
   'block-update': [id: SectionId, block: LessonBlock]
+  'block-insert': [id: SectionId, afterId: BlockId | undefined, type: BlockType]
+  'block-end': [id: SectionId, blockId: BlockId, kept: string]
   'block-move': [id: SectionId, blockId: BlockId, delta: MoveDirection]
+  'block-duplicate': [id: SectionId, blockId: BlockId]
   'block-remove': [id: SectionId, blockId: BlockId]
 }
 
+export interface SectionHeaderProps extends Placed {
+  section: LessonSection
+  frozen?: boolean
+  autofocus?: boolean
+}
+
+export interface SectionHeaderEmits {
+  rename: [title: string]
+  assessment: [assessment: LessonSection['assessment']]
+  move: [delta: MoveDirection]
+  remove: []
+}
+
+export interface SectionMenuProps extends Placed {
+  label: string
+  assessment: LessonSection['assessment']
+  /** Automatic marking has nothing to mark in a section without a question. */
+  gradable: boolean
+}
+
+export interface SectionMenuEmits {
+  move: [delta: MoveDirection]
+  assessment: [assessment: LessonSection['assessment']]
+  remove: []
+}
+
+export interface SectionBoundaryEmits {
+  add: []
+}
+
 export interface ContentProblemsNoticeProps {
-  problems: readonly ContentProblem[]
+  problems?: readonly ContentProblem[]
+  faults?: readonly BlockFault[]
 }
 
 export interface LessonPreviewProps {

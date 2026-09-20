@@ -1,19 +1,18 @@
 # Texts for the lesson editor. Owned by T5.
 
 editor-title = Lesson editor
-editor-back = Back to lessons
-editor-save = Save draft
+editor-title-label = Lesson title
+editor-title-placeholder = Untitled lesson
 editor-publish = Publish
 editor-new-revision = New version
-editor-unsaved = Unsaved changes
 editor-retry = Try again
 
 version-title = Lesson version
 version-subtitle = A published version cannot be edited.
 version-back = Back
 
-editor-state-draft = Draft v{ $version }
-editor-state-published = Published v{ $version }
+editor-state-draft = Draft
+editor-state-published = Published
 
 editor-no-versions = This lesson has no versions to open.
 editor-load-failed = The lesson content could not be loaded.
@@ -22,10 +21,6 @@ editor-publish-failed = The version could not be published.
 editor-revision-failed = A new version could not be started.
 
 # Writing or reading
-
-editor-mode-label = View
-editor-mode-write = Write
-editor-mode-read = Read
 
 # Sections
 
@@ -49,10 +44,11 @@ editor-section-remove-cancel = Keep it
 
 editor-homework-placeholder = Is work asked for?
 editor-homework-label = Homework
-editor-homework-none = Not asked for
-editor-homework-auto = Asked for, marked automatically
-editor-homework-teacher = Asked for, a teacher marks it
+editor-homework-none = No
+editor-homework-auto = Marked automatically
+editor-homework-teacher = A teacher marks it
 editor-homework-note = There is no separate assignment field — write what you ask for in the section text
+editor-homework-needs-quiz = Nothing to mark automatically: the section has no questions
 
 # Blocks
 
@@ -60,6 +56,7 @@ editor-block-text = Text
 editor-block-video = Video
 editor-block-audio = Audio
 editor-block-quiz = Quiz
+editor-block-section = Section
 editor-block-add = Add block
 editor-block-up = Move the { $block } block up
 editor-block-down = Move the { $block } block down
@@ -73,7 +70,7 @@ editor-block-unknown-body = It cannot be edited here, and while it is in the les
 editor-text-label = Lesson text
 editor-text-edit = Edit this text
 editor-text-hint = Markdown: # heading, **bold**, *italic*, - list, [link](https://example.org), > quote
-editor-text-placeholder = Write the lesson text here.
+editor-text-placeholder = Lesson text, or “/” to insert a block
 
 editor-source-placeholder = Choose a source
 editor-source-label = Source
@@ -132,3 +129,70 @@ publish-confirm-title = Publish this version?
 publish-confirm-body = Students start reading version { $version }. It cannot be changed afterwards — only a new version can.
 publish-confirm-submit = Publish
 publish-confirm-cancel = Cancel
+
+# Files in a media block
+
+editor-media-refused-image = Only image files can go in this block.
+editor-media-refused-video = Only video files can go in this block.
+editor-media-refused-audio = Only audio files can go in this block.
+editor-media-uploading = Uploading
+editor-media-cancel = Cancel
+editor-media-retry = Try again
+editor-media-uploaded = { $name } uploaded
+editor-media-replace = Replace
+editor-media-caption-label = Caption
+editor-media-caption-hint = Shown under the file. Optional.
+editor-media-preview-alt = Uploaded file
+editor-media-unavailable = Not available yet. Files uploaded here live only until the page is reloaded.
+
+# Choosing a file
+
+media-picker-title = Choose a file
+media-picker-close = Close
+media-picker-tab-upload = Upload
+media-picker-tab-library = Library
+media-picker-tab-link = Link
+media-picker-drop-label = Drop a file here
+media-picker-search = Search by name
+media-picker-empty-title = Nothing here yet
+media-picker-empty-body = Upload a file, or search for another name.
+media-picker-failed-title = The library could not be read
+media-picker-retry = Try again
+media-picker-link-label = Link
+media-picker-link-hint = YouTube, Vimeo, or a direct link to a file
+media-picker-link-submit = Use this link
+
+# Media that could not be stored
+
+media-upload-failed = The file could not be uploaded.
+media-upload-cancelled = The upload was stopped.
+media-unavailable = Files cannot be stored yet.
+editor-block-image = Image
+editor-block-menu = Block options
+editor-section-menu = Section options
+editor-move-up = Move up
+editor-move-down = Move down
+editor-duplicate = Duplicate
+editor-delete = Delete
+# Quiz
+editor-quiz-explanation-label = Explanation
+editor-quiz-explanation-placeholder = Why is that the answer? Shown after answering.
+# Saving
+
+editor-status-saving = Saving…
+editor-status-saved = Saved
+editor-status-failed = Not saved
+editor-save-retry = Try saving again
+
+# Unfinished blocks
+
+editor-faults-title = This version cannot be published yet
+editor-fault-block = Section { $section }, block { $position } is unfinished.
+
+editor-media-add-image = Add an image
+editor-media-add-video = Add a video
+editor-media-add-audio = Add audio
+editor-media-drop-hint-image = PNG, JPG, GIF or SVG
+editor-media-drop-hint-video = MP4, WebM or MOV
+editor-media-drop-hint-audio = MP3, WAV or OGG
+editor-media-browse = Choose a file

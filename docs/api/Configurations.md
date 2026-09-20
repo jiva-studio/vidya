@@ -3,12 +3,9 @@
 ## Environment Variables
 
 #### `VIDYA_AUTH_USER_PERMISSIONS_CACHE_TTL`.
-Time to live for the user permissions cache in seconds. Set to 0 to disable
-caching, for development for example.
+Time to live for the user permissions cache in seconds. Set to 0 to disable caching for development purposes for example.
 
-Every token now carries the holder's permissions, so this cache is read only
-for a token minted by an older build that has not expired yet. Permissions are
-fixed for the life of an access token and change at the next refresh.
+Permissions are minted into every token, so this covers the reads that mint one — signing in and refreshing — and the tokens issued before the claim existed, which the guard resolves per request.
 
 #### `VIDYA_CORS_ORIGINS`.
 Comma-separated list of browser origins allowed to read an answer from this API.
@@ -27,4 +24,3 @@ and the list is never a wildcard because the answers carry a student's own rows.
 
 #### `VIDYA_MOBILE_PORT`.
 Port the mobile dev server runs on, used only to build the CORS fallback above.
-Defaults to `5173`, Vite's own default.

@@ -1,67 +1,83 @@
+import type { $Fetch, FetchError, FetchOptions } from 'ofetch'
+import { ofetch } from 'ofetch'
+
 import { HttpError, OfflineError } from './errors'
+import { backoffMs, retryAfterMs } from './retryTiming'
 import type { FetchHttpClientOptions, HttpClient, HttpQuery } from './types'
 
-const queryString = (query: HttpQuery | undefined): string => {
-  if (!query) return ''
-  const pairs = Object.entries(query).filter(([, value]) => value !== undefined)
-  if (pairs.length === 0) return ''
-  return `?${new URLSearchParams(pairs.map(([key, value]) => [key, String(value)]))}`
-}
+/** How long a screen waits for an answer before it is told there is none. */
+const TimeoutMs = 15_000
 
-const parse = async (response: Response): Promise<unknown> => {
-  if (response.status === 204) return undefined
-  const text = await response.text()
-  if (text.length === 0) return undefined
-  try {
-    return JSON.parse(text)
-    // A body that is not JSON is still worth carrying: it is what the screen shows.
-  } catch {
-    return text
-  }
-}
+/** A read is attempted again this many times; a write, never on its own. */
+const ReadAttempts = 2
 
-/** The only place in the application that knows fetch exists. */
+/** Statuses that say the request failed on the way rather than on its merits. */
+const Transient = [408, 425, 429, 500, 502, 503, 504]
+
+/**
+ * The only place in the application that knows how a request is made.
+ *
+ * The retrying, the backoff and the deadline are `ofetch`'s: a hand-written
+ * loop around `fetch` is the same code with our own bugs in it. What is ours is
+ * the line between a read and a write — a read that timed out can be asked
+ * again, a write may already have been carried out, and asking again would
+ * enrol a student twice.
+ */
 export class FetchHttpClient implements HttpClient {
-  constructor(private readonly options: FetchHttpClientOptions) {}
+  private readonly call: $Fetch
+
+  constructor(private readonly options: FetchHttpClientOptions) {
+    this.call = ofetch.create({
+      baseURL: options.baseUrl,
+      timeout: TimeoutMs,
+      retryDelay: ({ response, options: pending }) =>
+        retryAfterMs(response?.headers?.get('retry-after'), Date.now()) ??
+        backoffMs(Number(pending.retry), ReadAttempts),
+      retryStatusCodes: Transient,
+      headers: { accept: 'application/json' },
+      onRequest: ({ options: request }) => {
+        const token = this.options.accessToken()
+        if (token) request.headers.set('authorization', `Bearer ${token}`)
+      },
+    })
+  }
 
   get<TResponse>(path: string, query?: HttpQuery): Promise<TResponse> {
-    return this.send<TResponse>('GET', `${path}${queryString(query)}`)
+    return this.send<TResponse>(path, { method: 'GET', query, retry: ReadAttempts })
   }
 
   post<TResponse>(path: string, body?: unknown): Promise<TResponse> {
-    return this.send<TResponse>('POST', path, body)
+    return this.send<TResponse>(path, { method: 'POST', body: toBody(body) })
   }
 
   patch<TResponse>(path: string, body?: unknown): Promise<TResponse> {
-    return this.send<TResponse>('PATCH', path, body)
+    return this.send<TResponse>(path, { method: 'PATCH', body: toBody(body) })
   }
 
   async delete(path: string): Promise<void> {
-    await this.send<unknown>('DELETE', path)
+    await this.send<unknown>(path, { method: 'DELETE' })
   }
 
-  private async send<TResponse>(method: string, path: string, body?: unknown): Promise<TResponse> {
-    const response = await this.call(method, path, body)
-    const payload = await parse(response)
-    if (!response.ok) throw new HttpError(response.status, path, payload)
-    return payload as TResponse
-  }
-
-  private async call(method: string, path: string, body?: unknown): Promise<Response> {
-    const token = this.options.accessToken()
+  private async send<TResponse>(path: string, request: FetchOptions<'json'>): Promise<TResponse> {
     try {
-      return await fetch(`${this.options.baseUrl}${path}`, {
-        method,
-        headers: {
-          accept: 'application/json',
-          ...(token ? { authorization: `Bearer ${token}` } : {}),
-          ...(body === undefined ? {} : { 'content-type': 'application/json' }),
-        },
-        body: body === undefined ? undefined : JSON.stringify(body),
-      })
-      // A transport failure carries no status code, so it needs its own type.
-    } catch {
-      throw new OfflineError(path)
+      return await this.call<TResponse>(path, { retry: false, ...request })
+    } catch (error) {
+      throw translate(path, error as FetchError)
     }
   }
+}
+
+/** The transport takes an object or nothing; what a caller hands over is its own. */
+const toBody = (body: unknown): Record<string, unknown> | undefined =>
+  body === undefined ? undefined : (body as Record<string, unknown>)
+
+/**
+ * A refusal and an unreachable server are different failures.
+ *
+ * `ofetch` reports both as one error; a refusal carries the response the server
+ * sent, and a request that never arrived carries nothing to show.
+ */
+const translate = (path: string, error: FetchError): Error => {
+  const status = error.response?.status
+  return status ? new HttpError(status, path, error.data) : new OfflineError(path)
 }

@@ -53,14 +53,14 @@ export type LessonVersionSummary = Omit<LessonVersionDetails, 'content'>
 
 /**
  * A quiz as a student may receive it: the question and the options, never the
- * key. The server withholds `rightAnswer` on the way out, because content is
- * downloaded whole onto the device — once the key is in the student's local
- * database, no server-side fix can take it back.
+ * key. The server withholds `rightAnswer` and `explanation` on the way out,
+ * because content is downloaded whole onto the device — once the key is in the
+ * student's local database, no server-side fix can take it back.
  */
-export type StudentQuizBlock = Omit<domain.QuizBlock, 'rightAnswer'>
+export type StudentQuizBlock = Omit<domain.QuizBlock, 'rightAnswer' | 'explanation'>
 
 export type StudentLessonBlock =
-  domain.TextBlock | domain.VideoBlock | domain.AudioBlock | StudentQuizBlock
+  domain.TextBlock | domain.ImageBlock | domain.VideoBlock | domain.AudioBlock | StudentQuizBlock
 
 export type StudentLessonSection = Omit<domain.LessonSection, 'blocks'> & {
   blocks: StudentLessonBlock[]

@@ -3,6 +3,7 @@ import { Routes } from '@vidya/protocol'
 
 import { config } from '../config'
 import { useSession } from '../session'
+import { announceFailures, reportFailure } from './failures'
 import { FetchHttpClient } from './fetchHttpClient'
 import { refreshOn401 } from './refreshOn401'
 import type { HttpClient } from './types'
@@ -42,12 +43,17 @@ export const useApi = (): HttpClient => {
     return true
   }
 
-  client = refreshOn401(
-    new FetchHttpClient({
-      baseUrl: config.apiBaseUrl,
-      accessToken: () => session.accessToken.value,
-    }),
-    { refresh, endSession: () => session.end() },
+  client = announceFailures(
+    refreshOn401(
+      new FetchHttpClient({
+        baseUrl: config.apiBaseUrl,
+        accessToken: () => session.accessToken.value,
+      }),
+      { refresh, endSession: () => session.end() },
+    ),
+    // Outside the renewal, so a request that a refresh carried through is not
+    // reported as the failure it briefly was.
+    reportFailure,
   )
 
   return client

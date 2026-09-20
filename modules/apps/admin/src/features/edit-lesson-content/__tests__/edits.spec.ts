@@ -5,11 +5,15 @@ import { describe, expect, it } from 'vitest'
 import {
   addBlock,
   addSection,
+  convertBlock,
+  endTextBlock,
+  insertSectionAfter,
   moveBlock,
   moveSection,
   removeBlock,
   removeSection,
   renameSection,
+  sectionBelow,
   setSectionAssessment,
   updateBlock,
 } from '../model'
@@ -151,5 +155,77 @@ describe('identity', () => {
 
     expect(minted.has(removed as string)).toBe(false)
     expect(minted.size).toBe(50)
+  })
+})
+
+describe('turning one block into another', () => {
+  it('keeps the place and the identity, and carries nothing across', () => {
+    let content = addSection(emptyLessonContent(), 'One')
+    const section = content.sections[0].id
+    content = addBlock(content, section, 'text')
+    content = addBlock(content, section, 'quiz')
+
+    const target = content.sections[0].blocks[0]
+    content = updateBlock(content, section, { ...target, content: 'written' } as TextBlock)
+
+    const next = convertBlock(content, section, target.id, 'image')
+    const converted = next.sections[0].blocks[0]
+
+    expect(converted.id).toBe(target.id)
+    expect(converted.type).toBe('image')
+    expect(next.sections[0].blocks).toHaveLength(2)
+    expect(JSON.stringify(converted)).not.toContain('written')
+  })
+
+  it('leaves a document alone when the block it names is not there', () => {
+    const content = addSection(emptyLessonContent(), 'One')
+    const section = content.sections[0].id
+
+    expect(convertBlock(content, section, 'ghost' as never, 'image')).toEqual(content)
+  })
+})
+
+describe('ending a text block', () => {
+  it('keeps what was written and opens an empty line under it', () => {
+    let content = addSection(emptyLessonContent(), 'One')
+    const section = content.sections[0].id
+    content = addBlock(content, section, 'text')
+
+    const first = content.sections[0].blocks[0]
+    const next = endTextBlock(content, section, first.id, 'a paragraph')
+    const [kept, opened] = next.sections[0].blocks as TextBlock[]
+
+    expect(kept.content).toBe('a paragraph')
+    expect(opened.type).toBe('text')
+    expect(opened.content).toBe('')
+    expect(opened.id).not.toBe(kept.id)
+  })
+
+  it('does nothing to a block that holds a file rather than text', () => {
+    let content = addSection(emptyLessonContent(), 'One')
+    const section = content.sections[0].id
+    content = addBlock(content, section, 'image')
+
+    const block = content.sections[0].blocks[0]
+
+    expect(endTextBlock(content, section, block.id, 'text').sections[0].blocks).toHaveLength(1)
+  })
+})
+
+describe('opening a section between two others', () => {
+  it('puts it directly below the one it was opened from', () => {
+    let content = addSection(addSection(emptyLessonContent(), 'One'), 'Three')
+    const first = content.sections[0].id
+
+    content = insertSectionAfter(content, first)
+
+    expect(titlesOf(content)).toEqual(['One', '', 'Three'])
+    expect(sectionBelow(content, first)).toBe(content.sections[1].id)
+  })
+
+  it('puts it at the end when it was opened from nothing', () => {
+    const content = insertSectionAfter(addSection(emptyLessonContent(), 'One'), undefined)
+
+    expect(titlesOf(content)).toEqual(['One', ''])
   })
 })

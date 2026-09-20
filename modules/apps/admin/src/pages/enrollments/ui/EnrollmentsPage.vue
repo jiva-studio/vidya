@@ -15,7 +15,7 @@ import { useCan } from '@/shared/access'
 
 import EnrollmentsFilters from './EnrollmentsFilters.vue'
 import EnrollmentsTableRow from './EnrollmentsTableRow.vue'
-import { errorClasses, sectionClasses } from './styles'
+import { sectionClasses } from './styles'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -37,12 +37,6 @@ const columns = computed<TableColumn[]>(() => [
   { key: 'status', label: $t('enrollments-column-status') },
   { key: 'actions', label: $t('enrollments-column-actions'), align: 'end' },
 ])
-
-const errorText = computed(() =>
-  enrollments.error.value ? $t(enrollments.error.value) : undefined,
-)
-
-const failure = computed(() => moderation.error.value && $t(moderation.error.value))
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -110,12 +104,11 @@ function isBusy(row: TableRowData): boolean {
       :group-options="directory.groupOptions.value"
       @update:filters="onFilters"
     />
-    <p v-if="failure" :class="errorClasses" role="alert">{{ failure }}</p>
     <Table
       :columns="columns"
       :rows="enrollments.rows.value"
       :loading="enrollments.loading.value"
-      :error="errorText"
+      :error="enrollments.error.value ? $t('state-error') : undefined"
       :empty-title="$t('enrollments-empty-title')"
       :empty-description="$t('enrollments-empty-body')"
       :retry-label="$t('action-retry')"

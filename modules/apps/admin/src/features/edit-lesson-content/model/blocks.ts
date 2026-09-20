@@ -17,6 +17,7 @@ export const newBlockId = (): BlockId => asId<BlockId>(crypto.randomUUID())
 /** What each kind of block looks like before anyone has typed into it. */
 const blanks: Record<BlockType, (id: BlockId) => LessonBlock> = {
   text: (id) => ({ id, type: 'text', content: '' }),
+  image: (id) => ({ id, type: 'image', source: 'url', url: '' }),
   video: (id) => ({ id, type: 'video', source: 'url', url: '' }),
   audio: (id) => ({ id, type: 'audio', source: 'url', url: '' }),
   quiz: (id) => ({ id, type: 'quiz', question: '', answers: ['', ''], rightAnswer: 0 }),

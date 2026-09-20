@@ -10,7 +10,7 @@ import LessonVersionPage from './LessonVersionPage.vue'
  * One published version, read and never written.
  *
  * "No permission" is absent on purpose: the screen is behind `lessons:read`, and a
- * reader without it never arrives (AC-7). There is nothing to hide within it.
+ * reader without it never arrives. There is nothing to hide within it.
  */
 const VERSION = '/edu/lessons/l1/versions/v7'
 
@@ -23,7 +23,7 @@ const content = {
       id: 's1',
       title: 'Alphabet',
       assessment: 'none',
-      blocks: [{ id: 'b1', type: 'text', content: '# Devanagari\n\nЧитаем **слева направо**.' }],
+      blocks: [{ id: 'b1', type: 'text', content: '# Devanagari\n\nRead it **left to right**.' }],
     },
   ],
 }

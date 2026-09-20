@@ -19,7 +19,7 @@ import type { CourseFormValues } from '../types'
  *
  * The school is an argument, never a capture: the caller reads it from
  * `useCurrentSchool()` at the moment it asks, so a list can never be built for
- * the school that was current when the composable was created (AC-8).
+ * the school that was current when the composable was created.
  */
 export const getCourses = (http: HttpClient, query: GetCoursesQuery): Promise<GetCoursesResponse> =>
   http.get<GetCoursesResponse>(Routes().edu.courses.find(), { schoolId: query.schoolId })

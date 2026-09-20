@@ -110,7 +110,7 @@ describe('SchoolSettingsPage', () => {
     })
 
     expect(page.find('[role="alert"]').text()).not.toContain('Settings are unreadable')
-    expect(page.find('[role="alert"]').text()).toContain('Сервер не смог это выполнить')
+    expect(page.find('[role="alert"]').text()).toContain('Не получилось. Попробуйте ещё раз.')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
     await retry?.trigger('click')

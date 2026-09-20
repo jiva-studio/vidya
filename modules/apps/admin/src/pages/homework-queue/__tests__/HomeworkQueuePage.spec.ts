@@ -1,5 +1,3 @@
-import '../../../../../../libs/ui/vitest.setup'
-
 import type { PermissionKey } from '@vidya/domain'
 import { EmptyState } from '@vidya/ui'
 import { flushPromises } from '@vue/test-utils'

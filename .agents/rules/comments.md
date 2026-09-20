@@ -94,7 +94,13 @@ is not visible in the code:
 - a trade-off that was deliberately taken.
 
 What the code *does* is the job of the code and its names. If a comment is
-needed to explain what a function does, rename the function.
+needed to explain what a function does, rename the function: a name is read at
+every call, a docblock only where it is written.
+
+A function is named with a verb, because a name says what calling it does; a
+noun or a participle names the answer instead of the act. `keep`, `kindOf`,
+`stamped`, `take` are not names — `storeFile`, `detectKind`, `stampSchema`,
+`handleAndStop` are. The frontend rules carry the full form of this.
 
 ```ts
 // Bad
@@ -112,9 +118,47 @@ for (const user of users) { ... }
 
 ---
 
+---
+
+## 5. A type is commented all the way, or not at all
+
+A field that carries a docblock among five that do not reads as five that were
+forgotten. Either every field earns its line, or what is worth saying about the
+type goes into the type's own docblock.
+
+```ts
+// Bad
+export interface MediaRecord {
+  id: MediaId
+  kind: MediaKind
+  /** What a block stores: a path the server will serve, never a blob url. */
+  url: string
+  name: string
+}
+
+// Good
+/**
+ * A stored file, as the library lists it and a block refers to it.
+ *
+ * `url` is what a block stores: a path the server will serve, never a blob url.
+ */
+export interface MediaRecord {
+  id: MediaId
+  kind: MediaKind
+  url: string
+  name: string
+}
+```
+
+---
+
 ## Checklist before handing a diff over
 
 - [ ] No `(D-n)`, `(I-n)`, `(AC-n)`, `(T-*-n)` or similar tags anywhere, tests included.
 - [ ] No comment narrating a defect, a review round, or who asked for what.
 - [ ] Every docblock is proportional to what it documents.
 - [ ] Every remaining comment says *why*, not *what*.
+- [ ] Every function is named with a verb, and no docblock exists to make up
+      for a name.
+- [ ] No type carries a comment on some of its fields and not the rest.
+- [ ] Everything is in English: code, comments, test names, sample content.

@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 /**
- * AC-34, checked rather than remembered: every screen has its states in
+ * Checked rather than remembered: every screen has its states in
  * Storybook, so the admin can be read without a stand.
  */
 const pages = join(import.meta.dirname, '../../pages')

@@ -105,7 +105,7 @@ describe('UsersPage', () => {
     const { transport, page } = await mountPage({ [USERS]: refusal(500, 'People are unreadable') })
 
     expect(page.find('[role="alert"]').text()).not.toContain('People are unreadable')
-    expect(page.find('[role="alert"]').text()).toContain('Сервер не смог это выполнить')
+    expect(page.find('[role="alert"]').text()).toContain('Не получилось. Попробуйте ещё раз.')
 
     const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
     await retry?.trigger('click')
@@ -119,7 +119,7 @@ describe('UsersPage', () => {
       [USERS]: {
         items: Array.from({ length: 12 }, (_, i) => ({
           id: `user-${i}`,
-          name: i === 0 ? 'Ann Smith' : i === 1 ? 'Bob Jones' : `User ${i}`,
+          name: { 0: 'Ann Smith', 1: 'Bob Jones' }[i] ?? `User ${i}`,
         })),
       },
     })

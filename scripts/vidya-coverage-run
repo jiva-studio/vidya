@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Measures statement coverage, over every workspace or over one of them.
+#
+# Coverage is a map of what the suite has not looked at, not a score to raise:
+# a package at ninety per cent whose error paths are all in the other ten is
+# worse tested than one at seventy that reads them. Nothing here fails on a
+# threshold, because a number that must be met is a number that gets met by
+# testing the easy half.
+#
+#   vidya-coverage-run                 every workspace that has tests
+#   vidya-coverage-run @vidya/admin    one of them
+#
+# Reports land in each package's own `coverage/` — `lcov-report/index.html` for
+# reading, `lcov.info` for anything that consumes it. Both are gitignored.
+#
+# Vitest and Jest each measure their own way, so the runners are asked for
+# coverage in their own words rather than through one flag this script invents.
+
+MODULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../modules" && pwd)"
+cd "$MODULES_DIR"
+
+PKG="${1:-}"
+
+# Vitest takes `--coverage`; Jest is handed `--coverage` the same way, and the
+# workspace that needs different words says so in its own `coverage` script.
+run_package() {
+  local name="$1"
+  echo ""
+  echo "── $name ─────────────────────────────────────────────"
+  npm run test -w "$name" --if-present -- --coverage
+}
+
+if [[ -n "$PKG" ]]; then
+  run_package "$PKG"
+  exit 0
+fi
+
+# The workspaces in the order a reader meets them: what the browser runs, what
+# it is built from, and what answers it.
+for name in @vidya/admin @vidya/ui @vidya/api; do
+  run_package "$name"
+done

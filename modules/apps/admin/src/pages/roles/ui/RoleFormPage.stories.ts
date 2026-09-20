@@ -46,12 +46,12 @@ export const Loading: Story = { render: over({ [ROLE]: pending() }, { id: 'role-
 export const Empty: Story = { render: over({ 'POST /edu/roles': { id: 'role-2' } }) }
 
 export const Failed: Story = {
-  render: over({ [ROLE]: refusal(404, 'Такой роли нет') }, { id: 'role-1' }),
+  render: over({ [ROLE]: refusal(404, 'No such role') }, { id: 'role-1' }),
 }
 
 export const Denied: Story = {
   render: over(
-    { 'POST /edu/roles': refusal(403, 'Недостаточно прав, чтобы создать роль') },
+    { 'POST /edu/roles': refusal(403, 'Not enough rights to create a role') },
     {},
     [] as PermissionKey[],
   ),

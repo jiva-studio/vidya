@@ -30,6 +30,15 @@ export const userApi = (http: HttpClient) => ({
 
   get: (id: UserId) => http.get<GetUserResponse>(Routes().edu.user(id).get()),
 
+  /**
+   * The same read, for a screen that only wants the name if it may have it.
+   *
+   * `users:read` is a right of its own: a reviewer without it still has work to
+   * do, and the rows show identifiers instead of complaining once per row.
+   */
+  nameOf: (id: UserId) =>
+    http.get<GetUserResponse>(Routes().edu.user(id).get(), undefined, { quiet: true }),
+
   update: (id: UserId, body: UpdateUserRequest) =>
     http.patch<UpdateUserResponse>(Routes().edu.user(id).update(), body),
 
