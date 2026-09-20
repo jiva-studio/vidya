@@ -8,6 +8,7 @@ import { useContainer } from 'class-validator'
 import { AppModule } from './app.module'
 import { corsOptionsFor } from './shared/cors'
 import { bootstrapMigrations } from './shared/migrations'
+import { securityHeaders } from './shared/security-headers'
 import { setupSwagger } from './shared/swagger'
 
 async function bootstrap() {
@@ -18,8 +19,12 @@ async function bootstrap() {
   // with no reason code, and the device could not tell which row to blame.
   app.useBodyParser('json', { limit: SYNC_MAX_BATCH_BYTES })
 
-  // Before anything is served: a half-migrated schema is worse than a slow start.
+  // Before anything else answers: no response should ever go out without these.
   const configService = app.get(ConfigService)
+  const hstsEnabled = configService.get<boolean>('securityHeaders.hstsEnabled')
+  app.use(securityHeaders({ hstsEnabled }))
+
+  // Before anything is served: a half-migrated schema is worse than a slow start.
   await bootstrapMigrations(configService)
 
   // The student app is cross-origin by construction: a native build speaks from

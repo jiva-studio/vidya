@@ -10,6 +10,7 @@ import {
   MigrationsConfig,
   OtpConfig,
   RedisConfig,
+  SecurityHeadersConfig,
 } from '@vidya/api/configs'
 import { Entities } from '@vidya/entities'
 
@@ -30,6 +31,7 @@ import { SyncModule } from './sync/sync.module'
         AuthConfig,
         MailerConfig,
         MigrationsConfig,
+        SecurityHeadersConfig,
       ],
     }),
     TypeOrmModule.forRootAsync({
