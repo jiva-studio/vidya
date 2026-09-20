@@ -16,7 +16,7 @@ const Messages: Record<number, string> = {
  * The server's own reason travels with it where it gave one: `{ message }` from
  * a domain rule names the thing that is wrong, which no phrasing of ours can.
  */
-export const describe = (error: unknown): Failure => {
+export const describeFailure = (error: unknown): Failure => {
   if (error instanceof OfflineError) return { key: 'failure-offline' }
   if (!(error instanceof HttpError)) return { key: 'failure-unknown' }
 
@@ -51,7 +51,7 @@ export const announceFailures = (client: HttpClient, report: FailureSink): HttpC
     try {
       return await call()
     } catch (error) {
-      if (!isUnauthorized(error)) report(describe(error))
+      if (!isUnauthorized(error)) report(describeFailure(error))
       throw error
     }
   }

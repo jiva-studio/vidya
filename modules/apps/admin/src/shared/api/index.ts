@@ -1,5 +1,5 @@
 export { HttpError, isTooManyRequests, isUnauthorized, OfflineError } from './errors'
-export { announceFailures, describe, onFailure, reportFailure } from './failures'
+export { announceFailures, describeFailure, onFailure, reportFailure } from './failures'
 export { FetchHttpClient } from './fetchHttpClient'
 export { refreshOn401 } from './refreshOn401'
 export type * from './types'

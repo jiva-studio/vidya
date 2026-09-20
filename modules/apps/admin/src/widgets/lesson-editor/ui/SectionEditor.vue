@@ -134,7 +134,7 @@ function onEnd(id: BlockId, kept: string) {
           @update="onBlockUpdate"
           @insert="onBlockInsert(block.id, $event)"
           @insert-section="onSectionInsert"
-          @end="(kept) => onEnd(block.id, kept)"
+          @end="onEnd(block.id, $event)"
           @move="onBlockMove(block.id, $event)"
           @duplicate="onBlockDuplicate(block.id)"
           @remove="onBlockRemove(block.id)"

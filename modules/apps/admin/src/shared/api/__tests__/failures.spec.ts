@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { HttpError, OfflineError } from '../errors'
-import { announceFailures, describe as describeFailure } from '../failures'
+import { announceFailures, describeFailure } from '../failures'
 import type { Failure, HttpClient } from '../types'
 
 const failing = (error: unknown): HttpClient => ({
