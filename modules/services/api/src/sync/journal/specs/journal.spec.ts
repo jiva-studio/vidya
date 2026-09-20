@@ -6,8 +6,8 @@ import { runMigrations } from '@vidya/api/shared/migrations'
 import { COLLECTION_PROJECTIONS, SYNCED_ENTITY_NAMES, withSyncWriteContext } from '@vidya/api/sync'
 import { asId, BlockId, SectionId, UserId } from '@vidya/domain'
 import { Course, Enrollment } from '@vidya/entities'
+import { randomUUID } from 'crypto'
 import { DataSource } from 'typeorm'
-import { v4 as uuid } from 'uuid'
 
 import { createJournalContext, JournalContext, journalFor, journalRows } from './context'
 
@@ -127,7 +127,7 @@ describe('sync journal', () => {
           blockStates.create({
             enrollmentId: ctx.enrollment.id,
             lessonVersionId: ctx.draft.id,
-            blockId: asId<BlockId>(uuid()),
+            blockId: asId<BlockId>(randomUUID()),
             schoolId: ctx.school.id,
             state: { type: 'video', watched: 12, duration: 60 },
           }),
@@ -189,7 +189,7 @@ describe('sync journal', () => {
       await homework.create({
         enrollmentId: ctx.enrollment.id,
         lessonVersionId: ctx.draft.id,
-        sectionId: asId<SectionId>(uuid()),
+        sectionId: asId<SectionId>(randomUUID()),
         schoolId: ctx.school.id,
         text: 'my answer',
       })

@@ -1,9 +1,9 @@
 import { Entities } from '@vidya/entities'
+import { randomUUID } from 'crypto'
 import { readdirSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { DataType, newDb } from 'pg-mem'
 import { DataSource } from 'typeorm'
-import { v4 } from 'uuid'
 
 /**
  * The same `.sql` files the API applies at startup.
@@ -42,7 +42,7 @@ export const testingDataSource = async (): Promise<DataSource> => {
     schema.registerFunction({
       name: 'uuid_generate_v4',
       returns: DataType.uuid,
-      implementation: v4,
+      implementation: randomUUID,
       impure: true,
     })
   })

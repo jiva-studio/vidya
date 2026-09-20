@@ -1,7 +1,7 @@
 import { JwtService } from '@nestjs/jwt'
 import { OtpAttemptsStorageKey, OtpStorageKey, Routes } from '@vidya/protocol'
+import { randomUUID } from 'crypto'
 import * as request from 'supertest'
-import { v4 as uuid } from 'uuid'
 
 import { AuthContext, createAuthContext } from './context'
 
@@ -147,7 +147,7 @@ describe('the authentication perimeter', () => {
       const jwt = ctx.app.get(JwtService)
 
       const forged = await jwt.signAsync(
-        { jti: uuid(), sub: uuid(), typ: 'refresh' },
+        { jti: randomUUID(), sub: randomUUID(), typ: 'refresh' },
         { secret: 'a-key-this-deployment-never-configured-32chars', expiresIn: '90d' },
       )
 

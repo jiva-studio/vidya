@@ -2,8 +2,8 @@ import { INestApplication } from '@nestjs/common'
 import { createTestingApp } from '@vidya/api/edu/shared'
 import { appendJournalRow, Clock, ServerHlcService } from '@vidya/api/sync'
 import { asId, parseHlc, SchoolId } from '@vidya/domain'
+import { randomUUID } from 'crypto'
 import { DataSource } from 'typeorm'
-import { v4 as uuid } from 'uuid'
 
 import { createJournalContext, JournalContext } from './context'
 
@@ -52,7 +52,7 @@ describe('the server HLC across instances', () => {
 
   it('keeps both edits of one document when two instances stamp it at once', async () => {
     const clock = frozen(NOW)
-    const docId = uuid()
+    const docId = randomUUID()
 
     const stamps = [
       await new ServerHlcService(clock).next(ds.manager),

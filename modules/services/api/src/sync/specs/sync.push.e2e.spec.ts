@@ -5,9 +5,9 @@ import { CLOCK, isServerDeviceId } from '@vidya/api/sync'
 import * as domain from '@vidya/domain'
 import { BlockState, Homework } from '@vidya/entities'
 import * as protocol from '@vidya/protocol'
+import { randomUUID } from 'crypto'
 import * as request from 'supertest'
 import { DataSource } from 'typeorm'
-import { v4 as uuid } from 'uuid'
 
 import { BLOCK_ID, createSyncContext, SECTION_ID, SyncContext } from './context'
 
@@ -47,7 +47,7 @@ describe('POST /sync/push', () => {
   const answer = (overrides: Partial<protocol.PushChange> = {}): protocol.PushChange => ({
     outboxId: 1,
     collection: 'homework',
-    docId: uuid(),
+    docId: randomUUID(),
     op: 'upsert',
     hlc: hlc(NOW - 60_000),
     baseHlc: null,
@@ -64,7 +64,7 @@ describe('POST /sync/push', () => {
   const progress = (overrides: Partial<protocol.PushChange> = {}): protocol.PushChange => ({
     outboxId: 2,
     collection: 'block_states',
-    docId: uuid(),
+    docId: randomUUID(),
     op: 'upsert',
     hlc: hlc(NOW - 59_000, 1),
     baseHlc: null,
@@ -157,7 +157,7 @@ describe('POST /sync/push', () => {
     // time really does collide and must not raise.
     const again = answer({
       outboxId: 2,
-      docId: uuid(),
+      docId: randomUUID(),
       hlc: first.hlc,
       data: { ...first.data, text: 'Written on the train, sent twice.' },
     })
@@ -324,7 +324,7 @@ describe('POST /sync/push', () => {
   /* ------------------------------- ------------------------------- */
 
   it('two edits of one document land in the order they were sent', async () => {
-    const docId = uuid()
+    const docId = randomUUID()
     const changes = [
       answer({ outboxId: 1, docId, hlc: hlc(NOW - 60_000), data: bodyOf(ctx, 'First') }),
       answer({ outboxId: 2, docId, hlc: hlc(NOW - 50_000), data: bodyOf(ctx, 'Second') }),

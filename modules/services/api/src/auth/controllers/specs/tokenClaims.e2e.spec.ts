@@ -2,9 +2,9 @@ import { JwtService } from '@nestjs/jwt'
 import { JwtConfig } from '@vidya/api/configs'
 import { Role, User } from '@vidya/entities'
 import * as protocol from '@vidya/protocol'
+import { randomUUID } from 'crypto'
 import * as request from 'supertest'
 import { DataSource } from 'typeorm'
-import { v4 as uuid } from 'uuid'
 
 import { AuthContext, createAuthContext } from './context'
 
@@ -140,7 +140,7 @@ describe('the permissions a token carries', () => {
     const config = ctx.app.get<{ secret: string }>(JwtConfig.KEY)
 
     const legacy = await jwt.signAsync(
-      { jti: uuid(), sub: user.id, typ: 'access' },
+      { jti: randomUUID(), sub: user.id, typ: 'access' },
       { secret: config.secret, expiresIn: '1h' },
     )
 
