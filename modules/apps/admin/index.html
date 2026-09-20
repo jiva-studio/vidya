@@ -19,11 +19,11 @@
 
       `frame-ancestors` is deliberately absent. A `<meta>` tag cannot carry it —
       the directive is ignored there by specification — so it has to be a
-      response header from whatever serves this build, and nothing does yet
-      (`modules/services/gateway/` is an empty README). Whoever stands the
-      gateway up owes this document `X-Frame-Options: DENY` or
-      `Content-Security-Policy: frame-ancestors 'none'` as a response header,
-      the same decision the API already makes for its own Swagger page.
+      response header from whatever serves this build. The gateway
+      (`modules/services/gateway/`) sends it, as `X-Frame-Options: DENY` and
+      `frame-ancestors 'none'` — the same decision the API already makes for
+      its own Swagger page. A deployment serving this build by other means owes
+      it the same header.
     -->
     <meta
       http-equiv="Content-Security-Policy"
