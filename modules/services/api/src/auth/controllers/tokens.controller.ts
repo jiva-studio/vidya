@@ -60,7 +60,7 @@ export class TokensController {
     }
 
     // revoke the refresh token to prevent replay attacks
-    this.revokedTokensService.revoke(refreshToken)
+    await this.revokedTokensService.revoke(refreshToken)
 
     // get user
     const user = await this.usersService.findById(refreshToken.sub)
