@@ -1,7 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { normalizeLogin } from '@vidya/api/auth/utils'
 import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
-import { IsNotEmpty, IsString } from 'class-validator'
+import { Transform } from 'class-transformer'
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator'
 
 /* -------------------------------------------------------------------------- */
 /*                                Authentcation                               */
@@ -9,7 +11,13 @@ import { IsNotEmpty, IsString } from 'class-validator'
 
 export class OtpSignInRequest implements protocol.OtpSignInRequest {
   @ApiProperty({ example: 'example@example.com' })
-  @IsNotEmpty()
+  // Normalised the same way as GetOtpRequest.destination, so the Redis OTP
+  // key, the attempt counter and the user lookup all see the same string
+  // regardless of how the caller capitalised or padded their login.
+  @Transform(({ value }) => normalizeLogin(value))
+  // Every login is an email address today; add a phone validator here when
+  // sms sign-in ships.
+  @IsEmail()
   login: string
 
   @ApiProperty({ example: '123123' })

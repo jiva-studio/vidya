@@ -1,7 +1,13 @@
+import { User } from '@vidya/entities'
 import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
+import { DataSource } from 'typeorm'
 
 import { AuthContext, createAuthContext } from './context'
+
+/** Decodes the `sub` claim without verifying the signature; tests only need to tell users apart. */
+const subjectOf = (token: string): string =>
+  JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString()).sub
 
 describe('/auth', () => {
   let ctx: AuthContext
@@ -77,6 +83,15 @@ describe('/auth', () => {
     return request(server()).post(routes.otp.root()).send({ type: 'email' }).expect(400)
   })
 
+  it('refuses a destination that is not an email address, and sends nothing', async () => {
+    await request(server())
+      .post(routes.otp.root())
+      .send({ type: 'email', destination: 'not-an-address' })
+      .expect(400)
+
+    expect(ctx.mail.messages).toHaveLength(0)
+  })
+
   /* -------------------------------------------------------------------------- */
   /*                                  Signing in                                */
   /* -------------------------------------------------------------------------- */
@@ -96,6 +111,17 @@ describe('/auth', () => {
     // on the unique index.
     expect(second.accessToken).toEqual(expect.any(String))
     expect(second.accessToken).not.toBe(first.accessToken)
+  })
+
+  it('treats capitalisation and surrounding whitespace as the same login', async () => {
+    const first = await signIn('Bob@Example.com')
+    const second = await signIn('  bob@example.com  ')
+
+    expect(subjectOf(second.accessToken)).toBe(subjectOf(first.accessToken))
+
+    const ds = ctx.app.get(DataSource)
+    const matches = await ds.getRepository(User).count({ where: { email: 'bob@example.com' } })
+    expect(matches).toBe(1)
   })
 
   it('refuses a wrong code', async () => {
@@ -125,6 +151,27 @@ describe('/auth', () => {
     return request(server())
       .post(routes.auth.signIn('otp'))
       .send({ login: LOGIN, otp: '123456' })
+      .expect(401)
+  })
+
+  it('shares the OTP attempt budget across login capitalisation and whitespace variants', async () => {
+    const code = await requestCode('Bob@Example.com')
+
+    const wrongGuess = (login: string) =>
+      request(server()).post(routes.auth.signIn('otp')).send({ login, otp: '000000' }).expect(401)
+
+    // Five wrong guesses, each under a different spelling of the same login,
+    // exhaust the shared five-guess budget rather than getting five each.
+    await wrongGuess('bob@example.com')
+    await wrongGuess('BOB@EXAMPLE.COM')
+    await wrongGuess('  bob@example.com')
+    await wrongGuess('Bob@Example.com  ')
+    await wrongGuess('bob@example.com')
+
+    // The budget is spent, so even the real code is refused now.
+    return request(server())
+      .post(routes.auth.signIn('otp'))
+      .send({ login: 'bob@example.com', otp: code })
       .expect(401)
   })
 
