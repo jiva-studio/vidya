@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { EnrollmentStatus } from '@vidya/domain'
 import { Avatar, Badge, TableCell, TableRow } from '@vidya/ui'
 import type { BadgeTone } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
@@ -16,14 +17,18 @@ const props = defineProps<GroupMemberRowProps>()
 
 const { $t } = useFluent()
 
-const tones: Record<string, BadgeTone> = {
+// Keyed by the domain's own list, so a state added there stops the build here
+// rather than reaching the roster as an unnamed grey badge.
+const tones: Record<EnrollmentStatus, BadgeTone> = {
   pending: 'warning',
   accepted: 'success',
   declined: 'danger',
+  revoked: 'accent',
+  withdrawn: 'info',
 }
 
 const name = computed(() => nameText())
-const tone = computed<BadgeTone>(() => tones[props.row.status] ?? 'neutral')
+const tone = computed<BadgeTone>(() => tones[props.row.status])
 const status = computed(() => `group-members-status-${props.row.status}`)
 const since = computed(() => formatDate(props.row.enrolledAt))
 

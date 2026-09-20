@@ -41,6 +41,10 @@ export const SYNC_DIRECTION: Readonly<Record<SyncCollection, SyncDirection>> = O
  * for its own reason — `enrollments.status` is `pending` when the student asks
  * and `accepted` when the school answers. The server's claim wins on such a
  * field, because the answer supersedes the request.
+ *
+ * `enrollments.archivedByStudentAt` is shared for the same reason: the student
+ * puts it on to hide a finished request and takes it off again, and the server
+ * clears it when a new decision brings the request back onto the screen.
  */
 export interface SyncFieldOwnership<TField extends string> {
   readonly client: readonly TField[]
@@ -58,8 +62,14 @@ export const FIELD_OWNER: Readonly<SyncFieldOwners> = Object.freeze({
     server: ['status', 'grade', 'reviewedById', 'reviewedAt', 'answeredSupersededVersion'] as const,
   }),
   enrollments: Object.freeze({
-    client: ['status'] as const,
-    server: ['status', 'decidedById', 'decidedAt', 'groupId'] as const,
+    client: [
+      'status',
+      'preferredGroupId',
+      'preferredTimes',
+      'comment',
+      'archivedByStudentAt',
+    ] as const,
+    server: ['status', 'decidedById', 'decidedAt', 'groupId', 'archivedByStudentAt'] as const,
   }),
 })
 

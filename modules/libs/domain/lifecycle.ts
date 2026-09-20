@@ -12,13 +12,37 @@ export type LessonVersionStatus = (typeof LessonVersionStatuses)[number]
 /**
  * Enrolment is moderated: a request is reviewed before it grants access.
  *
- * `revoked` is the school taking a place back — losing the school role revokes
- * every place and every open request it carried. `declined` is the answer to a
- * request the school refused on its merits, and it stays that way: the two read
- * differently to a student.
+ * Three of the four outcomes end a request, and a student reads them as three
+ * different things. `declined` is the school refusing the request on its
+ * merits. `revoked` is the school taking a place back that it had already
+ * given — losing the school role revokes every place and every open request it
+ * carried. `withdrawn` is the student handing the place back themselves. Only
+ * the last one is the student's own doing, so collapsing any two of them would
+ * tell someone the school turned them away when nobody did.
  */
-export const EnrollmentStatuses = ['pending', 'accepted', 'declined', 'revoked'] as const
+export const EnrollmentStatuses = [
+  'pending',
+  'accepted',
+  'declined',
+  'revoked',
+  'withdrawn',
+] as const
 export type EnrollmentStatus = (typeof EnrollmentStatuses)[number]
+
+/** The states that still hold a place on the course — asked for, or granted. */
+export const LiveEnrollmentStatuses = ['pending', 'accepted'] as const
+
+export const isLive = (status: EnrollmentStatus): boolean =>
+  (LiveEnrollmentStatuses as readonly string[]).includes(status)
+
+/** A group is created before it runs, runs, and then stops taking anyone new. */
+export const GroupStatuses = ['pending', 'active', 'inactive'] as const
+export type GroupStatus = (typeof GroupStatuses)[number]
+
+/** The one state in which a group still takes students. */
+export const RECRUITING_GROUP_STATUS: GroupStatus = 'pending'
+
+export const isRecruiting = (status: GroupStatus): boolean => status === RECRUITING_GROUP_STATUS
 
 /**
  * Homework moves forward through review. The client may only ever request

@@ -42,6 +42,7 @@ enrollment-status-pending = На рассмотрении
 enrollment-status-accepted = Принято
 enrollment-status-declined = Отклонено
 enrollment-status-revoked = Отозвано
+enrollment-status-withdrawn = Вы ушли с курса
 enrollment-no-group-yet = Ожидает группу
 
 # Урок

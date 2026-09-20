@@ -41,7 +41,8 @@ enrollment-revoked-summary = The school has ended your enrolment on this course.
 enrollment-status-pending = Pending
 enrollment-status-accepted = Accepted
 enrollment-status-declined = Declined
-enrollment-status-revoked = Withdrawn
+enrollment-status-revoked = Place withdrawn by the school
+enrollment-status-withdrawn = You left the course
 enrollment-no-group-yet = Waiting for a group
 
 # Lesson

@@ -124,7 +124,16 @@ export const HomeworkSyncFields = [
 
 export type HomeworkSyncField = (typeof HomeworkSyncFields)[number]
 
-export const EnrollmentSyncFields = ['status', 'decidedById', 'decidedAt', 'groupId'] as const
+export const EnrollmentSyncFields = [
+  'status',
+  'decidedById',
+  'decidedAt',
+  'groupId',
+  'preferredGroupId',
+  'preferredTimes',
+  'comment',
+  'archivedByStudentAt',
+] as const
 
 export type EnrollmentSyncField = (typeof EnrollmentSyncFields)[number]
 

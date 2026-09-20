@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { EnrollmentStatus } from '@vidya/domain'
+import { EnrollmentStatus, LiveEnrollmentStatuses } from '@vidya/domain'
 import * as domain from '@vidya/domain'
 import { Course, Enrollment } from '@vidya/entities'
 import { EntityManager, In, Repository } from 'typeorm'
@@ -35,16 +35,17 @@ export type ModerationDecision = {
  *
  * `declined` is empty and stays empty. A refusal on the merits is an answer,
  * not a pause; reversing it is a new request, not a second answer to the old.
+ *
+ * `withdrawn` is empty too: the student gave the place back, and the school
+ * does not decide its way out of that.
  */
 const MODERATION: Readonly<Record<EnrollmentStatus, readonly ModerationStatus[]>> = Object.freeze({
   pending: ['accepted', 'declined'],
   accepted: [],
   declined: [],
   revoked: ['accepted'],
+  withdrawn: [],
 })
-
-/** What a revocation takes back; a refusal was never a place to begin with. */
-const REVOCABLE: EnrollmentStatus[] = ['pending', 'accepted']
 
 /** Postgres reports a broken UNIQUE constraint as SQLSTATE 23505. */
 const isUniqueViolation = (error: unknown): boolean =>
@@ -170,7 +171,7 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
     const places = await manager.findBy(Enrollment, {
       studentId,
       schoolId,
-      status: In(REVOCABLE),
+      status: In([...LiveEnrollmentStatuses]),
     })
 
     for (const place of places) {

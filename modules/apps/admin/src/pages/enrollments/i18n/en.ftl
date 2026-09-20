@@ -45,4 +45,5 @@ enrollment-status-pending = Waiting
 enrollment-status-accepted = Accepted
 enrollment-status-declined = Declined
 enrollment-status-revoked = Revoked
+enrollment-status-withdrawn = Left the course
 enrollment-status-in-queue = In the queue

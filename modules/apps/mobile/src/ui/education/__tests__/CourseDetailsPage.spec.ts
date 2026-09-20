@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { parseIsoDateTime } from '@vidya/domain'
+import type { EnrollmentStatus } from '@vidya/domain'
+import { EnrollmentStatuses, parseIsoDateTime } from '@vidya/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/app', async () => (await import('./localScreens')).appDouble)
@@ -18,6 +19,23 @@ import {
   seed,
   settle,
 } from './localScreens'
+
+/**
+ * Whether a place in that state is one the screen offers to open.
+ *
+ * Keyed by the domain's own list rather than spelled out beside the cases, so
+ * a state added there has to be answered here instead of quietly sitting out
+ * the run.
+ */
+const OPENS_THE_PLACE: Record<EnrollmentStatus, boolean> = {
+  pending: true,
+  accepted: true,
+  declined: true,
+  revoked: true,
+  withdrawn: false,
+}
+
+const held = EnrollmentStatuses.filter((status) => OPENS_THE_PLACE[status])
 
 const openCourse = () => mountPage(CourseDetailsPage, { id: COURSE_ID })
 
@@ -52,18 +70,15 @@ describe('a course knows whether the student already has a place', () => {
     expect(wrapper.text()).toContain('Enroll')
   })
 
-  it.each(['pending', 'accepted', 'declined', 'revoked'] as const)(
-    'offers to open the place instead when one is %s',
-    async (status) => {
-      seed.enrollments.push(anEnrollment({ status }))
+  it.each(held)('offers to open the place instead when one is %s', async (status) => {
+    seed.enrollments.push(anEnrollment({ status }))
 
-      const wrapper = await openCourse()
-      await settle()
+    const wrapper = await openCourse()
+    await settle()
 
-      expect(wrapper.text()).toContain('Open my course')
-      expect(wrapper.text()).not.toContain('Enroll')
-    },
-  )
+    expect(wrapper.text()).toContain('Open my course')
+    expect(wrapper.text()).not.toContain('Enroll')
+  })
 
   it('opens the place it found rather than the enrolment form', async () => {
     seed.enrollments.push(anEnrollment({ status: 'accepted' }))

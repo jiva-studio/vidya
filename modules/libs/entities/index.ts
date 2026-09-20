@@ -2,7 +2,7 @@ import { AuditLog } from './auditLog'
 import { BlockState } from './blockState'
 import { Course, LearningType } from './course'
 import { Enrollment } from './enrollment'
-import { Group, GroupStatus } from './group'
+import { Group } from './group'
 import { Homework } from './homework'
 import { Lesson } from './lesson'
 import { LessonVersion } from './lessonVersion'
@@ -15,6 +15,7 @@ import { UserRole } from './userRole'
 export type { AuditAction } from './auditLog'
 export type { SchoolConfig } from './school'
 export type { SyncOp, SyncScopeKind } from './syncJournal'
+export type { GroupStatus } from '@vidya/domain'
 
 export {
   AuditLog,
@@ -22,7 +23,6 @@ export {
   Course,
   Enrollment,
   Group,
-  GroupStatus,
   Homework,
   LearningType,
   Lesson,

@@ -5,6 +5,7 @@ import type {
   IOutboxRepository,
   ISyncApplyRepository,
 } from '@vidya/domain'
+import { EnrollmentStatuses } from '@vidya/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/app', async () => (await import('./localScreens')).appDouble)
@@ -176,6 +177,26 @@ describe('asking to join a course', () => {
  * one is caught by refusing to enter the handler a second time — and the button
  * cannot do it, because the second tap lands before the render that disables it.
  */
+/**
+ * Whether a place already on the device stops a second request for the course.
+ *
+ * Keyed by the domain's own list rather than spelled out beside the cases, so
+ * a state added there has to be answered here instead of quietly sitting out
+ * the run. `pending` is left out of the cases below because the two taps that
+ * create it are their own tests.
+ */
+const STOPS_A_SECOND_REQUEST: Record<EnrollmentStatus, boolean> = {
+  pending: true,
+  accepted: true,
+  declined: true,
+  revoked: true,
+  withdrawn: false,
+}
+
+const alreadyHeld = EnrollmentStatuses.filter(
+  (status) => status !== 'pending' && STOPS_A_SECOND_REQUEST[status],
+)
+
 describe('asking twice for the same course', () => {
   it('writes one request when the button is tapped twice before it can disable itself', async () => {
     await pressEnrol(2)
@@ -189,7 +210,7 @@ describe('asking twice for the same course', () => {
     expect(await journaled()).toHaveLength(1)
   })
 
-  it.each(['accepted', 'declined', 'revoked'] as const)(
+  it.each(alreadyHeld)(
     'writes nothing when the course already holds a %s place',
     async (status) => {
       await placeOnTheDevice(status)
@@ -200,7 +221,7 @@ describe('asking twice for the same course', () => {
     },
   )
 
-  it.each(['accepted', 'declined', 'revoked'] as const)(
+  it.each(alreadyHeld)(
     'keeps the one %s place rather than laying a pending one over it',
     async (status) => {
       await placeOnTheDevice(status)
@@ -211,16 +232,13 @@ describe('asking twice for the same course', () => {
     },
   )
 
-  it.each(['accepted', 'declined', 'revoked'] as const)(
-    'opens the %s place it found instead of asking again',
-    async (status) => {
-      const held = await placeOnTheDevice(status)
+  it.each(alreadyHeld)('opens the %s place it found instead of asking again', async (status) => {
+    const held = await placeOnTheDevice(status)
 
-      await pressEnrol()
+    await pressEnrol()
 
-      expect(navigations.at(-1)).toEqual({ name: 'my-enrollment', params: { id: held } })
-    },
-  )
+    expect(navigations.at(-1)).toEqual({ name: 'my-enrollment', params: { id: held } })
+  })
 
   it('sends a student with no place to the confirmation instead', async () => {
     await pressEnrol()
