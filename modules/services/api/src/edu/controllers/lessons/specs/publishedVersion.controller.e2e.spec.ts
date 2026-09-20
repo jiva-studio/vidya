@@ -34,7 +34,7 @@ describe('/edu/lessons/:lessonId/versions/published', () => {
     ctx = await createContext(app)
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app.close()
   })
 

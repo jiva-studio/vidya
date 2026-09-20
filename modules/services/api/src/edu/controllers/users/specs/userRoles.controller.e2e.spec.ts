@@ -14,7 +14,7 @@ describe('/edu/users/:userId/roles', () => {
     ctx = await createContext(app)
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app.close()
   })
 

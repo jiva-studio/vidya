@@ -33,7 +33,7 @@ describe('/edu/roles permission-grant escalation', () => {
     school = await app.get(SchoolsService).create({ name: faker.company.name() })
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app.close()
   })
 
