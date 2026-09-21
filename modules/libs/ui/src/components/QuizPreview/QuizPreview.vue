@@ -2,7 +2,14 @@
 import { computed } from 'vue'
 
 import MarkdownText from '../MarkdownText'
-import { answersClasses, optionClasses, recordedClasses, rightAnswerClasses } from './styles'
+import {
+  answersClasses,
+  explanationClasses,
+  optionClasses,
+  recordedClasses,
+  rightAnswerClasses,
+  verdictClasses,
+} from './styles'
 import type { QuizPreviewEmits, QuizPreviewProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -29,6 +36,18 @@ const answered = computed(() => {
 // One answer and no second one. The key travels to nobody who has not answered,
 // and a quiz that took a second answer would hand it over in two goes.
 const locked = computed(() => answered.value !== undefined || props.progress?.editable === false)
+
+// The server's word on the answer, and the only place the explanation is ever
+// drawn: a student who has not answered is shown neither.
+const verdict = computed(() =>
+  answered.value === undefined ? undefined : props.progress?.verdicts[props.block.id],
+)
+
+const verdictLabel = computed(() =>
+  verdict.value?.correct === true
+    ? props.progress?.labels.answerCorrect
+    : props.progress?.labels.answerIncorrect,
+)
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -71,8 +90,19 @@ function isRightAnswer(index: number): boolean {
       </li>
     </ol>
 
-    <p v-if="answered && props.progress" :class="recordedClasses">
+    <p v-if="answered && props.progress && !verdict" :class="recordedClasses">
       {{ props.progress.labels.answerRecorded }}
     </p>
+
+    <template v-if="verdict">
+      <p :class="verdictClasses(verdict.correct)" :data-correct="String(verdict.correct)">
+        {{ verdictLabel }}
+      </p>
+      <MarkdownText
+        v-if="verdict.explanation"
+        :class="explanationClasses"
+        :markdown="verdict.explanation"
+      />
+    </template>
   </div>
 </template>

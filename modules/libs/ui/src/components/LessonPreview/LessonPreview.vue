@@ -29,6 +29,10 @@ function onChange(blockId: BlockId, state: LessonBlockState) {
       :labels="props.labels"
       :progress="props.progress"
       @change="onChange"
-    />
+    >
+      <template #footer="footer">
+        <slot name="section" v-bind="footer" />
+      </template>
+    </SectionPreview>
   </div>
 </template>

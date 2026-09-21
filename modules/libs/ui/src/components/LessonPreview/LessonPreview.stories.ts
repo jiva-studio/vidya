@@ -46,13 +46,18 @@ export const AsTheStudentReadsIt = {
   args: { content, labels: { ...labels, rightAnswer: undefined } },
 }
 
-const progressLabels = { markRead: 'Mark as read', answerRecorded: 'Your answer is in.' }
+const progressLabels = {
+  markRead: 'Mark as read',
+  answerRecorded: 'Your answer is in.',
+  answerCorrect: 'Right',
+  answerIncorrect: 'Wrong',
+}
 
 export const AsTheStudentAnswersIt = {
   args: {
     content,
     labels: { ...labels, rightAnswer: undefined },
-    progress: { states: {}, editable: true, labels: progressLabels },
+    progress: { states: {}, verdicts: {}, editable: true, labels: progressLabels },
   },
 }
 
@@ -62,6 +67,20 @@ export const AsTheStudentLeftIt = {
     labels: { ...labels, rightAnswer: undefined },
     progress: {
       states: { b1: { type: 'text', read: true }, b3: { type: 'quiz', answer: 1 } },
+      verdicts: {},
+      editable: true,
+      labels: progressLabels,
+    },
+  },
+}
+
+export const AsTheSchoolMarkedIt = {
+  args: {
+    content,
+    labels: { ...labels, rightAnswer: undefined },
+    progress: {
+      states: { b1: { type: 'text', read: true }, b3: { type: 'quiz', answer: 1 } },
+      verdicts: { b3: { correct: false, explanation: 'The alphabet opens with a vowel.' } },
       editable: true,
       labels: progressLabels,
     },

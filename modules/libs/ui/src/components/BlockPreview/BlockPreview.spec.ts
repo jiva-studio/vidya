@@ -18,7 +18,13 @@ const labels: LessonPreviewLabels = {
 const reading = (over: Partial<LessonProgress> = {}): LessonProgress => ({
   states: {},
   editable: true,
-  labels: { markRead: 'Mark as read', answerRecorded: 'Your answer is in.' },
+  verdicts: {},
+  labels: {
+    markRead: 'Mark as read',
+    answerRecorded: 'Your answer is in.',
+    answerCorrect: 'Right',
+    answerIncorrect: 'Wrong',
+  },
   ...over,
 })
 

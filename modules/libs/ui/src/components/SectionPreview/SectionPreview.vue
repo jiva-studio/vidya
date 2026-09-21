@@ -33,5 +33,10 @@ function onChange(blockId: BlockId, state: LessonBlockState) {
       :progress="props.progress"
       @change="onChange"
     />
+
+    <!-- What a section carries besides its blocks — homework, a grade — is the
+         screen's to draw: the library knows the lesson, not the student's
+         standing on it. -->
+    <slot name="footer" :section="props.section" />
   </article>
 </template>

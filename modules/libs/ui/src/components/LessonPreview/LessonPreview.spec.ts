@@ -85,7 +85,13 @@ const quiz = (id: string) => ({
 const studying = (over: Partial<LessonProgress> = {}): LessonProgress => ({
   states: {},
   editable: true,
-  labels: { markRead: 'Mark as read', answerRecorded: 'Your answer is in.' },
+  verdicts: {},
+  labels: {
+    markRead: 'Mark as read',
+    answerRecorded: 'Your answer is in.',
+    answerCorrect: 'Right',
+    answerIncorrect: 'Wrong',
+  },
   ...over,
 })
 
@@ -113,5 +119,33 @@ describe('LessonPreview as the student reads it', () => {
     const content = lesson([section('s1', 'The alphabet', [quiz('b1')])])
 
     expect(draw(content).findAll('input')).toEqual([])
+  })
+})
+
+describe('LessonPreview as a screen hangs its own things on it', () => {
+  it('gives each section a place of its own, named after that section', () => {
+    const content = lesson([
+      section('s1', 'The alphabet', [text('b1', 'First')]),
+      section('s2', 'The numerals', [text('b2', 'Second')]),
+    ])
+
+    const page = mount(LessonPreview, {
+      props: { content, labels },
+      slots: { section: '<p class="under">under {{ params.section.title }}</p>' },
+    })
+
+    expect(page.findAll('.under').map((note) => note.text())).toEqual([
+      'under The alphabet',
+      'under The numerals',
+    ])
+  })
+
+  it('draws the section in full without one, which is how the console reads it', () => {
+    const content = lesson([section('s1', 'The alphabet', [text('b1', 'First')])])
+
+    const page = mount(LessonPreview, { props: { content, labels } })
+
+    expect(page.text()).toContain('The alphabet')
+    expect(page.find('.under').exists()).toBe(false)
   })
 })

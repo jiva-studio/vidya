@@ -66,8 +66,14 @@ describe('QuizPreview', () => {
 
 const answering = (over: Partial<LessonProgress> = {}): LessonProgress => ({
   states: {},
+  verdicts: {},
   editable: true,
-  labels: { markRead: 'Mark as read', answerRecorded: 'Your answer is in.' },
+  labels: {
+    markRead: 'Mark as read',
+    answerRecorded: 'Your answer is in.',
+    answerCorrect: 'Right',
+    answerIncorrect: 'Wrong',
+  },
   ...over,
 })
 
@@ -119,5 +125,40 @@ describe('QuizPreview as the student answers it', () => {
     const page = ask(answering({ editable: false }))
 
     expect(page.find('input[type="radio"]').attributes('disabled')).toBeDefined()
+  })
+})
+
+const given = (answer: number) => ({ states: { [block().id]: { type: 'quiz' as const, answer } } })
+
+describe('QuizPreview once the school has marked the answer', () => {
+  it('says the answer was right', () => {
+    const page = ask(answering({ ...given(0), verdicts: { [block().id]: { correct: true } } }))
+
+    expect(page.get('[data-correct="true"]').text()).toBe('Right')
+  })
+
+  it('says the answer was wrong rather than leaving the student to guess', () => {
+    const page = ask(answering({ ...given(1), verdicts: { [block().id]: { correct: false } } }))
+
+    expect(page.get('[data-correct="false"]').text()).toBe('Wrong')
+  })
+
+  it('shows the explanation, which travels only with the verdict', () => {
+    const verdict = { correct: false, explanation: 'The alphabet opens with a vowel.' }
+    const page = ask(answering({ ...given(1), verdicts: { [block().id]: verdict } }))
+
+    expect(page.text()).toContain('The alphabet opens with a vowel.')
+  })
+
+  it('drops the promise of an answer to come once the answer is here', () => {
+    const page = ask(answering({ ...given(0), verdicts: { [block().id]: { correct: true } } }))
+
+    expect(page.text()).not.toContain('Your answer is in.')
+  })
+
+  it('keeps a verdict off a block this student never answered', () => {
+    const page = ask(answering({ verdicts: { [block().id]: { correct: true } } }))
+
+    expect(page.find('[data-correct]').exists()).toBe(false)
   })
 })
