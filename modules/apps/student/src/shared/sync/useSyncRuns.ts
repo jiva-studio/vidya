@@ -1,8 +1,7 @@
 import { createGlobalState } from '@vueuse/core'
 import { ref } from 'vue'
 
-/** A sync run, as the tab that owns the engine offers it. */
-export type SyncRun = () => void
+import type { SyncRun } from './types'
 
 /**
  * How a screen asks for data it has just made itself eligible for.

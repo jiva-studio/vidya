@@ -8,9 +8,10 @@ import { useConnection } from '@/shared/connection'
 import { useBlockStateWriter, useHomeworkWriter } from '@/shared/data'
 import { type INetworkStatus, LocalStorageDeviceId } from '@/shared/platform'
 import { useSiteStatus } from '@/shared/status'
-import { useOutboxView, useSyncRuns } from '@/shared/sync'
+import { useDeviceWrites, useOutboxView, useSyncRuns } from '@/shared/sync'
 
 import { renewSession } from './connection'
+import { announceEnrollmentWrites } from './enrollmentWrites'
 
 /**
  * Where the sync engine is wired into the running site, and when it runs.
@@ -115,6 +116,7 @@ const startSiteSync = async (
   // appended to the outbox in the same transaction, which is what sends it.
   useBlockStateWriter().adoptWriter(engine.blockStates)
   useHomeworkWriter().adoptWriter(engine.homework)
+  useDeviceWrites().adoptEnrollments(announceEnrollmentWrites(engine.enrollments))
 
   // The same journal, read rather than written: it is where a screen learns
   // that the work beside it is still waiting, or was refused and why.
@@ -135,6 +137,7 @@ const startSiteSync = async (
       useSyncRuns().adoptRunner(undefined)
       useBlockStateWriter().adoptWriter(undefined)
       useHomeworkWriter().adoptWriter(undefined)
+      useDeviceWrites().adoptEnrollments(undefined)
       useOutboxView().forgetJournal()
     },
   }

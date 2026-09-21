@@ -3,6 +3,7 @@ import type {
   LocalBlockState,
   LocalCourse,
   LocalEnrollment,
+  LocalGroup,
   LocalHomework,
   LocalLesson,
   LocalLessonVersion,
@@ -13,7 +14,10 @@ import {
   type BlockId,
   type CourseId,
   type EnrollmentId,
+  type GroupId,
   type HomeworkId,
+  isLive,
+  isRecruiting,
   type LessonId,
   type LessonVersionId,
   type SchoolId,
@@ -28,6 +32,7 @@ import { createMemoryHistory, createRouter, type RouteRecordRaw } from 'vue-rout
 import { educationKey, type LocalEducation, schoolRepositoryKey } from '@/shared/data'
 import { fluent } from '@/shared/i18n'
 import { useSiteStatus } from '@/shared/status'
+import { type EnrollmentWrites, useDeviceWrites } from '@/shared/sync'
 
 /**
  * Where the site stands, set outright.
@@ -57,6 +62,7 @@ export interface DeviceRows {
   enrollments?: LocalEnrollment[]
   homework?: LocalHomework[]
   blockStates?: LocalBlockState[]
+  groups?: LocalGroup[]
 }
 
 export const aSchool = (overrides: Partial<LocalSchool> = {}): LocalSchool => ({
@@ -102,6 +108,17 @@ export const anEnrollment = (overrides: Partial<LocalEnrollment> = {}): LocalEnr
   preferredTimes: null,
   comment: null,
   archivedByStudentAt: null,
+  ...overrides,
+})
+
+export const aGroup = (overrides: Partial<LocalGroup> = {}): LocalGroup => ({
+  id: asId<GroupId>('group-1'),
+  schoolId: asId<SchoolId>('school-1'),
+  courseId: asId<CourseId>('course-1'),
+  name: 'Tuesday evenings',
+  description: null,
+  startsAt: null,
+  status: 'pending',
   ...overrides,
 })
 
@@ -168,6 +185,7 @@ export const fakeDevice = (rows: DeviceRows = {}) => {
   const enrollments = rows.enrollments ?? []
   const homework = rows.homework ?? []
   const blockStates = rows.blockStates ?? []
+  const groups = rows.groups ?? []
 
   const schoolRepository: ISchoolRepository = {
     list: vi.fn(async () => schools),
@@ -197,8 +215,21 @@ export const fakeDevice = (rows: DeviceRows = {}) => {
           ) ?? null,
       ),
     },
+    groups: {
+      listRecruitingByCourse: vi.fn(async (courseId) =>
+        groups.filter((group) => group.courseId === courseId && isRecruiting(group.status)),
+      ),
+      getById: vi.fn(async (id) => groups.find((group) => group.id === id) ?? null),
+    },
     enrollments: {
-      list: vi.fn(async () => enrollments),
+      // The device keeps a live place on the list whether or not it was put
+      // away: only a finished request leaves it.
+      list: vi.fn(async () =>
+        enrollments.filter(
+          (place) => place.archivedByStudentAt === null || isLive(place.status),
+        ),
+      ),
+      getById: vi.fn(async (id) => enrollments.find((place) => place.id === id) ?? null),
       getLiveByCourse: vi.fn(
         async (courseId) =>
           enrollments.find((place) => place.courseId === courseId && LIVE.includes(place.status)) ??
@@ -220,14 +251,64 @@ export const fakeDevice = (rows: DeviceRows = {}) => {
     },
   }
 
+  const writes = fakeWrites(enrollments)
+
   return {
     schools: schoolRepository,
     education,
+    enrollments,
+    writes,
     provide: {
       [schoolRepositoryKey as symbol]: schoolRepository,
       [educationKey as symbol]: education,
     },
   }
+}
+
+const WRITTEN_AT = toIsoDateTime(new Date('2026-02-01T00:00:00.000Z'))
+
+/**
+ * The writing tab's half of the device.
+ *
+ * The rows land in the same list the readers answer from, because a screen
+ * that asks for a place and then re-reads the course must find the place it
+ * has just made — as it would on a machine that wrote it to SQLite.
+ */
+const fakeWrites = (enrollments: LocalEnrollment[]): EnrollmentWrites => {
+  const amend = async (id: string, changes: Partial<LocalEnrollment>) => {
+    const at = enrollments.findIndex((place) => place.id === id)
+    if (at < 0) throw new Error(`no local enrollment with id ${id}`)
+
+    const amended = { ...enrollments[at]!, ...changes }
+    enrollments.splice(at, 1, amended)
+
+    return amended
+  }
+
+  return {
+    request: vi.fn(async (input) => {
+      const written = anEnrollment({
+        ...input,
+        status: 'pending',
+        createdAt: WRITTEN_AT,
+        groupId: null,
+        preferredGroupId: input.preferredGroupId ?? null,
+        preferredTimes: input.preferredTimes ?? null,
+        comment: input.comment ?? null,
+      })
+      enrollments.push(written)
+
+      return written
+    }),
+    withdraw: vi.fn((id) => amend(id, { status: 'withdrawn' })),
+    archive: vi.fn((id) => amend(id, { archivedByStudentAt: WRITTEN_AT })),
+    unarchive: vi.fn((id) => amend(id, { archivedByStudentAt: null })),
+  }
+}
+
+/** Makes this the tab that writes, so the screens are offered the writes above. */
+export const letTheTabWrite = (writes: EnrollmentWrites | undefined): void => {
+  useDeviceWrites().adoptEnrollments(writes)
 }
 
 /**
