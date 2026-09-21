@@ -1,19 +1,12 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { EnrollmentStatus, isLive, LiveEnrollmentStatuses } from '@vidya/domain'
 import * as domain from '@vidya/domain'
-import { Course, Enrollment } from '@vidya/entities'
+import { Enrollment } from '@vidya/entities'
 import { EntityManager, In, Repository } from 'typeorm'
 
 import { Scope, ScopedEntitiesService } from './entities.service'
 import { GroupsService } from './groups.service'
-import { LessonsService } from './lessons.service'
-import { LessonVersionsService } from './lessonVersions.service'
 import { scopedBySchool } from './scoped-by-school'
 
 export type ModerationStatus = Extract<EnrollmentStatus, 'accepted' | 'declined'>
@@ -62,13 +55,6 @@ const CLEARED_BY_A_NEW_DECISION = Object.freeze({
   archivedBySchoolById: null,
 })
 
-/** What a student may ask for beside the course itself. */
-export type EnrollmentWishes = {
-  preferredGroupId?: domain.GroupId
-  preferredTimes?: domain.PreferredTimes
-  comment?: string
-}
-
 /** Postgres reports a broken UNIQUE constraint as SQLSTATE 23505. */
 const isUniqueViolation = (error: unknown): boolean =>
   (error as { code?: string })?.code === '23505'
@@ -85,8 +71,6 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
   constructor(
     @InjectRepository(Enrollment) repository: Repository<Enrollment>,
     private readonly groups: GroupsService,
-    private readonly lessons: LessonsService,
-    private readonly versions: LessonVersionsService,
   ) {
     super(repository, scopedBySchool<Enrollment>('enrollments:read'))
   }
@@ -101,95 +85,9 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
     return enrollment
   }
 
-  /**
-   * The student's accepted place on the course a lesson version belongs to.
-   *
-   * Resolved from the caller and the content rather than taken from the
-   * request: the chain is version -> lesson -> course -> enrolment, and every
-   * link of it is what proves the student may be writing here at all. Both the
-   * homework and the progress endpoints need it, which is why it is not a
-   * private helper on either of them.
-   *
-   * One row comes back because a student holds at most one live place on a
-   * course, and an accepted place is live. Earlier attempts on the same course
-   * are finished rows and cannot be accepted.
-   */
-  async forLessonVersion(
-    lessonVersionId: domain.LessonVersionId,
-    studentId: domain.UserId,
-  ): Promise<Enrollment> {
-    const version = await this.versions.findOneBy({ id: lessonVersionId })
-
-    if (!version) {
-      throw new NotFoundException(`Lesson version ${lessonVersionId} not found`)
-    }
-
-    const lesson = await this.lessons.findOneBy({ id: version.lessonId })
-
-    if (!lesson) {
-      throw new NotFoundException(`Lesson with id ${version.lessonId} not found`)
-    }
-
-    const enrollment = await this.findOneBy({
-      studentId,
-      courseId: lesson.courseId,
-      status: 'accepted',
-    })
-
-    // Access comes from being enrolled; a pending or declined request is not a place.
-    if (!enrollment) {
-      throw new ForbiddenException('Not enrolled on the course this lesson belongs to')
-    }
-
-    return enrollment
-  }
-
   /** Whether this enrolment is the caller's own. */
   isOwnedBy(enrollment: Enrollment | null, userId: domain.UserId): boolean {
     return enrollment?.studentId === userId
-  }
-
-  /**
-   * A student asks to join. The school decides later.
-   *
-   * Only a live place stands in the way: a course taken and left is history,
-   * and asking again writes a second row beside it rather than reopening the
-   * first. The check and the insert are two statements, so two requests
-   * arriving together can both pass the check. The partial index over live rows
-   * is what actually decides it; the check is only here to give the ordinary
-   * case a readable error rather than a constraint name. Both paths end in the
-   * same 409.
-   */
-  async request(
-    course: Course,
-    studentId: domain.UserId,
-    wishes: EnrollmentWishes = {},
-  ): Promise<Enrollment> {
-    const live = await this.findLivePlace(course.id, studentId)
-
-    if (live) {
-      throw new ConflictException('Already enrolled on this course')
-    }
-
-    if (wishes.preferredGroupId) {
-      await this.assertGroupBelongsToCourse(wishes.preferredGroupId, course.id)
-    }
-
-    try {
-      return await this.create({
-        courseId: course.id,
-        studentId,
-        schoolId: course.schoolId,
-        status: 'pending',
-        preferredGroupId: wishes.preferredGroupId ?? null,
-        preferredTimes: wishes.preferredTimes ?? null,
-        comment: wishes.comment ?? null,
-      })
-    } catch (error) {
-      if (!isUniqueViolation(error)) throw error
-
-      throw new ConflictException('Already enrolled on this course')
-    }
   }
 
   /** How many live places a student holds in one school — what leaving it costs. */

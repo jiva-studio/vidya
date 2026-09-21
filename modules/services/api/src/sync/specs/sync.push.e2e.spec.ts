@@ -282,10 +282,12 @@ describe('POST /sync/push', () => {
 
   it('accepted work is frozen', async () => {
     const homework = app.get(HomeworkService)
-    const submitted = await homework.submit({
-      enrollment: ctx.enrollment,
-      version: ctx.mine.published,
+    const submitted = await homework.create({
+      enrollmentId: ctx.enrollment.id,
+      lessonVersionId: ctx.mine.published.id,
       sectionId: SECTION_ID,
+      schoolId: ctx.enrollment.schoolId,
+      status: 'pending',
       text: 'The answer as handed in',
     })
 

@@ -42,7 +42,6 @@ import {
   JoinController,
   LessonsController,
   LessonVersionsController,
-  ProgressController,
   RolesController,
   UserRolesController,
   UsersController,
@@ -91,7 +90,6 @@ import {
     LessonVersionsController,
     EnrollmentsController,
     HomeworkController,
-    ProgressController,
   ],
   providers: [
     // Services

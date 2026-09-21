@@ -2,7 +2,6 @@ import { ConflictException, INestApplication } from '@nestjs/common'
 import { EnrollmentsService } from '@vidya/api/edu/services'
 import { createTestingApp } from '@vidya/api/edu/shared'
 import { SyncScopesService } from '@vidya/api/sync'
-import { Course, Enrollment } from '@vidya/entities'
 import { DataSource } from 'typeorm'
 
 import { createEnrollmentWorld, EnrollmentWorld, placeFor, reload } from './enrollmentWorld'
@@ -229,38 +228,6 @@ describe('a place from decision to decision', () => {
 
       expect(row.status).toBe('revoked')
       expect(row.archivedByStudentAt).toBeNull()
-    })
-  })
-
-  /* -------------------------------------------------------------------------- */
-  /*                          asking again after it ended                       */
-  /* -------------------------------------------------------------------------- */
-
-  describe('asking for a place', () => {
-    const course = async (): Promise<Course> =>
-      app.get(DataSource).getRepository(Course).findOneBy({ id: world.courseId })
-
-    it('lets a student ask again once the previous place has ended', async () => {
-      const left = await place('withdrawn')
-
-      const asked = await enrollments.request(await course(), world.studentId)
-
-      expect(asked.id).not.toBe(left.id)
-      expect(asked.status).toBe('pending')
-      expect(
-        await app.get(DataSource).getRepository(Enrollment).countBy({
-          courseId: world.courseId,
-          studentId: world.studentId,
-        }),
-      ).toBe(2)
-    })
-
-    it('refuses a second live request on the same course', async () => {
-      await place('pending')
-
-      await expect(enrollments.request(await course(), world.studentId)).rejects.toBeInstanceOf(
-        ConflictException,
-      )
     })
   })
 })

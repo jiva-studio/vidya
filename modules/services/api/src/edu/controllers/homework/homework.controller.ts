@@ -13,12 +13,7 @@ import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
-import {
-  EnrollmentsService,
-  HomeworkService,
-  LessonsService,
-  LessonVersionsService,
-} from '@vidya/api/edu/services'
+import { EnrollmentsService, HomeworkService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
 import * as domain from '@vidya/domain'
 import * as entities from '@vidya/entities'
@@ -30,7 +25,6 @@ const Crud = CrudDecorators({
   entityName: 'Homework',
   getOneResponseDto: dto.GetHomeworkResponse,
   getManyResponseDto: dto.GetHomeworkListResponse,
-  createOneResponseDto: dto.SubmitHomeworkResponse,
   updateOneResponseDto: dto.ReviewHomeworkResponse,
   deleteOneResponseDto: dto.GetHomeworkResponse,
 })
@@ -43,61 +37,21 @@ export class HomeworkController {
   constructor(
     private readonly homework: HomeworkService,
     private readonly enrollments: EnrollmentsService,
-    private readonly versions: LessonVersionsService,
-    private readonly lessons: LessonsService,
   ) {}
-
-  /* -------------------------------------------------------------------------- */
-  /*                             POST /edu/homework                             */
-  /* -------------------------------------------------------------------------- */
-
-  /**
-   * A student submits an answer. This is the only transition a client can ask
-   * for; every state after it belongs to the reviewer.
-   */
-  @Crud.CreateOne(Routes().edu.homework.submit())
-  async submit(
-    @Body() request: dto.SubmitHomeworkRequest,
-    @Authentication() auth: UserAuthentication,
-  ): Promise<dto.SubmitHomeworkResponse> {
-    const version = await this.versions.findOneBy({ id: request.lessonVersionId })
-
-    if (!version) {
-      throw new NotFoundException(`Lesson version ${request.lessonVersionId} not found`)
-    }
-
-    const enrollment = await this.enrollments.forLessonVersion(request.lessonVersionId, auth.userId)
-
-    const saved = await this.homework.submit({
-      enrollment,
-      version,
-      sectionId: request.sectionId,
-      text: request.text,
-    })
-
-    return toHomeworkDetails(saved)
-  }
 
   /* -------------------------------------------------------------------------- */
   /*                              GET /edu/homework                             */
   /* -------------------------------------------------------------------------- */
 
+  /** Staff only: a student reads their own answers off a sync pull, not off this list. */
   @Crud.GetMany(Routes().edu.homework.find())
   async getMany(
     @Query() query: dto.GetHomeworkQuery,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetHomeworkListResponse> {
-    if (auth.permissions.has(['homework:read'])) {
-      const found = await this.homework
-        .scopedBy({ permissions: auth.permissions })
-        .findAll({ where: { enrollmentId: query.enrollmentId, status: query.status } })
-
-      return { items: toHomeworkSummaries(found) }
-    }
-
-    // Without the permission a student sees only their own work, found via enrollments.
-    const mine = await this.enrollments.findAll({ where: { studentId: auth.userId } })
-    const found = await this.homework.forEnrollments(mine, query.status)
+    const found = await this.homework
+      .scopedBy({ permissions: auth.permissions })
+      .findAll({ where: { enrollmentId: query.enrollmentId, status: query.status } })
 
     return { items: toHomeworkSummaries(found) }
   }

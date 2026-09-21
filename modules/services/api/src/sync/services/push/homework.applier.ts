@@ -17,10 +17,10 @@ import {
 /**
  * The one status a student can never write over.
  *
- * Not the whole freeze that `HomeworkService` applies: an answer still on its
- * way through review may be corrected from a device, because a batch is allowed
- * to carry two edits of one document and the second must land. Accepted
- * is final, and the only status whose refusal the contract has a word for.
+ * An answer still on its way through review may be corrected from a device,
+ * because a batch is allowed to carry two edits of one document and the second
+ * must land. Accepted is final, and the only status whose refusal the contract
+ * has a word for.
  */
 const FINAL = 'accepted'
 
@@ -38,10 +38,9 @@ const find = async (manager: EntityManager, change: PushChange): Promise<Homewor
 /**
  * A student's answer, arriving from a device.
  *
- * The rules are `HomeworkService`'s, applied here rather than borrowed, because
- * a push runs inside its own transaction and that service writes through its own
- * repository. They are the same two rules: the client may only ever ask for
- * `pending`, and an answer is frozen once it is handed in.
+ * This is the only door an answer comes through, so the rules are applied here
+ * rather than borrowed: the client may only ever ask for `pending`, and an
+ * answer freezes once it has been accepted.
  *
  * The server fields — `status`, `grade`, `reviewedById`, `reviewedAt` — are
  * dropped from whatever the client sent without a word. Refusing a row

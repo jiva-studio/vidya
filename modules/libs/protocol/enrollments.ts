@@ -42,14 +42,6 @@ export type EnrollmentSummary = Pick<
 >
 
 /* -------------------------------------------------------------------------- */
-/*                                   Enrol                                    */
-/* -------------------------------------------------------------------------- */
-
-/** A student asks to join a course. The school decides. */
-export type CreateEnrollmentRequest = { courseId: string }
-export type CreateEnrollmentResponse = crud.CreateItemResponse<EnrollmentDetails['id']>
-
-/* -------------------------------------------------------------------------- */
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -59,9 +51,6 @@ export type GetEnrollmentsQuery = {
   studentId?: domain.UserId
   status?: domain.EnrollmentStatus
 }
-
-/** The caller is the student, so naming one would only let them ask about someone else. */
-export type GetMyEnrollmentsQuery = Omit<GetEnrollmentsQuery, 'studentId' | 'groupId'>
 
 export type GetEnrollmentsResponse = crud.GetItemsListResponse<EnrollmentSummary>
 export type GetEnrollmentResponse = crud.GetItemResponse<EnrollmentDetails>

@@ -63,7 +63,6 @@ export const Routes = (baseUrl: string = '') => ({
         all: (lessonId: string) => `${baseUrl}/edu/lessons/${lessonId}/versions`,
         get: (lessonId: string, versionId: string) =>
           `${baseUrl}/edu/lessons/${lessonId}/versions/${versionId}`,
-        published: (lessonId: string) => `${baseUrl}/edu/lessons/${lessonId}/versions/published`,
         create: (lessonId: string) => `${baseUrl}/edu/lessons/${lessonId}/versions`,
         update: (lessonId: string, versionId: string) =>
           `${baseUrl}/edu/lessons/${lessonId}/versions/${versionId}`,
@@ -80,9 +79,7 @@ export const Routes = (baseUrl: string = '') => ({
     },
     enrollments: {
       find: () => `${baseUrl}/edu/enrollments`,
-      my: () => `${baseUrl}/edu/enrollments/my`,
       get: (id: string) => `${baseUrl}/edu/enrollments/${id}`,
-      create: () => `${baseUrl}/edu/enrollments`,
       moderate: (id: string) => `${baseUrl}/edu/enrollments/${id}/moderation`,
       archive: (id: string) => `${baseUrl}/edu/enrollments/${id}/archive`,
       group: (id: string) => `${baseUrl}/edu/enrollments/${id}/group`,
@@ -91,12 +88,7 @@ export const Routes = (baseUrl: string = '') => ({
     homework: {
       find: () => `${baseUrl}/edu/homework`,
       get: (id: string) => `${baseUrl}/edu/homework/${id}`,
-      submit: () => `${baseUrl}/edu/homework`,
       review: (id: string) => `${baseUrl}/edu/homework/${id}/review`,
-    },
-    progress: {
-      find: () => `${baseUrl}/edu/progress`,
-      save: () => `${baseUrl}/edu/progress`,
     },
     schools: {
       configs: {
