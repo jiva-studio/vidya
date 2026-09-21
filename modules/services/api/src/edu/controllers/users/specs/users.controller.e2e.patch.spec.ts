@@ -1,8 +1,6 @@
 import { INestApplication } from '@nestjs/common'
-import { toUserDetails } from '@vidya/api/edu/mappers/org.mapper'
-import { createTestingApp, onTheWire } from '@vidya/api/edu/shared'
+import { createTestingApp } from '@vidya/api/edu/shared'
 import { Routes } from '@vidya/protocol'
-import { instanceToPlain } from 'class-transformer'
 import * as request from 'supertest'
 
 import { Context, createContext } from './context'
