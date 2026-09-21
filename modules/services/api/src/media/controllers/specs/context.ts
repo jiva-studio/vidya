@@ -5,6 +5,7 @@ import { faker } from '@faker-js/faker'
 import { INestApplication } from '@nestjs/common'
 import { Context, createContext } from '@vidya/api/edu/controllers/schools/specs/context'
 import { RolesService, UsersService } from '@vidya/api/edu/services'
+import { InMemoryStorage, StorageCall } from '@vidya/api/media/infra'
 import * as domain from '@vidya/domain'
 import { Role, User } from '@vidya/entities'
 import * as protocol from '@vidya/protocol'
@@ -63,14 +64,37 @@ const TECHNICAL_SPECIALIST: domain.PermissionKey[] = [
   'schools:read',
 ]
 
+/** One sealed value: AES-256-GCM output and the nonce it was sealed with. */
+export type SealedValue = {
+  ciphertext: string
+  nonce: string
+}
+
+/**
+ * The envelope a profile row carries.
+ *
+ * One document rather than a column per sealed value, because the data key and
+ * the secrets under it are written and read together or not at all. The school
+ * and profile ids are the additional data, so the document does not open in a
+ * row it was not sealed for.
+ */
+export type StorageSecrets = {
+  keyVersion: number
+  dek: SealedValue
+  secret: SealedValue
+  tokenSecret?: SealedValue
+}
+
 export type StorageProfileRow = {
   id: string
   schoolId: string
+  provider: string
+  endpoint: string | null
+  r2AccountId: string | null
   prefix: string
   bucket: string
   accessKeyId: string
-  secretCiphertext: Buffer | null
-  secretNonce: Buffer | null
+  secrets: StorageSecrets
   verifiedAt: Date | null
   verifyError: string | null
   retiredAt: Date | null
@@ -89,8 +113,19 @@ export type StorageContext = Context & {
   profileRows(schoolId: string): Promise<StorageProfileRow[]>
   currentProfileIdOf(schoolId: string): Promise<string | null>
 
-  /** Moves one row's secret ciphertext onto another row, nonce included. */
-  moveSecretCiphertext(fromProfileId: string, toProfileId: string): Promise<void>
+  /** Moves one row's whole sealed envelope onto another row. */
+  moveSecrets(fromProfileId: string, toProfileId: string): Promise<void>
+
+  sealedSecretsOf(profileId: string): Promise<StorageSecrets>
+
+  /** Which profile a stored file is read through, which is the one that wrote it. */
+  profileIdOfMedia(mediaId: string): Promise<string | undefined>
+
+  /** Every call the API has made to storage since the app booted, in order. */
+  storageCalls(): StorageCall[]
+
+  /** What is still sitting under the fixture bucket's school prefix. */
+  objectsLeftUnder(prefix: string): string[]
 }
 
 export const createStorageContext = async (app: INestApplication): Promise<StorageContext> => {
@@ -98,6 +133,7 @@ export const createStorageContext = async (app: INestApplication): Promise<Stora
   const rolesService = app.get(RolesService)
   const usersService = app.get(UsersService)
   const ds = app.get(DataSource)
+  const storage = app.get(InMemoryStorage)
 
   const twoTechnicianRole = await rolesService.create({
     name: 'Two :: Technical specialist',
@@ -139,12 +175,32 @@ export const createStorageContext = async (app: INestApplication): Promise<Stora
       return rows[0]?.currentStorageProfileId ?? null
     },
 
-    async moveSecretCiphertext(fromProfileId, toProfileId) {
+    storageCalls() {
+      return storage.calls
+    },
+
+    objectsLeftUnder(prefix) {
+      return storage
+        .keysUnder(storageProfileFixture.request.bucket, prefix)
+        .map((stored) => stored.key)
+    },
+
+    async profileIdOfMedia(mediaId) {
+      const rows = await ds.query('SELECT "profileId" FROM "media" WHERE "id" = $1', [mediaId])
+      return rows[0]?.profileId
+    },
+
+    async sealedSecretsOf(profileId) {
+      const rows = await ds.query('SELECT "secrets" FROM "storage_profiles" WHERE "id" = $1', [
+        profileId,
+      ])
+      return rows[0].secrets
+    },
+
+    async moveSecrets(fromProfileId, toProfileId) {
       await ds.query(
-        'UPDATE "storage_profiles" SET "secretCiphertext" = ' +
-          '(SELECT "secretCiphertext" FROM "storage_profiles" WHERE "id" = $1), ' +
-          '"secretNonce" = (SELECT "secretNonce" FROM "storage_profiles" WHERE "id" = $1) ' +
-          'WHERE "id" = $2',
+        'UPDATE "storage_profiles" SET "secrets" = ' +
+          '(SELECT "secrets" FROM "storage_profiles" WHERE "id" = $1) WHERE "id" = $2',
         [fromProfileId, toProfileId],
       )
     },

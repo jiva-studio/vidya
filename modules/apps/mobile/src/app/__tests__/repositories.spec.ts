@@ -1,8 +1,7 @@
+import type { LocalEnrollment, LocalGroup } from '@vidya/client'
 import type { CourseId, EnrollmentId, GroupId, SchoolId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-
-import type { LocalEnrollment, LocalGroup } from '@/ports'
 
 import type { StartedSync } from '../sync'
 

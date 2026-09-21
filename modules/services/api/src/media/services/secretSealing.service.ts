@@ -4,47 +4,40 @@ import { Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { MediaConfig } from '@vidya/api/configs'
 import { SchoolId, StorageProfileId } from '@vidya/domain'
+import { SealedText, StorageSecrets } from '@vidya/entities'
 
 import { StorageFailedError } from '../storageFailure'
 
 const ALGORITHM = 'aes-256-gcm'
 const NONCE_BYTES = 12
 const TAG_BYTES = 16
-
-export type SealedValue = { ciphertext: Buffer; nonce: Buffer }
-
-export type SealedProfile = {
-  keyVersion: number
-  dek: SealedValue
-  secret: SealedValue
-  tokenSecret: SealedValue | null
-}
+const DEK_BYTES = 32
 
 /** What a ciphertext is bound to, and therefore what it stops opening outside of. */
 export type SealingScope = { schoolId: SchoolId; profileId: StorageProfileId }
 
-export type SealedRow = {
-  keyVersion: number
-  dekCiphertext: Buffer | null
-  dekNonce: Buffer | null
-  secretCiphertext: Buffer | null
-  secretNonce: Buffer | null
-}
+/** The credentials a school hands over; the token secret only when it has a CDN. */
+export type StoragePlainSecrets = { secret: string; tokenSecret?: string }
 
-const seal = (key: Buffer, plaintext: Buffer, aad: Buffer): SealedValue => {
+const seal = (key: Buffer, plaintext: Buffer, aad: Buffer): SealedText => {
   const nonce = randomBytes(NONCE_BYTES)
   const cipher = createCipheriv(ALGORITHM, key, nonce)
   cipher.setAAD(aad)
 
   const body = Buffer.concat([cipher.update(plaintext), cipher.final()])
-  return { ciphertext: Buffer.concat([body, cipher.getAuthTag()]), nonce }
+
+  return {
+    ciphertext: Buffer.concat([body, cipher.getAuthTag()]).toString('base64'),
+    nonce: nonce.toString('base64'),
+  }
 }
 
-const open = (key: Buffer, sealed: SealedValue, aad: Buffer): Buffer => {
-  const body = sealed.ciphertext.subarray(0, sealed.ciphertext.length - TAG_BYTES)
-  const tag = sealed.ciphertext.subarray(sealed.ciphertext.length - TAG_BYTES)
+const open = (key: Buffer, sealed: SealedText, aad: Buffer): Buffer => {
+  const whole = Buffer.from(sealed.ciphertext, 'base64')
+  const body = whole.subarray(0, whole.length - TAG_BYTES)
+  const tag = whole.subarray(whole.length - TAG_BYTES)
 
-  const decipher = createDecipheriv(ALGORITHM, key, sealed.nonce)
+  const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(sealed.nonce, 'base64'))
   decipher.setAAD(aad)
   decipher.setAuthTag(tag)
 
@@ -69,12 +62,9 @@ const open = (key: Buffer, sealed: SealedValue, aad: Buffer): Buffer => {
 export class SecretSealingService {
   constructor(@Inject(MediaConfig.KEY) private readonly config: ConfigType<typeof MediaConfig>) {}
 
-  sealProfile(
-    secrets: { secret: string; tokenSecret?: string },
-    scope: SealingScope,
-  ): SealedProfile {
+  sealProfile(secrets: StoragePlainSecrets, scope: SealingScope): StorageSecrets {
     const master = this.masterKey()
-    const dek = randomBytes(32)
+    const dek = randomBytes(DEK_BYTES)
     const aad = additionalData(scope)
 
     return {
@@ -87,12 +77,13 @@ export class SecretSealingService {
     }
   }
 
-  openSecret(row: SealedRow, scope: SealingScope): string {
+  openSecret(secrets: StorageSecrets, scope: SealingScope): string {
     const aad = additionalData(scope)
 
     try {
-      const dek = open(this.masterKey(), asSealed(row.dekCiphertext, row.dekNonce), aad)
-      return open(dek, asSealed(row.secretCiphertext, row.secretNonce), aad).toString('utf8')
+      const dek = open(this.masterKey(), required(secrets?.dek), aad)
+
+      return open(dek, required(secrets.secret), aad).toString('utf8')
     } catch {
       // Why it will not open is not something the school can act on, and the
       // detail would be about the ciphertext of their credentials.
@@ -116,8 +107,8 @@ export class SecretSealingService {
 const additionalData = (scope: SealingScope): Buffer =>
   Buffer.from(`storage-profile:${scope.schoolId}:${scope.profileId}`, 'utf8')
 
-const asSealed = (ciphertext: Buffer | null, nonce: Buffer | null): SealedValue => {
-  if (!ciphertext || !nonce) throw new Error('The row carries no sealed value.')
+const required = (sealed: SealedText | null | undefined): SealedText => {
+  if (!sealed?.ciphertext || !sealed.nonce) throw new Error('The row carries no sealed value.')
 
-  return { ciphertext, nonce }
+  return sealed
 }

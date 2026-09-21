@@ -1,25 +1,31 @@
-import {
-  SchoolId,
-  StorageDelivery,
-  StorageProfileId,
-  StorageProfileKind,
-  VideoProvider,
-} from '@vidya/domain'
-import { Column, Entity, PrimaryGeneratedColumn, ValueTransformer } from 'typeorm'
+import { SchoolId, StorageDelivery, StorageProfileId, StorageProvider } from '@vidya/domain'
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+
+/** One AES-256-GCM value: base64 ciphertext and the nonce it was sealed under. */
+export type SealedText = {
+  ciphertext: string
+  nonce: string
+}
 
 /**
- * Sealed bytes as they sit in a `bytea` column: base64, not raw.
+ * The credentials of one profile, sealed as a single document.
  *
- * The encoding costs a third more space and buys the one thing that matters
- * for a ciphertext — the bytes come back exactly as they went in. A raw buffer
- * parameter is text to some of the drivers this schema is read through,
- * including the in-memory one the suites run on, and text means UTF-8, which
- * silently replaces every byte above 0x7F. A ciphertext that has been through
- * that no longer opens, and nothing says so until someone tries.
+ * Two layers, rotated on different schedules: `dek` is this row's data key
+ * wrapped under the installation master key named by `keyVersion`, and the
+ * storage secret and the CDN token secret are sealed under that data key. The
+ * school and the profile ids are the additional data of every value here, so a
+ * document carried into another row does not open.
+ *
+ * Base64 rather than bytes because the column is `json`, and because a raw
+ * buffer parameter is text to some of the drivers this schema is read through —
+ * text means UTF-8, which silently replaces every byte above 0x7F, and a
+ * ciphertext that has been through that no longer opens.
  */
-const sealedBytes: ValueTransformer = {
-  to: (value: Buffer | null) => (value ? Buffer.from(value.toString('base64'), 'ascii') : null),
-  from: (value: Buffer | null) => (value ? Buffer.from(value.toString('ascii'), 'base64') : null),
+export type StorageSecrets = {
+  keyVersion: number
+  dek: SealedText
+  secret: SealedText
+  tokenSecret: SealedText | null
 }
 
 /**
@@ -30,34 +36,23 @@ const sealedBytes: ValueTransformer = {
  * already uploaded name the profile that wrote them, so a rotation leaves them
  * readable instead of orphaning everything the school has published.
  *
- * The secret never rests in the clear. `dekCiphertext` holds this row's data
- * key sealed under the installation master key named by `keyVersion`, and
- * `secretCiphertext` holds the secret sealed under that data key with the
- * school and the profile as additional data — which is what makes a ciphertext
- * copied into another row unreadable rather than merely misplaced.
- * `accessKeyId` is deliberately in the clear: it names the credential without
- * being one, and a refusal has to be explainable without the secret.
- *
- * `usedBytes` counts this profile rather than the school: the bytes are in the
- * bucket the profile names, so a school that moves starts counting again while
- * the retired row keeps the count of what it still holds.
+ * Neither what the school may store nor what it already stores is here. The
+ * ceiling is policy and lives in `school_storage_quotas`; the occupied bytes
+ * are the sum of the school's ready files, which cannot drift the way a counter
+ * on an immutable row does. `accessKeyId` is deliberately in the clear: it
+ * names the credential without being one, and a refusal has to be explainable
+ * without the secret.
  */
 @Entity({ name: 'storage_profiles' })
 export class StorageProfile {
   @PrimaryGeneratedColumn('uuid')
   id: StorageProfileId
 
-  // Null names the storage of the installation, which is configured from the
-  // environment and has no row here; the column exists so one query shape
-  // serves both.
-  @Column({ type: 'uuid', nullable: true })
-  schoolId: SchoolId | null
-
-  @Column({ type: 'character varying', nullable: false, default: 's3' })
-  kind: StorageProfileKind
+  @Column({ type: 'uuid', nullable: false })
+  schoolId: SchoolId
 
   @Column({ type: 'character varying', nullable: false })
-  endpoint: string
+  provider: StorageProvider
 
   @Column({ type: 'character varying', nullable: false, default: '' })
   region: string
@@ -71,41 +66,23 @@ export class StorageProfile {
   @Column({ type: 'character varying', nullable: false })
   accessKeyId: string
 
-  @Column({ type: 'bytea', nullable: true, transformer: sealedBytes })
-  secretCiphertext: Buffer | null
+  // Only 's3-compatible' fills this in; for the named providers the address is
+  // derived from the provider, the region and the account.
+  @Column({ type: 'character varying', nullable: true })
+  endpoint: string | null
 
-  @Column({ type: 'bytea', nullable: true, transformer: sealedBytes })
-  secretNonce: Buffer | null
+  // R2 addresses by account and has no regions, so it cannot borrow `region`.
+  @Column({ type: 'character varying', nullable: true })
+  r2AccountId: string | null
 
-  @Column({ type: 'integer', nullable: false, default: 1 })
-  keyVersion: number
-
-  @Column({ type: 'bytea', nullable: true, transformer: sealedBytes })
-  dekCiphertext: Buffer | null
-
-  @Column({ type: 'bytea', nullable: true, transformer: sealedBytes })
-  dekNonce: Buffer | null
+  @Column({ type: 'json', nullable: false })
+  secrets: StorageSecrets
 
   @Column({ type: 'character varying', nullable: false, default: 'presigned' })
   delivery: StorageDelivery
 
   @Column({ type: 'character varying', nullable: true })
   publicBaseUrl: string | null
-
-  @Column({ type: 'bytea', nullable: true, transformer: sealedBytes })
-  tokenSecretCiphertext: Buffer | null
-
-  @Column({ type: 'bytea', nullable: true, transformer: sealedBytes })
-  tokenSecretNonce: Buffer | null
-
-  @Column({ type: 'json', nullable: false, default: { kind: 'none' } })
-  video: VideoProvider
-
-  @Column({ type: 'bigint', nullable: true })
-  quotaBytes: string | null
-
-  @Column({ type: 'bigint', nullable: false, default: 0 })
-  usedBytes: string
 
   @Column({ type: 'timestamptz', nullable: true })
   verifiedAt: Date | null

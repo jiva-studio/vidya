@@ -44,7 +44,7 @@ import { clientForSignIn } from '@/app'
 import { config as environment } from '@/config'
 import { AsyncButton } from '@/design'
 import { useAuthToast } from '@/ui/auth/composables/useAuthToast'
-import { auth } from '@/usecases'
+import { auth } from '@vidya/client'
 
 /* --------------------------------- State ---------------------------------- */
 

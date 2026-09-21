@@ -57,19 +57,38 @@ describe('the endpoints a school is not allowed to point us at', () => {
     })
   }
 
-  // A request that was attempted and failed comes back as `storage-unreachable`
-  // (502). Arriving as `storage-endpoint-rejected` instead is what says the
-  // address was refused before anything was sent to it.
-  it('sends nothing to a refused endpoint and leaves no profile behind', async () => {
+  // The accepted address at the end is what makes the empty journal mean
+  // something: an empty one proves nothing if the journal cannot fill at all.
+  it('sends nothing at all to a refused endpoint', async () => {
     for (const [endpoint] of REFUSED_ENDPOINTS) {
       const response = await put(endpoint)
 
       expect(response.status).toBe(422)
-      expect(response.body.message).not.toContain(MediaRefusals.storageUnreachable)
     }
+
+    expect(ctx.storageCalls()).toEqual([])
+
+    await put('https://s3.eu-central-1.amazonaws.com')
+
+    expect(ctx.storageCalls()).not.toEqual([])
+  })
+
+  it('leaves no profile behind after refusing every one of them', async () => {
+    for (const [endpoint] of REFUSED_ENDPOINTS) await put(endpoint)
 
     await expect(ctx.profileRows(ctx.one.school.id)).resolves.toEqual([])
     await expect(ctx.currentProfileIdOf(ctx.one.school.id)).resolves.toBeNull()
+  })
+
+  // The journal above says nothing was dialled; this says we knew why before
+  // dialling. An address that had been tried and failed answers
+  // `storage-unreachable` instead.
+  it('refuses the address rather than reporting storage as unreachable', async () => {
+    for (const [endpoint] of REFUSED_ENDPOINTS) {
+      const response = await put(endpoint)
+
+      expect(response.body.message).not.toContain(MediaRefusals.storageUnreachable)
+    }
   })
 
   it('accepts a host on the allowlist of suffixes', async () => {

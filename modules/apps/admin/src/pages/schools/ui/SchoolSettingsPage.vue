@@ -17,7 +17,7 @@ import { useRouter } from 'vue-router'
 
 import type { RoleRow } from '@/entities/role'
 import { roleApi } from '@/entities/role'
-import { reasonOf } from '@/shared/lib'
+import { reasonOf, useToasts } from '@/shared/lib'
 import { useSchoolApi } from '@/entities/school'
 import { useHttp } from '@/shared/api'
 
@@ -25,6 +25,7 @@ import DefaultRoleField from './DefaultRoleField.vue'
 import StudentRolesList from './StudentRolesList.vue'
 import type { SchoolSettingsPageProps } from './types'
 import { formClasses, pageClasses } from './styles'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -34,6 +35,7 @@ const props = defineProps<SchoolSettingsPageProps>()
 
 const { $t } = useFluent()
 const router = useRouter()
+const toasts = useToasts()
 const schools = useSchoolApi()
 
 // The settings belong to the school in the address, which need not be the one
@@ -80,6 +82,7 @@ async function onSubmit() {
       defaultStudentRoleId: chosenDefaultRole(),
       studentRoleIds: studentRoleIds.value,
     })
+    toasts.show({ title: $t('toast-saved'), tone: 'success' })
     void router.push({ name: 'schools' })
   } catch (failure) {
     error.value = reasonOf(failure)
@@ -119,7 +122,9 @@ async function load(): Promise<void> {
 
 <template>
   <section :class="pageClasses">
-    <PageHeader :title="$t('schools-settings-title')" />
+    <PageHeader :title="$t('schools-settings-title')">
+      <template #leading><PageBack /></template>
+    </PageHeader>
     <Skeleton v-if="loading" shape="block" :lines="4" />
     <FailureState
       v-else-if="loadFailed"

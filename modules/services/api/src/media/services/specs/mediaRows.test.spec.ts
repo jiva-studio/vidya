@@ -30,8 +30,7 @@ describe('the rows behind an upload', () => {
     ...overrides,
   })
 
-  const usedBytesOf = async (): Promise<number> =>
-    Number((await ds.getRepository(StorageProfile).findOneByOrFail({ id: profileId })).usedBytes)
+  const usedBytesOf = async (): Promise<number> => usage.usedBytesOf(schoolId)
 
   beforeEach(async () => {
     ds = await testingDataSource()
@@ -46,16 +45,24 @@ describe('the rows behind an upload', () => {
 
     const profile = await ds.getRepository(StorageProfile).save({
       schoolId,
-      kind: 's3',
+      provider: 's3-compatible',
       endpoint: 'https://de-s3.storage.bunnycdn.com',
+      r2AccountId: null,
       region: 'de',
       bucket: 'vidya-demo',
       prefix: `school/${schoolId}`,
       accessKeyId: 'vidya-demo',
+      secrets: {
+        keyVersion: 1,
+        dek: { ciphertext: 'c2VhbGVkLWRlaw==', nonce: 'ZGVrLW5vbmNl' },
+        secret: { ciphertext: 'c2VhbGVk', nonce: 'bm9uY2U=' },
+        tokenSecret: null,
+      },
       delivery: 'presigned',
-      video: { kind: 'none' },
-      quotaBytes: null,
-      usedBytes: '0',
+      publicBaseUrl: null,
+      verifiedAt: new Date('2026-09-21T12:00:00.000Z'),
+      verifyError: null,
+      retiredAt: null,
     } as StorageProfile)
     profileId = profile.id
   })
@@ -78,7 +85,7 @@ describe('the rows behind an upload', () => {
     expect(Number((await rows.findById(created.id))?.sizeBytes)).toBe(4096)
   })
 
-  it('charges the profile the bytes storage reported, not the declared ones', async () => {
+  it('is charged the bytes storage reported, not the declared ones', async () => {
     const created = await rows.createPending(draft({ sizeBytes: 4096 }))
 
     await rows.markReady(created, { sizeBytes: 2048, mimeType: 'image/png', sha256: null })

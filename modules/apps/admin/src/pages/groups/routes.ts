@@ -11,13 +11,16 @@ export const routes: RouteRecordRaw[] = [
     path: '/s/:schoolId/groups',
     name: 'groups',
     component: () => import('./ui/GroupsPage.vue'),
-    meta: { permission: 'groups:read', breadcrumbs: ['nav-groups'] },
+    meta: { permission: 'groups:read' },
   },
   {
     path: '/s/:schoolId/groups/new',
     name: 'group-create',
     component: () => import('./ui/GroupFormPage.vue'),
-    meta: { permission: 'groups:create', breadcrumbs: ['nav-groups', 'group-form-create-title'] },
+    meta: {
+      permission: 'groups:create',
+      nav: { parent: 'groups', label: 'group-form-create-title' },
+    },
   },
   {
     path: '/s/:schoolId/groups/:groupId/edit',
@@ -26,7 +29,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       section: 'groups',
       permission: 'groups:update',
-      breadcrumbs: ['nav-groups', 'group-form-edit-title'],
+      nav: { parent: 'groups', label: 'group-form-edit-title' },
     },
   },
   {
@@ -36,7 +39,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       section: 'groups',
       permission: 'enrollments:read',
-      breadcrumbs: ['nav-groups', 'group-members-title'],
+      nav: { parent: 'groups', label: 'group-members-title' },
     },
   },
 ]

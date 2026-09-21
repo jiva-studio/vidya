@@ -2,21 +2,22 @@ import type { LessonContent } from '@vidya/domain'
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 import { refusal } from '@/shared/testing'
 
 import { messages } from '../i18n'
 import {
+  accessibleName,
   addSection,
   AWAY_PATH,
-  clickText,
   EDITOR_PATH,
   labels,
   LESSON_PATH,
   openEditor,
   plain,
+  saveButton,
   saveDraft,
-  statuses,
+  saveSays,
   VERSIONS,
 } from './harness'
 
@@ -69,7 +70,7 @@ describe('opening a lesson', () => {
       .map((call) => `${call.method} ${call.path}`)
 
     expect(versionCalls).toEqual([`GET ${VERSIONS}`, `GET ${VERSIONS}/v1`])
-    expect(statuses(wrapper)).toContain('Draft')
+    expect(saveSays(wrapper)).toBe(translate('toast-saved'))
   })
 
   it('shows the markdown the author typed, not a rendering of it', async () => {
@@ -138,7 +139,7 @@ describe('saving', () => {
       reason: 'Version v1 is published and cannot be edited.',
     })
     expect(plain(wrapper.text())).not.toContain('Version v1 is published')
-    expect(statuses(wrapper)).toContain('Not saved')
+    expect(saveSays(wrapper)).toBe(translate('editor-save-retry'))
   })
 
   it('refuses to save a document it cannot author, and says why', async () => {
@@ -150,9 +151,11 @@ describe('saving', () => {
       [`GET ${VERSIONS}/v1`]: broken,
     })
 
-    expect(plain(wrapper.text())).toContain('This lesson cannot be saved')
+    expect(plain(wrapper.text())).toContain(translate('editor-problems-title'))
 
-    const publish = wrapper.findAll('button').find((node) => plain(node.text()) === 'Publish')
+    const publish = wrapper
+      .findAll('button')
+      .find((node) => plain(node.text()) === translate('editor-publish'))
     expect(publish?.attributes('disabled')).toBeDefined()
 
     await saveDraft()
@@ -173,28 +176,81 @@ describe('saving', () => {
     })
 
     // Saving strips what this build did not model, and the stripped block is
-    // one a student has already answered against.
-    await addSection(wrapper)
+    // one a student has already answered against. So the document is not
+    // offered for editing at all, rather than editable and quietly unsaved.
+    const names = [...wrapper.element.querySelectorAll('button')].map(accessibleName)
+    expect(names).not.toContain(translate('editor-section-add'))
+
     await saveDraft()
 
     expect(http.calls.filter((call) => call.method === 'PATCH')).toHaveLength(0)
-    expect(plain(wrapper.text())).toContain('This lesson cannot be saved')
+    expect(plain(wrapper.text())).toContain(translate('editor-problems-title'))
+  })
+
+  it('offers no save for a lesson it cannot author, rather than a button that does nothing', async () => {
+    const withUnknown = details('v1', 1, 'draft')
+    withUnknown.content.sections[0].blocks.push({
+      id: 'b2',
+      type: 'diagram',
+    } as unknown as LessonContent['sections'][number]['blocks'][number])
+
+    const { wrapper } = await openEditor({
+      ...draftAnswers(),
+      [`GET ${VERSIONS}/v1`]: withUnknown,
+    })
+
+    expect(saveButton(wrapper)?.disabled).toBe(true)
   })
 })
 
 describe('versions', () => {
-  it('opens a published version read-only', async () => {
+  it('opens a published version editable, and says an edit starts the next one', async () => {
     const { wrapper } = await openEditor({
       [`GET ${VERSIONS}`]: { items: [summary('v1', 1, 'published')] },
       [`GET ${VERSIONS}/v1`]: details('v1', 1, 'published'),
     })
 
-    expect(statuses(wrapper)).toContain('Published')
-    expect(labels(wrapper)).not.toContain('Add section')
-    expect(labels(wrapper)).toContain('New version')
+    const names = [...wrapper.element.querySelectorAll('button')].map(accessibleName)
+
+    expect(plain(wrapper.text())).toContain('Version 1 · published')
+    expect(names).toContain(translate('editor-section-add'))
+    expect(labels(wrapper)).not.toContain('New version')
   })
 
-  it('walks into the draft that is already open when a revision is refused', async () => {
+  it('says which version is on screen', async () => {
+    const { wrapper } = await openEditor({
+      [`GET ${VERSIONS}`]: { items: [summary('v1', 1, 'published')] },
+      [`GET ${VERSIONS}/v1`]: details('v1', 1, 'published'),
+    })
+
+    expect(plain(wrapper.text())).toContain('Version 1')
+  })
+
+  it('starts the next version on the first edit to a published one', async () => {
+    let opened = false
+
+    const { wrapper, http } = await openEditor({
+      [`GET ${VERSIONS}`]: () => ({
+        items: opened
+          ? [summary('v1', 1, 'published'), summary('v2', 2, 'draft')]
+          : [summary('v1', 1, 'published')],
+      }),
+      [`GET ${VERSIONS}/v1`]: details('v1', 1, 'published'),
+      [`GET ${VERSIONS}/v2`]: details('v2', 2, 'draft'),
+      [`POST ${VERSIONS}`]: () => {
+        opened = true
+        return { id: 'v2', lessonId: 'l1', version: 2, status: 'draft' }
+      },
+    })
+
+    await addSection(wrapper)
+
+    expect(http.calls.map((call) => `${call.method} ${call.path}`)).toContain(`POST ${VERSIONS}`)
+    expect(http.calls.map((call) => `${call.method} ${call.path}`)).toContain(`GET ${VERSIONS}/v2`)
+    expect(plain(wrapper.text())).toContain('Version 2')
+  })
+
+  it('walks into the draft that is already open when the fork is refused', async () => {
     let opened = false
 
     const { wrapper, http } = await openEditor({
@@ -211,23 +267,23 @@ describe('versions', () => {
       },
     })
 
-    await clickText(wrapper, 'New version')
+    await addSection(wrapper)
 
     expect(http.calls.map((call) => `${call.method} ${call.path}`)).toContain(`GET ${VERSIONS}/v2`)
-    expect(statuses(wrapper)).toContain('Draft')
+    expect(plain(wrapper.text())).toContain('Version 2')
     expect(plain(wrapper.text())).not.toContain('already has an open draft')
   })
 
   it('hides publishing from someone without lessons:publish', async () => {
     const { wrapper } = await openEditor(draftAnswers(), ['lessons:read', 'lessons:update'])
 
-    expect(labels(wrapper)).not.toContain('Publish')
+    expect(labels(wrapper)).not.toContain(translate('editor-publish'))
   })
 
   it('offers publishing to someone with it', async () => {
     const { wrapper } = await openEditor(draftAnswers())
 
-    expect(labels(wrapper)).toContain('Publish')
+    expect(labels(wrapper)).toContain(translate('editor-publish'))
   })
 })
 
@@ -278,7 +334,7 @@ describe('a lesson with nothing in it', () => {
     expect(titles).toHaveLength(1)
     expect((titles[0] as HTMLInputElement).value).toBe('')
     expect(blocks).toHaveLength(1)
-    expect(plain(wrapper.text())).not.toContain('This lesson is empty')
+    expect(plain(wrapper.text())).not.toContain(translate('editor-sections-empty-title'))
   })
 
   it('reaches the server with nothing, because nobody wrote anything', async () => {

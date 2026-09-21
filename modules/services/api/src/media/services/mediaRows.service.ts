@@ -25,12 +25,13 @@ export type ConfirmedObject = {
 }
 
 /**
- * The `media` rows, and the one place `usedBytes` moves.
+ * The `media` rows: written before their bytes, and the record of what a school
+ * is charged for.
  *
- * Turning a row ready and charging the profile for its bytes happen in one
- * transaction: a count that can be updated without the row, or a row that can
- * turn ready without the count, drifts from the bucket within a day and there
- * is nothing afterwards that can say which of the two is right.
+ * Nothing counts the bytes on the side. What a school occupies is summed from
+ * the rows that are ready, so a row turning ready is the whole of the change —
+ * a counter kept elsewhere drifts from the rows within a day, and nothing
+ * afterwards can say which of the two is right.
  */
 @Injectable()
 export class MediaRowsService {
@@ -62,48 +63,34 @@ export class MediaRowsService {
   }
 
   async markReady(media: Media, confirmed: ConfirmedObject): Promise<Media> {
-    return this.dataSource.transaction(async (manager) => {
-      await manager.getRepository(Media).update(
-        { id: media.id },
-        {
-          status: 'ready',
-          sizeBytes: String(confirmed.sizeBytes),
-          mimeType: confirmed.mimeType,
-          sha256: confirmed.sha256,
-          updatedAt: new Date(),
-        },
-      )
+    await this.rows().update(
+      { id: media.id },
+      {
+        status: 'ready',
+        sizeBytes: String(confirmed.sizeBytes),
+        mimeType: confirmed.mimeType,
+        sha256: confirmed.sha256,
+        updatedAt: new Date(),
+      },
+    )
 
-      await this.chargeProfile(manager, media.profileId, confirmed.sizeBytes)
-
-      return manager.getRepository(Media).findOneOrFail({ where: { id: media.id } })
-    })
+    return this.rows().findOneOrFail({ where: { id: media.id } })
   }
 
   async markFailed(mediaId: MediaId): Promise<void> {
     await this.rows().update({ id: mediaId }, { status: 'failed', updatedAt: new Date() })
   }
 
-  async deleteRow(mediaId: MediaId): Promise<void> {
-    await this.rows().delete({ id: mediaId })
-  }
-
   /**
-   * Drops a row and gives its bytes back to the profile that holds them.
+   * Drops a row, and with it the bytes it was charged for.
    *
-   * `manager` is the caller's transaction, so the row and the count move
-   * together. Only a ready row was ever charged — a pending one's size was a
-   * reservation that disappears with the row, and releasing it again would take
-   * the profile below what its bucket actually holds.
+   * Pass `manager` to drop the row inside the caller's transaction, so what
+   * else that transaction writes about the deletion cannot outlive the row.
+   * Nothing else has to be released: the sum a school is charged for is read
+   * off the rows, so the row leaving is the whole of the change.
    */
-  async deleteChargedRow(manager: EntityManager, media: Media): Promise<void> {
-    await manager.getRepository(Media).delete({ id: media.id })
-
-    if (media.status !== 'ready') return
-
-    await manager
-      .getRepository(StorageProfile)
-      .decrement({ id: media.profileId }, 'usedBytes', Number(media.sizeBytes))
+  async deleteRow(mediaId: MediaId, manager?: EntityManager): Promise<void> {
+    await (manager ? manager.getRepository(Media) : this.rows()).delete({ id: mediaId })
   }
 
   /** The pending rows whose uploader has had long enough and is not coming back. */
@@ -119,14 +106,6 @@ export class MediaRowsService {
     return this.dataSource
       .getRepository(StorageProfile)
       .find({ where: { retiredAt: IsNull() }, order: { createdAt: 'ASC' } })
-  }
-
-  private async chargeProfile(
-    manager: EntityManager,
-    profileId: StorageProfileId,
-    sizeBytes: number,
-  ): Promise<void> {
-    await manager.getRepository(StorageProfile).increment({ id: profileId }, 'usedBytes', sizeBytes)
   }
 
   private rows() {

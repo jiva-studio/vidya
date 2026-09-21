@@ -87,8 +87,8 @@ const versionOf = async (
 /**
  * Whether the answered version had already been superseded when it was written.
  *
- * The same rule `HomeworkService` applies, read through the caller's transaction
- * so that a version published in a neighbouring row of the same batch is seen.
+ * Read through the caller's transaction, so that a version published in a
+ * neighbouring row of the same batch is seen.
  */
 export const isSuperseded = async (
   manager: EntityManager,

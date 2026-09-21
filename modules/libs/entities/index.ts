@@ -10,6 +10,7 @@ import { Media } from './media'
 import { MediaUsage } from './mediaUsage'
 import { Role } from './role'
 import { School } from './school'
+import { SchoolStorageQuota } from './schoolStorageQuota'
 import { StorageProfile } from './storageProfile'
 import { SyncJournal } from './syncJournal'
 import { User } from './user'
@@ -17,6 +18,7 @@ import { UserRole } from './userRole'
 
 export type { AuditAction } from './auditLog'
 export type { SchoolConfig } from './school'
+export type { SealedText, StorageSecrets } from './storageProfile'
 export type { SyncOp, SyncScopeKind } from './syncJournal'
 export type { GroupStatus } from '@vidya/domain'
 
@@ -34,6 +36,7 @@ export {
   MediaUsage,
   Role,
   School,
+  SchoolStorageQuota,
   StorageProfile,
   SyncJournal,
   User,
@@ -52,6 +55,7 @@ export const Entities = [
   Media,
   MediaUsage,
   School,
+  SchoolStorageQuota,
   StorageProfile,
   SyncJournal,
   User,

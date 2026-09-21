@@ -1,0 +1,128 @@
+name: Build and Publish Container Images
+
+run-name: Build & publish containers (${{ github.ref_name }}) by @${{ github.actor }}
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      force_all:
+        description: 'Force build and publish all images regardless of path changes'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has_changes: ${{ steps.set-matrix.outputs.has_changes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect changed service paths
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'modules/services/api/**'
+              - 'modules/libs/**'
+              - 'modules/package*.json'
+              - 'modules/tsconfig.base.json'
+              - '.github/workflows/docker-publish.yml'
+            admin:
+              - 'modules/apps/admin/**'
+              - 'modules/libs/**'
+              - 'modules/package*.json'
+              - 'modules/tsconfig.base.json'
+              - '.github/workflows/docker-publish.yml'
+            gateway:
+              - 'modules/services/gateway/**'
+              - '.github/workflows/docker-publish.yml'
+
+      - name: Generate dynamic build matrix
+        id: set-matrix
+        run: |
+          FORCE_ALL="${{ startsWith(github.ref, 'refs/tags/v') || github.event.inputs.force_all == 'true' }}"
+          SERVICES="[]"
+
+          if [ "$FORCE_ALL" = "true" ] || [ "${{ steps.filter.outputs.api }}" = "true" ]; then
+            SERVICES=$(echo "$SERVICES" | jq -c '. + [{"name": "vidya-api", "file": "modules/services/api/Dockerfile", "context": "."}]')
+          fi
+
+          if [ "$FORCE_ALL" = "true" ] || [ "${{ steps.filter.outputs.admin }}" = "true" ]; then
+            SERVICES=$(echo "$SERVICES" | jq -c '. + [{"name": "vidya-admin", "file": "modules/apps/admin/Dockerfile", "context": "."}]')
+          fi
+
+          if [ "$FORCE_ALL" = "true" ] || [ "${{ steps.filter.outputs.gateway }}" = "true" ]; then
+            SERVICES=$(echo "$SERVICES" | jq -c '. + [{"name": "vidya-gateway", "file": "modules/services/gateway/Dockerfile", "context": "."}]')
+          fi
+
+          COUNT=$(echo "$SERVICES" | jq 'length')
+          MATRIX=$(echo "$SERVICES" | jq -c '{include: .}')
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "has_changes=$([ "$COUNT" -gt 0 ] && echo "true" || echo "false")" >> "$GITHUB_OUTPUT"
+
+  build-and-publish:
+    name: Build & Publish (${{ matrix.name }})
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata (tags and labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.name }}
+          flavor: |
+            latest=auto
+          tags: |
+            type=ref,event=branch
+            type=sha,format=short,prefix=sha-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

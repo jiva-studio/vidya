@@ -136,6 +136,21 @@ export const noticeClasses = [
 
 export const noticeListClasses = ['m-0', 'ps-[var(--space-4)]']
 
+// The line names a block, so it takes the reader to it. Underlined rather than
+// coloured: inside a warning panel a second colour says nothing.
+export const noticeLinkClasses = [
+  'border-0 bg-transparent p-0 text-inherit underline cursor-pointer',
+  'text-start text-[length:var(--text-sm)]',
+  'focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]',
+]
+
+/** The version the editor has open, beside the word for what is happening. */
+export const toolbarVersionClasses = [
+  'me-[var(--space-2)] rounded-[var(--radius-sm)]',
+  'bg-[var(--color-surface-sunken)] px-[var(--space-2)] py-[var(--space-1)]',
+  'text-[length:var(--text-xs)] text-[var(--color-text-muted)] whitespace-nowrap',
+]
+
 /* --------------------------------- Reading -------------------------------- */
 
 export const readingClasses = ['w-full', 'max-w-[var(--prose-max)]', 'mx-auto']

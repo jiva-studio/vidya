@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker'
 import { INestApplication } from '@nestjs/common'
-import { toUserDetails, toUserSummaries } from '@vidya/api/edu/mappers/org.mapper'
 import { createTestingApp } from '@vidya/api/edu/shared'
 import { onTheWire } from '@vidya/api/edu/shared'
 import { Routes } from '@vidya/protocol'
 import { instanceToPlain } from 'class-transformer'
 import * as request from 'supertest'
 
+import { toUserDetails } from '../../../mappers/org.mapper'
 import { Context, createContext } from './context'
 
 describe('/edu/users', () => {
@@ -57,16 +57,20 @@ describe('/edu/users', () => {
       .expect(onTheWire(instanceToPlain(toUserDetails(ctx.one.users.oneAdmin))))
   })
 
-  it(`GET /edu/users returns permitted users`, async () => {
-    return request(app.getHttpServer())
+  // By name, so the list reads alphabetically rather than in whatever order
+  // the rows happen to come back in, and by identity, because the roles a row
+  // carries are the ones held in the schools being listed.
+  it(`GET /edu/users returns permitted users, in name order`, async () => {
+    const response = await request(app.getHttpServer())
       .get(Routes().edu.user().find())
       .set('Authorization', `Bearer ${ctx.one.tokens.oneAdmin}`)
       .expect(200)
-      .expect({
-        items: instanceToPlain(
-          toUserSummaries([ctx.one.users.oneAdmin, ctx.misc.users.adminOfOneAndTwo]),
-        ),
-      })
+
+    expect(response.body.total).toBe(2)
+    expect(response.body.items.map((item: { name: string }) => item.name)).toEqual([
+      'Admin of One and Two',
+      'Org Admin',
+    ])
   })
 
   it(`GET /edu/users filtered by schoolId`, async () => {
@@ -75,7 +79,7 @@ describe('/edu/users', () => {
       .query({ schoolId: ctx.two.school.id })
       .set('Authorization', `Bearer ${ctx.one.tokens.oneAdmin}`)
       .expect(200)
-      .expect({ items: [] })
+      .expect({ items: [], total: 0 })
   })
 
   /* -------------------------------------------------------------------------- */
@@ -101,6 +105,6 @@ describe('/edu/users', () => {
       .get(Routes().edu.user().find())
       .set('Authorization', `Bearer ${ctx.misc.tokens.dummy}`)
       .expect(200)
-      .expect({ items: [] })
+      .expect({ items: [], total: 0 })
   })
 })

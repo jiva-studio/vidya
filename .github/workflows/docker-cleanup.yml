@@ -1,0 +1,42 @@
+name: Clean Up Old Container Images
+
+run-name: Cleanup old images by @${{ github.actor }}
+
+on:
+  schedule:
+    - cron: '0 3 * * 0' # Weekly on Sunday at 03:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (simulate deletion without deleting)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    name: Cleanup GHCR Packages
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - vidya-api
+          - vidya-admin
+          - vidya-gateway
+
+    steps:
+      - name: Prune old container versions
+        uses: snok/container-retention-policy@v3.0.0
+        with:
+          image-names: ${{ matrix.package }}
+          cut-off: 14d # Remove images older than 14 days
+          keep-at-least: 5 # Keep at least 5 newest versions
+          filter-tags: 'sha-*, pr-*' # Only prune commit shas and PR builds
+          filter-include-untagged: true # Delete untagged manifests
+          skip-tags: 'latest, main, v*, [0-9]+.[0-9]+.[0-9]+' # Never delete releases or main/latest
+          token: ${{ secrets.GITHUB_TOKEN }}
+          dry-run: ${{ github.event.inputs.dry_run || 'false' }}

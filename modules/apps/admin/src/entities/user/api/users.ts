@@ -14,7 +14,7 @@ import { useCurrentSchool } from '@/shared/access'
 import type { HttpClient } from '@/shared/api'
 import { useHttp } from '@/shared/api'
 
-import type { GetUserSchoolsResponse } from './types'
+import type { GetUserSchoolsResponse, UserPageQuery } from './types'
 
 /**
  * Every request the admin makes about a user.
@@ -25,8 +25,8 @@ import type { GetUserSchoolsResponse } from './types'
  * controller answers them.
  */
 export const userApi = (http: HttpClient) => ({
-  list: (schoolId: SchoolId | undefined) =>
-    http.get<GetUsersResponse>(Routes().edu.user().find(), { schoolId }),
+  list: (schoolId: SchoolId | undefined, page: UserPageQuery = {}) =>
+    http.get<GetUsersResponse>(Routes().edu.user().find(), { schoolId, ...page }),
 
   get: (id: UserId) => http.get<GetUserResponse>(Routes().edu.user(id).get()),
 
@@ -62,5 +62,5 @@ export const useUserApi = () => {
   const api = userApi(useHttp())
   const { schoolId } = useCurrentSchool()
 
-  return { ...api, list: () => api.list(schoolId.value), schoolId }
+  return { ...api, list: (page?: UserPageQuery) => api.list(schoolId.value, page), schoolId }
 }

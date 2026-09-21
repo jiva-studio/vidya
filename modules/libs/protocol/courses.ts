@@ -6,29 +6,36 @@ import * as crud from './crud'
 /*                                   Models                                   */
 /* -------------------------------------------------------------------------- */
 
+/** Only a published course appears in a school's catalogue; see {@link domain.CourseStatuses}. */
 export type CourseDetails = {
   id: domain.CourseId
   schoolId: domain.SchoolId
   name: string
   description?: string
   learningType: domain.CourseLearningType
+  status: domain.CourseStatus
 }
 
-export type CourseSummary = Pick<CourseDetails, 'id' | 'name' | 'description'>
+export type CourseSummary = Pick<CourseDetails, 'id' | 'name' | 'description' | 'status'>
 
 /* -------------------------------------------------------------------------- */
 /*                                   Create                                   */
 /* -------------------------------------------------------------------------- */
 
-export type CreateCourseRequest = crud.CreateItemRequest<Omit<CourseDetails, 'id'>>
+/** A new course starts as a draft; publishing it is a separate request. */
+export type CreateCourseRequest = crud.CreateItemRequest<Omit<CourseDetails, 'id' | 'status'>>
 export type CreateCourseResponse = crud.CreateItemResponse<CourseDetails['id']>
 
 /* -------------------------------------------------------------------------- */
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export type GetCoursesQuery = { schoolId?: string }
-export type GetCoursesResponse = crud.GetItemsListResponse<CourseSummary>
+export type GetCoursesQuery = crud.PageQuery & {
+  schoolId?: string
+  query?: string
+}
+
+export type GetCoursesResponse = crud.GetPagedItemsListResponse<CourseSummary>
 export type GetCourseResponse = crud.GetItemResponse<CourseDetails>
 
 /* -------------------------------------------------------------------------- */

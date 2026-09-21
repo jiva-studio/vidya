@@ -28,9 +28,20 @@ export type MediaStatus = (typeof MediaStatuses)[number]
 export const StorageDeliveries = ['presigned', 'bunny-token', 'public'] as const
 export type StorageDelivery = (typeof StorageDeliveries)[number]
 
-/** Only S3-compatible storage is supported; Bunny, R2, MinIO and AWS all are. */
-export const StorageProfileKinds = ['s3'] as const
-export type StorageProfileKind = (typeof StorageProfileKinds)[number]
+/**
+ * Who holds the bucket. All four speak the same S3 API; what differs is the
+ * address, and for three of them we can build it ourselves —
+ * `s3.<region>.amazonaws.com`, `<region>-s3.storage.bunnycdn.com`,
+ * `<account>.r2.cloudflarestorage.com`. A school picks its provider and types
+ * keys, not a URL.
+ *
+ * `s3-compatible` is the escape hatch for MinIO, Wasabi, Ceph and the rest, and
+ * the only one that carries an address of its own — which is why it is also the
+ * only one the endpoint allowlist has to police: a free-form address is one the
+ * API dials from inside its own network.
+ */
+export const StorageProviders = ['aws', 'bunny', 'r2', 's3-compatible'] as const
+export type StorageProvider = (typeof StorageProviders)[number]
 
 /**
  * Adaptive bitrate is a property of transcoding, not of storage, so it arrives

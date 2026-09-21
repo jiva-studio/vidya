@@ -1,29 +1,44 @@
 <script setup lang="ts">
-import { Button, PageHeader, TableFilters } from '@vidya/ui'
-import { computed, ref } from 'vue'
+import type { CourseSummary } from '@vidya/protocol'
+import { TableFilters } from '@vidya/ui'
+import { onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { useCourses } from '@/entities/course'
-import { useCan } from '@/shared/access'
+import { getCourses } from '@/entities/course'
+import { useCan, useCurrentSchool } from '@/shared/access'
+import { useHttp } from '@/shared/api'
+import { usePagedList } from '@/shared/lib'
 
 import CoursesTable from './CoursesTable.vue'
-import { pageClasses } from './styles'
+import { ListPage } from '@/widgets/list-page'
 
 /* --------------------------------- State ---------------------------------- */
 
 const router = useRouter()
-const courses = useCourses()
-const search = ref('')
+const http = useHttp()
+const { generation, schoolId } = useCurrentSchool()
+
+// The page is its own list rather than `useCourses`, which the group form and
+// the groups filter read whole: a picker cut to its first page loses courses.
+const courses = usePagedList<CourseSummary>({
+  read: (page) => getCourses(http, { schoolId: schoolId.value, ...page }),
+  fallback: 'courses-load-failed',
+})
 
 // Hidden rather than disabled: a button the operator may never press only
 // spends their attention, and the server refuses regardless.
 const canCreate = useCan('courses:create')
 const canEdit = useCan('courses:update')
 
-const displayedItems = computed(() => {
-  if (!search.value.trim()) return courses.items.value
-  const query = search.value.trim().toLowerCase()
-  return courses.items.value.filter((course) => course.name.toLowerCase().includes(query))
+/* ---------------------------------- Hooks --------------------------------- */
+
+// The server answers for the school in hand, so a switch is a new list.
+watch(generation, () => {
+  courses.restart()
+})
+
+onMounted(() => {
+  void courses.load()
 })
 
 /* -------------------------------- Handlers -------------------------------- */
@@ -41,30 +56,40 @@ function onLessons(id: string) {
 }
 
 function onRetry() {
-  void courses.reload()
+  void courses.load()
+}
+
+function onSearch(term: string) {
+  courses.find(term)
 }
 
 function onClear() {
-  search.value = ''
+  courses.find('')
 }
 </script>
 
 <template>
-  <section :class="pageClasses">
-    <PageHeader :title="$t('courses-title')">
-      <template #actions>
-        <Button v-if="canCreate" @click="onCreate">{{ $t('courses-create') }}</Button>
-      </template>
-    </PageHeader>
-    <TableFilters
-      v-if="courses.items.value.length >= 10 || search"
-      v-model:search="search"
-      :search-label="$t('courses-title')"
-      :filters-applied="!!search"
-      @clear="onClear"
-    />
+  <ListPage
+    :title="$t('courses-title')"
+    :create-label="canCreate ? $t('courses-create') : undefined"
+    :page="courses.page.value"
+    :total="courses.total.value"
+    :paged="courses.paged.value"
+    @create="onCreate"
+    @update:page="courses.goTo"
+  >
+    <template #filters>
+      <TableFilters
+        v-if="courses.searchable.value"
+        :search="courses.query.value"
+        :search-label="$t('courses-title')"
+        :filters-applied="!!courses.query.value"
+        @update:search="onSearch"
+        @clear="onClear"
+      />
+    </template>
     <CoursesTable
-      :rows="displayedItems"
+      :rows="courses.rows.value"
       :loading="courses.loading.value"
       :error="courses.error.value ? $t('state-error') : undefined"
       :can-create="canCreate"
@@ -74,5 +99,5 @@ function onClear() {
       @edit="onEdit"
       @lessons="onLessons"
     />
-  </section>
+  </ListPage>
 </template>

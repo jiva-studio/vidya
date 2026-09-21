@@ -43,7 +43,7 @@ export class MediaDeletionService {
     await opened.storage.remove(media.storageKey)
 
     await this.dataSource.transaction(async (manager) => {
-      await this.rows.deleteChargedRow(manager, media)
+      await this.rows.deleteRow(media.id, manager)
 
       await this.auditLog.record(
         {

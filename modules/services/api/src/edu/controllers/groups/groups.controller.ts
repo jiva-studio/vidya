@@ -69,18 +69,22 @@ export class GroupsController {
 
   @Crud.GetMany(Routes().edu.groups.find())
   async getMany(
-    @Query() query: dto.GetGroupsQuery,
+    @Query() filters: dto.GetGroupsQuery,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetGroupsResponse> {
     if (!auth.permissions.has(['groups:read'])) {
       throw new ForbiddenException('User does not have permission')
     }
 
-    const groups = await this.groups
+    const [groups, total] = await this.groups
       .scopedBy({ permissions: auth.permissions })
-      .findAll({ where: { courseId: query.courseId } })
+      .findAndCount({
+        where: { ...dto.matchingName(filters.query), courseId: filters.courseId },
+        order: { name: 'ASC', id: 'ASC' },
+        ...dto.pageOf(filters),
+      })
 
-    return { items: toGroupSummaries(groups) }
+    return { items: toGroupSummaries(groups), total }
   }
 
   /* -------------------------------------------------------------------------- */
@@ -125,16 +129,16 @@ export class GroupsController {
     @Body() request: dto.UpdateGroupRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateGroupResponse> {
-    if (!auth.permissions.has(['groups:update'])) {
-      throw new ForbiddenException('User does not have permission')
-    }
-
     const group = await this.groups
       .scopedBy({ permissions: auth.permissions })
       .findOne({ where: { id } })
 
     if (!group) {
       throw new NotFoundException(`Group with id ${id} not found`)
+    }
+
+    if (!auth.permissions.has(['groups:update'], { schoolId: group.schoolId })) {
+      throw new ForbiddenException('User does not have permission')
     }
 
     const updated = await this.groups.updateOneBy({ id }, request)
@@ -150,16 +154,16 @@ export class GroupsController {
     @Param('id', new ParseUUIDPipe()) id: domain.GroupId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.DeleteGroupResponse> {
-    if (!auth.permissions.has(['groups:delete'])) {
-      throw new ForbiddenException('User does not have permission')
-    }
-
     const group = await this.groups
       .scopedBy({ permissions: auth.permissions })
       .findOne({ where: { id } })
 
     if (!group) {
       throw new NotFoundException(`Group with id ${id} not found`)
+    }
+
+    if (!auth.permissions.has(['groups:delete'], { schoolId: group.schoolId })) {
+      throw new ForbiddenException('User does not have permission')
     }
 
     await this.groups.deleteOneBy({ id })

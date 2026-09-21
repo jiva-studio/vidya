@@ -19,8 +19,8 @@ import { h } from 'vue'
 const events = vi.hoisted(() => [] as string[])
 const state = vi.hoisted(() => ({ migrationFails: false }))
 
-vi.mock('@/infra/persistence', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/infra/persistence')>()
+vi.mock('@vidya/client', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vidya/client')>()
   const opened = { images: new Map() }
 
   const open = () => {
@@ -30,7 +30,6 @@ vi.mock('@/infra/persistence', async (importOriginal) => {
 
   return {
     ...actual,
-    useCapacitorSqlPersistence: open,
     useSqlJsPersistence: open,
     runMigrations: async (...args: Parameters<typeof actual.runMigrations>) => {
       events.push('migrate')

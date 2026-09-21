@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { CourseLearningType } from '@vidya/domain'
-import { FormField, FormFooter, Input, RadioGroup, Textarea } from '@vidya/ui'
+import { FormField, FormFooter, Input, RadioGroup, Switch, Textarea } from '@vidya/ui'
 import type { RadioOption } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
@@ -16,6 +16,7 @@ const props = withDefaults(defineProps<CourseFormProps>(), {
   busy: false,
   error: undefined,
   submitLabel: undefined,
+  publishable: false,
 })
 
 /* --------------------------------- Events --------------------------------- */
@@ -29,6 +30,12 @@ const { $t } = useFluent()
 const submitted = ref(false)
 
 const nameError = computed(() => nameErrorText())
+
+const published = computed(() => props.modelValue.status === 'published')
+
+const publishHint = computed(() =>
+  published.value ? $t('course-form-publish-on') : $t('course-form-publish-off'),
+)
 
 const formats = computed<RadioOption[]>(() => [
   {
@@ -55,6 +62,10 @@ function onDescription(value: string) {
 
 function onFormat(value: string) {
   patch({ learningType: value as CourseLearningType })
+}
+
+function onPublished(value: boolean) {
+  patch({ status: value ? 'published' : 'draft' })
 }
 
 function onSubmit() {
@@ -97,7 +108,7 @@ function nameErrorText(): string | undefined {
       <template #default="field">
         <Textarea
           :id="field.id"
-          :rows="4"
+          :rows="12"
           :model-value="props.modelValue.description"
           :described-by="field.describedBy"
           @update:model-value="onDescription"
@@ -112,6 +123,15 @@ function nameErrorText(): string | undefined {
         @update:model-value="onFormat"
       />
     </FormField>
+
+    <Switch
+      v-if="props.publishable"
+      :model-value="published"
+      :label="$t('course-form-publish-label')"
+      :description="publishHint"
+      :disabled="props.busy"
+      @update:model-value="onPublished"
+    />
 
     <FormFooter
       :submit-label="props.submitLabel ?? $t('course-form-submit')"

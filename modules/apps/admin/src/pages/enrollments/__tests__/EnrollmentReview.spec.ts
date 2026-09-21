@@ -7,7 +7,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { setAppRouter } from '@/shared/access'
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
@@ -23,9 +23,9 @@ const GROUPS = '/edu/groups'
 // Copy of this suite's own, so the screen owns its wording and the test owns
 // only the keys it has to find a control by.
 const copy = `
-enrollments-review = Рассмотреть
-enrollments-review-group-closed = Набор закрыт
-enrollments-review-accept = Принять в группу
+enrollments-review = Review
+enrollments-review-group-closed = No longer taking students
+enrollments-review-accept = Accept into the group
 `
 
 const blank = { template: '<div />' }
@@ -61,22 +61,22 @@ const details = (over: Record<string, unknown> = {}) => ({
   createdAt: '2026-09-01T10:00:00.000Z',
   preferredGroupId: 'g1',
   preferredTimes: EVENING_AT_SIX,
-  comment: 'Могу только после работы',
+  comment: 'Only after work',
   ...over,
 })
 
 const world = (over: FakeAnswers = {}): FakeAnswers => ({
-  [COURSES]: { items: [{ id: 'c1', name: 'Основы' }] },
+  [COURSES]: { items: [{ id: 'c1', name: 'Foundations' }] },
   [GROUPS]: {
     items: [
-      { id: 'g1', name: 'Утренняя', status: 'pending' },
-      { id: 'g2', name: 'Вечерняя', status: 'pending' },
+      { id: 'g1', name: 'Morning', status: 'pending' },
+      { id: 'g2', name: 'Evening', status: 'pending' },
     ],
   },
   [ENROLLMENTS]: { items: [summary()] },
   [`${ENROLLMENTS}/e1`]: details(),
   [`PATCH ${ENROLLMENTS}/e1/moderation`]: details({ status: 'accepted', groupId: 'g2' }),
-  '/edu/users/u1': { id: 'u1', name: 'Аня Иванова', email: 'a@example.com', roles: [] },
+  '/edu/users/u1': { id: 'u1', name: 'Ann Ivanova', email: 'a@example.com', roles: [] },
   ...over,
 })
 
@@ -161,16 +161,16 @@ describe('reviewing a request', () => {
   it('names the group the student asked for, and keeps naming it while another is chosen', async () => {
     const { page } = await mountPage(world())
 
-    expect(shown(page)).not.toContain('Утренняя')
+    expect(shown(page)).not.toContain('Morning')
 
-    await click(page, 'Рассмотреть')
+    await click(page, translate('enrollments-review'))
 
-    expect(shown(page)).toContain('Утренняя')
+    expect(shown(page)).toContain('Morning')
 
     groupChoice(page)?.vm.$emit('update:modelValue', 'g2')
     await flushPromises()
 
-    expect(shown(page)).toContain('Утренняя')
+    expect(shown(page)).toContain('Morning')
   })
 
   it('says when that group has stopped taking anyone', async () => {
@@ -178,22 +178,22 @@ describe('reviewing a request', () => {
       world({
         [GROUPS]: {
           items: [
-            { id: 'g1', name: 'Утренняя', status: 'active' },
-            { id: 'g2', name: 'Вечерняя', status: 'pending' },
+            { id: 'g1', name: 'Morning', status: 'active' },
+            { id: 'g2', name: 'Evening', status: 'pending' },
           ],
         },
       }),
     )
 
-    await click(page, 'Рассмотреть')
+    await click(page, translate('enrollments-review'))
 
-    expect(shown(page)).toContain('Набор закрыт')
+    expect(shown(page)).toContain(translate('enrollments-review-group-closed'))
   })
 
   it('leaves the hours as the student gave them and names the zone they are in', async () => {
     const { page } = await mountPage(world())
 
-    await click(page, 'Рассмотреть')
+    await click(page, translate('enrollments-review'))
 
     expect(shown(page)).toContain('18:00')
     expect(shown(page)).toContain('20:00')
@@ -203,15 +203,15 @@ describe('reviewing a request', () => {
   it('shows what the student wrote', async () => {
     const { page } = await mountPage(world())
 
-    await click(page, 'Рассмотреть')
+    await click(page, translate('enrollments-review'))
 
-    expect(shown(page)).toContain('Могу только после работы')
+    expect(shown(page)).toContain('Only after work')
   })
 
   it('starts the decision from the group that was asked for', async () => {
     const { page } = await mountPage(world())
 
-    await click(page, 'Рассмотреть')
+    await click(page, translate('enrollments-review'))
 
     expect(groupChoice(page)?.props('modelValue')).toBe('g1')
   })
@@ -219,10 +219,10 @@ describe('reviewing a request', () => {
   it('accepts the student into a group other than the one they asked for, in one move', async () => {
     const { transport, page } = await mountPage(world())
 
-    await click(page, 'Рассмотреть')
+    await click(page, translate('enrollments-review'))
     groupChoice(page)?.vm.$emit('update:modelValue', 'g2')
     await flushPromises()
-    await clickInBody('Принять в группу')
+    await clickInBody(translate('enrollments-review-accept'))
 
     expect(transport.calls.find((call) => call.method === 'PATCH')).toMatchObject({
       path: `${ENROLLMENTS}/e1/moderation`,

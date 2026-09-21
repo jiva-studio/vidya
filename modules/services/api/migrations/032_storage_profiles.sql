@@ -1,74 +1,106 @@
--- A school's own storage, and the credentials that reach it.
+-- Where a school's files live, and with what keys.
 --
--- A profile is never edited in place. Rotating a key or changing provider
--- writes a new row, retires the old one and repoints the school; files already
--- uploaded keep naming the profile that wrote them, so their keys stay
--- readable. "schools"."currentStorageProfileId" is therefore the only thing
--- that moves, and a retired row is kept for as long as one file refers to it.
+-- A profile is never edited: new keys retire this row and the school points at
+-- a new one, because files already uploaded are read through the profile that
+-- wrote them. Rotating a key under published content would otherwise break
+-- every file a school has.
 --
--- The secret is never stored as it was typed. Each row carries its own data
--- key, sealed under the installation's master key ("keyVersion" says which),
--- and the secret is sealed under that data key with the school and the profile
--- as additional data — a ciphertext copied into another row stops decrypting.
--- "accessKeyId" stays in the clear on purpose: it names the credential without
--- being one, and every refusal has to be explainable without the secret.
+-- `provider` is named rather than inferred, and the endpoint is derived from it
+-- wherever it can be — `s3.<region>.amazonaws.com`,
+-- `<region>-s3.storage.bunnycdn.com`, `<account>.r2.cloudflarestorage.com`. A
+-- school picks its provider and types keys, not a URL. Only `s3-compatible`
+-- carries an endpoint of its own, and that is the one case the SSRF allowlist
+-- has to police: a free-form address is one the API dials from inside its own
+-- network. rclone models the same set the same way, for the same reason.
 --
--- "usedBytes" is counted per profile rather than per school because the bytes
--- live in the profile: a school that moves to another bucket starts its count
--- again, and the retired row keeps the count of what it still holds.
+-- The sealed keys live in one `secrets` document rather than in three pairs of
+-- bytea columns. What is sealed is one envelope — a data key wrapped by the
+-- installation's master key, and under it the storage secret and the CDN token
+-- secret — so splitting it across the schema only spread the encryption over
+-- six columns that must be written and read together or not at all.
+--
+-- What this table does NOT hold, on purpose:
+--
+--   * how much a school has stored. That is `SUM(sizeBytes)` over its ready
+--     files, which cannot drift; a counter here already produced a defect, by
+--     being incremented on the profile that wrote the file while the quota was
+--     read from the profile that is current, so a key rotated on the same
+--     bucket reset the count to zero. A stored counter earns its keep at
+--     millions of rows, not at a school library's thousands.
+--   * the video provider. A transcoding library is a second vendor
+--     relationship, not a bucket's credentials, and it gets its own table when
+--     one is needed.
 
 CREATE TABLE "storage_profiles" (
-  "id"                     uuid NOT NULL DEFAULT uuid_generate_v4(),
-  "schoolId"               uuid,
-  "kind"                   character varying NOT NULL DEFAULT 's3',
-  "endpoint"               character varying NOT NULL,
-  "region"                 character varying NOT NULL DEFAULT '',
-  "bucket"                 character varying NOT NULL,
-  "prefix"                 character varying NOT NULL DEFAULT '',
-  "accessKeyId"            character varying NOT NULL,
-  "secretCiphertext"       bytea,
-  "secretNonce"            bytea,
-  "keyVersion"             integer NOT NULL DEFAULT 1,
-  "dekCiphertext"          bytea,
-  "dekNonce"               bytea,
-  "delivery"               character varying NOT NULL DEFAULT 'presigned',
-  "publicBaseUrl"          character varying,
-  "tokenSecretCiphertext"  bytea,
-  "tokenSecretNonce"       bytea,
-  "video"                  json NOT NULL DEFAULT '{"kind":"none"}',
-  "quotaBytes"             bigint,
-  "usedBytes"              bigint NOT NULL DEFAULT 0,
-  "verifiedAt"             TIMESTAMPTZ,
-  "verifyError"            character varying,
-  "retiredAt"              TIMESTAMPTZ,
-  "createdAt"              TIMESTAMPTZ NOT NULL DEFAULT now(),
-  "updatedAt"              TIMESTAMPTZ NOT NULL DEFAULT now(),
+  "id"            uuid NOT NULL DEFAULT uuid_generate_v4(),
+  "schoolId"      uuid NOT NULL,
+
+  -- 'aws' | 'bunny' | 'r2' | 's3-compatible'
+  "provider"      character varying NOT NULL,
+
+  "region"        character varying NOT NULL DEFAULT '',
+  "bucket"        character varying NOT NULL,
+  "prefix"        character varying NOT NULL DEFAULT '',
+  "accessKeyId"   character varying NOT NULL,
+
+  -- Only 's3-compatible' fills this in; for the named providers it is derived.
+  "endpoint"      character varying,
+
+  -- R2 addresses by account and has no regions, so it cannot borrow `region`:
+  -- a column that means one thing for one provider and another for the next is
+  -- how a wrong host gets built.
+  "r2AccountId"   character varying,
+
+  -- AES-256-GCM, one envelope: `{ keyVersion, dek, secret, tokenSecret }`,
+  -- each sealed value carrying its own nonce. The school and profile ids are
+  -- the AAD, so a document carried into another row will not open.
+  "secrets"       json NOT NULL,
+
+  -- Derived from whether a CDN host is present, never chosen by a person.
+  "delivery"      character varying NOT NULL DEFAULT 'presigned',
+  "publicBaseUrl" character varying,
+
+  -- The last probe of these keys. Both null means nobody ever probed them,
+  -- which is what a profile lent from the installation looks like.
+  "verifiedAt"    TIMESTAMPTZ,
+  "verifyError"   character varying,
+
+  "retiredAt"     TIMESTAMPTZ,
+  "createdAt"     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  "updatedAt"     TIMESTAMPTZ NOT NULL DEFAULT now(),
+
   CONSTRAINT "PK_storage_profiles" PRIMARY KEY ("id"),
   CONSTRAINT "FK_storage_profiles_school" FOREIGN KEY ("schoolId")
     REFERENCES "schools" ("id") ON DELETE CASCADE
 );
 
--- Every profile a school has ever had, retired ones included: a file is read
--- through the profile that wrote it, so the retired rows are looked up as often
--- as the live one.
---
--- It is declared before the partial unique index below and must stay there. The
--- in-memory database the suites run on picks the first index whose columns
--- match and does not read the predicate, so with the partial one first a lookup
--- by school answers with the live profile alone and the retired ones vanish.
-CREATE INDEX "idx_storage_profiles_schoolId" ON "storage_profiles" ("schoolId");
+CREATE INDEX "IDX_storage_profiles_school" ON "storage_profiles" ("schoolId");
 
--- A school has at most one profile in use; the retired ones are history.
-CREATE UNIQUE INDEX "UQ_storage_profiles_live_school"
+-- A school has one live profile at a time, and the database is what says so:
+-- two grants asking at once must not lend the same school two buckets.
+-- Declared after the plain index on purpose — pg-mem matches a partial index by
+-- its columns without reading the predicate, and finds this one first
+-- otherwise.
+CREATE UNIQUE INDEX "UQ_storage_profiles_live_per_school"
   ON "storage_profiles" ("schoolId")
   WHERE "retiredAt" IS NULL;
+
+-- What a school may store. Policy, not measurement: null means no ceiling of
+-- ours, which is what a school paying its own provider gets.
+CREATE TABLE "school_storage_quotas" (
+  "schoolId"   uuid NOT NULL,
+  "quotaBytes" bigint,
+  "updatedAt"  TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  CONSTRAINT "PK_school_storage_quotas" PRIMARY KEY ("schoolId"),
+  CONSTRAINT "FK_school_storage_quotas_school" FOREIGN KEY ("schoolId")
+    REFERENCES "schools" ("id") ON DELETE CASCADE
+);
 
 ALTER TABLE "schools"
   ADD COLUMN "currentStorageProfileId" uuid;
 
--- SET NULL rather than CASCADE: losing the profile row must drop the school
--- back to the storage of the installation, not delete the school.
 ALTER TABLE "schools"
-  ADD CONSTRAINT "FK_schools_currentStorageProfile"
-  FOREIGN KEY ("currentStorageProfileId")
-  REFERENCES "storage_profiles" ("id") ON DELETE SET NULL;
+  ADD CONSTRAINT "FK_schools_current_storage_profile"
+  FOREIGN KEY ("currentStorageProfileId") REFERENCES "storage_profiles" ("id")
+  ON DELETE SET NULL;

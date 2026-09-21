@@ -1,10 +1,10 @@
 import { INestApplication } from '@nestjs/common'
 import { UsersController } from '@vidya/api/edu/controllers'
 import * as dto from '@vidya/api/edu/dto'
-import { toUserDetails, toUserSummaries } from '@vidya/api/edu/mappers/org.mapper'
 import { createTestingApp } from '@vidya/api/edu/shared'
 import * as entities from '@vidya/entities'
 
+import { toUserDetails } from '../../../mappers/org.mapper'
 import { Context, createContext } from './context'
 
 describe('UsersController', () => {
@@ -22,10 +22,13 @@ describe('UsersController', () => {
     await app.close()
   })
 
+  // By identity, not by the whole summary: the roles a row carries are the
+  // ones held in the schools being listed, which is narrower than the roles
+  // the fixture entity holds everywhere.
   function expectUsers(res: dto.GetUsersResponse, users: entities.User[]) {
     expect(res).toHaveProperty('items')
     expect(res.items).toHaveLength(users.length)
-    expect(res.items).toEqual(expect.arrayContaining(toUserSummaries(users)))
+    expect(res.items.map((item) => item.id).sort()).toEqual(users.map((user) => user.id).sort())
   }
 
   /* -------------------------------------------------------------------------- */
@@ -85,6 +88,38 @@ describe('UsersController', () => {
         await ctx.authenticate(ctx.misc.users.adminOfOneAndTwo),
       )
       expectUsers(res, [ctx.one.users.oneAdmin, ctx.misc.users.adminOfOneAndTwo])
+    })
+
+    // Somebody with a role in two schools is listed in both, and each list
+    // names only its own: the other school's role is not this page's business.
+    it('names only the roles held in the school being listed', async () => {
+      const res = await ctr.getMany(
+        new dto.GetUsersQuery({ schoolId: ctx.one.school.id }),
+        await ctx.authenticate(ctx.misc.users.adminOfOneAndTwo),
+      )
+
+      const both = res.items.find((item) => item.id === ctx.misc.users.adminOfOneAndTwo.id)
+
+      expect(both?.roles.map((role) => role.name)).toEqual(['Org Admin'])
+    })
+
+    it('answers how many matched, beside the page', async () => {
+      const res = await ctr.getMany(
+        new dto.GetUsersQuery(),
+        await ctx.authenticate(ctx.one.users.oneAdmin),
+      )
+
+      expect(res.total).toBe(res.items.length)
+    })
+
+    it('returns one page when one is asked for', async () => {
+      const query = new dto.GetUsersQuery()
+      query.limit = 1
+
+      const res = await ctr.getMany(query, await ctx.authenticate(ctx.one.users.oneAdmin))
+
+      expect(res.items).toHaveLength(1)
+      expect(res.total).toBe(2)
     })
   })
 })

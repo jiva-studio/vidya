@@ -1,5 +1,6 @@
 import path from 'node:path'
 
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 import tailwind from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
@@ -8,7 +9,28 @@ const port = Number(process.env.VIDYA_ADMIN_PORT || 7811)
 const apiUrl = process.env.VIDYA_API_URL || 'http://localhost:7810'
 
 export default defineConfig({
-  plugins: [vue(), tailwind()],
+  plugins: [
+    vue(),
+    tailwind(),
+    ...(process.env.SENTRY_AUTH_TOKEN
+      ? [
+          sentryVitePlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT || 'vidya-admin',
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            release: {
+              name: process.env.VITE_APP_VERSION,
+            },
+            sourcemaps: {
+              filesToDeleteAfterUpload: ['./dist/**/*.map'],
+            },
+          }),
+        ]
+      : []),
+  ],
+  build: {
+    sourcemap: process.env.SENTRY_AUTH_TOKEN ? 'hidden' : false,
+  },
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),

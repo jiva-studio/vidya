@@ -11,3 +11,18 @@ export const backClasses = [
   'text-[var(--color-text-muted)]',
   'hover:text-[var(--color-text)]',
 ]
+
+export const joinRowClasses = ['flex', 'items-center', 'gap-[var(--space-2)]']
+
+export const joinStatusClasses = ['text-[length:var(--text-sm)]', 'text-[var(--color-text-muted)]']
+
+export const joinNoticeClasses = [
+  'flex',
+  'flex-wrap',
+  'items-center',
+  'gap-[var(--space-2)]',
+  'text-[length:var(--text-sm)]',
+  'text-[var(--color-text-muted)]',
+]
+
+export const joinLinkClasses = ['underline', 'text-[var(--color-text)]']

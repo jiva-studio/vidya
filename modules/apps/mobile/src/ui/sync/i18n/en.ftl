@@ -17,6 +17,8 @@ sync-rejection-enrollmentRevoked = You are no longer enrolled on this course.
 sync-rejection-scopeRevoked = The school took away your access, so this answer was never sent.
 sync-rejection-unknownLessonVersion = The school does not know the lesson version this answer was written against.
 sync-rejection-alreadyAccepted = An answer has already been accepted, so this one cannot replace it.
+sync-rejection-underReview = A teacher has this work open, so it cannot be changed until they answer.
+sync-rejection-courseNotOffered = The school is not taking students onto this course yet.
 sync-rejection-payloadTooLarge = The answer is too long to be sent.
 sync-rejection-malformed = The school could not read this answer.
 

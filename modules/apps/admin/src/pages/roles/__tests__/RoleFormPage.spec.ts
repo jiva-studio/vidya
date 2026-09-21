@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, refusal } from '@/shared/testing'
@@ -69,7 +69,9 @@ const whole = async (page: Awaited<ReturnType<typeof mountForm>>['page'], prefix
 }
 
 const save = async (page: Awaited<ReturnType<typeof mountForm>>['page']) => {
-  const button = page.findAll('button').find((candidate) => candidate.text() === 'Сохранить')
+  const button = page
+    .findAll('button')
+    .find((candidate) => candidate.text() === translate('action-save'))
   await button?.trigger('click')
   await flushPromises()
 }
@@ -96,9 +98,9 @@ describe('RoleFormPage', () => {
   it('lays them out as one list per area, headed by the name of the area', async () => {
     const { page } = await mountForm({ 'POST /edu/roles': { id: 'role-1' } })
 
-    expect(page.text()).toContain('Роли')
-    expect(page.text()).toContain('Домашние работы')
-    expect(page.text()).toContain('Публикация')
+    expect(page.text()).toContain(translate('nav-roles'))
+    expect(page.text()).toContain(translate('permission-group-homework'))
+    expect(page.text()).toContain(translate('permission-action-publish'))
   })
 
   it('sends exactly the permissions that were ticked', async () => {
@@ -146,7 +148,7 @@ describe('RoleFormPage', () => {
     await flip(page)
 
     expect(page.findAll('[data-permission]')).toHaveLength(0)
-    expect(page.text()).toContain('Выключите переключатель')
+    expect(page.text()).toContain(translate('permission-all-notice'))
 
     await save(page)
 
@@ -201,7 +203,7 @@ describe('RoleFormPage', () => {
     await save(page)
 
     expect(transport.calls).toHaveLength(0)
-    expect(page.text()).toContain('Укажите название.')
+    expect(page.text()).toContain(translate('roles-form-name-required'))
   })
 
   it('loads the role it is editing and patches it', async () => {

@@ -11,7 +11,7 @@ import {
 
 import SelectList from './SelectList.vue'
 import { cn } from '../../lib/utils'
-import { iconClasses, surfaceClasses, triggerVariants } from './styles'
+import { iconClasses, surfaceClasses, triggerVariants, valueClasses } from './styles'
 import type { SelectEmits, SelectProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -49,7 +49,7 @@ function onUpdate(value: unknown) {
       :aria-describedby="props.describedBy"
       :class="cn(triggerVariants({ invalid: props.invalid }), props.class)"
     >
-      <SelectValue :placeholder="props.placeholder" />
+      <SelectValue :class="valueClasses" :placeholder="props.placeholder" />
       <SelectIcon>
         <ChevronDown :class="iconClasses" />
       </SelectIcon>

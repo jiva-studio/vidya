@@ -16,7 +16,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       section: 'homework-queue',
       permission: 'homework:read',
-      breadcrumbs: ['nav-homework-queue', 'homework-one'],
+      nav: { parent: 'homework-queue', label: 'homework-one' },
     },
   },
 ]

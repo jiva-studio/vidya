@@ -8,6 +8,7 @@ roles-column-description = Description
 roles-column-actions = Actions
 roles-empty-title = No roles yet
 roles-empty-body = Create a role and give it to someone.
+roles-school-missing = Choose a school first.
 roles-create = Create a role
 roles-edit = Edit
 

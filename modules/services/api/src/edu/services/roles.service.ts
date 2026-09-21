@@ -1,11 +1,13 @@
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { AuthenticatedUserPermissions } from '@vidya/api/auth/utils'
 import { PERMISSIONS_CACHE_EVICTION, PermissionsCacheEviction } from '@vidya/api/edu/ports'
 import { AuditLogService } from '@vidya/api/shared/services'
 import * as domain from '@vidya/domain'
 import { Role, UserRole } from '@vidya/entities'
 import { DeepPartial, EntityManager, FindOptionsWhere, In, Repository } from 'typeorm'
 
+import { assertPermissionsGrantable } from '../validations/permission-grant.validation'
 import { EnrollmentsService } from './enrollments.service'
 import { Scope, ScopedEntitiesService } from './entities.service'
 
@@ -37,15 +39,18 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
         .getScopes(['roles:read'])
         .filter((s) => !schoolId || s.schoolId === schoolId)
 
-      // No scope means no access, so the empty list is a deliberate fail-closed result.
+      // No scope means no access, so the empty list is a deliberate fail-closed
+      // result. Everything but `where` is carried over: a scope that rebuilt
+      // the query from nothing dropped the paging and the ordering with it.
       return scopes.length > 0
         ? {
+            ...query,
             where: scopes.map((s) => ({
               ...query?.where,
               schoolId: s.schoolId,
             })),
           }
-        : { where: { schoolId: In([]) } }
+        : { ...query, where: { schoolId: In([]) } }
     })
   }
 
@@ -94,12 +99,18 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
   }
 
   /**
-   * Refuses unless every role named belongs to one of the given schools.
+   * Refuses unless every role named belongs to one of the given schools,
+   * and verifies that the caller possesses all permissions contained within
+   * each assigned role in that school.
    *
    * The rule lives here rather than in the controller so that the next caller
    * in — the offline sync endpoints do not go through one — gets it too.
    */
-  async assertRolesWithin(roleIds: domain.RoleId[], schoolIds: domain.SchoolId[]): Promise<void> {
+  async assertRolesWithin(
+    roleIds: domain.RoleId[],
+    schoolIds: domain.SchoolId[],
+    callerPermissions?: AuthenticatedUserPermissions,
+  ): Promise<void> {
     if (roleIds.length === 0) return
 
     const roles = await this.repository.find({ where: { id: In(roleIds) } })
@@ -108,6 +119,12 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
 
     if (!allFound || !allInScope) {
       throw new ForbiddenException('User does not have permission')
+    }
+
+    if (callerPermissions) {
+      for (const role of roles) {
+        assertPermissionsGrantable(role.permissions, role.schoolId, callerPermissions)
+      }
     }
   }
 
@@ -123,21 +140,29 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
     roleIds: domain.RoleId[],
     schoolIds: domain.SchoolId[],
     actorUserId?: domain.UserId | null,
-  ): Promise<void> {
-    await this.assertRolesWithin(roleIds, schoolIds)
+    callerPermissions?: AuthenticatedUserPermissions,
+  ): Promise<number> {
+    await this.assertRolesWithin(roleIds, schoolIds, callerPermissions)
 
     const elsewhere = (await this.getRolesOfUser(userId))
       .filter((role) => !schoolIds.includes(role.schoolId))
       .map((role) => role.id)
 
-    await this.setRolesForUser(userId, [...elsewhere, ...roleIds], actorUserId)
+    return this.setRolesForUser(userId, [...elsewhere, ...roleIds], actorUserId)
   }
 
+  /**
+   * Replaces the user's roles, and answers with how many places went with them.
+   *
+   * The count is taken inside the transaction that revokes the places, because
+   * it is the only place that knows which rows were actually taken back: read
+   * before the write it would be a guess, and read after it would be nothing.
+   */
   async setRolesForUser(
     userId: domain.UserId,
     roleIds: domain.RoleId[],
     actorUserId?: domain.UserId | null,
-  ): Promise<void> {
+  ): Promise<number> {
     const existing = await this.userRolesRepo.findBy({ userId })
 
     // find roles to add or remove
@@ -147,7 +172,7 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
     const rolesToRemove = existing.filter((userRole) => !roleIds.includes(userRole.roleId))
 
     // perform the changes in a single transaction
-    await this.userRolesRepo.manager.transaction(async (transactionalEntityManager) => {
+    return this.userRolesRepo.manager.transaction(async (transactionalEntityManager) => {
       await Promise.all([
         ...rolesToAssign.map(async (roleId) => {
           const userRole = this.userRolesRepo.create({ userId, roleId })
@@ -158,7 +183,7 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
         }),
       ])
 
-      await this.closeMembershipsEnded(
+      const revokedPlaces = await this.closeMembershipsEnded(
         transactionalEntityManager,
         userId,
         rolesToRemove.map((userRole) => userRole.roleId),
@@ -186,6 +211,8 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
         rolesToRemove.map((userRole) => userRole.roleId),
         actorUserId,
       )
+
+      return revokedPlaces
     })
   }
 
@@ -334,18 +361,21 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
   }
 
   /**
-   * The cascade that keeps `scopesFor` honest: a place on a course is a
-   * consequence of belonging to the school, and every path that takes the last
-   * role away has to come through here. A path that forgets it leaves a student
-   * reading the school's catalogue and lessons on a role nobody has.
+   * The cascade that keeps `scopesFor` honest, answering with how many places
+   * it took back.
+   *
+   * A place on a course is a consequence of belonging to the school, and every
+   * path that takes the last role away has to come through here. A path that
+   * forgets it leaves a student reading the school's catalogue and lessons on a
+   * role nobody has.
    */
   private async closeMembershipsEnded(
     manager: EntityManager,
     userId: domain.UserId,
     removedRoleIds: domain.RoleId[],
     keptRoleIds: domain.RoleId[],
-  ): Promise<void> {
-    if (removedRoleIds.length === 0) return
+  ): Promise<number> {
+    if (removedRoleIds.length === 0) return 0
 
     const removed = await manager.find(Role, { where: { id: In(removedRoleIds) } })
     const kept = keptRoleIds.length
@@ -355,11 +385,15 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
     const stillIn = new Set(kept.map((role) => role.schoolId))
     const left = new Set(removed.map((role) => role.schoolId))
 
+    let revoked = 0
+
     for (const schoolId of left) {
       if (!stillIn.has(schoolId)) {
-        await this.enrollments.revokePlacesIn(userId, schoolId, manager)
+        revoked += await this.enrollments.revokePlacesIn(userId, schoolId, manager)
       }
     }
+
+    return revoked
   }
 
   /** The same, for a path that knows one school and has to ask about the rest. */

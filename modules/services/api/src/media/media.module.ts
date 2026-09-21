@@ -12,6 +12,7 @@ import {
   MediaUsage,
   Role,
   School,
+  SchoolStorageQuota,
   StorageProfile,
   User,
   UserRole,
@@ -35,6 +36,7 @@ import {
 } from './infra'
 import {
   EndpointGuardService,
+  InstallationStorageService,
   MediaCatalogService,
   MediaDeletionService,
   MediaMasterKeyService,
@@ -48,6 +50,7 @@ import {
   SecretSealingService,
   StorageProbeService,
   StorageProfilesService,
+  StorageQuotasService,
   StorageSetupService,
 } from './services'
 
@@ -101,6 +104,7 @@ const storageProviders: Provider[] = [
       Media,
       MediaUsage,
       StorageProfile,
+      SchoolStorageQuota,
       School,
       User,
       Role,
@@ -125,6 +129,7 @@ const storageProviders: Provider[] = [
     ...storageProviders,
 
     EndpointGuardService,
+    InstallationStorageService,
     MediaCatalogService,
     MediaDeletionService,
     MediaRowsService,
@@ -137,6 +142,7 @@ const storageProviders: Provider[] = [
     SecretSealingService,
     StorageProbeService,
     StorageProfilesService,
+    StorageQuotasService,
     StorageSetupService,
     MediaMasterKeyService,
   ],

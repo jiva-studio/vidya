@@ -30,15 +30,15 @@ const world = (lessons: MediaInUseResponse['lessons']) => {
   const manager = {} as EntityManager
   const steps: string[] = []
   const removed: string[] = []
-  const dropped: Media[] = []
+  const dropped: MediaId[] = []
   const recorded: AuditLogEntry[] = []
 
   const service = new MediaDeletionService(
     { transaction: async (run: (m: EntityManager) => Promise<void>) => run(manager) } as DataSource,
     {
-      deleteChargedRow: async (_m: EntityManager, media: Media) => {
+      deleteRow: async (mediaId: MediaId) => {
         steps.push('drop-row')
-        dropped.push(media)
+        dropped.push(mediaId)
       },
     } as unknown as MediaRowsService,
     { lessonsUsing: async () => lessons } as unknown as MediaUsageIndexService,
