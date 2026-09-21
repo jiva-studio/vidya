@@ -6,6 +6,10 @@ import DOMPurify from 'dompurify'
 // someone watching the screen rather than setting a page.
 Marked.setOptions({ breaks: true })
 
+const SANITIZE_OPTIONS: DOMPurify.Config = {
+  USE_PROFILES: { html: true },
+}
+
 /**
  * Lesson text, as the student will see it.
  *
@@ -15,7 +19,7 @@ Marked.setOptions({ breaks: true })
  * of this function is the only string the editor is allowed to hand to `v-html`.
  */
 export const renderMarkdown = (markdown: string): string =>
-  DOMPurify.sanitize(Marked.parse(markdown))
+  DOMPurify.sanitize(Marked.parse(markdown), SANITIZE_OPTIONS)
 
 /**
  * One line of markdown, for a place that already has its own element.
@@ -25,4 +29,4 @@ export const renderMarkdown = (markdown: string): string =>
  * characters the author typed, not a page title inside a form field.
  */
 export const renderInlineMarkdown = (markdown: string): string =>
-  DOMPurify.sanitize(InlineLexer.output(markdown, {}, Marked.options))
+  DOMPurify.sanitize(InlineLexer.output(markdown, {}, Marked.options), SANITIZE_OPTIONS)
