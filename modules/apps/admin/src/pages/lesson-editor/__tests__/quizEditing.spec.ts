@@ -1,7 +1,7 @@
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 
 import { messages } from '../i18n'
 import { contentOf, draftOf, quizBlock, sectionOf } from './documents'
@@ -143,6 +143,8 @@ describe('the explanation', () => {
       ),
     ]
 
-    expect(fields.some((node) => accessibleName(node) === 'Explanation')).toBe(true)
+    expect(
+      fields.some((node) => accessibleName(node) === translate('editor-quiz-explanation-label')),
+    ).toBe(true)
   })
 })

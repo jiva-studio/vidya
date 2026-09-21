@@ -5,6 +5,8 @@ import { webcrypto } from 'node:crypto'
 import { enableAutoUnmount } from '@vue/test-utils'
 import { afterEach } from 'vitest'
 
+import { enBundle, fluent, locale } from './src/shared/i18n'
+
 if (!globalThis.crypto) {
   Object.defineProperty(globalThis, 'crypto', { value: webcrypto })
 }
@@ -72,3 +74,8 @@ if (!globalThis.ResizeObserver) {
 // Vue, outside any test. Every mounted screen therefore goes away with the test
 // that mounted it.
 enableAutoUnmount(afterEach)
+
+// The suite runs in English. An assertion then quotes the text it checks; a
+// test about the translation itself switches the language on its own.
+locale.value = 'en'
+fluent.bundles = [enBundle]

@@ -18,6 +18,19 @@ export interface MenuItem {
   readonly permission?: PermissionKey
 }
 
+/**
+ * Where a page that has no sidebar entry of its own belongs.
+ *
+ * A roster, a form, an editor: each is reached through a record, so it cannot
+ * be a standing entry — there is no roster until a group is chosen. It names
+ * the entry it sits under instead, and the sidebar shows it nested there while
+ * it is open. That is the whole of the trail, so no page draws breadcrumbs.
+ */
+export interface NavPlacement {
+  readonly parent: string
+  readonly label: string
+}
+
 /** Sidebar entries are grouped; the group is a heading, not a link. */
 export interface MenuGroup {
   readonly label: string

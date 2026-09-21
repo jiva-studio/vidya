@@ -62,13 +62,21 @@ export type SubmitHomeworkResponse = crud.UpdateItemResponse<HomeworkDetails>
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export type GetHomeworkQuery = {
+export type GetHomeworkQuery = crud.PageQuery & {
   enrollmentId?: domain.EnrollmentId
   groupId?: domain.GroupId
   status?: domain.HomeworkStatus
+
+  /**
+   * Narrows the answer to one school.
+   *
+   * The list is otherwise scoped only by the caller's grants, which can span
+   * several. `scopedBySchool` intersects the two, so this cannot widen.
+   */
+  schoolId?: domain.SchoolId
 }
 
-export type GetHomeworkListResponse = crud.GetItemsListResponse<HomeworkSummary>
+export type GetHomeworkListResponse = crud.GetPagedItemsListResponse<HomeworkSummary>
 export type GetHomeworkResponse = crud.GetItemResponse<HomeworkDetails>
 
 /* -------------------------------------------------------------------------- */

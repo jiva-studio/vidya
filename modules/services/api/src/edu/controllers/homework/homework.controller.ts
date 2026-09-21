@@ -88,18 +88,26 @@ export class HomeworkController {
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetHomeworkListResponse> {
     if (auth.permissions.has(['homework:read'])) {
-      const found = await this.homework
+      const [found, total] = await this.homework
         .scopedBy({ permissions: auth.permissions })
-        .findAll({ where: { enrollmentId: query.enrollmentId, status: query.status } })
+        .findAndCount({
+          where: {
+            enrollmentId: query.enrollmentId,
+            status: query.status,
+            schoolId: query.schoolId,
+          },
+          order: { createdAt: 'DESC', id: 'ASC' },
+          ...dto.pageOf(query),
+        })
 
-      return { items: toHomeworkSummaries(found) }
+      return { items: toHomeworkSummaries(found), total }
     }
 
     // Without the permission a student sees only their own work, found via enrollments.
     const mine = await this.enrollments.findAll({ where: { studentId: auth.userId } })
     const found = await this.homework.forEnrollments(mine, query.status)
 
-    return { items: toHomeworkSummaries(found) }
+    return { items: toHomeworkSummaries(found), total: found.length }
   }
 
   /* -------------------------------------------------------------------------- */

@@ -66,18 +66,22 @@ export class CoursesController {
 
   @Crud.GetMany(Routes().edu.courses.find())
   async getMany(
-    @Query() query: dto.GetCoursesQuery,
+    @Query() filters: dto.GetCoursesQuery,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetCoursesResponse> {
     if (!auth.permissions.has(['courses:read'])) {
       throw new ForbiddenException('User does not have permission')
     }
 
-    const courses = await this.courses
+    const [courses, total] = await this.courses
       .scopedBy({ permissions: auth.permissions })
-      .findAll({ where: { schoolId: query.schoolId } })
+      .findAndCount({
+        where: { ...dto.matchingName(filters.query), schoolId: filters.schoolId },
+        order: { name: 'ASC', id: 'ASC' },
+        ...dto.pageOf(filters),
+      })
 
-    return { items: toCourseSummaries(courses) }
+    return { items: toCourseSummaries(courses), total }
   }
 
   /* -------------------------------------------------------------------------- */

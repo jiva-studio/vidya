@@ -3,6 +3,8 @@ import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator'
 
+import { PagedQuery } from './paging.dto'
+
 /* -------------------------------------------------------------------------- */
 /*                                   Models                                   */
 /* -------------------------------------------------------------------------- */
@@ -71,16 +73,25 @@ export class CreateCourseResponse implements protocol.CreateCourseResponse {
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export class GetCoursesQuery implements protocol.GetCoursesQuery {
+export class GetCoursesQuery extends PagedQuery implements protocol.GetCoursesQuery {
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
   schoolId?: domain.SchoolId
+
+  @ApiPropertyOptional({ example: 'morning' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  query?: string
 }
 
 export class GetCoursesResponse implements protocol.GetCoursesResponse {
   @ApiProperty({ type: [CourseSummary] })
   items: CourseSummary[]
+
+  @ApiProperty({ example: 137 })
+  total: number
 }
 
 export class GetCourseResponse extends CourseDetails {}

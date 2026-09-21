@@ -1,5 +1,6 @@
 export * from './auth'
 export * from './courses'
+export type { GetPagedItemsListResponse, PageQuery } from './crud'
 export * from './enrollments'
 export * from './error'
 export * from './groups'

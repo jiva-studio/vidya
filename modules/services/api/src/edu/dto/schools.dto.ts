@@ -11,6 +11,8 @@ import {
   MinLength,
 } from 'class-validator'
 
+import { PagedQuery } from './paging.dto'
+
 /* -------------------------------------------------------------------------- */
 /*                                   Models                                   */
 /* -------------------------------------------------------------------------- */
@@ -46,9 +48,18 @@ export class SchoolSummary implements protocol.SchoolSummary {
 
 export class GetSchoolResponse extends SchoolDetails implements protocol.GetSchoolResponse {}
 
+export class GetSchoolsQuery extends PagedQuery implements protocol.GetSchoolsQuery {
+  @ApiPropertyOptional({ example: 'morning' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  query?: string
+}
+
 export class GetSchoolsResponse implements protocol.GetSchoolsResponse {
-  constructor(options: { items: Array<SchoolSummary> }) {
+  constructor(options: { items: Array<SchoolSummary>; total?: number }) {
     this.items = options.items ?? []
+    this.total = options.total ?? this.items.length
   }
 
   @ApiProperty({
@@ -60,6 +71,9 @@ export class GetSchoolsResponse implements protocol.GetSchoolsResponse {
     ],
   })
   items: SchoolSummary[]
+
+  @ApiProperty({ example: 137 })
+  total: number
 }
 
 /* -------------------------------------------------------------------------- */

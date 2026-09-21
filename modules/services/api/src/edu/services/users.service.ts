@@ -25,11 +25,16 @@ export class UsersService extends ScopedEntitiesService<User, Scope> {
         .filter((s) => !schoolId || s.schoolId === schoolId)
         .map((s) => s.schoolId)
 
-      // Create a scoped query for the user
+      // Everything but `where` is carried over: rebuilding the query from
+      // nothing silently dropped the paging and the relations the caller asked
+      // for, so a list could not be paged and roles could not be loaded.
       const scopedQuery = {
+        ...query,
         where: {
+          ...(where ?? {}),
           id: where?.id,
           roles: {
+            ...(where?.roles ?? {}),
             schoolId: In(schoolIds),
           },
         },

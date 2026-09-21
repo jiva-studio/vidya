@@ -5,6 +5,7 @@ import {
   NotFoundException,
   Param,
   ParseUUIDPipe,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
@@ -71,21 +72,26 @@ export class SchoolsController {
   /* -------------------------------------------------------------------------- */
 
   @Crud.GetMany(Routes().edu.schools.find())
-  async getMany(@Authentication() auth: UserAuthentication): Promise<dto.GetSchoolsResponse> {
+  async getMany(
+    @Query() filters: dto.GetSchoolsQuery,
+    @Authentication() auth: UserAuthentication,
+  ): Promise<dto.GetSchoolsResponse> {
     // Check if user has permission to read schools
     if (!auth.permissions.has(['schools:read'])) {
       throw new ForbiddenException('User does not have permission')
     }
 
-    // Get schools with user permissions scope
-    const schools = await this.schoolsService
+    // Get one page of the schools the caller may see
+    const [schools, total] = await this.schoolsService
       .scopedBy({ permissions: auth.permissions })
-      .findAll({})
+      .findAndCount({
+        where: dto.matchingName(filters.query),
+        order: { name: 'ASC', id: 'ASC' },
+        ...dto.pageOf(filters),
+      })
 
     // Return schools response
-    return new dto.GetSchoolsResponse({
-      items: toSchoolSummaries(schools),
-    })
+    return new dto.GetSchoolsResponse({ items: toSchoolSummaries(schools), total })
   }
 
   /* -------------------------------------------------------------------------- */

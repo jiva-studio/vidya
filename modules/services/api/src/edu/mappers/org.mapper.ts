@@ -14,6 +14,7 @@ const SCHOOL = ['id', 'name', 'logoUrl', 'description'] as const
 const SCHOOL_SUMMARY = ['id', 'name', 'logoUrl'] as const
 const USER = ['id', 'name', 'email', 'phone'] as const
 const USER_SUMMARY = ['id', 'name'] as const
+const USER_ROLE_SUMMARY = ['id', 'name'] as const
 
 /* -------------------------------------------------------------------------- */
 /*                                    Roles                                   */
@@ -39,7 +40,11 @@ export const toSchoolSummaries = (s: entities.School[]) =>
 /* -------------------------------------------------------------------------- */
 
 export const toUserDetails = (u: entities.User) => project<dto.UserDetails>(u, USER)
-export const toUserSummaries = (u: entities.User[]) => projectAll<dto.UserSummary>(u, USER_SUMMARY)
+export const toUserSummaries = (u: entities.User[]): dto.UserSummary[] =>
+  u.map((user) => ({
+    ...project<dto.UserSummary>(user, USER_SUMMARY),
+    roles: projectAll<dto.UserRoleSummary>(user.roles ?? [], USER_ROLE_SUMMARY),
+  }))
 
 /* -------------------------------------------------------------------------- */
 /*                                   Shared                                   */

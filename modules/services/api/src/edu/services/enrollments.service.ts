@@ -16,7 +16,7 @@ import { LessonsService } from './lessons.service'
 import { LessonVersionsService } from './lessonVersions.service'
 import { scopedBySchool } from './scoped-by-school'
 
-export type ModerationStatus = Extract<EnrollmentStatus, 'accepted' | 'declined'>
+export type ModerationStatus = Extract<EnrollmentStatus, 'accepted' | 'declined' | 'revoked'>
 
 export type ModerationDecision = {
   status: ModerationStatus
@@ -32,6 +32,10 @@ export type ModerationDecision = {
  * were rather than made to start again with nothing they had. There is no open
  * request there to refuse, hence no way back to `declined`.
  *
+ * `accepted` goes to `revoked` and nowhere else: a place given can be taken
+ * back, but not turned into a refusal, there being no request left to refuse.
+ * `revoked` reopens to `accepted`, so the pair is reversible.
+ *
  * `declined` is empty and stays empty. A refusal on the merits is an answer,
  * not a pause; reversing it is a new request, not a second answer to the old.
  *
@@ -41,7 +45,7 @@ export type ModerationDecision = {
  */
 const MODERATION: Readonly<Record<EnrollmentStatus, readonly ModerationStatus[]>> = Object.freeze({
   pending: ['accepted', 'declined'],
-  accepted: [],
+  accepted: ['revoked'],
   declined: [],
   revoked: ['accepted'],
   withdrawn: ['accepted'],
@@ -238,6 +242,12 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
       throw new ConflictException(
         `Enrollment ${enrollment.id} cannot go from ${enrollment.status} to ${decision.status}`,
       )
+    }
+
+    // `CLEARED_BY_A_NEW_DECISION` nulls the column and the write below puts
+    // the decision's own value back, so an ended place could keep a group.
+    if (decision.groupId && decision.status !== 'accepted') {
+      throw new ConflictException(`A ${decision.status} place is not put in a group`)
     }
 
     if (decision.groupId) {

@@ -53,26 +53,46 @@ export type CreateEnrollmentResponse = crud.CreateItemResponse<EnrollmentDetails
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export type GetEnrollmentsQuery = {
+export type GetEnrollmentsQuery = crud.PageQuery & {
   courseId?: domain.CourseId
   groupId?: domain.GroupId
   studentId?: domain.UserId
   status?: domain.EnrollmentStatus
+
+  /**
+   * Narrows the answer to one school.
+   *
+   * The list is otherwise scoped only by the caller's grants, which can span
+   * several. `scopedBySchool` intersects the two, so this cannot widen.
+   */
+  schoolId?: domain.SchoolId
 }
 
-/** The caller is the student, so naming one would only let them ask about someone else. */
-export type GetMyEnrollmentsQuery = Omit<GetEnrollmentsQuery, 'studentId' | 'groupId'>
+/**
+ * The caller is the student, so naming one would only let them ask about
+ * someone else. It does not page either: the endpoint answers every place the
+ * caller holds, which is a handful, and the DTO refuses what it cannot honour.
+ */
+export type GetMyEnrollmentsQuery = Omit<
+  GetEnrollmentsQuery,
+  'studentId' | 'groupId' | 'schoolId' | 'limit' | 'offset'
+>
 
-export type GetEnrollmentsResponse = crud.GetItemsListResponse<EnrollmentSummary>
+export type GetEnrollmentsResponse = crud.GetPagedItemsListResponse<EnrollmentSummary>
 export type GetEnrollmentResponse = crud.GetItemResponse<EnrollmentDetails>
 
 /* -------------------------------------------------------------------------- */
 /*                                 Moderation                                 */
 /* -------------------------------------------------------------------------- */
 
-/** Accept or decline a request, optionally placing the student in a group. */
+/**
+ * What the school decides about a place.
+ *
+ * `revoked` takes back a place already given, without ending the student's
+ * membership of the school. `withdrawn` is absent: it is the student's to make.
+ */
 export type ModerateEnrollmentRequest = {
-  status: Extract<domain.EnrollmentStatus, 'accepted' | 'declined'>
+  status: Extract<domain.EnrollmentStatus, 'accepted' | 'declined' | 'revoked'>
   groupId?: domain.GroupId
 }
 

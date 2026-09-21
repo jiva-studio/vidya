@@ -13,7 +13,7 @@ const COURSE = ['id', 'schoolId', 'name', 'description', 'learningType'] as cons
 const COURSE_SUMMARY = ['id', 'name', 'description'] as const
 
 const GROUP = ['id', 'courseId', 'name', 'description'] as const
-const GROUP_SUMMARY = ['id', 'name', 'status'] as const
+const GROUP_SUMMARY = ['id', 'courseId', 'name', 'status'] as const
 
 const LESSON = ['id', 'courseId', 'lessonNumber', 'title'] as const
 const LESSON_SUMMARY = ['id', 'lessonNumber', 'title'] as const

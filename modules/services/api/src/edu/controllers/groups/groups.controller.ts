@@ -69,18 +69,22 @@ export class GroupsController {
 
   @Crud.GetMany(Routes().edu.groups.find())
   async getMany(
-    @Query() query: dto.GetGroupsQuery,
+    @Query() filters: dto.GetGroupsQuery,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetGroupsResponse> {
     if (!auth.permissions.has(['groups:read'])) {
       throw new ForbiddenException('User does not have permission')
     }
 
-    const groups = await this.groups
+    const [groups, total] = await this.groups
       .scopedBy({ permissions: auth.permissions })
-      .findAll({ where: { courseId: query.courseId } })
+      .findAndCount({
+        where: { ...dto.matchingName(filters.query), courseId: filters.courseId },
+        order: { name: 'ASC', id: 'ASC' },
+        ...dto.pageOf(filters),
+      })
 
-    return { items: toGroupSummaries(groups) }
+    return { items: toGroupSummaries(groups), total }
   }
 
   /* -------------------------------------------------------------------------- */

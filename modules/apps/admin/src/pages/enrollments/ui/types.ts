@@ -28,6 +28,7 @@ export interface EnrollmentsTableRowProps {
 export interface EnrollmentsTableRowEmits {
   accept: [id: EnrollmentId]
   decline: [id: EnrollmentId]
+  revoke: [id: EnrollmentId]
   'assign-group': [id: EnrollmentId]
   review: [id: EnrollmentId]
   archive: [id: EnrollmentId]

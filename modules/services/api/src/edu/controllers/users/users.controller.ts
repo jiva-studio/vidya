@@ -81,7 +81,7 @@ export class UsersController {
 
   @Crud.GetMany(Routes().edu.user(':id').find())
   async getMany(
-    @Query() query: dto.GetUsersQuery,
+    @Query() filters: dto.GetUsersQuery,
     @Authentication() auth: UserAuthentication,
   ): Promise<GetUsersResponse> {
     // Check if user has permission to read users
@@ -89,17 +89,24 @@ export class UsersController {
       throw new ForbiddenException('User does not have permission')
     }
 
-    // Get users with user permissions scope
-    const users = await this.usersService.scopedBy({ permissions: auth.permissions }).findAll({
-      where: {
-        roles: {
-          schoolId: query.schoolId,
+    // One page of the school's people, with their roles in it. `relations` and
+    // the paging survive the scope, which used to rebuild the query from `where`
+    // alone and drop them.
+    const [users, total] = await this.usersService
+      .scopedBy({ permissions: auth.permissions })
+      .findAndCount({
+        where: {
+          ...dto.matchingName(filters.query),
+          roles: { schoolId: filters.schoolId },
         },
-      },
-    })
+        relations: { roles: true },
+        order: { name: 'ASC', id: 'ASC' },
+        ...dto.pageOf(filters),
+      })
 
     // Return users response
     return new dto.GetUsersResponse({
+      total,
       items: toUserSummaries(users),
     })
   }

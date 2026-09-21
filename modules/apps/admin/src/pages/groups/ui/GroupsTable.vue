@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import type { GroupSummary } from '@vidya/protocol'
 import { Table } from '@vidya/ui'
 import type { TableColumn } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
 
 import GroupRow from './GroupRow.vue'
-import type { GroupsTableEmits, GroupsTableProps } from './types'
+import type { GroupListRow, GroupsTableEmits, GroupsTableProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
 const props = withDefaults(defineProps<GroupsTableProps>(), {
+  emptyTitle: undefined,
+  emptyDescription: undefined,
   loading: false,
   error: undefined,
   canCreate: false,
@@ -25,10 +26,9 @@ const emit = defineEmits<GroupsTableEmits>()
 
 const { $t } = useFluent()
 
-// `GroupSummary` is an id and a name and nothing else — no course, no
-// description — so the list shows what it has and the rest is one click away.
 const columns = computed<TableColumn[]>(() => [
   { key: 'name', label: $t('groups-column-name') },
+  { key: 'course', label: $t('groups-column-course') },
   { key: 'actions', label: $t('groups-column-actions'), align: 'end' },
 ])
 
@@ -54,8 +54,8 @@ function onMembers(id: string) {
 
 /* -------------------------------- Helpers --------------------------------- */
 
-function asGroup(row: unknown): GroupSummary {
-  return row as GroupSummary
+function asGroup(row: unknown): GroupListRow {
+  return row as GroupListRow
 }
 </script>
 
@@ -65,8 +65,8 @@ function asGroup(row: unknown): GroupSummary {
     :rows="props.rows"
     :loading="props.loading"
     :error="props.error"
-    :empty-title="$t('groups-empty-title')"
-    :empty-description="$t('groups-empty-body')"
+    :empty-title="props.emptyTitle ?? $t('groups-empty-title')"
+    :empty-description="props.emptyDescription ?? $t('groups-empty-body')"
     :empty-action-label="emptyAction"
     :retry-label="$t('action-retry')"
     @retry="onRetry"

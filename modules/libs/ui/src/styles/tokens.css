@@ -72,6 +72,22 @@
   --color-primary-border: var(--color-accent-200);
   --color-focus: var(--color-accent-500);
 
+  /* Avatar tints. Initials sit on one of six pairs chosen by a hash of the
+     name, never at random: one face keeps one colour. Each pair is a surface
+     and a foreground that pass AA together. */
+  --color-avatar-1-surface: #ccfbf1;
+  --color-avatar-1-fg: #115e59;
+  --color-avatar-2-surface: #dbeafe;
+  --color-avatar-2-fg: #1e40af;
+  --color-avatar-3-surface: #fce7f3;
+  --color-avatar-3-fg: #9d174d;
+  --color-avatar-4-surface: #fef3c7;
+  --color-avatar-4-fg: #92400e;
+  --color-avatar-5-surface: #e0e7ff;
+  --color-avatar-5-fg: #3730a3;
+  --color-avatar-6-surface: #dcfce7;
+  --color-avatar-6-fg: #166534;
+
   /* ------------------------------------------------------------------ */
   /*  Type                                                               */
   /* ------------------------------------------------------------------ */

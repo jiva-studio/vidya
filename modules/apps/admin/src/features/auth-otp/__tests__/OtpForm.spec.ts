@@ -2,7 +2,7 @@ import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { httpClientKey, HttpError, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
 
@@ -74,7 +74,7 @@ describe('OtpForm', () => {
     await typeEmail(form, 'owner@example.com')
 
     expect(form.find('input[name="one-time-code"]').exists()).toBe(true)
-    expect(form.text()).toContain('Код уже отправлен и ещё действует')
+    expect(form.text()).toContain(translate('auth-error-code-still-valid'))
   })
 
   it('counts down instead of offering a button that answers 429', async () => {
@@ -112,7 +112,7 @@ describe('OtpForm', () => {
     await form.find('form').trigger('submit')
     await flushPromises()
 
-    expect(form.text()).toContain('Неверный код')
+    expect(form.text()).toContain(translate('auth-error-wrong-code'))
     expect((form.find('input[name="one-time-code"]').element as HTMLInputElement).value).toBe(
       '000000',
     )

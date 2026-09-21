@@ -1,78 +1,67 @@
 <script setup lang="ts">
-import { FormField, FormFooter, Input } from '@vidya/ui'
-import { useFluent } from 'fluent-vue'
-import { computed, ref } from 'vue'
+import { FieldGroup, FormField, Input } from '@vidya/ui'
 
-import { reasonOf } from '@/shared/lib'
-import { useUserApi } from '@/entities/user'
+import type { UserFormValues } from '@/entities/user'
 
-import { formClasses } from './styles'
-import type { UserDetailsFormProps } from './types'
+import type { UserDetailsFormEmits, UserDetailsFormProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<UserDetailsFormProps>()
+const props = withDefaults(defineProps<UserDetailsFormProps>(), {
+  busy: false,
+  invalid: false,
+})
 
-/* --------------------------------- State ---------------------------------- */
+/* --------------------------------- Events --------------------------------- */
 
-const { $t } = useFluent()
-const api = useUserApi()
-
-const name = ref(props.user.name)
-const email = ref(props.user.email)
-const busy = ref(false)
-const invalid = ref(false)
-const error = ref<string | undefined>(undefined)
-
-const nameError = computed(() => (invalid.value ? $t('users-form-name-required') : undefined))
+const emit = defineEmits<UserDetailsFormEmits>()
 
 /* -------------------------------- Handlers -------------------------------- */
 
-async function onSubmit() {
-  invalid.value = name.value.trim().length === 0
-  if (invalid.value) return
-
-  busy.value = true
-  error.value = undefined
-
-  try {
-    await api.update(props.user.id, {
-      name: name.value.trim(),
-      email: email.value.trim(),
-    })
-  } catch (failure) {
-    error.value = reasonOf(failure)
-  } finally {
-    busy.value = false
-  }
+function onName(name: string) {
+  patch({ name })
 }
 
-function onCancel() {
-  name.value = props.user.name
-  email.value = props.user.email
-  invalid.value = false
-  error.value = undefined
+function onEmail(email: string) {
+  patch({ email })
+}
+
+/* -------------------------------- Helpers --------------------------------- */
+
+function patch(values: Partial<UserFormValues>) {
+  emit('update:modelValue', { ...props.modelValue, ...values })
 }
 </script>
 
 <template>
-  <form :class="formClasses" @submit.prevent="onSubmit">
-    <FormField :label="$t('users-form-name')" :error="nameError" required>
+  <FieldGroup :title="$t('users-form-title')">
+    <FormField
+      :label="$t('users-form-name')"
+      :error="props.invalid ? $t('users-form-name-required') : undefined"
+      required
+    >
       <template #default="field">
-        <Input :id="field.id" v-model="name" name="name" :disabled="busy" />
+        <Input
+          :id="field.id"
+          name="name"
+          :model-value="props.modelValue.name"
+          :disabled="props.busy"
+          :invalid="field.invalid"
+          @update:model-value="onName"
+        />
       </template>
     </FormField>
     <FormField :label="$t('users-form-email')">
       <template #default="field">
-        <Input :id="field.id" v-model="email" name="email" type="email" :disabled="busy" />
+        <Input
+          :id="field.id"
+          name="email"
+          :model-value="props.modelValue.email"
+          type="email"
+          :disabled="props.busy"
+          @update:model-value="onEmail"
+        />
       </template>
     </FormField>
-    <FormFooter
-      :submit-label="$t('action-save')"
-      :cancel-label="$t('action-cancel')"
-      :busy="busy"
-      @submit="onSubmit"
-      @cancel="onCancel"
-    />
-  </form>
+  </FieldGroup>
 </template>

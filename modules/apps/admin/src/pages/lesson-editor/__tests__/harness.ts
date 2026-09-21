@@ -9,7 +9,7 @@ import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 import type { MediaGateway } from '@/entities/media'
 import { FakeMediaGateway, mediaGatewayKey } from '@/entities/media'
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { manualClock } from '@/shared/lib'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
@@ -23,7 +23,7 @@ import LessonEditorPage from '../ui/LessonEditorPage.vue'
 // the two it borrows are stated here rather than imported across.
 addMessages({
   en: 'nav-courses = Courses\nlessons-title = Lessons\n',
-  ru: 'nav-courses = Курсы\nlessons-title = Уроки\n',
+  ru: 'nav-courses = Courses\nlessons-title = Lessons\n',
 })
 
 export const SCHOOL = asId<SchoolId>('11111111-1111-1111-1111-111111111111')
@@ -116,16 +116,31 @@ export const openEditor = async (
 }
 
 /**
- * Saves the draft the way the screen does.
+ * Saves the draft through the shortcut.
  *
- * There is no save button any more: autosave carries the document, and the
- * shortcut is what an author reaches for when they will not wait for it.
+ * Autosave carries the document and the toolbar's button sends it now; the
+ * shortcut is the third way in, and the one a test can reach without knowing
+ * which of the two the author pressed.
  */
 export const saveDraft = async (): Promise<void> => {
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true }))
   await flushPromises()
   await flushPromises()
 }
+
+/** The one control that carries the state of the draft, and what it says. */
+export const saveButton = (wrapper: { element: Element }): HTMLButtonElement | undefined =>
+  [...wrapper.element.querySelectorAll('button')].find((node) =>
+    [
+      translate('action-save'),
+      translate('toast-saved'),
+      translate('editor-status-saving'),
+      translate('editor-save-retry'),
+    ].includes(plain(node.textContent ?? '').trim()),
+  )
+
+export const saveSays = (wrapper: { element: Element }): string =>
+  plain(saveButton(wrapper)?.textContent ?? '').trim()
 
 /** What the toolbar says, as one of the words it may say. */
 export const statuses = (wrapper: { element: Element }): string[] =>
@@ -195,7 +210,7 @@ export const clickOverlay = async (label: string): Promise<void> => {
  */
 export const openInsertMenu = async (root: Element): Promise<void> => {
   const tail = [...root.querySelectorAll<HTMLElement>('button')].find((node) =>
-    accessibleName(node).startsWith('Lesson text'),
+    accessibleName(node).startsWith(translate('editor-text-label')),
   )
 
   tail?.click()
@@ -213,7 +228,7 @@ export const openInsertMenu = async (root: Element): Promise<void> => {
 /** Opens a section from the boundary below the one on screen. */
 export const addSection = async (wrapper: { element: Element }): Promise<void> => {
   const boundary = [...wrapper.element.querySelectorAll<HTMLElement>('button')].find(
-    (node) => accessibleName(node) === 'Add section',
+    (node) => accessibleName(node) === translate('editor-section-add'),
   )
 
   if (!boundary) throw new Error('no boundary to open a section from')

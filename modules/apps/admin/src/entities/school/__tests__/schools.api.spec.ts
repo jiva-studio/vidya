@@ -23,7 +23,7 @@ describe('schoolApi', () => {
 
     await api.list()
 
-    expect(transport.calls).toEqual([{ method: 'GET', path: '/edu/schools', query: undefined }])
+    expect(transport.calls).toEqual([{ method: 'GET', path: '/edu/schools', query: {} }])
   })
 
   it('reads one school by its identifier', async () => {
