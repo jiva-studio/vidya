@@ -1,0 +1,42 @@
+/*
+ * The site's own stylesheet.
+ *
+ * The design tokens come from @vidya/ui and are read here, never redefined: a
+ * second copy of a colour is how two screens end up with two greys.
+ */
+
+@import '@ui/styles/tokens.css';
+@import 'tailwindcss';
+
+/* Tailwind 4 detects sources from the build root and never looks inside
+   node_modules, where @vidya/ui is linked. */
+@source '../../../src';
+@source '../../../../../libs/ui/src';
+
+@layer base {
+  html,
+  body,
+  #app {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-page);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  .startup-failure {
+    max-width: 32rem;
+    margin: 4rem auto;
+    padding: 0 1rem;
+  }
+}

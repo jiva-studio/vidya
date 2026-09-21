@@ -147,6 +147,7 @@ seed:
 #
 #   780x  infrastructure   7800 postgres · 7801 redis · 7802 smtp · 7803 mail ui
 #   781x  applications     7810 api · 7811 admin · 7812 storybook · 7813 gateway
+#                          7814 student site
 
 COMPOSE := docker compose -f modules/docker-compose.dev.yml
 MAIL_UI := http://localhost:7803
@@ -157,6 +158,7 @@ export VIDYA_MAILER_PORT  := 7802
 export VIDYA_API_PORT     := 7810
 export VIDYA_ADMIN_PORT   := 7811
 export VIDYA_SB_PORT      := 7812
+export VIDYA_STUDENT_PORT := 7814
 export VIDYA_API_URL      := http://localhost:7810
 
 # Query logging defaults to off (see db.config.ts); set explicitly here so
