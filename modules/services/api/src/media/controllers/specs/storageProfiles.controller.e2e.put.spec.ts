@@ -67,19 +67,54 @@ describe('handing a school its own storage credentials', () => {
     const response = await put(credentials)
 
     expect(response.body.data).toMatchObject({
+      ...storageProfileFixture.response,
+      id: response.body.data.id,
       schoolId: ctx.one.school.id,
-      kind: credentials.kind,
-      endpoint: credentials.endpoint,
-      region: credentials.region,
-      bucket: credentials.bucket,
       prefix: credentials.prefix,
-      accessKeyId: credentials.accessKeyId,
-      secretTail: storageProfileFixture.request.secret.slice(-4),
-      publicBaseUrl: credentials.publicBaseUrl,
-      quotaBytes: credentials.quotaBytes,
       usedBytes: 0,
-      video: { kind: 'none' },
+      verifiedAt: response.body.data.verifiedAt,
     })
+  })
+
+  // The probe is worth having only if it walks the path the product walks: a
+  // narrower check would keep passing after uploads or playback had stopped
+  // working.
+  it('proves the keys by writing, heading, reading back and deleting, in that order', async () => {
+    await put(ctx.credentialsFor(ctx.one.school.id))
+
+    expect(ctx.storageCalls().map((call) => call.op)).toEqual([
+      'signUpload',
+      'write',
+      'head',
+      'signRead',
+      'readRange',
+      'remove',
+    ])
+  })
+
+  it('writes the probe through a grant, exactly as a browser would', async () => {
+    await put(ctx.credentialsFor(ctx.one.school.id))
+
+    const probeKey = `school/${ctx.one.school.id}/.vidya-probe`
+
+    expect(ctx.storageCalls()).toHaveLength(6)
+    expect(ctx.storageCalls().map((call) => call.key)).toEqual(Array(6).fill(probeKey))
+  })
+
+  it('takes the probe object away again, leaving the bucket as it was', async () => {
+    await put(ctx.credentialsFor(ctx.one.school.id))
+
+    expect(ctx.storageCalls().map((call) => call.op)).toContain('remove')
+    expect(ctx.objectsLeftUnder(`school/${ctx.one.school.id}`)).toEqual([])
+  })
+
+  it('names the provider the school chose, so no endpoint has to be guessed', async () => {
+    const credentials = ctx.credentialsFor(ctx.one.school.id)
+
+    const response = await put(credentials)
+
+    expect(response.body.data.provider).toBe(credentials.provider)
+    expect(response.body.data.endpoint).toBe(credentials.endpoint)
   })
 
   it('derives the delivery from the CDN host rather than letting a person choose', async () => {
@@ -165,7 +200,7 @@ describe('handing a school its own storage credentials', () => {
     const retired = rows.find((row) => row.id === first.body.data.id)
 
     expect(retired?.accessKeyId).toBe(ctx.credentialsFor(ctx.one.school.id).accessKeyId)
-    expect(retired?.secretCiphertext).not.toBeNull()
+    expect(retired?.secrets.secret.ciphertext).toBeTruthy()
     expect(retired?.bucket).toBe(storageProfileFixture.request.bucket)
   })
 })

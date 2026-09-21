@@ -1,32 +1,28 @@
 import { Injectable } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
-import {
-  SchoolId,
-  StorageDelivery,
-  StorageProfileId,
-  StorageProfileKind,
-  VideoProvider,
-} from '@vidya/domain'
-import { School, StorageProfile } from '@vidya/entities'
+import { SchoolId, StorageDelivery, StorageProfileId, StorageProvider } from '@vidya/domain'
+import { School, StorageProfile, StorageSecrets } from '@vidya/entities'
 import { DataSource, EntityManager, IsNull } from 'typeorm'
-
-import { SealedProfile } from './secretSealing.service'
 
 /** A profile as it is about to be written; a row is never edited after this. */
 export type StorageProfileDraft = {
   id: StorageProfileId
   schoolId: SchoolId
-  kind: StorageProfileKind
-  endpoint: string
+  provider: StorageProvider
+
+  /** Null for every provider whose address we compose ourselves. */
+  endpoint: string | null
+
   region: string
+
+  /** The account R2 is addressed by, and null for every other provider. */
+  r2AccountId: string | null
   bucket: string
   prefix: string
   accessKeyId: string
   delivery: StorageDelivery
   publicBaseUrl: string | null
-  video: VideoProvider
-  quotaBytes: number | null
-  sealed: SealedProfile
+  secrets: StorageSecrets
   verifiedAt: Date
 }
 
@@ -91,24 +87,16 @@ export class StorageProfilesService {
 const rowFrom = (draft: StorageProfileDraft): Partial<StorageProfile> => ({
   id: draft.id,
   schoolId: draft.schoolId,
-  kind: draft.kind,
+  provider: draft.provider,
   endpoint: draft.endpoint,
   region: draft.region,
+  r2AccountId: draft.r2AccountId,
   bucket: draft.bucket,
   prefix: draft.prefix,
   accessKeyId: draft.accessKeyId,
-  secretCiphertext: draft.sealed.secret.ciphertext,
-  secretNonce: draft.sealed.secret.nonce,
-  keyVersion: draft.sealed.keyVersion,
-  dekCiphertext: draft.sealed.dek.ciphertext,
-  dekNonce: draft.sealed.dek.nonce,
+  secrets: draft.secrets,
   delivery: draft.delivery,
   publicBaseUrl: draft.publicBaseUrl,
-  tokenSecretCiphertext: draft.sealed.tokenSecret?.ciphertext ?? null,
-  tokenSecretNonce: draft.sealed.tokenSecret?.nonce ?? null,
-  video: draft.video,
-  quotaBytes: draft.quotaBytes === null ? null : String(draft.quotaBytes),
-  usedBytes: '0',
   verifiedAt: draft.verifiedAt,
   verifyError: null,
   retiredAt: null,

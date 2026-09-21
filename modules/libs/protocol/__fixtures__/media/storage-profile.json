@@ -1,9 +1,9 @@
 {
   "name": "storage-profile",
   "endpoint": "PUT /edu/schools/:schoolId/storage",
-  "description": "A school hands over its own credentials. The request carries the secret; the response never does — only the key id and the last four characters, which tells two credentials apart without being usable. `delivery` is derived, not chosen: a CDN host in the profile means the CDN signs, its absence means the storage endpoint signs. Applying this retires the previous profile rather than editing it, because files already uploaded are read through the profile that wrote them.",
+  "description": "A school hands over its own credentials. The request carries the secret; the response never does — only the key id and the last four characters, which tells two credentials apart without being usable. `delivery` is derived, not chosen: a CDN host in the profile means the CDN signs, its absence means the storage endpoint signs. Applying this retires the previous profile rather than editing it, because files already uploaded are read through the profile that wrote them. The video provider is not here: a transcoding library is a second vendor relationship, not a bucket's credentials, and gets its own shape when one exists.",
   "request": {
-    "kind": "s3",
+    "provider": "s3-compatible",
     "endpoint": "https://de-s3.storage.bunnycdn.com",
     "region": "de",
     "bucket": "vidya-demo",
@@ -18,7 +18,7 @@
   "response": {
     "id": "e5f60718-293a-4b45-cd6e-7f8091021324",
     "schoolId": "6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f",
-    "kind": "s3",
+    "provider": "s3-compatible",
     "endpoint": "https://de-s3.storage.bunnycdn.com",
     "region": "de",
     "bucket": "vidya-demo",
@@ -27,7 +27,6 @@
     "secretTail": "427e",
     "delivery": "bunny-token",
     "publicBaseUrl": "https://cdn.demo-school.example",
-    "video": { "kind": "none" },
     "quotaBytes": 53687091200,
     "usedBytes": 402118,
     "verifiedAt": "2026-09-21T12:00:03.880Z",

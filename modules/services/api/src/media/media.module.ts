@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
 import { MediaConfig } from '@vidya/api/configs'
 import { RedisService } from '@vidya/api/shared/services'
-import { Role, School, StorageProfile, User, UserRole } from '@vidya/entities'
+import { Role, School, SchoolStorageQuota, StorageProfile, User, UserRole } from '@vidya/entities'
 
 import { StorageProfilesController } from './controllers'
 import {
@@ -23,6 +23,7 @@ import {
   SecretSealingService,
   StorageProbeService,
   StorageProfilesService,
+  StorageQuotasService,
   StorageSetupService,
 } from './services'
 
@@ -68,7 +69,9 @@ const storageProviders: Provider[] = [
  * concerns that belong together and beside nothing else.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([StorageProfile, School, User, Role, UserRole])],
+  imports: [
+    TypeOrmModule.forFeature([StorageProfile, SchoolStorageQuota, School, User, Role, UserRole]),
+  ],
   controllers: [StorageProfilesController],
   providers: [
     // What the authentication guard needs to read a token; `AuthModule`
@@ -83,6 +86,7 @@ const storageProviders: Provider[] = [
     SecretSealingService,
     StorageProbeService,
     StorageProfilesService,
+    StorageQuotasService,
     StorageSetupService,
     MediaMasterKeyService,
   ],

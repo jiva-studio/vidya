@@ -137,8 +137,11 @@ export type ResolveMediaResponse = {
 export type StorageProfileView = {
   id: domain.StorageProfileId
   schoolId: domain.SchoolId
-  kind: domain.StorageProfileKind
-  endpoint: string
+  provider: domain.StorageProvider
+
+  /** Only `s3-compatible` carries one; for the rest it is derived and refused here. */
+  endpoint: string | null
+
   region: string
   bucket: string
   prefix: string
@@ -146,7 +149,6 @@ export type StorageProfileView = {
   secretTail: string
   delivery: domain.StorageDelivery
   publicBaseUrl: string | null
-  video: domain.VideoProvider
   quotaBytes: number | null
   usedBytes: number
   verifiedAt: domain.IsoDateTime | null
@@ -164,16 +166,22 @@ export type StorageProfileView = {
  * would otherwise break every file the school has published.
  */
 export type UpsertStorageProfileRequest = {
-  kind: domain.StorageProfileKind
-  endpoint: string
+  provider: domain.StorageProvider
+
+  /** Required for `s3-compatible`, refused for the rest: theirs is derived. */
+  endpoint?: string
+
   region: string
+
+  /** R2 addresses by account rather than by region, and has no regions. */
+  r2AccountId?: string
+
   bucket: string
   prefix?: string
   accessKeyId: string
   secret: string
   publicBaseUrl?: string
   tokenSecret?: string
-  video?: domain.VideoProvider
   quotaBytes?: number
 }
 

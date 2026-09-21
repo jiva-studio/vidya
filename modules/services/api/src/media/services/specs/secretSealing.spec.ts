@@ -1,9 +1,10 @@
 import { ConfigType } from '@nestjs/config'
 import { MediaConfig } from '@vidya/api/configs'
 import { SchoolId, StorageProfileId } from '@vidya/domain'
+import { SealedText, StorageSecrets } from '@vidya/entities'
 
 import { StorageFailedError } from '../../storageFailure'
-import { SealedProfile, SealedRow, SecretSealingService } from '../secretSealing.service'
+import { SecretSealingService } from '../secretSealing.service'
 
 type Config = ConfigType<typeof MediaConfig>
 
@@ -17,13 +18,10 @@ const OTHER_PROFILE = '99999999-8888-7777-6666-555555555555' as StorageProfileId
 
 const SECRET = 'd41d8cd9-8f00-b204-e980-0998ecf8427e'
 
-const rowOf = (sealed: SealedProfile): SealedRow => ({
-  keyVersion: sealed.keyVersion,
-  dekCiphertext: sealed.dek.ciphertext,
-  dekNonce: sealed.dek.nonce,
-  secretCiphertext: sealed.secret.ciphertext,
-  secretNonce: sealed.secret.nonce,
-})
+/** The sealed bytes behind one value of the document, to bend or to move. */
+const bytesOf = (sealed: SealedText): Buffer => Buffer.from(sealed.ciphertext, 'base64')
+
+const asText = (bytes: Buffer): string => bytes.toString('base64')
 
 describe('sealing a school storage secret', () => {
   const master = Buffer.alloc(32, 3)
@@ -34,14 +32,15 @@ describe('sealing a school storage secret', () => {
 
     const sealed = sealing.sealProfile({ secret: SECRET }, scope)
 
-    expect(sealing.openSecret(rowOf(sealed), scope)).toBe(SECRET)
+    expect(sealing.openSecret(sealed, scope)).toBe(SECRET)
   })
 
   it('keeps the secret out of the ciphertext it produces', () => {
     const sealed = sealingWith(master).sealProfile({ secret: SECRET }, scope)
 
-    expect(sealed.secret.ciphertext.toString('utf8')).not.toContain(SECRET)
-    expect(sealed.secret.ciphertext.toString('latin1')).not.toContain(SECRET)
+    expect(sealed.secret.ciphertext).not.toContain(SECRET)
+    expect(bytesOf(sealed.secret).toString('utf8')).not.toContain(SECRET)
+    expect(bytesOf(sealed.secret).toString('latin1')).not.toContain(SECRET)
   })
 
   it('seals the same secret differently every time, so two rows never match', () => {
@@ -50,8 +49,8 @@ describe('sealing a school storage secret', () => {
     const first = sealing.sealProfile({ secret: SECRET }, scope)
     const second = sealing.sealProfile({ secret: SECRET }, scope)
 
-    expect(first.secret.nonce.equals(second.secret.nonce)).toBe(false)
-    expect(first.secret.ciphertext.equals(second.secret.ciphertext)).toBe(false)
+    expect(first.secret.nonce).not.toBe(second.secret.nonce)
+    expect(first.secret.ciphertext).not.toBe(second.secret.ciphertext)
   })
 
   // One data key shared between profiles would make a stolen row readable with
@@ -61,11 +60,7 @@ describe('sealing a school storage secret', () => {
     const mine = sealing.sealProfile({ secret: SECRET }, scope)
     const theirs = sealing.sealProfile({ secret: SECRET }, scope)
 
-    const withTheirKey = {
-      ...rowOf(mine),
-      dekCiphertext: theirs.dek.ciphertext,
-      dekNonce: theirs.dek.nonce,
-    }
+    const withTheirKey: StorageSecrets = { ...mine, dek: theirs.dek }
 
     expect(() => sealing.openSecret(withTheirKey, scope)).toThrow(StorageFailedError)
   })
@@ -95,7 +90,7 @@ describe('a sealed secret read somewhere it was not sealed for', () => {
     const sealed = sealing.sealProfile({ secret: SECRET }, scope)
 
     expect(() =>
-      sealing.openSecret(rowOf(sealed), { schoolId: SCHOOL, profileId: OTHER_PROFILE }),
+      sealing.openSecret(sealed, { schoolId: SCHOOL, profileId: OTHER_PROFILE }),
     ).toThrow(StorageFailedError)
   })
 
@@ -104,7 +99,7 @@ describe('a sealed secret read somewhere it was not sealed for', () => {
     const sealed = sealing.sealProfile({ secret: SECRET }, scope)
 
     expect(() =>
-      sealing.openSecret(rowOf(sealed), { schoolId: OTHER_SCHOOL, profileId: PROFILE }),
+      sealing.openSecret(sealed, { schoolId: OTHER_SCHOOL, profileId: PROFILE }),
     ).toThrow(StorageFailedError)
   })
 
@@ -113,7 +108,10 @@ describe('a sealed secret read somewhere it was not sealed for', () => {
     const mine = sealing.sealProfile({ secret: SECRET }, scope)
     const theirs = sealing.sealProfile({ secret: SECRET }, scope)
 
-    const tampered = { ...rowOf(mine), secretCiphertext: theirs.secret.ciphertext }
+    const tampered: StorageSecrets = {
+      ...mine,
+      secret: { ...mine.secret, ciphertext: theirs.secret.ciphertext },
+    }
 
     expect(() => sealing.openSecret(tampered, scope)).toThrow(StorageFailedError)
   })
@@ -121,7 +119,7 @@ describe('a sealed secret read somewhere it was not sealed for', () => {
   it('does not open under a different master key', () => {
     const sealed = sealingWith(master).sealProfile({ secret: SECRET }, scope)
 
-    expect(() => sealingWith(Buffer.alloc(32, 9)).openSecret(rowOf(sealed), scope)).toThrow(
+    expect(() => sealingWith(Buffer.alloc(32, 9)).openSecret(sealed, scope)).toThrow(
       StorageFailedError,
     )
   })
@@ -129,21 +127,24 @@ describe('a sealed secret read somewhere it was not sealed for', () => {
   it('refuses a single flipped bit rather than returning what it can decrypt', () => {
     const sealing = sealingWith(master)
     const sealed = sealing.sealProfile({ secret: SECRET }, scope)
-    const bent = Buffer.from(sealed.secret.ciphertext)
+    const bent = bytesOf(sealed.secret)
     bent[0] ^= 0x01
 
-    expect(() => sealing.openSecret({ ...rowOf(sealed), secretCiphertext: bent }, scope)).toThrow(
-      StorageFailedError,
-    )
+    expect(() =>
+      sealing.openSecret(
+        { ...sealed, secret: { ...sealed.secret, ciphertext: asText(bent) } },
+        scope,
+      ),
+    ).toThrow(StorageFailedError)
   })
 
   it('says the ciphertext is unreadable when the row carries none at all', () => {
     const sealing = sealingWith(master)
     const sealed = sealing.sealProfile({ secret: SECRET }, scope)
 
-    expect(() => sealing.openSecret({ ...rowOf(sealed), secretCiphertext: null }, scope)).toThrow(
-      StorageFailedError,
-    )
+    expect(() =>
+      sealing.openSecret({ ...sealed, secret: null as unknown as SealedText }, scope),
+    ).toThrow(StorageFailedError)
   })
 
   it('never names the secret in what it throws', () => {
@@ -151,7 +152,7 @@ describe('a sealed secret read somewhere it was not sealed for', () => {
     const sealed = sealing.sealProfile({ secret: SECRET }, scope)
 
     try {
-      sealing.openSecret(rowOf(sealed), { schoolId: OTHER_SCHOOL, profileId: PROFILE })
+      sealing.openSecret(sealed, { schoolId: OTHER_SCHOOL, profileId: PROFILE })
       throw new Error('the secret opened where it should not have')
     } catch (error) {
       expect(String((error as Error).message)).not.toContain(SECRET)
@@ -172,6 +173,6 @@ describe('sealing without a master key', () => {
   it('refuses to open, rather than treating a missing key as a wrong one', () => {
     const sealed = sealingWith(Buffer.alloc(32, 3)).sealProfile({ secret: SECRET }, scope)
 
-    expect(() => sealingWith(null).openSecret(rowOf(sealed), scope)).toThrow(StorageFailedError)
+    expect(() => sealingWith(null).openSecret(sealed, scope)).toThrow(StorageFailedError)
   })
 })

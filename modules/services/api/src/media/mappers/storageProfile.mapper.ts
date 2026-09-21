@@ -3,6 +3,8 @@ import { toIsoDateTime } from '@vidya/domain'
 import { StorageProfile } from '@vidya/entities'
 import * as protocol from '@vidya/protocol'
 
+import { storageEndpointFor } from '../services/storageAddress'
+
 const SECRET_TAIL_LENGTH = 4
 
 /**
@@ -25,21 +27,13 @@ export const deliveryFor = (
 export const secretTailOf = (secret: string): string => secret.slice(-SECRET_TAIL_LENGTH)
 
 /**
- * The video provider, or none at all.
- *
- * A union cannot be checked by a field decorator, and this value goes into a
- * `json` column, so whatever arrives would be stored and read back as a
- * provider later. Anything that is not a complete provider is therefore read
- * as `none` here rather than kept for a reader to trip over.
+ * What a school occupies and what it may occupy, neither of which is on the
+ * profile: the first is the sum of its ready files, the second its own policy
+ * row.
  */
-export const videoProviderOf = (value: domain.VideoProvider | undefined): domain.VideoProvider => {
-  if (value?.kind !== 'bunny-stream') return { kind: 'none' }
-
-  const { libraryId, pullZoneHost } = value
-  if (typeof libraryId !== 'string' || typeof pullZoneHost !== 'string') return { kind: 'none' }
-  if (libraryId.length === 0 || pullZoneHost.length === 0) return { kind: 'none' }
-
-  return { kind: 'bunny-stream', libraryId, pullZoneHost }
+export type StorageOccupancy = {
+  usedBytes: number
+  quotaBytes: number | null
 }
 
 /**
@@ -52,11 +46,17 @@ export const videoProviderOf = (value: domain.VideoProvider | undefined): domain
 export const toStorageProfileView = (
   profile: StorageProfile,
   secretTail: string,
+  occupancy: StorageOccupancy,
 ): protocol.StorageProfileView => ({
   id: profile.id,
-  schoolId: profile.schoolId as protocol.StorageProfileView['schoolId'],
-  kind: profile.kind,
-  endpoint: profile.endpoint,
+  schoolId: profile.schoolId,
+
+  provider: profile.provider,
+
+  // The host the files are actually at: composed for the providers whose
+  // address is ours to compose, and the school's own where it typed one.
+  endpoint: storageEndpointFor(profile.provider, profile),
+
   region: profile.region,
   bucket: profile.bucket,
   prefix: profile.prefix,
@@ -64,9 +64,8 @@ export const toStorageProfileView = (
   secretTail,
   delivery: profile.delivery,
   publicBaseUrl: profile.publicBaseUrl,
-  video: profile.video,
-  quotaBytes: profile.quotaBytes === null ? null : Number(profile.quotaBytes),
-  usedBytes: Number(profile.usedBytes),
+  quotaBytes: occupancy.quotaBytes,
+  usedBytes: occupancy.usedBytes,
   verifiedAt: profile.verifiedAt ? toIsoDateTime(profile.verifiedAt) : null,
   verifyError: profile.verifyError,
 })

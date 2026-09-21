@@ -19,24 +19,33 @@ const HTTPS_ONLY = { protocols: ['https'], require_protocol: true, require_tld: 
  *
  * `delivery` is absent on purpose: it is derived from whether a CDN host was
  * given, so offering it as a field would let a school claim a delivery mode its
- * profile cannot perform. `secret` and `tokenSecret` are write-only — nothing
- * reads them back, here or anywhere else.
+ * profile cannot perform. `endpoint` is optional here and refused further in
+ * for every provider whose host we compose ourselves, which no field decorator
+ * can express. `secret` and `tokenSecret` are write-only — nothing reads them
+ * back, here or anywhere else.
  */
 export class UpsertStorageProfileRequest implements protocol.UpsertStorageProfileRequest {
-  @ApiProperty({ example: 's3' })
-  @IsIn(domain.StorageProfileKinds)
-  kind: domain.StorageProfileKind
+  @ApiProperty({ example: 's3-compatible' })
+  @IsIn(domain.StorageProviders)
+  provider: domain.StorageProvider
 
-  @ApiProperty({ example: 'https://de-s3.storage.bunnycdn.com' })
+  @ApiPropertyOptional({ example: 'https://de-s3.storage.bunnycdn.com' })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  endpoint: string
+  endpoint?: string
 
   @ApiProperty({ example: 'de' })
   @IsString()
   @MaxLength(64)
   region: string
+
+  @ApiPropertyOptional({ example: 'a1b2c3d4e5f60718293a4b45cd6e7f80' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  r2AccountId?: string
 
   @ApiProperty({ example: 'vidya-demo' })
   @IsString()
@@ -72,10 +81,6 @@ export class UpsertStorageProfileRequest implements protocol.UpsertStorageProfil
   @IsString()
   @MaxLength(512)
   tokenSecret?: string
-
-  @ApiPropertyOptional({ example: { kind: 'none' } })
-  @IsOptional()
-  video?: domain.VideoProvider
 
   @ApiPropertyOptional({ example: 53687091200 })
   @IsOptional()
