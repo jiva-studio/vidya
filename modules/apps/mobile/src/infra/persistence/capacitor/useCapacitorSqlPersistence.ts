@@ -4,8 +4,7 @@ import {
   SQLiteConnection,
   type SQLiteDBConnection,
 } from '@capacitor-community/sqlite'
-
-import type { IDatabase, IPersistence } from '@/ports'
+import type { IDatabase, IPersistence } from '@vidya/client'
 
 import { createCapacitorSqlDatabase } from './capacitorSqlDatabase'
 

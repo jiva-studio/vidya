@@ -1,6 +1,5 @@
+import { type HttpClient, HttpError, OfflineError } from '@vidya/client'
 import { describe, expect, it, vi } from 'vitest'
-
-import { type HttpClient, HttpError, OfflineError } from '@/ports'
 
 import { endSessionOn401 } from '../endSessionOn401'
 

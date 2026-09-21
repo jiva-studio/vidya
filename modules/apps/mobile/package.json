@@ -25,6 +25,7 @@
     "@ionic/vue-router": "^8.8.19",
     "@sentry/vue": "^10.75.0",
     "@ts-stack/markdown": "^1.5.0",
+    "@vidya/client": "^0.0.0",
     "@vidya/domain": "^0.0.0",
     "@vidya/protocol": "^0.0.0",
     "@vidya/usecases": "^0.0.0",

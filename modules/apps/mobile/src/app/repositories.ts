@@ -7,7 +7,7 @@ import type {
   ILessonRepository,
   ILessonVersionRepository,
   ISchoolRepository,
-} from '@/ports'
+} from '@vidya/client'
 
 import { useOutboxView } from './outboxView'
 import { runningSyncs, type SyncTriggers } from './sync'

@@ -1,0 +1,29 @@
+{
+  "name": "@vidya/client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The client hexagon shared by the web and the device: ports, scenarios and platform-free adapters",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./testing": "./testing.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@vidya/domain": "^0.0.0",
+    "@vidya/protocol": "^0.0.0",
+    "@vidya/usecases": "^0.0.0",
+    "sql.js": "^1.14.2"
+  },
+  "devDependencies": {
+    "@types/sql.js": "^1.4.11",
+    "fake-indexeddb": "^6.2.5",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  }
+}
