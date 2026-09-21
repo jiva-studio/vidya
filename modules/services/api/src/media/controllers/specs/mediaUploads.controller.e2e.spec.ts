@@ -4,9 +4,11 @@ import { UploadGrant } from '@vidya/domain'
 import { MediaRefusals } from '@vidya/protocol'
 
 import { refusalFor, TEST_MASTER_KEY } from './context'
-import { createMediaFlow, MediaFlow } from './uploadFlow'
+import { createMediaFlow, grantPutFixture, MediaFlow } from './uploadFlow'
 
 const ROUTE = 'POST /media/uploads'
+
+const SHA256 = grantPutFixture.request.sha256 as string
 
 /**
  * What the grant binds, read off the grant whichever way the provider expresses
@@ -95,6 +97,14 @@ describe('asking for permission to upload a file', () => {
     })
   })
 
+  it('promises deduplication for a file the browser was able to hash', async () => {
+    await configure()
+
+    const response = await ask({ sizeBytes: 4096, sha256: SHA256 })
+
+    expect(response.body.deduplicated).toBe(grantPutFixture.response.deduplicated)
+  })
+
   it('refuses a type that is not on the white list', async () => {
     await configure()
     const expected = refusalFor(ROUTE, MediaRefusals.typeNotAllowed)
@@ -128,10 +138,16 @@ describe('asking for permission to upload a file', () => {
   it('leaves neither a row nor a signature behind when it refuses on the quota', async () => {
     await configure({ quotaBytes: 4096 })
 
+    // The probe that accepts the profile signs an object of its own on the way
+    // in, so what a refusal has to add is nothing, not that nothing was signed.
+    const signedBefore = flow.storage.calls.length
+
     await ask({ sizeBytes: 5000 })
 
     expect(await flow.mediaRowsOf(flow.ctx.one.school.id)).toEqual([])
-    expect(flow.storage.calls.filter((call) => call.op === 'signUpload')).toEqual([])
+    expect(
+      flow.storage.calls.slice(signedBefore).filter((call) => call.op === 'signUpload'),
+    ).toEqual([])
   })
 
   it('counts the bytes outstanding grants promised, so parallel grants cannot overfill', async () => {
@@ -191,6 +207,12 @@ describe('asking for permission to upload a file above the hashing limit', () =>
     expect(checksumKeys(response.body.grant as UploadGrant)).toEqual([])
   })
 
+  it('says outright that a file it did not hash takes no part in deduplication', async () => {
+    const response = await askUnhashed()
+
+    expect(response.body.deduplicated).toBe(false)
+  })
+
   it('keeps both copies of an unhashed file, because it cannot tell them apart', async () => {
     const first = await askUnhashed()
     const second = await askUnhashed()
@@ -200,6 +222,25 @@ describe('asking for permission to upload a file above the hashing limit', () =>
       const completed = await flow.completeUpload(
         granted.body.mediaId,
         {},
+        flow.ctx.one.users.owner,
+      )
+      expect(completed.status).toBe(200)
+    }
+
+    expect(second.body.mediaId).not.toBe(first.body.mediaId)
+    expect(flow.objectBehind(second.body.grant as UploadGrant)).toBeDefined()
+  })
+
+  it('holds to that promise when the hash arrives late, at completion', async () => {
+    const first = await askUnhashed()
+    const second = await askUnhashed()
+
+    for (const granted of [first, second]) {
+      expect(granted.body.deduplicated).toBe(false)
+      await flow.putBytes(granted.body.grant as UploadGrant, Buffer.alloc(4096, 1))
+      const completed = await flow.completeUpload(
+        granted.body.mediaId,
+        { sha256: SHA256 },
         flow.ctx.one.users.owner,
       )
       expect(completed.status).toBe(200)
