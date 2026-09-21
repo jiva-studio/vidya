@@ -19,6 +19,7 @@ sync-rejection-unknownLessonVersion = Школа не знает версию у
 sync-rejection-alreadyAccepted = Ответ уже принят, заменить его новым нельзя.
 sync-rejection-underReview = Работу сейчас смотрит преподаватель — изменить её можно будет после ответа.
 sync-rejection-courseNotOffered = Школа пока не набирает на этот курс.
+sync-rejection-alreadyGraded = На этот вопрос уже отвечено, ответ проверен и остаётся прежним.
 sync-rejection-payloadTooLarge = Ответ слишком длинный, чтобы его отправить.
 sync-rejection-malformed = Школа не смогла прочитать этот ответ.
 

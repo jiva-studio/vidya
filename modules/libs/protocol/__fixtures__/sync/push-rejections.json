@@ -1,7 +1,7 @@
 {
   "name": "push-rejections",
   "endpoint": "POST /sync/push",
-  "description": "Every rejection reason, once each. The work stays on the device in all seven cases: a refusal is a state of the row, never a lost edit.",
+  "description": "Every rejection reason, once each. The work stays on the device in all eight cases: a refusal is a state of the row, never a lost edit.",
   "request": {
     "deviceId": "device-8f2a6c14",
     "changes": [
@@ -92,6 +92,20 @@
         "baseHlc": null
       },
       {
+        "outboxId": 107,
+        "collection": "block_states",
+        "docId": "9e4b2d76-1c38-4f50-b9a2-5d7e8c0f3a15",
+        "op": "upsert",
+        "data": {
+          "state": {
+            "type": "quiz",
+            "answer": 1
+          }
+        },
+        "hlc": "001789682400000:00007:device-8f2a6c14",
+        "baseHlc": null
+      },
+      {
         "outboxId": 108,
         "collection": "homework",
         "docId": "c4a71e92-3f85-4d60-b1a8-7e2c9f0d5346",
@@ -172,6 +186,14 @@
         "status": "rejected",
         "reason": "malformed",
         "detail": "state is not a known block state"
+      },
+      {
+        "outboxId": 107,
+        "collection": "block_states",
+        "docId": "9e4b2d76-1c38-4f50-b9a2-5d7e8c0f3a15",
+        "status": "rejected",
+        "reason": "alreadyGraded",
+        "detail": "the question has been answered and marked"
       },
       {
         "outboxId": 108,

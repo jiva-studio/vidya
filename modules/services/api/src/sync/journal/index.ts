@@ -1,5 +1,10 @@
 export { CLOCK, type Clock, systemClock } from './clock'
-export { currentSyncWriteContext, type SyncWriteContext, withSyncWriteContext } from './context'
+export {
+  currentSyncWriteContext,
+  type SyncWriteContext,
+  withoutSyncWriteContext,
+  withSyncWriteContext,
+} from './context'
 export {
   COLLECTION_PROJECTIONS,
   type CollectionProjection,

@@ -105,3 +105,17 @@ export type QuizBlockState = { type: 'quiz'; answer: number }
 export type TextBlockState = { type: 'text'; read: boolean }
 
 export type LessonBlockState = VideoBlockState | AudioBlockState | QuizBlockState | TextBlockState
+
+/**
+ * What the server says about an answer, written once and never by the client.
+ *
+ * The explanation travels here and nowhere else: it is withheld from the
+ * lesson a student downloads, because content reaches a device whole and a key
+ * handed out there cannot be recalled. Returned with the verdict it is safe —
+ * the answer is already spent, and one blocks worth of prose is not the key to
+ * the rest.
+ */
+export type QuizVerdict = {
+  correct: boolean
+  explanation?: string
+}

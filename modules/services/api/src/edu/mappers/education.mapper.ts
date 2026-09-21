@@ -48,6 +48,7 @@ const HOMEWORK = [
   'status',
   'text',
   'grade',
+  'comment',
   'reviewedById',
   'submittedAt',
   'reviewedAt',
