@@ -88,4 +88,24 @@ describe('the one connection', () => {
 
     expect(connection.connection.value).toBeUndefined()
   })
+
+  it('handles storage access exceptions gracefully without throwing', () => {
+    const original = window.localStorage
+    try {
+      Object.defineProperty(window, 'localStorage', {
+        get() {
+          throw new Error('SecurityError: Access is denied')
+        },
+        configurable: true,
+      })
+      const connection = useConnection()
+      expect(() => connection.restore()).not.toThrow()
+      expect(connection.connection.value).toBeUndefined()
+    } finally {
+      Object.defineProperty(window, 'localStorage', {
+        value: original,
+        configurable: true,
+      })
+    }
+  })
 })

@@ -136,4 +136,17 @@ describe('signing in with a code', () => {
     expect(form.emitted('signed-in')).toBeUndefined()
     expect(form.text()).toContain('Wrong code')
   })
+
+  it('moves to the code entry and informs the student when a code is still valid', async () => {
+    const { form } = mountForm({
+      [OTP]: new HttpError(429, OTP),
+    })
+
+    await form.find('input[name="email"]').setValue('student@example.com')
+    await form.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(form.find('input[name="one-time-code"]').exists()).toBe(true)
+    expect(form.text()).toContain('still valid')
+  })
 })
