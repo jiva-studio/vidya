@@ -1,3 +1,4 @@
+import type { IOutboxRepository, OutboxEntry } from '@vidya/domain'
 import { asId, type LessonId, type SchoolId } from '@vidya/domain'
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -16,6 +17,7 @@ import {
   textOf,
 } from '@/shared/data/__tests__/fakeDevice'
 import { useSiteStatus } from '@/shared/status'
+import { useOutboxView } from '@/shared/sync'
 
 import CoursePage from '../ui/CoursePage.vue'
 
@@ -146,5 +148,47 @@ describe('one course', () => {
     await flushPromises()
 
     expect(device.education.courses.getById).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('the request for a place on this course', () => {
+  const asked: DeviceRows = { ...taught, enrollments: [anEnrollment({ status: 'pending' })] }
+
+  const journalOf = (rows: OutboxEntry[]): IOutboxRepository =>
+    ({
+      listUnsettled: vi.fn(async () => rows),
+      listDead: vi.fn(async () => []),
+    }) as unknown as IOutboxRepository
+
+  const waiting = {
+    id: 1,
+    ownerId: 'student-1',
+    collection: 'enrollments',
+    docId: 'enrollment-1',
+    op: 'put',
+    status: 'rejected',
+    reason: 'courseNotOffered',
+  } as unknown as OutboxEntry
+
+  beforeEach(() => {
+    siteStandsAt({ filled: true })
+    useOutboxView().forgetJournal()
+  })
+
+  it('says the school has the request once nothing is left in the journal', async () => {
+    useOutboxView().adoptJournal('student-1', journalOf([]))
+    const { screen } = await render(asked)
+
+    expect(textOf(screen)).toContain('Accepted')
+  })
+
+  it('says why the school refused it, beside the request itself', async () => {
+    useOutboxView().adoptJournal('student-1', journalOf([waiting]))
+    await flushPromises()
+
+    const { screen } = await render(asked)
+
+    expect(textOf(screen)).toContain('Not accepted')
+    expect(textOf(screen)).toContain('not taking students onto this course yet')
   })
 })
