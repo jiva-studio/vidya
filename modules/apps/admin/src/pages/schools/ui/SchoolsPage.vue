@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { SchoolId } from '@vidya/domain'
 import type { TableColumn, TableRowData } from '@vidya/ui'
-import { Button, PageHeader, Table, TableFilters } from '@vidya/ui'
+import { Button, PageHeader, Pagination, Table, TableFilters } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -12,6 +12,8 @@ import { useCan } from '@/shared/access'
 
 import SchoolsTableRow from './SchoolsTableRow.vue'
 import { sectionClasses } from './styles'
+import { PageBack } from '@/widgets/page-back'
+import { PAGE_SIZE } from '@/shared/lib'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -77,6 +79,7 @@ function asSchool(row: TableRowData): SchoolRow {
 <template>
   <section :class="sectionClasses">
     <PageHeader :title="$t('schools-title')">
+      <template #leading><PageBack /></template>
       <template #actions>
         <Button v-if="canCreate" @click="onCreate">{{ $t('schools-create') }}</Button>
       </template>
@@ -109,5 +112,12 @@ function asSchool(row: TableRowData): SchoolRow {
         />
       </template>
     </Table>
+    <Pagination
+      v-if="schools.paged.value"
+      :page="schools.page.value"
+      :per-page="PAGE_SIZE"
+      :total="schools.total.value"
+      @update:page="schools.goTo"
+    />
   </section>
 </template>

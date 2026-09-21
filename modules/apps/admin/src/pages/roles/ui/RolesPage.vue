@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { RoleId } from '@vidya/domain'
 import type { TableColumn, TableRowData } from '@vidya/ui'
-import { Button, PageHeader, Table, TableFilters } from '@vidya/ui'
+import { Button, PageHeader, Pagination, Table, TableFilters } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -12,6 +12,8 @@ import { useCan } from '@/shared/access'
 
 import RolesTableRow from './RolesTableRow.vue'
 import { pageClasses } from './styles'
+import { PageBack } from '@/widgets/page-back'
+import { PAGE_SIZE } from '@/shared/lib'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -75,6 +77,7 @@ function asRole(row: TableRowData): RoleRow {
 <template>
   <section :class="pageClasses">
     <PageHeader :title="$t('roles-title')">
+      <template #leading><PageBack /></template>
       <template #actions>
         <Button v-if="canCreate" @click="onCreate">{{ $t('roles-create') }}</Button>
       </template>
@@ -102,5 +105,12 @@ function asRole(row: TableRowData): RoleRow {
         <RolesTableRow :role="asRole(row)" :can-update="canUpdate" @edit="onEdit" />
       </template>
     </Table>
+    <Pagination
+      v-if="roles.paged.value"
+      :page="roles.page.value"
+      :per-page="PAGE_SIZE"
+      :total="roles.total.value"
+      @update:page="roles.goTo"
+    />
   </section>
 </template>

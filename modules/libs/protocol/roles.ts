@@ -27,11 +27,11 @@ export type CreateRoleResponse = crud.CreateItemResponse<RoleDetails['id']>
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export type GetRoleSummariesListQuery = {
+export type GetRoleSummariesListQuery = crud.PageQuery & {
   schoolId?: domain.SchoolId
 }
 
-export type GetRolesResponse = crud.GetItemsListResponse<RoleSummary>
+export type GetRolesResponse = crud.GetPagedItemsListResponse<RoleSummary>
 
 export type GetRoleResponse = crud.GetItemResponse<RoleDetails>
 

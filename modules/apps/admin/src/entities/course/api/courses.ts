@@ -22,7 +22,11 @@ import type { CourseFormValues } from '../types'
  * the school that was current when the composable was created.
  */
 export const getCourses = (http: HttpClient, query: GetCoursesQuery): Promise<GetCoursesResponse> =>
-  http.get<GetCoursesResponse>(Routes().edu.courses.find(), { schoolId: query.schoolId })
+  http.get<GetCoursesResponse>(Routes().edu.courses.find(), {
+    schoolId: query.schoolId,
+    limit: query.limit,
+    offset: query.offset,
+  })
 
 export const getCourse = (http: HttpClient, id: CourseId): Promise<GetCourseResponse> =>
   http.get<GetCourseResponse>(Routes().edu.courses.get(id))

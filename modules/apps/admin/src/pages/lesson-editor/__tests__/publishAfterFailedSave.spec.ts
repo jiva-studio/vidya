@@ -6,7 +6,7 @@ import { refusal } from '@/shared/testing'
 
 import { messages } from '../i18n'
 import { contentOf, draftOf, sectionOf, textBlock } from './documents'
-import { clickText, openEditor, plain, saveDraft, VERSIONS } from './harness'
+import { clickText, openEditor, plain, saveDraft, saveSays, VERSIONS } from './harness'
 
 addMessages(messages)
 locale.value = 'en'
@@ -83,7 +83,7 @@ describe('publishing a version the server never received', () => {
     await rename(wrapper, Revised)
     await saveDraft()
 
-    expect(plain(wrapper.text())).toContain('Not saved')
+    expect(saveSays(wrapper)).toBe('Try saving again')
   })
 
   it('does not freeze a version while the last edit is still unsaved', async () => {

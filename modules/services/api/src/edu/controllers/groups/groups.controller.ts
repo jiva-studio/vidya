@@ -76,11 +76,15 @@ export class GroupsController {
       throw new ForbiddenException('User does not have permission')
     }
 
-    const groups = await this.groups
+    const [groups, total] = await this.groups
       .scopedBy({ permissions: auth.permissions })
-      .findAll({ where: { courseId: query.courseId } })
+      .findAndCount({
+        where: { courseId: query.courseId },
+        order: { name: 'ASC' },
+        ...dto.pageOf(query),
+      })
 
-    return { items: toGroupSummaries(groups) }
+    return { items: toGroupSummaries(groups), total }
   }
 
   /* -------------------------------------------------------------------------- */

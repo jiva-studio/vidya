@@ -6,7 +6,15 @@ import { pending, refusal } from '@/shared/testing'
 
 import { messages } from '../i18n'
 import { contentOf, sectionOf, textBlock } from './documents'
-import { addSection, LESSON_PATH, openEditor, plain, saveDraft, VERSIONS } from './harness'
+import {
+  addSection,
+  LESSON_PATH,
+  openEditor,
+  plain,
+  saveButton,
+  saveDraft,
+  VERSIONS,
+} from './harness'
 
 addMessages(messages)
 locale.value = 'en'
@@ -49,10 +57,6 @@ const published = (over: Record<string, unknown> = {}) => {
 
 const surfaces = (wrapper: { element: Element }) =>
   wrapper.element.querySelectorAll('.cm-content').length
-
-const saveButton = (wrapper: {
-  findAll: (s: string) => { text: () => string; attributes: (n: string) => string | undefined }[]
-}) => wrapper.findAll('button').find((node) => plain(node.text()) === 'Save')
 
 describe('forking a published version under the author', () => {
   beforeEach(() => {
@@ -105,7 +109,7 @@ describe('forking a published version under the author', () => {
     })
 
     await addSection(wrapper)
-    expect(saveButton(wrapper)?.attributes('disabled')).toBeUndefined()
+    expect(saveButton(wrapper)?.disabled).toBe(false)
 
     refuse = false
     await saveDraft()

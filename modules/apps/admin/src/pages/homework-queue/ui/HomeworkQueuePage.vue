@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { HomeworkId } from '@vidya/domain'
 import type { TableColumn, TableRowData } from '@vidya/ui'
-import { PageHeader, Table } from '@vidya/ui'
+import { PageHeader, Pagination, Table } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -12,6 +12,8 @@ import { useHomeworkRows } from '../model'
 import HomeworkQueueFilters from './HomeworkQueueFilters.vue'
 import HomeworkQueueRow from './HomeworkQueueRow.vue'
 import { sectionClasses } from './styles'
+import { PageBack } from '@/widgets/page-back'
+import { PAGE_SIZE } from '@/shared/lib'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -38,7 +40,7 @@ onMounted(() => {
 function onFilters(filters: HomeworkFilters) {
   const refetch = filters.status !== queue.filters.value.status
   queue.filters.value = filters
-  if (refetch) void queue.load()
+  if (refetch) queue.restart()
 }
 
 function onRetry() {
@@ -58,7 +60,9 @@ function asWork(row: TableRowData): HomeworkRow {
 
 <template>
   <section :class="sectionClasses">
-    <PageHeader :title="$t('homework-title')" />
+    <PageHeader :title="$t('homework-title')">
+      <template #leading><PageBack /></template>
+    </PageHeader>
     <HomeworkQueueFilters
       :filters="queue.filters.value"
       :course-options="queue.directory.courseOptions.value"
@@ -79,5 +83,12 @@ function asWork(row: TableRowData): HomeworkRow {
         <HomeworkQueueRow :row="asWork(row)" @open="onOpen" />
       </template>
     </Table>
+    <Pagination
+      v-if="queue.paged.value"
+      :page="queue.page.value"
+      :per-page="PAGE_SIZE"
+      :total="queue.total.value"
+      @update:page="queue.goTo"
+    />
   </section>
 </template>

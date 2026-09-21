@@ -72,6 +72,11 @@ export const useHomeworkRows = () => {
     loading: queue.loading,
     error: queue.error,
     load,
+    total: queue.total,
+    page: queue.page,
+    paged: queue.paged,
+    goTo: queue.goTo,
+    restart: queue.restart,
     directory,
   }
 }

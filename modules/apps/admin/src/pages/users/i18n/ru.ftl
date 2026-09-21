@@ -3,11 +3,13 @@
 nav-users = Люди
 
 users-title = Люди
-users-description = Все, у кого есть роль в этой школе.
+users-description = Преподаватели, кураторы и студенты школы.
 users-column-name = Имя
+users-column-roles = Роли
 users-column-actions = Действия
 users-empty-title = Здесь пока никого нет
 users-empty-body = Человек появится здесь, когда получит роль в этой школе.
+users-unnamed = Без имени
 users-open = Открыть
 
 users-card-title = Человек
@@ -29,7 +31,6 @@ users-no-matches-title = Никого не нашли
 users-no-matches-body = Попробуйте другое имя или очистите поиск.
 
 users-roles-title = Роли в этой школе
-users-roles-hint = Роль выдаётся и снимается сразу, без сохранения.
 users-roles-empty-title = В этой школе ещё нет ролей
 users-roles-empty-body = Сначала создайте роль, затем выдайте её этому человеку.
 

@@ -80,17 +80,17 @@ export class RolesController {
       throw new ForbiddenException('User does not have permission')
     }
 
-    // Get roles
-    const roles = await this.rolesService.scopedBy({ permissions: auth.permissions }).findAll({
-      where: {
-        schoolId: query.schoolId,
-      },
-    })
+    // Get one page of roles
+    const [roles, total] = await this.rolesService
+      .scopedBy({ permissions: auth.permissions })
+      .findAndCount({
+        where: { schoolId: query.schoolId },
+        order: { name: 'ASC' },
+        ...dto.pageOf(query),
+      })
 
     // Return role summaries
-    return new dto.GetRolesResponse({
-      items: toRoleSummaries(roles),
-    })
+    return new dto.GetRolesResponse({ items: toRoleSummaries(roles), total })
   }
 
   /* -------------------------------------------------------------------------- */

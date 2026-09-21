@@ -13,6 +13,7 @@ import {
 } from 'class-validator'
 
 import { IsPermissionsProhibited } from '../validations'
+import { PagedQuery } from './paging.dto'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Models                                   */
@@ -53,7 +54,10 @@ export class RoleSummary implements protocol.RoleSummary {
 
 export class GetRoleResponse extends RoleDetails implements protocol.GetRoleResponse {}
 
-export class GetRoleSummariesListQuery implements protocol.GetRoleSummariesListQuery {
+export class GetRoleSummariesListQuery
+  extends PagedQuery
+  implements protocol.GetRoleSummariesListQuery
+{
   @ApiPropertyOptional()
   @IsUUID()
   @IsOptional()
@@ -61,8 +65,9 @@ export class GetRoleSummariesListQuery implements protocol.GetRoleSummariesListQ
 }
 
 export class GetRolesResponse implements protocol.GetRolesResponse {
-  constructor(options: { items: Array<RoleSummary> }) {
+  constructor(options: { items: Array<RoleSummary>; total?: number }) {
     this.items = options.items ?? []
+    this.total = options.total ?? this.items.length
   }
 
   @ApiProperty({
@@ -75,6 +80,9 @@ export class GetRolesResponse implements protocol.GetRolesResponse {
     ],
   })
   items: RoleSummary[]
+
+  @ApiProperty({ example: 137 })
+  total: number
 }
 
 /* -------------------------------------------------------------------------- */

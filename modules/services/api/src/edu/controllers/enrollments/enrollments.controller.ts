@@ -97,20 +97,24 @@ export class EnrollmentsController {
 
     // Staff see the school's enrollments; everyone else sees only their own, and
     // each side is shown its own list with its own tidying-up taken off it.
-    const found = auth.permissions.has(['enrollments:read'])
-      ? await this.enrollments.scopedBy({ permissions: auth.permissions }).findAll({
+    const page = { order: { createdAt: 'DESC' } as const, ...dto.pageOf(query) }
+
+    const [found, total] = auth.permissions.has(['enrollments:read'])
+      ? await this.enrollments.scopedBy({ permissions: auth.permissions }).findAndCount({
           where: {
             ...where,
             schoolId: query.schoolId,
             studentId: query.studentId,
             ...visibleToSchool(),
           },
+          ...page,
         })
-      : await this.enrollments.findAll({
+      : await this.enrollments.findAndCount({
           where: { ...where, studentId: auth.userId, ...visibleToStudent() },
+          ...page,
         })
 
-    return { items: toEnrollmentSummaries(found) }
+    return { items: toEnrollmentSummaries(found), total }
   }
 
   /* -------------------------------------------------------------------------- */
@@ -147,7 +151,7 @@ export class EnrollmentsController {
       },
     })
 
-    return { items: toEnrollmentSummaries(found) }
+    return { items: toEnrollmentSummaries(found), total: found.length }
   }
 
   /* -------------------------------------------------------------------------- */

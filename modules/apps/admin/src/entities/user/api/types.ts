@@ -9,3 +9,10 @@ import type { SchoolId } from '@vidya/domain'
 export interface GetUserSchoolsResponse {
   userSchools: SchoolId[]
 }
+
+/** One page of the people list, as the screen asks for it. */
+export interface UserPageQuery {
+  limit?: number
+  offset?: number
+  search?: string
+}

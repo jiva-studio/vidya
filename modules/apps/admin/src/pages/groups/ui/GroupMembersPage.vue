@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { EnrollmentId, GroupId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
-import { Breadcrumbs, Button, PageHeader, Toaster } from '@vidya/ui'
+import { Button, PageHeader, Toaster } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import type { GroupMember } from '@/entities/group'
@@ -14,6 +14,7 @@ import { useCan } from '@/shared/access'
 
 import GroupMembers from './GroupMembers.vue'
 import { pageClasses, refusalClasses } from './styles'
+import { PageBack } from '@/widgets/page-back'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -29,16 +30,7 @@ const assignment = useGroupAssignment()
 const canModerate = useCan('enrollments:moderate')
 const moving = ref<GroupMember | undefined>(undefined)
 
-const breadcrumbs = computed(() => [
-  { key: 'groups', label: $t('groups-title') },
-  { key: 'members', label: $t('group-members-title') },
-])
-
 /* -------------------------------- Handlers -------------------------------- */
-
-function onBreadcrumb(key: string) {
-  if (key === 'groups') void router.push({ name: 'groups' })
-}
 
 function onBack() {
   void router.push({ name: 'groups' })
@@ -79,9 +71,7 @@ async function onUndo(id: string) {
 <template>
   <section :class="pageClasses">
     <PageHeader :title="$t('group-members-title')">
-      <template #breadcrumbs>
-        <Breadcrumbs :items="breadcrumbs" @select="onBreadcrumb" />
-      </template>
+      <template #leading><PageBack /></template>
       <template #actions>
         <Button variant="ghost" @click="onBack">{{ $t('group-members-back') }}</Button>
       </template>

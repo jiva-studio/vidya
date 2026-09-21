@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EnrollmentId, GroupId } from '@vidya/domain'
 import type { TableColumn, TableRowData } from '@vidya/ui'
-import { PageHeader, Table, Toaster } from '@vidya/ui'
+import { PageHeader, Pagination, Table, Toaster } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 
@@ -14,10 +14,12 @@ import { decidePlacement, useModerateEnrollment } from '@/features/moderate-enro
 import { EnrollmentReviewDialog } from '@/features/review-enrollment'
 import { useDirectory } from '@/features/school-directory'
 import { useCan } from '@/shared/access'
+import { PAGE_SIZE } from '@/shared/lib'
 
 import EnrollmentsFilters from './EnrollmentsFilters.vue'
 import EnrollmentsTableRow from './EnrollmentsTableRow.vue'
 import { refusalClasses, sectionClasses } from './styles'
+import { PageBack } from '@/widgets/page-back'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -55,7 +57,7 @@ onMounted(() => {
 
 function onFilters(filters: EnrollmentFilters) {
   enrollments.filters.value = filters
-  void enrollments.load()
+  enrollments.restart()
 }
 
 function onRetry() {
@@ -162,7 +164,9 @@ function refusalFor(row: TableRowData): string | undefined {
 
 <template>
   <section :class="sectionClasses">
-    <PageHeader :title="$t('enrollments-title')" :description="$t('enrollments-description')" />
+    <PageHeader :title="$t('enrollments-title')" :description="$t('enrollments-description')">
+      <template #leading><PageBack /></template>
+    </PageHeader>
     <EnrollmentsFilters
       :filters="enrollments.filters.value"
       :course-options="directory.courseOptions.value"
@@ -195,6 +199,13 @@ function refusalFor(row: TableRowData): string | undefined {
         />
       </template>
     </Table>
+    <Pagination
+      v-if="enrollments.paged.value"
+      :page="enrollments.page.value"
+      :per-page="PAGE_SIZE"
+      :total="enrollments.total.value"
+      @update:page="enrollments.goTo"
+    />
     <p v-if="rowRefusal" :class="refusalClasses" role="alert">{{ $t(rowRefusal) }}</p>
     <EnrollmentReviewDialog
       :open="!!reviewing"

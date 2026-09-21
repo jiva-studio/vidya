@@ -5,13 +5,14 @@ import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { reasonOf } from '@/shared/lib'
+import { reasonOf, useToasts } from '@/shared/lib'
 import { useRoleApi } from '@/entities/role'
 import { useCan, useCurrentSchool } from '@/shared/access'
 
 import RoleFormFields from './RoleFormFields.vue'
 import { formClasses, pageClasses } from './styles'
 import type { RoleFormPageProps } from './types'
+import { PageBack } from '@/widgets/page-back'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -21,6 +22,7 @@ const props = withDefaults(defineProps<RoleFormPageProps>(), { id: undefined })
 
 const { $t } = useFluent()
 const router = useRouter()
+const toasts = useToasts()
 const api = useRoleApi()
 
 // Read when the request is built, never captured: a role created after the
@@ -62,6 +64,7 @@ async function onSubmit() {
 
   try {
     await send()
+    toasts.show({ title: $t('toast-saved'), tone: 'success' })
     void router.push({ name: 'roles' })
   } catch (failure) {
     error.value = reasonOf(failure)
@@ -114,7 +117,9 @@ async function send(): Promise<void> {
 
 <template>
   <section :class="pageClasses">
-    <PageHeader :title="title" />
+    <PageHeader :title="title">
+      <template #leading><PageBack /></template>
+    </PageHeader>
     <form :class="formClasses" @submit.prevent="onSubmit">
       <RoleFormFields
         v-model:name="name"

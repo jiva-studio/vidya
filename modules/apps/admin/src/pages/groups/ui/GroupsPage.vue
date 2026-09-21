@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { SelectOption } from '@vidya/ui'
-import { Button, PageHeader, Select, TableFilters } from '@vidya/ui'
+import { Button, PageHeader, Pagination, Select, TableFilters } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -13,6 +13,8 @@ import { ANY, asFilter } from '@/shared/lib'
 import GroupsTable from './GroupsTable.vue'
 import { filterClasses, pageClasses } from './styles'
 import type { GroupListRow } from './types'
+import { PageBack } from '@/widgets/page-back'
+import { PAGE_SIZE } from '@/shared/lib'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -97,6 +99,7 @@ function matches(group: GroupListRow, query: string): boolean {
 <template>
   <section :class="pageClasses">
     <PageHeader :title="$t('groups-title')">
+      <template #leading><PageBack /></template>
       <template #actions>
         <Button v-if="canCreate" @click="onCreate">{{ $t('groups-create') }}</Button>
       </template>
@@ -130,6 +133,13 @@ function matches(group: GroupListRow, query: string): boolean {
       @create="onCreate"
       @edit="onEdit"
       @members="onMembers"
+    />
+    <Pagination
+      v-if="groups.paged.value"
+      :page="groups.page.value"
+      :per-page="PAGE_SIZE"
+      :total="groups.total.value"
+      @update:page="groups.goTo"
     />
   </section>
 </template>

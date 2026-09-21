@@ -6,6 +6,7 @@ action-save = Сохранить
 action-cancel = Отмена
 action-create = Создать
 action-delete = Удалить
+toast-saved = Сохранено
 action-retry = Повторить
 action-sign-out = Выйти
 

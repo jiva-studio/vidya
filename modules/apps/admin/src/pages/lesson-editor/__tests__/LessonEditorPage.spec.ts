@@ -15,8 +15,9 @@ import {
   LESSON_PATH,
   openEditor,
   plain,
+  saveButton,
   saveDraft,
-  statuses,
+  saveSays,
   VERSIONS,
 } from './harness'
 
@@ -69,7 +70,7 @@ describe('opening a lesson', () => {
       .map((call) => `${call.method} ${call.path}`)
 
     expect(versionCalls).toEqual([`GET ${VERSIONS}`, `GET ${VERSIONS}/v1`])
-    expect(statuses(wrapper)).toContain('Draft')
+    expect(saveSays(wrapper)).toBe('Saved')
   })
 
   it('shows the markdown the author typed, not a rendering of it', async () => {
@@ -138,7 +139,7 @@ describe('saving', () => {
       reason: 'Version v1 is published and cannot be edited.',
     })
     expect(plain(wrapper.text())).not.toContain('Version v1 is published')
-    expect(statuses(wrapper)).toContain('Not saved')
+    expect(saveSays(wrapper)).toBe('Try saving again')
   })
 
   it('refuses to save a document it cannot author, and says why', async () => {
@@ -196,9 +197,7 @@ describe('saving', () => {
       [`GET ${VERSIONS}/v1`]: withUnknown,
     })
 
-    const save = wrapper.findAll('button').find((node) => plain(node.text()) === 'Save')
-
-    expect(save?.attributes('disabled')).toBeDefined()
+    expect(saveButton(wrapper)?.disabled).toBe(true)
   })
 })
 
@@ -211,7 +210,7 @@ describe('versions', () => {
 
     const names = [...wrapper.element.querySelectorAll('button')].map(accessibleName)
 
-    expect(plain(wrapper.text())).toContain('An edit starts the next version')
+    expect(plain(wrapper.text())).toContain('Version 1 · published')
     expect(names).toContain('Add section')
     expect(labels(wrapper)).not.toContain('New version')
   })
@@ -246,7 +245,7 @@ describe('versions', () => {
 
     expect(http.calls.map((call) => `${call.method} ${call.path}`)).toContain(`POST ${VERSIONS}`)
     expect(http.calls.map((call) => `${call.method} ${call.path}`)).toContain(`GET ${VERSIONS}/v2`)
-    expect(statuses(wrapper)).toContain('Draft')
+    expect(plain(wrapper.text())).toContain('Version 2')
   })
 
   it('walks into the draft that is already open when the fork is refused', async () => {
@@ -269,7 +268,7 @@ describe('versions', () => {
     await addSection(wrapper)
 
     expect(http.calls.map((call) => `${call.method} ${call.path}`)).toContain(`GET ${VERSIONS}/v2`)
-    expect(statuses(wrapper)).toContain('Draft')
+    expect(plain(wrapper.text())).toContain('Version 2')
     expect(plain(wrapper.text())).not.toContain('already has an open draft')
   })
 

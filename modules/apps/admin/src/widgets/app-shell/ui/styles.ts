@@ -26,14 +26,7 @@ export const brandClasses = [
   'font-[var(--weight-semibold)]',
 ]
 
-export const footerClasses = [
-  'mt-auto',
-  'w-full',
-  'border-t',
-  'border-[var(--color-border)]',
-  'px-[var(--space-3)]',
-  'py-[var(--space-3)]',
-]
+export const footerClasses = ['mt-auto', 'w-full', 'px-[var(--space-3)]', 'py-[var(--space-3)]']
 
 export const mainClasses = ['min-w-0', 'flex-1', 'px-[var(--space-6)]', 'py-[var(--space-5)]']
 

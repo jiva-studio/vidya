@@ -128,6 +128,15 @@ export const saveDraft = async (): Promise<void> => {
   await flushPromises()
 }
 
+/** The one control that carries the state of the draft, and what it says. */
+export const saveButton = (wrapper: { element: Element }): HTMLButtonElement | undefined =>
+  [...wrapper.element.querySelectorAll('button')].find((node) =>
+    ['Save', 'Saved', 'Saving…', 'Try saving again'].includes(plain(node.textContent ?? '').trim()),
+  )
+
+export const saveSays = (wrapper: { element: Element }): string =>
+  plain(saveButton(wrapper)?.textContent ?? '').trim()
+
 /** What the toolbar says, as one of the words it may say. */
 export const statuses = (wrapper: { element: Element }): string[] =>
   [...wrapper.element.querySelectorAll('span')].map((node) => plain(node.textContent ?? '').trim())

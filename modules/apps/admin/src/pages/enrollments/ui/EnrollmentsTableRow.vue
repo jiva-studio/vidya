@@ -11,7 +11,7 @@ import { ArchiveAction } from '@/features/archive-enrollment'
 import { ModerationActions } from '@/features/moderate-enrollment'
 import { formatDate } from '@/shared/lib'
 
-import { refusalLineClasses, secondaryLineClasses, stackClasses } from './styles'
+import { decisionClasses, refusalLineClasses, secondaryLineClasses } from './styles'
 import type { EnrollmentsTableRowEmits, EnrollmentsTableRowProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -85,7 +85,7 @@ function onArchive(id: EnrollmentId) {
     </TableCell>
     <TableCell truncate :title="group">{{ group }}</TableCell>
     <TableCell>
-      <div :class="stackClasses">
+      <div :class="decisionClasses">
         <EnrollmentStatusBadge
           :status="props.enrollment.status"
           :in-queue="props.enrollment.inQueue"

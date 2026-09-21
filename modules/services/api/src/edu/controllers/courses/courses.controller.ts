@@ -73,11 +73,15 @@ export class CoursesController {
       throw new ForbiddenException('User does not have permission')
     }
 
-    const courses = await this.courses
+    const [courses, total] = await this.courses
       .scopedBy({ permissions: auth.permissions })
-      .findAll({ where: { schoolId: query.schoolId } })
+      .findAndCount({
+        where: { schoolId: query.schoolId },
+        order: { name: 'ASC' },
+        ...dto.pageOf(query),
+      })
 
-    return { items: toCourseSummaries(courses) }
+    return { items: toCourseSummaries(courses), total }
   }
 
   /* -------------------------------------------------------------------------- */

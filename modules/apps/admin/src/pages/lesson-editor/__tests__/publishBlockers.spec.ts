@@ -4,7 +4,7 @@ import { addMessages, locale } from '@/shared/i18n'
 
 import { messages } from '../i18n'
 import { contentOf, draftOf, quizBlock, sectionOf, textBlock } from './documents'
-import { accessibleName, clickText, labels, openEditor, plain } from './harness'
+import { accessibleName, clickText, openEditor, plain, saveButton, saveSays } from './harness'
 
 addMessages(messages)
 locale.value = 'en'
@@ -78,9 +78,7 @@ describe('the save button', () => {
   it('is offered, and says there is nothing to send until something changes', async () => {
     const { wrapper } = await openEditor(draftOf(settled()))
 
-    const save = wrapper.findAll('button').find((node) => plain(node.text()) === 'Save')
-
-    expect(labels(wrapper)).toContain('Save')
-    expect(save?.attributes('disabled')).toBeDefined()
+    expect(saveSays(wrapper)).toBe('Saved')
+    expect(saveButton(wrapper)?.disabled).toBe(true)
   })
 })

@@ -1,14 +1,16 @@
 <script setup lang="ts">
+import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { useRoute } from 'vue-router'
 
-import type { MenuGroup, MenuItem } from '@/shared/navigation'
 import { useCurrentSchool } from '@/shared/access'
-import { useSession } from '@/shared/session'
-import { grants } from '@/shared/session'
+import type { MenuGroup, MenuItem, NavPlacement } from '@/shared/navigation'
+import { useOpenPageTitle } from '@/shared/navigation'
+import { grants, useSession } from '@/shared/session'
 
-import type { SidebarNavProps } from '../types'
-import { groupLabelClasses, itemClasses, navClasses } from './styles'
+import type { SidebarEntryChild, SidebarNavProps } from '../types'
+import SidebarEntry from './SidebarEntry.vue'
+import { groupLabelClasses, navClasses } from './styles'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -16,10 +18,19 @@ const props = defineProps<SidebarNavProps>()
 
 /* --------------------------------- State ---------------------------------- */
 
+const { $t } = useFluent()
+const route = useRoute()
+const openTitle = useOpenPageTitle()
 const { permissions } = useSession()
 const { schoolId } = useCurrentSchool()
 
 const visible = computed<MenuGroup[]>(() => props.groups.map(withAllowedItems).filter(hasItems))
+
+// The page on screen, when it is one that lives under a sidebar entry rather
+// than being one. There is at most one: it is where the reader is.
+const placement = computed<NavPlacement | undefined>(
+  () => route.meta.nav as NavPlacement | undefined,
+)
 
 /* -------------------------------- Helpers --------------------------------- */
 
@@ -37,20 +48,30 @@ function withAllowedItems(group: MenuGroup): MenuGroup {
 function hasItems(group: MenuGroup): boolean {
   return group.items.length > 0
 }
+
+function childOf(item: MenuItem): SidebarEntryChild | undefined {
+  const open = placement.value
+  if (open?.parent !== item.route) return undefined
+
+  return { label: openTitle.value ?? $t(open.label), to: route.fullPath }
+}
+
+function entryTo(item: MenuItem) {
+  return { name: item.route, params: { schoolId: schoolId.value } }
+}
 </script>
 
 <template>
   <nav :class="navClasses" :aria-label="$t('nav-label')">
     <div v-for="group in visible" :key="group.label">
       <p :class="groupLabelClasses">{{ $t(group.label) }}</p>
-      <RouterLink
+      <SidebarEntry
         v-for="item in group.items"
         :key="item.route"
-        :class="itemClasses"
-        :to="{ name: item.route, params: { schoolId } }"
-      >
-        {{ $t(item.label) }}
-      </RouterLink>
+        :label="$t(item.label)"
+        :to="entryTo(item)"
+        :child="childOf(item)"
+      />
     </div>
   </nav>
 </template>

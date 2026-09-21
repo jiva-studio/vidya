@@ -12,9 +12,19 @@ import {
   MaxLength,
 } from 'class-validator'
 
+import { PagedQuery } from './paging.dto'
+
 /* -------------------------------------------------------------------------- */
 /*                                   Models                                   */
 /* -------------------------------------------------------------------------- */
+
+export class UserRoleSummary implements protocol.UserRoleSummary {
+  @ApiProperty({ example: 'id' })
+  id: domain.RoleId
+
+  @ApiProperty({ example: 'Teacher' })
+  name: string
+}
 
 export class UserSummary implements protocol.UserSummary {
   @ApiProperty({ example: 'id' })
@@ -22,6 +32,9 @@ export class UserSummary implements protocol.UserSummary {
 
   @ApiProperty({ example: 'name' })
   name: string
+
+  @ApiProperty({ type: [UserRoleSummary] })
+  roles: UserRoleSummary[]
 }
 
 export class UserDetailsRole implements protocol.UserDetailsRole {
@@ -53,8 +66,9 @@ export class UserDetails implements protocol.UserDetails {
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export class GetUsersQuery implements protocol.GetUsersQuery {
+export class GetUsersQuery extends PagedQuery implements protocol.GetUsersQuery {
   constructor(options?: { schoolId?: domain.SchoolId }) {
+    super()
     this.schoolId = options?.schoolId
   }
 
@@ -63,17 +77,27 @@ export class GetUsersQuery implements protocol.GetUsersQuery {
   @IsOptional()
   @IsSchoolExist()
   schoolId?: domain.SchoolId
+
+  @ApiPropertyOptional({ example: 'ann' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  search?: string
 }
 
 export class GetUserResponse extends UserDetails implements protocol.GetUserResponse {}
 
 export class GetUsersResponse implements protocol.GetUsersResponse {
-  constructor(options: { items: Array<UserSummary> }) {
+  constructor(options: { items: Array<UserSummary>; total?: number }) {
     this.items = options.items ?? []
+    this.total = options.total ?? this.items.length
   }
 
   @ApiProperty({ type: [UserSummary] })
   items: UserSummary[]
+
+  @ApiProperty({ example: 137 })
+  total: number
 }
 
 /* -------------------------------------------------------------------------- */

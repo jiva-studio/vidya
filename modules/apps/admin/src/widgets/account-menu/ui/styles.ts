@@ -6,7 +6,11 @@ export const triggerClasses = [
   'gap-[var(--space-2)]',
   'w-full',
   'h-[var(--control-lg)]',
-  'px-[var(--space-2)]',
+  // The avatar is one step smaller than the control holding it, so the room
+  // left above and below it is space-1; the leading edge matches that, and
+  // only the trailing one keeps the wider gap the chevron needs.
+  'ps-[var(--space-1)]',
+  'pe-[var(--space-2)]',
   'rounded-[var(--radius-lg)]',
   'bg-[var(--color-surface-hover)]',
   'border',

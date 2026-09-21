@@ -18,8 +18,9 @@ const props = withDefaults(defineProps<AvatarProps>(), {
 
 /* --------------------------------- State ---------------------------------- */
 
-const initials = computed(() => initialsOf(props.name))
-const tint = computed(() => tintOf(props.name))
+const named = computed(() => props.name ?? '')
+const initials = computed(() => initialsOf(named.value))
+const tint = computed(() => tintOf(named.value))
 
 /* -------------------------------- Helpers --------------------------------- */
 
@@ -31,7 +32,7 @@ function tintOf(name: string): string {
 
 <template>
   <AvatarRoot :class="cn(avatarVariants({ size: props.size }), tint, props.class)">
-    <AvatarImage v-if="props.src" :src="props.src" :alt="props.name" :class="imageClasses" />
+    <AvatarImage v-if="props.src" :src="named" :alt="named" :class="imageClasses" />
     <AvatarFallback :delay-ms="0">{{ initials }}</AvatarFallback>
   </AvatarRoot>
 </template>

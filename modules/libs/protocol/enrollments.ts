@@ -53,7 +53,7 @@ export type CreateEnrollmentResponse = crud.CreateItemResponse<EnrollmentDetails
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export type GetEnrollmentsQuery = {
+export type GetEnrollmentsQuery = crud.PageQuery & {
   courseId?: domain.CourseId
   groupId?: domain.GroupId
   studentId?: domain.UserId
@@ -71,7 +71,7 @@ export type GetEnrollmentsQuery = {
 /** The caller is the student, so naming one would only let them ask about someone else. */
 export type GetMyEnrollmentsQuery = Omit<GetEnrollmentsQuery, 'studentId' | 'groupId' | 'schoolId'>
 
-export type GetEnrollmentsResponse = crud.GetItemsListResponse<EnrollmentSummary>
+export type GetEnrollmentsResponse = crud.GetPagedItemsListResponse<EnrollmentSummary>
 export type GetEnrollmentResponse = crud.GetItemResponse<EnrollmentDetails>
 
 /* -------------------------------------------------------------------------- */

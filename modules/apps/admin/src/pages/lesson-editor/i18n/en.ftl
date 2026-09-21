@@ -6,6 +6,7 @@ editor-title-placeholder = Untitled lesson
 editor-publish = Publish
 editor-save = Save
 editor-version = Version { $version }
+editor-version-published = Version { $version } · published
 editor-retry = Try again
 
 version-title = Lesson version

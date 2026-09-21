@@ -1,19 +1,31 @@
 <script setup lang="ts">
-import { Button, PageHeader, TableFilters } from '@vidya/ui'
-import { computed, ref } from 'vue'
+import type { CourseSummary } from '@vidya/protocol'
+import { Button, PageHeader, Pagination, TableFilters } from '@vidya/ui'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { useCourses } from '@/entities/course'
-import { useCan } from '@/shared/access'
+import { getCourses } from '@/entities/course'
+import { useCan, useCurrentSchool } from '@/shared/access'
+import { useHttp } from '@/shared/api'
+import { PAGE_SIZE, usePagedList } from '@/shared/lib'
 
 import CoursesTable from './CoursesTable.vue'
 import { pageClasses } from './styles'
+import { PageBack } from '@/widgets/page-back'
 
 /* --------------------------------- State ---------------------------------- */
 
 const router = useRouter()
-const courses = useCourses()
+const http = useHttp()
+const { schoolId } = useCurrentSchool()
 const search = ref('')
+
+// The page is its own list rather than `useCourses`, which the group form and
+// the groups filter read whole: a picker cut to its first page loses courses.
+const courses = usePagedList<CourseSummary>({
+  read: (page) => getCourses(http, { schoolId: schoolId.value, ...page }),
+  fallback: 'courses-load-failed',
+})
 
 // Hidden rather than disabled: a button the operator may never press only
 // spends their attention, and the server refuses regardless.
@@ -21,9 +33,15 @@ const canCreate = useCan('courses:create')
 const canEdit = useCan('courses:update')
 
 const displayedItems = computed(() => {
-  if (!search.value.trim()) return courses.items.value
+  if (!search.value.trim()) return courses.rows.value
   const query = search.value.trim().toLowerCase()
-  return courses.items.value.filter((course) => course.name.toLowerCase().includes(query))
+  return courses.rows.value.filter((course) => course.name.toLowerCase().includes(query))
+})
+
+/* ---------------------------------- Hooks --------------------------------- */
+
+onMounted(() => {
+  void courses.load()
 })
 
 /* -------------------------------- Handlers -------------------------------- */
@@ -41,7 +59,7 @@ function onLessons(id: string) {
 }
 
 function onRetry() {
-  void courses.reload()
+  void courses.load()
 }
 
 function onClear() {
@@ -52,12 +70,13 @@ function onClear() {
 <template>
   <section :class="pageClasses">
     <PageHeader :title="$t('courses-title')">
+      <template #leading><PageBack /></template>
       <template #actions>
         <Button v-if="canCreate" @click="onCreate">{{ $t('courses-create') }}</Button>
       </template>
     </PageHeader>
     <TableFilters
-      v-if="courses.items.value.length >= 10 || search"
+      v-if="courses.rows.value.length >= 10 || search"
       v-model:search="search"
       :search-label="$t('courses-title')"
       :filters-applied="!!search"
@@ -73,6 +92,13 @@ function onClear() {
       @create="onCreate"
       @edit="onEdit"
       @lessons="onLessons"
+    />
+    <Pagination
+      v-if="courses.paged.value"
+      :page="courses.page.value"
+      :per-page="PAGE_SIZE"
+      :total="courses.total.value"
+      @update:page="courses.goTo"
     />
   </section>
 </template>

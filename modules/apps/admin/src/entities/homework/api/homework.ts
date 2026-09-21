@@ -20,8 +20,9 @@ import { useHttp } from '@/shared/api'
  * already resolved instead.
  */
 export const homeworkApi = (http: HttpClient) => ({
-  list: (query: Pick<GetHomeworkQuery, 'enrollmentId' | 'status' | 'schoolId'> = {}) =>
-    http.get<GetHomeworkListResponse>(Routes().edu.homework.find(), query as HttpQuery),
+  list: (
+    query: Pick<GetHomeworkQuery, 'enrollmentId' | 'status' | 'schoolId' | 'limit' | 'offset'> = {},
+  ) => http.get<GetHomeworkListResponse>(Routes().edu.homework.find(), query as HttpQuery),
 
   get: (id: HomeworkId) => http.get<GetHomeworkResponse>(Routes().edu.homework.get(id)),
 

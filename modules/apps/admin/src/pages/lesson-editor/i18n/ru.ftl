@@ -6,6 +6,7 @@ editor-title-placeholder = Урок без названия
 editor-publish = Опубликовать
 editor-save = Сохранить
 editor-version = Версия { $version }
+editor-version-published = Версия { $version } · опубликована
 editor-retry = Повторить
 
 version-title = Версия урока

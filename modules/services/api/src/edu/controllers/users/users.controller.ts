@@ -18,9 +18,21 @@ import { UserExistsPipe } from '@vidya/api/edu/pipes'
 import { RolesService, UsersService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
 import * as domain from '@vidya/domain'
+import { User } from '@vidya/entities'
 import { Routes } from '@vidya/protocol'
+import { FindOptionsWhere, ILike } from 'typeorm'
 
 import { toUserDetails, toUserSummaries } from '../../mappers/org.mapper'
+
+/**
+ * The search, as a `where` fragment.
+ *
+ * Two columns, so an operator can find somebody by either; TypeORM has no
+ * `OR` inside one object, so the caller spreads this into an array of wheres
+ * when it is present and into nothing when it is not.
+ */
+const matching = (search?: string): FindOptionsWhere<User> =>
+  search?.trim() ? { name: ILike(`%${search.trim()}%`) } : {}
 
 const Crud = CrudDecorators({
   entityName: 'User',
@@ -81,17 +93,24 @@ export class UsersController {
       throw new ForbiddenException('User does not have permission')
     }
 
-    // Get users with user permissions scope
-    const users = await this.usersService.scopedBy({ permissions: auth.permissions }).findAll({
-      where: {
-        roles: {
-          schoolId: query.schoolId,
+    // One page of the school's people, with their roles in it. `relations` and
+    // the paging survive the scope, which used to rebuild the query from `where`
+    // alone and drop them.
+    const [users, total] = await this.usersService
+      .scopedBy({ permissions: auth.permissions })
+      .findAndCount({
+        where: {
+          ...matching(query.search),
+          roles: { schoolId: query.schoolId },
         },
-      },
-    })
+        relations: { roles: true },
+        order: { name: 'ASC', id: 'ASC' },
+        ...dto.pageOf(query),
+      })
 
     // Return users response
     return new dto.GetUsersResponse({
+      total,
       items: toUserSummaries(users),
     })
   }

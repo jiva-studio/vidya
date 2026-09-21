@@ -3,11 +3,13 @@
 nav-users = People
 
 users-title = People
-users-description = Everyone with a role in this school.
+users-description = The teachers, curators and students of this school.
 users-column-name = Name
+users-column-roles = Roles
 users-column-actions = Actions
 users-empty-title = Nobody here yet
 users-empty-body = A person appears here once they are given a role in this school.
+users-unnamed = No name
 users-open = Open
 
 users-card-title = Person
@@ -29,7 +31,6 @@ users-no-matches-title = Nobody matches that
 users-no-matches-body = Try another name, or clear the search.
 
 users-roles-title = Roles in this school
-users-roles-hint = A role is given and taken back at once, with nothing to save.
 users-roles-empty-title = This school has no roles yet
 users-roles-empty-body = Create a role first, then give it to this person.
 

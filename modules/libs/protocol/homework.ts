@@ -62,7 +62,7 @@ export type SubmitHomeworkResponse = crud.UpdateItemResponse<HomeworkDetails>
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export type GetHomeworkQuery = {
+export type GetHomeworkQuery = crud.PageQuery & {
   enrollmentId?: domain.EnrollmentId
   groupId?: domain.GroupId
   status?: domain.HomeworkStatus
@@ -76,7 +76,7 @@ export type GetHomeworkQuery = {
   schoolId?: domain.SchoolId
 }
 
-export type GetHomeworkListResponse = crud.GetItemsListResponse<HomeworkSummary>
+export type GetHomeworkListResponse = crud.GetPagedItemsListResponse<HomeworkSummary>
 export type GetHomeworkResponse = crud.GetItemResponse<HomeworkDetails>
 
 /* -------------------------------------------------------------------------- */

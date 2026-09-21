@@ -2,7 +2,7 @@ import type { EnrollmentSummary } from '@vidya/protocol'
 import { computed, ref, watch } from 'vue'
 
 import { useCurrentSchool } from '@/shared/access'
-import { reasonOf } from '@/shared/lib'
+import { PAGE_SIZE, reasonOf } from '@/shared/lib'
 
 import { useEnrollmentApi } from '../api'
 import { toEnrollmentRows } from './enrollmentRows'
@@ -26,6 +26,8 @@ export const useEnrollments = (students: StudentNames, directory: Directory) => 
   const { generation } = useCurrentSchool()
 
   const items = ref<EnrollmentSummary[]>([])
+  const total = ref(0)
+  const page = ref(1)
   // The screen exists to answer requests, so it opens on the ones still
   // waiting; every other state is a record, and a record does not need doing.
   const filters = ref<EnrollmentFilters>({ status: 'pending' })
@@ -65,8 +67,13 @@ export const useEnrollments = (students: StudentNames, directory: Directory) => 
 
     try {
       await directory.load()
-      const response = await api.list({ ...filters.value })
+      const response = await api.list({
+        ...filters.value,
+        limit: PAGE_SIZE,
+        offset: (page.value - 1) * PAGE_SIZE,
+      })
       items.value = response.items.filter(inCurrentSchool)
+      total.value = response.total
       await resolveRows(items.value)
     } catch (failure) {
       error.value = reasonOf(failure)
@@ -75,9 +82,26 @@ export const useEnrollments = (students: StudentNames, directory: Directory) => 
     }
   }
 
+  const pages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)))
+
+  // Drawn only when there is a second page.
+  const paged = computed(() => pages.value > 1)
+
+  const goTo = (next: number): void => {
+    page.value = next
+    void load()
+  }
+
+  /** A new filter is a new list, so it starts at its own first page. */
+  const restart = (): void => {
+    page.value = 1
+    void load()
+  }
+
   watch(generation, () => {
+    page.value = 1
     void load()
   })
 
-  return { rows, filters, loading, error, load }
+  return { rows, filters, total, page, pages, paged, loading, error, load, goTo, restart }
 }

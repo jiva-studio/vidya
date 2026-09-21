@@ -4,6 +4,7 @@ import * as protocol from '@vidya/protocol'
 import { IsEnum, IsIn, IsOptional, IsString, IsUUID, MaxLength, ValidateIf } from 'class-validator'
 
 import { IsPreferredTimes } from '../validations'
+import { PagedQuery } from './paging.dto'
 
 /** Long enough for a paragraph, short enough that the column is not an essay. */
 const MAX_COMMENT_LENGTH = 1000
@@ -109,7 +110,7 @@ export class CreateEnrollmentResponse implements protocol.CreateEnrollmentRespon
   id: domain.EnrollmentId
 }
 
-export class GetEnrollmentsQuery implements protocol.GetEnrollmentsQuery {
+export class GetEnrollmentsQuery extends PagedQuery implements protocol.GetEnrollmentsQuery {
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
@@ -151,6 +152,9 @@ export class GetMyEnrollmentsQuery implements protocol.GetMyEnrollmentsQuery {
 export class GetEnrollmentsResponse implements protocol.GetEnrollmentsResponse {
   @ApiProperty({ type: [EnrollmentSummary] })
   items: EnrollmentSummary[]
+
+  @ApiProperty({ example: 137 })
+  total: number
 }
 
 export class GetEnrollmentResponse extends EnrollmentDetails {}

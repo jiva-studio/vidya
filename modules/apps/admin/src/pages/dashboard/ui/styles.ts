@@ -10,8 +10,11 @@ export const titleClasses = [
 
 // `auto-fill` rather than a fixed count: the page holds one to five of these
 // depending on the role, and a fixed grid leaves holes.
+// `auto-rows-fr` because a way in carries no figure and would otherwise stand
+// shorter than the queue beside it; the action is pushed to the bottom either
+// way, so the cards read as one set rather than as two kinds.
 export const gridClasses = [
-  'grid gap-[var(--space-4)]',
+  'grid gap-[var(--space-4)] auto-rows-fr',
   'grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]',
 ]
 

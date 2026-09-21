@@ -9,6 +9,15 @@ import * as crud from './crud'
 export type UserSummary = {
   id: domain.UserId
   name: string
+
+  /** The roles this person holds in the school being listed. */
+  roles: UserRoleSummary[]
+}
+
+/** A role as a row of the people list names it. */
+export type UserRoleSummary = {
+  id: domain.RoleId
+  name: string
 }
 
 export type UserDetailsRole = {
@@ -16,7 +25,7 @@ export type UserDetailsRole = {
   name?: string
 }
 
-export type UserDetails = UserSummary & {
+export type UserDetails = Omit<UserSummary, 'roles'> & {
   email: string
   phone?: string
   roles: UserDetailsRole[]
@@ -26,13 +35,16 @@ export type UserDetails = UserSummary & {
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export type GetUsersQuery = {
+export type GetUsersQuery = crud.PageQuery & {
   schoolId?: domain.SchoolId
+
+  /** Matched against the name and the address, case-insensitively. */
+  search?: string
 }
 
 export type GetUserResponse = crud.GetItemResponse<UserDetails>
 
-export type GetUsersResponse = crud.GetItemsListResponse<UserSummary>
+export type GetUsersResponse = crud.GetPagedItemsListResponse<UserSummary>
 
 /* -------------------------------------------------------------------------- */
 /*                                   Update                                   */

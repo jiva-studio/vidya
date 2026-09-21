@@ -12,6 +12,12 @@ import { Routes } from '@vidya/protocol'
 import type { HttpClient } from '@/shared/api'
 import { useHttp } from '@/shared/api'
 
+/** One page of the schools list, as a screen asks for it. */
+export interface SchoolPageQuery {
+  limit?: number
+  offset?: number
+}
+
 import type {
   SchoolConfigs,
   UpdateSchoolConfigsRequest,
@@ -27,7 +33,8 @@ import type {
  * token grants, which is why it takes no school of its own.
  */
 export const schoolApi = (http: HttpClient) => ({
-  list: () => http.get<GetSchoolsResponse>(Routes().edu.schools.find()),
+  list: (page: SchoolPageQuery = {}) =>
+    http.get<GetSchoolsResponse>(Routes().edu.schools.find(), { ...page }),
 
   get: (id: SchoolId) => http.get<GetSchoolResponse>(Routes().edu.schools.get(id)),
 

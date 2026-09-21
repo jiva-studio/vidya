@@ -6,7 +6,7 @@ import { addMessages, locale } from '@/shared/i18n'
 
 import { messages } from '../i18n'
 import { contentOf, sectionOf, textBlock } from './documents'
-import { LESSON_PATH, openEditor, plain, saveDraft, statuses, VERSIONS } from './harness'
+import { LESSON_PATH, openEditor, plain, saveDraft, saveSays, VERSIONS } from './harness'
 
 addMessages(messages)
 locale.value = 'en'
@@ -157,7 +157,7 @@ describe('the editor under rapid edits and answers that arrive late', () => {
     await flushPromises()
 
     expect(sent).toBe(2)
-    expect(statuses(wrapper)).not.toContain('Saved')
+    expect(saveSays(wrapper)).not.toBe('Saved')
     expect(saveButton(wrapper)?.attributes('disabled')).toBeUndefined()
 
     answers[1]?.settle(details('v1', 1, 'draft'))
@@ -165,7 +165,7 @@ describe('the editor under rapid edits and answers that arrive late', () => {
 
     const patches = writes(http, `${VERSIONS}/v1`).filter((call) => call.method === 'PATCH')
     expect(titleSent(patches.at(-1)?.body)).toBe('Second pass')
-    expect(statuses(wrapper)).toContain('Saved')
+    expect(saveSays(wrapper)).toBe('Saved')
   })
 
   it('leaves nothing behind when the editor is closed with a revision in flight', async () => {

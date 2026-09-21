@@ -7,6 +7,7 @@ action-save = Save
 action-cancel = Cancel
 action-create = Create
 action-delete = Delete
+toast-saved = Saved
 action-retry = Try again
 action-sign-out = Sign out
 

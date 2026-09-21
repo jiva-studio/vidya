@@ -4,9 +4,11 @@ export const filtersClasses = ['flex', 'flex-wrap', 'items-end', 'gap-[var(--spa
 
 export const filterClasses = 'w-[12rem]'
 
-// A row is read down a column, so what belongs to one fact stays in one cell:
-// the name with when it was asked for, the status with who decided it.
+// The name and when it was asked for are two facts and stack; a decision and
+// its date are one, and read across.
 export const stackClasses = ['flex flex-col items-start gap-[var(--space-1)]']
+
+export const decisionClasses = ['flex flex-wrap items-baseline gap-[var(--space-2)]']
 
 export const primaryLineClasses = ['whitespace-nowrap']
 
