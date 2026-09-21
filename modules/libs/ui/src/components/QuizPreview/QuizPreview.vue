@@ -21,8 +21,6 @@ const question = computed(() => props.block.question || props.labels.emptyQuesti
 // answer is in, and this is the screen as it looks before one.
 const answers = computed(() => props.block.answers)
 
-const asking = computed(() => props.progress !== undefined)
-
 const answered = computed(() => {
   const state = props.progress?.states[props.block.id]
   return state?.type === 'quiz' ? state : undefined
@@ -43,7 +41,7 @@ function onChoose(index: number) {
 // A screen that names no label for the key does not mark one, which is how the
 // student's copy is drawn by the same component as the author's.
 function isRightAnswer(index: number): boolean {
-  return !asking.value && Boolean(props.labels.rightAnswer) && index === props.block.rightAnswer
+  return Boolean(props.labels.rightAnswer) && index === props.block.rightAnswer
 }
 </script>
 
