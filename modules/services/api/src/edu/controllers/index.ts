@@ -1,7 +1,6 @@
 export * from './courses/courses.controller'
 export * from './enrollments/enrollments.controller'
 export * from './groups/groups.controller'
-export * from './join/join.controller'
 export * from './homework/homework.controller'
 export * from './homework/progress.controller'
 export * from './lessons/lessons.controller'

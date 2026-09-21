@@ -203,15 +203,6 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
    * down. `manager` is the caller's transaction, so the places and whatever
    * ended the membership commit or roll back together.
    */
-  /** How many live places a student holds in one school — what leaving it costs. */
-  async countLivePlacesIn(studentId: domain.UserId, schoolId: domain.SchoolId): Promise<number> {
-    return this.repository.countBy({
-      studentId,
-      schoolId,
-      status: In([...LiveEnrollmentStatuses]),
-    })
-  }
-
   async revokePlacesIn(
     studentId: domain.UserId,
     schoolId: domain.SchoolId,
