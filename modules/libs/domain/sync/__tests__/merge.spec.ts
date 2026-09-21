@@ -83,6 +83,29 @@ describe('mergeIncoming, enrollments', () => {
   })
 })
 
+describe('mergeIncoming, block_states', () => {
+  const local = doc({ state: { type: 'quiz', answer: 1 }, updatedAt: 'local' }, 2)
+  const remote = doc(
+    { state: { type: 'quiz', answer: 0 }, updatedAt: 'server', verdict: { correct: false } },
+    4,
+    'server',
+  )
+
+  it('keeps the answer this device wrote and takes the verdict on it', () => {
+    const merged = mergeIncoming('block_states', local, remote, true)
+
+    expect(merged.data).toEqual({
+      state: { type: 'quiz', answer: 1 },
+      updatedAt: 'local',
+      verdict: { correct: false },
+    })
+  })
+
+  it('takes the server version whole once the answer has been sent', () => {
+    expect(mergeIncoming('block_states', local, remote, false)).toEqual(remote)
+  })
+})
+
 describe('mergeIncoming, one-way collections', () => {
   const local = doc({ title: 'local' }, 2)
   const remote = doc({ title: 'server' }, 4, 'server')
@@ -91,11 +114,6 @@ describe('mergeIncoming, one-way collections', () => {
     expect(mergeIncoming('courses', local, remote, true)).toEqual(remote)
     expect(mergeIncoming('lessons', local, remote, true)).toEqual(remote)
     expect(mergeIncoming('lesson_versions', local, remote, true)).toEqual(remote)
-  })
-
-  it('keeps the local version of an upload-only collection while it is unsent', () => {
-    expect(mergeIncoming('block_states', local, remote, true)).toEqual(local)
-    expect(mergeIncoming('block_states', local, remote, false)).toEqual(remote)
   })
 
   it('takes the incoming version when the document is new here', () => {
