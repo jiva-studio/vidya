@@ -106,15 +106,24 @@ export class UsersController {
     @Param('id', new ParseUUIDPipe(), UserExistsPipe) id: domain.UserId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateUserResponse> {
-    // TODO user can update himself without any permission
-    const roles = await this.rolesService.getRolesOfUser(id)
-    const scopes = roles.map((role) => ({
-      schoolId: role.schoolId,
-    }))
+    const isSelf = auth.userId === id
 
-    // Check if user has permission to update users
-    if (!auth.permissions.has(['users:update'], scopes)) {
-      throw new ForbiddenException('User does not have permission')
+    // A user updating themselves may change their display name without administrative permissions.
+    // Changing sensitive identity fields (email, phone) or updating another user requires `users:update`
+    // across the target user's school scopes.
+    const isChangingSensitiveFields =
+      request.email !== undefined || request.phone !== undefined
+
+    if (!isSelf || isChangingSensitiveFields) {
+      const roles = await this.rolesService.getRolesOfUser(id)
+      const scopes = roles.map((role) => ({
+        schoolId: role.schoolId,
+      }))
+
+      // Check if user has permission to update users
+      if (!auth.permissions.has(['users:update'], scopes)) {
+        throw new ForbiddenException('User does not have permission')
+      }
     }
 
     // Update user
