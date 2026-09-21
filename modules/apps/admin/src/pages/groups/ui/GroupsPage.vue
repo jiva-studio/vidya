@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { SelectOption } from '@vidya/ui'
-import { Button, PageHeader, Pagination, Select, TableFilters } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -8,13 +7,11 @@ import { useRouter } from 'vue-router'
 import { useCourses } from '@/entities/course'
 import { useGroups } from '@/entities/group'
 import { useCan } from '@/shared/access'
-import { ANY, asFilter } from '@/shared/lib'
 
+import GroupsFilters from './GroupsFilters.vue'
 import GroupsTable from './GroupsTable.vue'
-import { filterClasses, pageClasses } from './styles'
 import type { GroupListRow } from './types'
-import { PageBack } from '@/widgets/page-back'
-import { PAGE_SIZE } from '@/shared/lib'
+import { ListPage } from '@/widgets/list-page'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -31,10 +28,9 @@ const courseNames = computed(
   () => new Map(courses.items.value.map((course) => [course.id, course.name])),
 )
 
-const courseOptions = computed<SelectOption[]>(() => [
-  { value: ANY, label: $t('groups-filter-all') },
-  ...courses.items.value.map((course) => ({ value: course.id, label: course.name })),
-])
+const courseOptions = computed<SelectOption[]>(() =>
+  courses.items.value.map((course) => ({ value: course.id, label: course.name })),
+)
 
 // Narrowing by course is the server's job — `GetGroupsQuery` takes one — so the
 // select drives the request; the search box only sifts what came back.
@@ -79,8 +75,12 @@ function onRetry() {
   void groups.reload()
 }
 
+function onSearch(term: string) {
+  search.value = term
+}
+
 function onCourse(value: string) {
-  groups.courseId.value = asFilter(value) ?? ''
+  groups.courseId.value = value
 }
 
 function onClear() {
@@ -97,30 +97,26 @@ function matches(group: GroupListRow, query: string): boolean {
 </script>
 
 <template>
-  <section :class="pageClasses">
-    <PageHeader :title="$t('groups-title')">
-      <template #leading><PageBack /></template>
-      <template #actions>
-        <Button v-if="canCreate" @click="onCreate">{{ $t('groups-create') }}</Button>
-      </template>
-    </PageHeader>
-    <TableFilters
-      v-model:search="search"
-      :search-label="$t('groups-title')"
-      :filters-applied="filtersApplied"
-      @clear="onClear"
-    >
-      <template #filters>
-        <Select
-          :class="filterClasses"
-          :model-value="groups.courseId.value || ANY"
-          :options="courseOptions"
-          :placeholder="$t('groups-filter-all')"
-          :aria-label="$t('groups-filter-course')"
-          @update:model-value="onCourse"
-        />
-      </template>
-    </TableFilters>
+  <ListPage
+    :title="$t('groups-title')"
+    :create-label="canCreate ? $t('groups-create') : undefined"
+    :page="groups.page.value"
+    :total="groups.total.value"
+    :paged="groups.paged.value"
+    @create="onCreate"
+    @update:page="groups.goTo"
+  >
+    <template #filters>
+      <GroupsFilters
+        :search="search"
+        :course-id="groups.courseId.value"
+        :course-options="courseOptions"
+        :filters-applied="filtersApplied"
+        @update:search="onSearch"
+        @update:course-id="onCourse"
+        @clear="onClear"
+      />
+    </template>
     <GroupsTable
       :rows="displayedItems"
       :empty-title="emptyTitle"
@@ -134,12 +130,5 @@ function matches(group: GroupListRow, query: string): boolean {
       @edit="onEdit"
       @members="onMembers"
     />
-    <Pagination
-      v-if="groups.paged.value"
-      :page="groups.page.value"
-      :per-page="PAGE_SIZE"
-      :total="groups.total.value"
-      @update:page="groups.goTo"
-    />
-  </section>
+  </ListPage>
 </template>

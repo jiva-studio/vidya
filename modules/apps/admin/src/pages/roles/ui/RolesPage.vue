@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { RoleId } from '@vidya/domain'
 import type { TableColumn, TableRowData } from '@vidya/ui'
-import { Button, PageHeader, Pagination, Table, TableFilters } from '@vidya/ui'
+import { Table, TableFilters } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -11,9 +11,7 @@ import { useRoles } from '@/entities/role'
 import { useCan } from '@/shared/access'
 
 import RolesTableRow from './RolesTableRow.vue'
-import { pageClasses } from './styles'
-import { PageBack } from '@/widgets/page-back'
-import { PAGE_SIZE } from '@/shared/lib'
+import { ListPage } from '@/widgets/list-page'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -75,20 +73,24 @@ function asRole(row: TableRowData): RoleRow {
 </script>
 
 <template>
-  <section :class="pageClasses">
-    <PageHeader :title="$t('roles-title')">
-      <template #leading><PageBack /></template>
-      <template #actions>
-        <Button v-if="canCreate" @click="onCreate">{{ $t('roles-create') }}</Button>
-      </template>
-    </PageHeader>
-    <TableFilters
-      v-if="roles.rows.value.length >= 10 || search"
-      v-model:search="search"
-      :search-label="$t('roles-title')"
-      :filters-applied="!!search"
-      @clear="onClear"
-    />
+  <ListPage
+    :title="$t('roles-title')"
+    :create-label="canCreate ? $t('roles-create') : undefined"
+    :page="roles.page.value"
+    :total="roles.total.value"
+    :paged="roles.paged.value"
+    @create="onCreate"
+    @update:page="roles.goTo"
+  >
+    <template #filters>
+      <TableFilters
+        v-if="roles.rows.value.length >= 10 || search"
+        v-model:search="search"
+        :search-label="$t('roles-title')"
+        :filters-applied="!!search"
+        @clear="onClear"
+      />
+    </template>
     <Table
       :columns="columns"
       :rows="displayedRows"
@@ -105,12 +107,5 @@ function asRole(row: TableRowData): RoleRow {
         <RolesTableRow :role="asRole(row)" :can-update="canUpdate" @edit="onEdit" />
       </template>
     </Table>
-    <Pagination
-      v-if="roles.paged.value"
-      :page="roles.page.value"
-      :per-page="PAGE_SIZE"
-      :total="roles.total.value"
-      @update:page="roles.goTo"
-    />
-  </section>
+  </ListPage>
 </template>

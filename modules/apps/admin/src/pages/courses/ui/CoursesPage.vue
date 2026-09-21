@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import type { CourseSummary } from '@vidya/protocol'
-import { Button, PageHeader, Pagination, TableFilters } from '@vidya/ui'
+import { TableFilters } from '@vidya/ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { getCourses } from '@/entities/course'
 import { useCan, useCurrentSchool } from '@/shared/access'
 import { useHttp } from '@/shared/api'
-import { PAGE_SIZE, usePagedList } from '@/shared/lib'
+import { usePagedList } from '@/shared/lib'
 
 import CoursesTable from './CoursesTable.vue'
-import { pageClasses } from './styles'
-import { PageBack } from '@/widgets/page-back'
+import { ListPage } from '@/widgets/list-page'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -68,20 +67,24 @@ function onClear() {
 </script>
 
 <template>
-  <section :class="pageClasses">
-    <PageHeader :title="$t('courses-title')">
-      <template #leading><PageBack /></template>
-      <template #actions>
-        <Button v-if="canCreate" @click="onCreate">{{ $t('courses-create') }}</Button>
-      </template>
-    </PageHeader>
-    <TableFilters
-      v-if="courses.rows.value.length >= 10 || search"
-      v-model:search="search"
-      :search-label="$t('courses-title')"
-      :filters-applied="!!search"
-      @clear="onClear"
-    />
+  <ListPage
+    :title="$t('courses-title')"
+    :create-label="canCreate ? $t('courses-create') : undefined"
+    :page="courses.page.value"
+    :total="courses.total.value"
+    :paged="courses.paged.value"
+    @create="onCreate"
+    @update:page="courses.goTo"
+  >
+    <template #filters>
+      <TableFilters
+        v-if="courses.rows.value.length >= 10 || search"
+        v-model:search="search"
+        :search-label="$t('courses-title')"
+        :filters-applied="!!search"
+        @clear="onClear"
+      />
+    </template>
     <CoursesTable
       :rows="displayedItems"
       :loading="courses.loading.value"
@@ -93,12 +96,5 @@ function onClear() {
       @edit="onEdit"
       @lessons="onLessons"
     />
-    <Pagination
-      v-if="courses.paged.value"
-      :page="courses.page.value"
-      :per-page="PAGE_SIZE"
-      :total="courses.total.value"
-      @update:page="courses.goTo"
-    />
-  </section>
+  </ListPage>
 </template>

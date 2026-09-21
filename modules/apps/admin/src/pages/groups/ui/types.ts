@@ -1,4 +1,5 @@
 import type { GroupSummary } from '@vidya/protocol'
+import type { SelectOption } from '@vidya/ui'
 
 import type { GroupFormValues, GroupMember } from '@/entities/group'
 
@@ -72,4 +73,26 @@ export interface GroupMemberRowProps {
 export interface GroupMemberRowEmits {
   revoke: [enrollmentId: string]
   move: [enrollmentId: string]
+}
+
+export interface GroupsCourseFilterProps {
+  modelValue: string
+  options: SelectOption[]
+}
+
+export interface GroupsCourseFilterEmits {
+  'update:modelValue': [value: string]
+}
+
+export interface GroupsFiltersProps {
+  search: string
+  courseId: string
+  courseOptions: SelectOption[]
+  filtersApplied: boolean
+}
+
+export interface GroupsFiltersEmits {
+  'update:search': [term: string]
+  'update:courseId': [courseId: string]
+  clear: []
 }
