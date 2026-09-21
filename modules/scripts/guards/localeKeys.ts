@@ -56,7 +56,7 @@ const DYNAMIC_KEYS: DynamicKey[] = [
   // How far a journaled row has travelled: the four states a screen shows.
   {
     prefix: 'submission-',
-    list: 'libs/client/usecases/sync/submissionState.ts#SubmissionStates',
+    list: 'libs/client/usecases/sync/submissions.ts#SubmissionStates',
   },
 ]
 
