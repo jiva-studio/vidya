@@ -115,8 +115,15 @@ class S3Storage implements MediaStoragePort {
 
   async head(key: string): Promise<StoredObject | undefined> {
     try {
+      // `ChecksumMode` is what makes a stored checksum readable back: without it
+      // the answer carries no `ChecksumSHA256` at all, whatever was verified on
+      // the way in, and the port would report every object as unhashed.
       const found = await this.client.send(
-        new HeadObjectCommand({ Bucket: this.credentials.bucket, Key: key }),
+        new HeadObjectCommand({
+          Bucket: this.credentials.bucket,
+          Key: key,
+          ChecksumMode: 'ENABLED',
+        }),
       )
 
       return {
@@ -166,17 +173,36 @@ class S3Storage implements MediaStoragePort {
   async *listUnfinished(
     prefix: string,
   ): AsyncIterable<{ key: string; uploadId: string; startedAt: Date }> {
-    const page = await this.client.send(
-      new ListMultipartUploadsCommand({ Bucket: this.credentials.bucket, Prefix: prefix }),
-    )
+    // Listed without `Prefix` and filtered here: MinIO answers a prefixed
+    // `ListMultipartUploads` with nothing at all, so a prefixed call would
+    // report every zone as having no unfinished sessions — the exact case this
+    // exists to find. The filter is ours; the paging is the provider's.
+    let marker: { key?: string; uploadId?: string } = {}
 
-    for (const upload of page.Uploads ?? []) {
-      yield {
-        key: upload.Key ?? '',
-        uploadId: upload.UploadId ?? '',
-        startedAt: upload.Initiated ?? new Date(0),
+    do {
+      const page = await this.client.send(
+        new ListMultipartUploadsCommand({
+          Bucket: this.credentials.bucket,
+          KeyMarker: marker.key,
+          UploadIdMarker: marker.uploadId,
+        }),
+      )
+
+      for (const upload of page.Uploads ?? []) {
+        const key = upload.Key ?? ''
+        if (!key.startsWith(prefix)) continue
+
+        yield {
+          key,
+          uploadId: upload.UploadId ?? '',
+          startedAt: upload.Initiated ?? new Date(0),
+        }
       }
-    }
+
+      marker = page.IsTruncated
+        ? { key: page.NextKeyMarker, uploadId: page.NextUploadIdMarker }
+        : {}
+    } while (marker.key !== undefined)
   }
 
   async abortUnfinished(key: string, uploadId: string): Promise<void> {
