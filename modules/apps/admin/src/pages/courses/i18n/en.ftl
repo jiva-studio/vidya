@@ -14,6 +14,7 @@ courses-empty-title = No courses yet
 courses-empty-body = Create a course, then add lessons to it.
 courses-empty-action = Create a course
 courses-load-failed = The courses could not be loaded.
+courses-draft = Draft
 courses-no-description = —
 
 course-form-create-title = New course

@@ -12,6 +12,7 @@ import { fakeHttpClient, mountWithApp } from '@/shared/testing'
 
 import { messages } from '../i18n'
 import CourseFormPage from '../ui/CourseFormPage.vue'
+import CoursesPage from '../ui/CoursesPage.vue'
 
 addMessages(messages)
 
@@ -144,5 +145,70 @@ describe('course publication', () => {
     const { page } = await editing('draft')
 
     expect(page.text()).toContain('Черновик: студенты пока не видят курс.')
+  })
+})
+
+const listed = [
+  { id: 'c1', name: 'Sanskrit from scratch', description: 'Cases and sandhi', status: 'published' },
+  { id: 'c2', name: 'Kirtan practice', description: 'Two evenings a week', status: 'draft' },
+]
+
+const list = async (items: unknown[]) => {
+  const routes = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/courses', name: 'courses', component: blank },
+      { path: '/courses/new', name: 'course-create', component: blank },
+      { path: '/courses/:courseId/edit', name: 'course-edit', component: blank },
+      { path: '/courses/:courseId/lessons', name: 'lessons', component: blank },
+    ],
+  })
+
+  const transport = fakeHttpClient({ [COURSES]: { items } })
+  const page = mountWithApp(CoursesPage, {
+    global: { plugins: [routes], provide: { [httpClientKey as symbol]: transport.client } },
+  })
+  await flushPromises()
+
+  return page
+}
+
+const rowSaying = (page: Awaited<ReturnType<typeof list>>, name: string) =>
+  page.findAll('tbody tr').find((row) => row.text().includes(name))
+
+describe('the courses list', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    resetApi()
+    useSession().end()
+    signIn()
+    locale.value = 'en'
+  })
+
+  it('marks the course students do not see yet', async () => {
+    const page = await list(listed)
+
+    expect(rowSaying(page, 'Kirtan practice')?.text()).toContain('Draft')
+  })
+
+  it('marks nothing on a course its students already see', async () => {
+    const page = await list(listed)
+
+    expect(rowSaying(page, 'Sanskrit from scratch')?.text()).not.toContain('Draft')
+  })
+
+  it('never calls a draft inactive or disabled', async () => {
+    const page = await list(listed)
+
+    expect(page.text()).not.toContain('Inactive')
+    expect(page.text()).not.toContain('Disabled')
+  })
+
+  it('says in Russian which course is a draft', async () => {
+    locale.value = 'ru'
+    const page = await list(listed)
+
+    expect(rowSaying(page, 'Kirtan practice')?.text()).toContain('Черновик')
+    expect(rowSaying(page, 'Sanskrit from scratch')?.text()).not.toContain('Черновик')
   })
 })

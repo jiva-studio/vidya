@@ -14,6 +14,7 @@ courses-empty-title = Курсов пока нет
 courses-empty-body = Создайте курс, а затем добавьте в него уроки.
 courses-empty-action = Создать курс
 courses-load-failed = Не удалось загрузить курсы.
+courses-draft = Черновик
 courses-no-description = —
 
 course-form-create-title = Новый курс

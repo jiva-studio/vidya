@@ -11,16 +11,22 @@ import CoursesPage from './CoursesPage.vue'
  * The courses of the current school, in the five states every list has.
  *
  * Mounted whole over the fake transport, so what is shown is what the screen
- * makes of an answer rather than what a caller chose to pass it.
+ * makes of an answer rather than what a caller chose to pass it. One of the
+ * three is a draft, because that is the row the list has to tell apart.
  */
 const COURSES = '/edu/courses'
 
 const FULL = ['courses:read', 'courses:create', 'courses:update'] as PermissionKey[]
 
 const items = [
-  { id: 'c1', name: 'Sanskrit from scratch', description: 'Alphabet, cases and sandhi' },
-  { id: 'c2', name: 'Bhagavad-gita', description: 'Read with the commentary' },
-  { id: 'c3', name: 'Kirtan practice', description: '' },
+  {
+    id: 'c1',
+    name: 'Sanskrit from scratch',
+    description: 'Alphabet, cases and sandhi',
+    status: 'published',
+  },
+  { id: 'c2', name: 'Bhagavad-gita', description: 'Read with the commentary', status: 'published' },
+  { id: 'c3', name: 'Kirtan practice', description: '', status: 'draft' },
 ]
 
 const over =
