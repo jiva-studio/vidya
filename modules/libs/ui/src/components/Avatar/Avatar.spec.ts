@@ -9,7 +9,7 @@ const classesOf = (name: string): string => mount(Avatar, { props: { name } }).a
 
 describe('avatarTint', () => {
   it('stays inside the range the tokens define', () => {
-    const names = ['Radha Devi', 'Gauranga', 'Ms. Kristen Gerhold', 'Дмитрий', 'x']
+    const names = ['Radha Devi', 'Gauranga', 'Ms. Kristen Gerhold', 'x']
 
     for (const name of names) {
       expect(avatarTint(name)).toBeGreaterThanOrEqual(1)
@@ -27,14 +27,21 @@ describe('avatarTint', () => {
     expect(new Set(names.map(avatarTint)).size).toBe(AVATAR_TINTS)
   })
 
-  // Russian women's names nearly all end in one of two letters, and a hash
-  // whose multiplier shares a factor with the palette lets the last character
-  // decide the colour on its own: a roster of them came out in two of six.
-  it('does not let the last letter decide the colour', () => {
-    for (const ending of ['а', 'я', 'в', 'о', 'и', 'н']) {
-      const names = Array.from({ length: 200 }, (_, index) => `Имя${index}${ending}`)
+  // The invariant the constants are chosen for. Real lists are full of names
+  // that end alike — a family, a patronymic, an inflected language — and each
+  // of those groups has to use the whole palette, not a corner of it.
+  it('spreads names that share a final letter', () => {
+    for (const ending of ['a', 'e', 'i', 'n', 's', 'y']) {
+      const names = Array.from({ length: 200 }, (_, index) => `Name ${index}${ending}`)
 
       expect(new Set(names.map(avatarTint)).size, `names ending in ${ending}`).toBe(AVATAR_TINTS)
+    }
+  })
+
+  it('tints a name written in any script, and one outside the basic plane', () => {
+    for (const name of ['Радха Деви', 'श्रीधर', '達磨', '𝒜nanda']) {
+      expect(avatarTint(name)).toBeGreaterThanOrEqual(1)
+      expect(avatarTint(name)).toBeLessThanOrEqual(AVATAR_TINTS)
     }
   })
 })
