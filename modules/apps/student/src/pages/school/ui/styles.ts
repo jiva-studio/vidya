@@ -16,3 +16,8 @@ export const rowClasses = [
 export const numberClasses = ['text-[var(--color-text-muted)] tabular-nums']
 
 export const placeClasses = ['flex flex-col items-start gap-[var(--space-2)]']
+
+export const noticeClasses = [
+  'flex flex-col items-start gap-[var(--space-2)]',
+  'rounded-[var(--radius-md)] border border-[var(--color-border)] p-[var(--space-4)]',
+]

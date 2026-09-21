@@ -5,6 +5,7 @@ import { toIsoDateTime } from '@vidya/domain'
 import { watch } from 'vue'
 
 import { useConnection } from '@/shared/connection'
+import { useBlockStateWriter } from '@/shared/data'
 import { type INetworkStatus, LocalStorageDeviceId } from '@/shared/platform'
 import { useSiteStatus } from '@/shared/status'
 import { useSyncRuns } from '@/shared/sync'
@@ -110,6 +111,10 @@ const startSiteSync = async (
   // next reload rather than at the moment somebody joined.
   useSyncRuns().adoptRunner(() => void run())
 
+  // The journaled repository and no other: progress recorded through it is
+  // appended to the outbox in the same transaction, which is what sends it.
+  useBlockStateWriter().adoptWriter(engine.blockStates)
+
   // A database that already holds scope positions was filled by a run on some
   // other day: the courses are there, and the screens must not promise to
   // fetch them again before saying so.
@@ -123,6 +128,7 @@ const startSiteSync = async (
       stopped = true
       offOnline()
       useSyncRuns().adoptRunner(undefined)
+      useBlockStateWriter().adoptWriter(undefined)
     },
   }
 }

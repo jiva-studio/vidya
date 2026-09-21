@@ -35,3 +35,7 @@ export interface CoursePlaceProps {
   /** The place the student holds on this course, or null when they hold none. */
   status: EnrollmentStatus | null
 }
+
+export interface LessonOutdatedEmits {
+  reload: []
+}
