@@ -6,3 +6,8 @@ export interface AccountMenuProps {
 export interface AccountMenuEmits {
   (event: 'sign-out'): void
 }
+
+export interface AccountMenuHeaderProps {
+  name: string
+  email?: string
+}

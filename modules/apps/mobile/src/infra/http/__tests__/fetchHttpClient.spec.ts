@@ -40,6 +40,13 @@ describe('FetchHttpClient', () => {
       )
     })
 
+    it('attaches an x-request-id header for distributed tracing', async () => {
+      const fetchMock = respondWith({})
+      await client.get('/edu/courses')
+      const headers = fetchMock.mock.calls[0][1]?.headers as Record<string, string>
+      expect(headers['x-request-id']).toBeTruthy()
+    })
+
     it('leaves the path alone when every query value is absent', async () => {
       const fetchMock = respondWith({})
       await client.get('/edu/enrollments', { studentId: undefined })

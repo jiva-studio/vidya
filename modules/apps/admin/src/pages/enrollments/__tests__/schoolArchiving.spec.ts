@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { setAppRouter } from '@/shared/access'
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers, RecordedCall } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
@@ -18,8 +18,8 @@ const COURSES = '/edu/courses'
 const GROUPS = '/edu/groups'
 
 const copy = `
-enrollments-archive = Убрать
-enrollments-review = Рассмотреть
+enrollments-archive = Put away
+enrollments-review = Review
 `
 
 const blank = { template: '<div />' }
@@ -60,11 +60,11 @@ const details = (id: string, over: Record<string, unknown> = {}) => ({
   ...over,
 })
 
-const person = { id: 'u1', name: 'Аня Иванова', email: 'a@example.com', roles: [] }
+const person = { id: 'u1', name: 'Ann Ivanova', email: 'a@example.com', roles: [] }
 
 const world = (over: FakeAnswers = {}): FakeAnswers => ({
-  [COURSES]: { items: [{ id: 'c1', name: 'Основы' }] },
-  [GROUPS]: { items: [{ id: 'g1', name: 'Утренняя', status: 'pending' }] },
+  [COURSES]: { items: [{ id: 'c1', name: 'Foundations' }] },
+  [GROUPS]: { items: [{ id: 'g1', name: 'Morning', status: 'pending' }] },
   [ENROLLMENTS]: { items: [summary('e1')] },
   [`${ENROLLMENTS}/e1`]: details('e1'),
   '/edu/users/u1': person,
@@ -138,14 +138,14 @@ describe('the school putting a row out of its own sight', () => {
       }),
     )
 
-    await click(page, 'Убрать')
-    await confirmInBody('Убрать')
+    await click(page, translate('enrollments-archive'))
+    await confirmInBody(translate('enrollments-archive'))
 
     const written = transport.calls.filter((call: RecordedCall) => call.method === 'PATCH')
     expect(written).toHaveLength(1)
     expect(written[0]).toMatchObject({ path: `${ENROLLMENTS}/e1/archive` })
     expect(written[0]?.body).toBeUndefined()
-    expect(page.text()).not.toContain('Аня Иванова')
+    expect(page.text()).not.toContain('Ann Ivanova')
   })
 
   it('offers it only once the request has been answered', async () => {
@@ -156,24 +156,26 @@ describe('the school putting a row out of its own sight', () => {
       }),
     )
 
-    expect(labels(page)).not.toContain('Убрать')
+    expect(labels(page)).not.toContain(translate('enrollments-archive'))
 
     const { page: answered } = await mountPage(world())
 
-    expect(labels(answered)).toContain('Убрать')
+    expect(labels(answered)).toContain(translate('enrollments-archive'))
   })
 
   it('is offered to nobody without the right to moderate', async () => {
     const { page: allowed } = await mountPage(world())
 
-    expect(labels(allowed)).toEqual(expect.arrayContaining(['Убрать', 'Рассмотреть']))
+    expect(labels(allowed)).toEqual(
+      expect.arrayContaining([translate('enrollments-archive'), translate('enrollments-review')]),
+    )
 
     useSession().end()
     signIn(['enrollments:read', 'users:read'] as PermissionKey[])
     const { page: reader } = await mountPage(world())
 
-    expect(labels(reader)).not.toContain('Убрать')
-    expect(labels(reader)).not.toContain('Рассмотреть')
+    expect(labels(reader)).not.toContain(translate('enrollments-archive'))
+    expect(labels(reader)).not.toContain(translate('enrollments-review'))
   })
 
   it('drops what the school put away and keeps what the student did', async () => {
@@ -189,13 +191,13 @@ describe('the school putting a row out of its own sight', () => {
           archivedByStudentAt: WHEN_THE_STUDENT_TIDIED_UP,
         }),
         [`${ENROLLMENTS}/e3`]: details('e3', { studentId: 'u3' }),
-        '/edu/users/u2': { ...person, id: 'u2', name: 'Борис Петров' },
-        '/edu/users/u3': { ...person, id: 'u3', name: 'Вера Сидорова' },
+        '/edu/users/u2': { ...person, id: 'u2', name: 'Boris Petrov' },
+        '/edu/users/u3': { ...person, id: 'u3', name: 'Vera Sidorova' },
       }),
     )
 
-    expect(page.text()).not.toContain('Аня Иванова')
-    expect(page.text()).toContain('Борис Петров')
-    expect(page.text()).toContain('Вера Сидорова')
+    expect(page.text()).not.toContain('Ann Ivanova')
+    expect(page.text()).toContain('Boris Petrov')
+    expect(page.text()).toContain('Vera Sidorova')
   })
 })

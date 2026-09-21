@@ -1,5 +1,7 @@
 import { INestApplication } from '@nestjs/common'
-import { createTestingApp } from '@vidya/api/edu/shared'
+import { AuthService } from '@vidya/api/auth/services'
+import { createTestingApp, newId } from '@vidya/api/edu/shared'
+import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
 
@@ -152,7 +154,7 @@ describe('/edu/lessons', () => {
   it('refuses to retitle without the permission', () => {
     return request(app.getHttpServer())
       .patch(routes.update(ctx.lessonId))
-      .auth(ctx.tokens.noPermissions, { type: 'bearer' })
+      .auth(ctx.tokens.reader, { type: 'bearer' })
       .send({ title: 'Renamed' })
       .expect(403)
   })
@@ -163,6 +165,22 @@ describe('/edu/lessons', () => {
       .auth(ctx.tokens.author, { type: 'bearer' })
       .send({ title: 'Renamed' })
       .expect(404)
+  })
+
+  it('refuses to retitle a lesson when holding update in another school and only read in this school', async () => {
+    const auth = app.get(AuthService)
+    const token = (
+      await auth.generateTokens(newId<domain.UserId>(), [
+        { sid: ctx.schoolId, p: ['lessons:update'] },
+        { sid: ctx.otherSchoolId, p: ['lessons:read'] },
+      ])
+    ).accessToken
+
+    return request(app.getHttpServer())
+      .patch(routes.update(ctx.otherLessonId))
+      .auth(token, { type: 'bearer' })
+      .send({ title: 'Renamed' })
+      .expect(403)
   })
 
   /* -------------------------------------------------------------------------- */
@@ -193,5 +211,20 @@ describe('/edu/lessons', () => {
       .delete(routes.delete(ctx.otherLessonId))
       .auth(ctx.tokens.author, { type: 'bearer' })
       .expect(404)
+  })
+
+  it('refuses to delete a lesson when holding delete in another school and only read in this school', async () => {
+    const auth = app.get(AuthService)
+    const token = (
+      await auth.generateTokens(newId<domain.UserId>(), [
+        { sid: ctx.schoolId, p: ['lessons:delete'] },
+        { sid: ctx.otherSchoolId, p: ['lessons:read'] },
+      ])
+    ).accessToken
+
+    return request(app.getHttpServer())
+      .delete(routes.delete(ctx.otherLessonId))
+      .auth(token, { type: 'bearer' })
+      .expect(403)
   })
 })

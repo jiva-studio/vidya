@@ -13,6 +13,8 @@ import {
   Min,
 } from 'class-validator'
 
+import { PagedQuery } from './paging.dto'
+
 export class HomeworkDetails implements protocol.HomeworkDetails {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   id: domain.HomeworkId
@@ -76,7 +78,7 @@ export class HomeworkSummary implements protocol.HomeworkSummary {
   submittedAt?: domain.IsoDateTime
 }
 
-export class GetHomeworkQuery implements protocol.GetHomeworkQuery {
+export class GetHomeworkQuery extends PagedQuery implements protocol.GetHomeworkQuery {
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
@@ -91,11 +93,19 @@ export class GetHomeworkQuery implements protocol.GetHomeworkQuery {
   @IsOptional()
   @IsIn(domain.HomeworkStatuses)
   status?: domain.HomeworkStatus
+
+  @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  @IsOptional()
+  @IsUUID()
+  schoolId?: domain.SchoolId
 }
 
 export class GetHomeworkListResponse implements protocol.GetHomeworkListResponse {
   @ApiProperty({ type: [HomeworkSummary] })
   items: HomeworkSummary[]
+
+  @ApiProperty({ example: 137 })
+  total: number
 }
 
 export class GetHomeworkResponse extends HomeworkDetails {}

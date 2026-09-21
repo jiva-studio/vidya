@@ -52,7 +52,7 @@ describe('SchoolsController', () => {
         await ctr.updateOne(
           ctx.one.school.id,
           new dto.UpdateSchoolRequest({ name: 'Updated School Name' }),
-          await ctx.authenticate(ctx.misc.users.empty),
+          await ctx.authenticate(ctx.one.users.readonly),
         )
       }).rejects.toThrow(`User does not have permission`)
     })

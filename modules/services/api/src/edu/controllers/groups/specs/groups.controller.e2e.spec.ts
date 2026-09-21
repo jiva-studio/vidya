@@ -1,5 +1,7 @@
 import { INestApplication } from '@nestjs/common'
-import { createTestingApp } from '@vidya/api/edu/shared'
+import { AuthService } from '@vidya/api/auth/services'
+import { createTestingApp, newId } from '@vidya/api/edu/shared'
+import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
 
@@ -145,6 +147,22 @@ describe('/edu/groups', () => {
       .expect(404)
   })
 
+  it('refuses to rename a group when holding update in another school and only read in this school', async () => {
+    const auth = app.get(AuthService)
+    const token = (
+      await auth.generateTokens(newId<domain.UserId>(), [
+        { sid: ctx.schoolId, p: ['groups:update'] },
+        { sid: ctx.otherSchoolId, p: ['groups:read'] },
+      ])
+    ).accessToken
+
+    return request(app.getHttpServer())
+      .patch(routes.update(ctx.otherGroupId))
+      .auth(token, { type: 'bearer' })
+      .send({ name: 'Renamed' })
+      .expect(403)
+  })
+
   /* -------------------------------------------------------------------------- */
   /*                                  Deleting                                  */
   /* -------------------------------------------------------------------------- */
@@ -173,6 +191,21 @@ describe('/edu/groups', () => {
       .delete(routes.delete(ctx.otherGroupId))
       .auth(ctx.tokens.admin, { type: 'bearer' })
       .expect(404)
+  })
+
+  it('refuses to delete a group when holding delete in another school and only read in this school', async () => {
+    const auth = app.get(AuthService)
+    const token = (
+      await auth.generateTokens(newId<domain.UserId>(), [
+        { sid: ctx.schoolId, p: ['groups:delete'] },
+        { sid: ctx.otherSchoolId, p: ['groups:read'] },
+      ])
+    ).accessToken
+
+    return request(app.getHttpServer())
+      .delete(routes.delete(ctx.otherGroupId))
+      .auth(token, { type: 'bearer' })
+      .expect(403)
   })
 
   it('rejects a malformed id before reaching the handler', () => {

@@ -30,8 +30,12 @@ export type CreateCourseResponse = crud.CreateItemResponse<CourseDetails['id']>
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export type GetCoursesQuery = { schoolId?: string }
-export type GetCoursesResponse = crud.GetItemsListResponse<CourseSummary>
+export type GetCoursesQuery = crud.PageQuery & {
+  schoolId?: string
+  query?: string
+}
+
+export type GetCoursesResponse = crud.GetPagedItemsListResponse<CourseSummary>
 export type GetCourseResponse = crud.GetItemResponse<CourseDetails>
 
 /* -------------------------------------------------------------------------- */

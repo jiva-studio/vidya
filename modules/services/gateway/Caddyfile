@@ -1,25 +1,9 @@
-# The gateway's whole configuration. Unlike the nginx setup this replaces,
-# there is no local/TLS template pair and no envsubst render step: Caddy
-# substitutes every {$VAR} placeholder itself when it loads this file (see
-# https://caddyserver.com/docs/caddyfile/concepts#environment-variables), so
-# one file, parametrized, covers both shapes. docker-entrypoint.sh computes
-# the handful of values that differ structurally between them —
-# VIDYA_GATEWAY_SITE_ADDRESS (a bare port locally, a real domain once TLS is
-# on) and VIDYA_GATEWAY_HSTS_DIRECTIVE (blank, or a `header` line) — and
-# exports them before Caddy reads this file. See README.md.
 {
 	http_port 8080
 	https_port 8443
 }
 
 {$VIDYA_GATEWAY_SITE_ADDRESS} {
-	# A coarse, per-client-IP outer limit — see README.md, "Rate limiting",
-	# for why two zones and where the numbers come from
-	# (docker-entrypoint.sh). caddy-ratelimit (github.com/mholt/caddy-ratelimit,
-	# compiled in at build time — see Dockerfile) has no separate burst
-	# parameter of its own, so this approximates nginx's rate+burst with two
-	# fixed windows instead: a short one capping any single second, a longer
-	# one capping the sustained average.
 	rate_limit {
 		zone gateway_burst {
 			key {remote_host}
@@ -33,30 +17,14 @@
 		}
 	}
 
-	# Matches modules/apps/admin/vite.config.ts's dev proxy: `handle_path`
-	# strips the matched `/api` prefix before proxying, the same rewrite the
-	# Vite proxy does, so the admin talks to one same-origin path in every
-	# environment and CORS never has to enter the picture in production.
-	#
-	# reverse_proxy sets X-Forwarded-For and X-Forwarded-Proto itself, from
-	# what it actually sees — verified empirically (see README.md, "Forwarded
-	# headers and trust proxy"): an inbound X-Forwarded-For is discarded, not
-	# appended to, exactly like the nginx gateway it replaces, so a client
-	# cannot plant an address ahead of its own. No response headers are added
-	# here on purpose: this is JSON, and helmet already owns every header on
-	# it (see README.md, "Header ownership").
+	# Forward /api/* to the backend API service (prefix stripped)
 	handle_path /api/* {
 		reverse_proxy {$VIDYA_GATEWAY_API_UPSTREAM}
 	}
 
-	# Nothing else runs in front of this document, and `frame-ancestors`
-	# cannot live in the <meta> tag in apps/admin/index.html (see its
-	# comment) — a CSP directive ignored there by specification. These are
-	# the gateway's alone to set. See README.md, "Header ownership".
+	# Forward all other requests to the frontend Admin UI service
 	handle {
-		root * /usr/share/vidya-gateway/admin
-		try_files {path} /index.html
-		file_server
+		reverse_proxy {$VIDYA_GATEWAY_ADMIN_UPSTREAM}
 		{$VIDYA_GATEWAY_HSTS_DIRECTIVE}
 		header X-Frame-Options "DENY"
 		header Content-Security-Policy "frame-ancestors 'none'"

@@ -4,7 +4,7 @@ import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { reasonOf } from '@/shared/lib'
+import { reasonOf, useToasts } from '@/shared/lib'
 import { useSchoolApi } from '@/entities/school'
 
 import SchoolAboutField from './SchoolAboutField.vue'
@@ -13,6 +13,7 @@ import SchoolLogoField from './SchoolLogoField.vue'
 import SchoolNameField from './SchoolNameField.vue'
 import type { SchoolFormPageProps } from './types'
 import { formClasses, pageClasses } from './styles'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -22,6 +23,7 @@ const props = withDefaults(defineProps<SchoolFormPageProps>(), { id: undefined }
 
 const { $t } = useFluent()
 const router = useRouter()
+const toasts = useToasts()
 const api = useSchoolApi()
 
 const name = ref('')
@@ -56,6 +58,7 @@ async function onSubmit() {
 
   try {
     await send()
+    toasts.show({ title: $t('toast-saved'), tone: 'success' })
     void router.push({ name: 'schools' })
   } catch (failure) {
     error.value = reasonOf(failure)
@@ -123,7 +126,9 @@ async function send(): Promise<void> {
 
 <template>
   <section :class="pageClasses">
-    <PageHeader :title="title" />
+    <PageHeader :title="title">
+      <template #leading><PageBack /></template>
+    </PageHeader>
     <form :class="formClasses" @submit.prevent="onSubmit">
       <SchoolNameField v-model="name" :error="nameError" :disabled="busy" />
       <SchoolLogoField v-model="logoUrl" :error="logoError" :disabled="busy" />

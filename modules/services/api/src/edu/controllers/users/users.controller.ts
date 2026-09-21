@@ -22,6 +22,14 @@ import { Routes } from '@vidya/protocol'
 
 import { toUserDetails, toUserSummaries } from '../../mappers/org.mapper'
 
+function isSelfProfileUpdate(
+  authUserId: domain.UserId,
+  targetId: domain.UserId,
+  request: dto.UpdateUserRequest,
+): boolean {
+  return authUserId === targetId && request.email === undefined && request.phone === undefined
+}
+
 const Crud = CrudDecorators({
   entityName: 'User',
   getOneResponseDto: dto.GetUserResponse,
@@ -73,7 +81,7 @@ export class UsersController {
 
   @Crud.GetMany(Routes().edu.user(':id').find())
   async getMany(
-    @Query() query: dto.GetUsersQuery,
+    @Query() filters: dto.GetUsersQuery,
     @Authentication() auth: UserAuthentication,
   ): Promise<GetUsersResponse> {
     // Check if user has permission to read users
@@ -81,17 +89,24 @@ export class UsersController {
       throw new ForbiddenException('User does not have permission')
     }
 
-    // Get users with user permissions scope
-    const users = await this.usersService.scopedBy({ permissions: auth.permissions }).findAll({
-      where: {
-        roles: {
-          schoolId: query.schoolId,
+    // One page of the school's people, with their roles in it. `relations` and
+    // the paging survive the scope, which used to rebuild the query from `where`
+    // alone and drop them.
+    const [users, total] = await this.usersService
+      .scopedBy({ permissions: auth.permissions })
+      .findAndCount({
+        where: {
+          ...dto.matchingName(filters.query),
+          roles: { schoolId: filters.schoolId },
         },
-      },
-    })
+        relations: { roles: true },
+        order: { name: 'ASC', id: 'ASC' },
+        ...dto.pageOf(filters),
+      })
 
     // Return users response
     return new dto.GetUsersResponse({
+      total,
       items: toUserSummaries(users),
     })
   }
@@ -106,21 +121,27 @@ export class UsersController {
     @Param('id', new ParseUUIDPipe(), UserExistsPipe) id: domain.UserId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateUserResponse> {
-    // TODO user can update himself without any permission
-    const roles = await this.rolesService.getRolesOfUser(id)
-    const scopes = roles.map((role) => ({
-      schoolId: role.schoolId,
-    }))
-
-    // Check if user has permission to update users
-    if (!auth.permissions.has(['users:update'], scopes)) {
-      throw new ForbiddenException('User does not have permission')
-    }
+    await this.assertCanUpdate(auth, id, request)
 
     // Update user
     const updatedUser = await this.usersService.updateOneBy({ id }, request)
 
     // Return updated user response
     return toUserDetails(updatedUser)
+  }
+
+  private async assertCanUpdate(
+    auth: UserAuthentication,
+    id: domain.UserId,
+    request: dto.UpdateUserRequest,
+  ): Promise<void> {
+    if (isSelfProfileUpdate(auth.userId, id, request)) return
+
+    const roles = await this.rolesService.getRolesOfUser(id)
+    const scopes = roles.map((role) => ({ schoolId: role.schoolId }))
+
+    if (!auth.permissions.has(['users:update'], scopes)) {
+      throw new ForbiddenException('User does not have permission')
+    }
   }
 }

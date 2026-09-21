@@ -1,11 +1,13 @@
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { AuthenticatedUserPermissions } from '@vidya/api/auth/utils'
 import { PERMISSIONS_CACHE_EVICTION, PermissionsCacheEviction } from '@vidya/api/edu/ports'
 import { AuditLogService } from '@vidya/api/shared/services'
 import * as domain from '@vidya/domain'
 import { Role, UserRole } from '@vidya/entities'
 import { DeepPartial, EntityManager, FindOptionsWhere, In, Repository } from 'typeorm'
 
+import { assertPermissionsGrantable } from '../validations/permission-grant.validation'
 import { EnrollmentsService } from './enrollments.service'
 import { Scope, ScopedEntitiesService } from './entities.service'
 
@@ -26,15 +28,18 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
         .getScopes(['roles:read'])
         .filter((s) => !schoolId || s.schoolId === schoolId)
 
-      // No scope means no access, so the empty list is a deliberate fail-closed result.
+      // No scope means no access, so the empty list is a deliberate fail-closed
+      // result. Everything but `where` is carried over: a scope that rebuilt
+      // the query from nothing dropped the paging and the ordering with it.
       return scopes.length > 0
         ? {
+            ...query,
             where: scopes.map((s) => ({
               ...query?.where,
               schoolId: s.schoolId,
             })),
           }
-        : { where: { schoolId: In([]) } }
+        : { ...query, where: { schoolId: In([]) } }
     })
   }
 
@@ -81,12 +86,18 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
   }
 
   /**
-   * Refuses unless every role named belongs to one of the given schools.
+   * Refuses unless every role named belongs to one of the given schools,
+   * and verifies that the caller possesses all permissions contained within
+   * each assigned role in that school.
    *
    * The rule lives here rather than in the controller so that the next caller
    * in — the offline sync endpoints do not go through one — gets it too.
    */
-  async assertRolesWithin(roleIds: domain.RoleId[], schoolIds: domain.SchoolId[]): Promise<void> {
+  async assertRolesWithin(
+    roleIds: domain.RoleId[],
+    schoolIds: domain.SchoolId[],
+    callerPermissions?: AuthenticatedUserPermissions,
+  ): Promise<void> {
     if (roleIds.length === 0) return
 
     const roles = await this.repository.find({ where: { id: In(roleIds) } })
@@ -95,6 +106,12 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
 
     if (!allFound || !allInScope) {
       throw new ForbiddenException('User does not have permission')
+    }
+
+    if (callerPermissions) {
+      for (const role of roles) {
+        assertPermissionsGrantable(role.permissions, role.schoolId, callerPermissions)
+      }
     }
   }
 
@@ -110,8 +127,9 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
     roleIds: domain.RoleId[],
     schoolIds: domain.SchoolId[],
     actorUserId?: domain.UserId | null,
+    callerPermissions?: AuthenticatedUserPermissions,
   ): Promise<number> {
-    await this.assertRolesWithin(roleIds, schoolIds)
+    await this.assertRolesWithin(roleIds, schoolIds, callerPermissions)
 
     const elsewhere = (await this.getRolesOfUser(userId))
       .filter((role) => !schoolIds.includes(role.schoolId))

@@ -8,6 +8,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 import {
@@ -80,21 +81,26 @@ export class SchoolsController {
   /* -------------------------------------------------------------------------- */
 
   @Crud.GetMany(Routes().edu.schools.find())
-  async getMany(@Authentication() auth: UserAuthentication): Promise<dto.GetSchoolsResponse> {
+  async getMany(
+    @Query() filters: dto.GetSchoolsQuery,
+    @Authentication() auth: UserAuthentication,
+  ): Promise<dto.GetSchoolsResponse> {
     // Check if user has permission to read schools
     if (!auth.permissions.has(['schools:read'])) {
       throw new ForbiddenException('User does not have permission')
     }
 
-    // Get schools with user permissions scope
-    const schools = await this.schoolsService
+    // Get one page of the schools the caller may see
+    const [schools, total] = await this.schoolsService
       .scopedBy({ permissions: auth.permissions })
-      .findAll({})
+      .findAndCount({
+        where: dto.matchingName(filters.query),
+        order: { name: 'ASC', id: 'ASC' },
+        ...dto.pageOf(filters),
+      })
 
     // Return schools response
-    return new dto.GetSchoolsResponse({
-      items: toSchoolSummaries(schools),
-    })
+    return new dto.GetSchoolsResponse({ items: toSchoolSummaries(schools), total })
   }
 
   /* -------------------------------------------------------------------------- */
@@ -132,11 +138,6 @@ export class SchoolsController {
     @Body() request: dto.UpdateSchoolRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateSchoolResponse> {
-    // Check if user has permission to update school
-    if (!auth.permissions.has(['schools:update'])) {
-      throw new ForbiddenException('User does not have permission')
-    }
-
     // Get school by Id with user permissions scope
     let school = await this.schoolsService
       .scopedBy({ permissions: auth.permissions })
@@ -145,6 +146,11 @@ export class SchoolsController {
     // No school found with the given Id
     if (!school) {
       throw new NotFoundException(`School with id ${id} not found`)
+    }
+
+    // Check if user has permission to update school
+    if (!auth.permissions.has(['schools:update'], { schoolId: id })) {
+      throw new ForbiddenException('User does not have permission')
     }
 
     // Update school
@@ -196,11 +202,6 @@ export class SchoolsController {
     @Param('id', new ParseUUIDPipe(), SchoolExistsPipe) id: domain.SchoolId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.DeleteSchoolResponse> {
-    // Check if user has permission to delete school
-    if (!auth.permissions.has(['schools:delete'])) {
-      throw new ForbiddenException('User does not have permission')
-    }
-
     // Get school by Id with user permissions scope
     const school = await this.schoolsService
       .scopedBy({ permissions: auth.permissions })
@@ -209,6 +210,11 @@ export class SchoolsController {
     // No school found with the given Id
     if (!school) {
       throw new NotFoundException(`School with id ${id} not found`)
+    }
+
+    // Check if user has permission to delete school
+    if (!auth.permissions.has(['schools:delete'], { schoolId: id })) {
+      throw new ForbiddenException('User does not have permission')
     }
 
     // Delete school

@@ -120,7 +120,7 @@ describe('the school scope', () => {
 
   // Granting is fixture work and goes straight at the join table; taking a role
   // back is the behaviour under test and must go through the school's own path.
-  const leaveSchool = (userId: domain.UserId): Promise<void> =>
+  const leaveSchool = (userId: domain.UserId): Promise<number> =>
     app.get(UserSchoolsService).removeUser(userId, ctx.schoolId)
 
   const placeOn = (
@@ -600,12 +600,19 @@ describe('the school scope', () => {
     const DECISIONS: readonly [domain.EnrollmentStatus, ModerationStatus, boolean][] = [
       ['pending', 'accepted', true],
       ['pending', 'declined', true],
+      ['pending', 'revoked', false],
       ['accepted', 'accepted', false],
       ['accepted', 'declined', false],
+      ['accepted', 'revoked', true],
       ['declined', 'accepted', false],
       ['declined', 'declined', false],
+      ['declined', 'revoked', false],
       ['revoked', 'accepted', true],
       ['revoked', 'declined', false],
+      ['revoked', 'revoked', false],
+      ['withdrawn', 'accepted', true],
+      ['withdrawn', 'declined', false],
+      ['withdrawn', 'revoked', false],
     ]
 
     const freshCourse = async (name: string): Promise<domain.CourseId> =>

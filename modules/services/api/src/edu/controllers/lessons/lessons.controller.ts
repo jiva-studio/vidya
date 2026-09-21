@@ -135,16 +135,16 @@ export class LessonsController {
     @Body() request: dto.UpdateLessonRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateLessonResponse> {
-    if (!auth.permissions.has(['lessons:update'])) {
-      throw new ForbiddenException('User does not have permission')
-    }
-
     const lesson = await this.lessons
       .scopedBy({ permissions: auth.permissions })
       .findOne({ where: { id } })
 
     if (!lesson) {
       throw new NotFoundException(`Lesson with id ${id} not found`)
+    }
+
+    if (!auth.permissions.has(['lessons:update'], { schoolId: lesson.schoolId })) {
+      throw new ForbiddenException('User does not have permission')
     }
 
     const updated = await this.lessons.updateOneBy({ id }, request)
@@ -160,16 +160,16 @@ export class LessonsController {
     @Param('id', new ParseUUIDPipe()) id: domain.LessonId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.DeleteLessonResponse> {
-    if (!auth.permissions.has(['lessons:delete'])) {
-      throw new ForbiddenException('User does not have permission')
-    }
-
     const lesson = await this.lessons
       .scopedBy({ permissions: auth.permissions })
       .findOne({ where: { id } })
 
     if (!lesson) {
       throw new NotFoundException(`Lesson with id ${id} not found`)
+    }
+
+    if (!auth.permissions.has(['lessons:delete'], { schoolId: lesson.schoolId })) {
+      throw new ForbiddenException('User does not have permission')
     }
 
     await this.lessons.deleteOneBy({ id })

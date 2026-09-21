@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { BlockId } from '@vidya/domain'
 import { computed } from 'vue'
 
-import { noticeClasses, noticeListClasses } from './styles'
-import type { ContentProblemsNoticeProps } from './types'
+import { noticeClasses, noticeLinkClasses, noticeListClasses } from './styles'
+import type { ContentProblemsNoticeEmits, ContentProblemsNoticeProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -11,6 +12,10 @@ const props = withDefaults(defineProps<ContentProblemsNoticeProps>(), {
   faults: () => [],
 })
 
+/* --------------------------------- Events --------------------------------- */
+
+const emit = defineEmits<ContentProblemsNoticeEmits>()
+
 /* --------------------------------- State ---------------------------------- */
 
 // Content this build cannot author stops the save; an unfinished block only
@@ -18,6 +23,12 @@ const props = withDefaults(defineProps<ContentProblemsNoticeProps>(), {
 const title = computed(() =>
   props.problems.length > 0 ? 'editor-problems-title' : 'editor-faults-title',
 )
+
+/* -------------------------------- Handlers -------------------------------- */
+
+function onReveal(blockId: BlockId) {
+  emit('reveal', blockId)
+}
 </script>
 
 <template>
@@ -28,7 +39,9 @@ const title = computed(() =>
         {{ $t(`editor-problem-${problem.kind}`, { detail: problem.detail }) }}
       </li>
       <li v-for="fault in props.faults" :key="fault.blockId">
-        {{ $t('editor-fault-block', { section: fault.section, position: fault.position }) }}
+        <button type="button" :class="noticeLinkClasses" @click="onReveal(fault.blockId)">
+          {{ $t('editor-fault-block', { section: fault.section, position: fault.position }) }}
+        </button>
       </li>
     </ul>
   </div>

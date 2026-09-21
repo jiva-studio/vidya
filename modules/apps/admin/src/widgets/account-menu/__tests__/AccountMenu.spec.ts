@@ -1,7 +1,7 @@
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { mountWithApp } from '@/shared/testing'
 
 import AccountMenu from '../ui/AccountMenu.vue'
@@ -13,18 +13,12 @@ const mountMenu = (
 describe('AccountMenu', () => {
   beforeEach(() => {
     localStorage.clear()
-    addMessages({
-      ru: `
-action-sign-out = Выйти
-language-label = Язык
-account-menu-label = Аккаунт
-`,
-      en: `
+    const copy = `
 action-sign-out = Sign out
 language-label = Language
 account-menu-label = Account
-`,
-    })
+`
+    addMessages({ en: copy, ru: copy })
   })
 
   it('renders the trigger with user name and avatar', () => {
@@ -44,7 +38,7 @@ account-menu-label = Account
 
     expect(wrapper.find('[role="menu"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('ann@example.com')
-    expect(wrapper.text()).toContain('Выйти')
+    expect(wrapper.text()).toContain(translate('action-sign-out'))
   })
 
   it('emits sign-out event when sign out button is clicked', async () => {
@@ -54,7 +48,9 @@ account-menu-label = Account
     await trigger.trigger('click')
     await flushPromises()
 
-    const signOutBtn = wrapper.findAll('button').find((b) => b.text().includes('Выйти'))
+    const signOutBtn = wrapper
+      .findAll('button')
+      .find((b) => b.text().includes(translate('action-sign-out')))
     await signOutBtn?.trigger('click')
     await flushPromises()
 

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp, refusal, signInAs, STORY_SCHOOL } from '@/shared/testing'
 
@@ -115,7 +115,7 @@ describe('LessonVersionPage', () => {
     const { page } = await open({ [VERSION]: refusal(503, 'Lesson storage is unavailable') })
 
     expect(page.text()).not.toContain('Lesson storage is unavailable')
-    expect(page.text()).toContain('That did not work. Try again.')
-    expect(page.text()).toContain('Try again')
+    expect(page.text()).toContain(translate('state-error'))
+    expect(page.text()).toContain(translate('action-retry'))
   })
 })

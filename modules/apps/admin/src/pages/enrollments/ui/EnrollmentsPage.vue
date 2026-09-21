@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EnrollmentId, GroupId } from '@vidya/domain'
 import type { TableColumn, TableRowData } from '@vidya/ui'
-import { PageHeader, Table, Toaster } from '@vidya/ui'
+import { PageHeader, Pagination, Table, Toaster } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
 
@@ -10,14 +10,16 @@ import { useEnrollments, useStudentNames } from '@/entities/enrollment'
 import { useUserApi } from '@/entities/user'
 import { useArchiveEnrollment } from '@/features/archive-enrollment'
 import { GroupAssignDialog, useGroupAssignment } from '@/features/assign-group'
-import { useModerateEnrollment } from '@/features/moderate-enrollment'
+import { decidePlacement, useModerateEnrollment } from '@/features/moderate-enrollment'
 import { EnrollmentReviewDialog } from '@/features/review-enrollment'
 import { useDirectory } from '@/features/school-directory'
 import { useCan } from '@/shared/access'
+import { PAGE_SIZE } from '@/shared/lib'
 
 import EnrollmentsFilters from './EnrollmentsFilters.vue'
 import EnrollmentsTableRow from './EnrollmentsTableRow.vue'
-import { sectionClasses } from './styles'
+import { refusalClasses, sectionClasses } from './styles'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -31,6 +33,9 @@ const assignment = useGroupAssignment()
 const archiving = useArchiveEnrollment()
 
 const canModerate = useCan('enrollments:moderate')
+
+// The dialog shows its own refusal; a decision taken from a row has this line.
+const rowRefusal = computed(() => (reviewing.value ? undefined : moderation.error.value))
 const placing = ref<EnrollmentRow | undefined>(undefined)
 const reviewing = ref<EnrollmentRow | undefined>(undefined)
 
@@ -52,18 +57,42 @@ onMounted(() => {
 
 function onFilters(filters: EnrollmentFilters) {
   enrollments.filters.value = filters
-  void enrollments.load()
+  enrollments.restart()
 }
 
 function onRetry() {
   void enrollments.load()
 }
 
+// Anything the row cannot explain — a closed group, or one from another
+// course — opens the dialog that can, rather than being decided silently.
 async function onAccept(id: EnrollmentId) {
-  if (await moderation.accept(id)) await enrollments.load()
+  const row = enrollments.rows.value.find((candidate) => candidate.id === id)
+  if (!row) return
+
+  moderation.forget()
+  const placement = decidePlacement({
+    courseId: row.courseId,
+    preferredGroupId: row.preferredGroupId,
+    groups: directory.groupsById.value,
+    groupsUnreadable: directory.groupsUnreadable.value,
+  })
+
+  if (placement.kind === 'review') {
+    reviewing.value = row
+    return
+  }
+
+  if (await moderation.accept(id, placement.groupId)) await enrollments.load()
+}
+
+async function onRevoke(id: EnrollmentId) {
+  moderation.forget()
+  if (await moderation.revoke(id)) await enrollments.load()
 }
 
 async function onDecline(id: EnrollmentId) {
+  moderation.forget()
   if (await moderation.decline(id)) await enrollments.load()
 }
 
@@ -135,7 +164,9 @@ function refusalFor(row: TableRowData): string | undefined {
 
 <template>
   <section :class="sectionClasses">
-    <PageHeader :title="$t('enrollments-title')" :description="$t('enrollments-description')" />
+    <PageHeader :title="$t('enrollments-title')" :description="$t('enrollments-description')">
+      <template #leading><PageBack /></template>
+    </PageHeader>
     <EnrollmentsFilters
       :filters="enrollments.filters.value"
       :course-options="directory.courseOptions.value"
@@ -161,12 +192,21 @@ function refusalFor(row: TableRowData): string | undefined {
           :archive-error="refusalFor(row)"
           @accept="onAccept"
           @decline="onDecline"
+          @revoke="onRevoke"
           @assign-group="onAssignAsked"
           @review="onReviewAsked"
           @archive="onArchive"
         />
       </template>
     </Table>
+    <Pagination
+      v-if="enrollments.paged.value"
+      :page="enrollments.page.value"
+      :per-page="PAGE_SIZE"
+      :total="enrollments.total.value"
+      @update:page="enrollments.goTo"
+    />
+    <p v-if="rowRefusal" :class="refusalClasses" role="alert">{{ $t(rowRefusal) }}</p>
     <EnrollmentReviewDialog
       :open="!!reviewing"
       :enrollment="reviewing"

@@ -42,6 +42,7 @@ describe('/edu/roles', () => {
       .expect(200)
       .expect({
         items: instanceToPlain(toRoleSummaries([ctx.one.roles.owner, ctx.one.roles.readonly])),
+        total: 2,
       })
   })
 
@@ -54,6 +55,7 @@ describe('/edu/roles', () => {
         items: instanceToPlain(
           toRoleSummaries([ctx.one.roles.owner, ctx.one.roles.readonly, ctx.two.roles.admin]),
         ),
+        total: 3,
       })
   })
 
@@ -66,7 +68,7 @@ describe('/edu/roles', () => {
       .get(Routes().edu.roles.find())
       .set('Authorization', `Bearer ${ctx.three.tokens.admin}`)
       .expect(200)
-      .expect({ items: [] })
+      .expect({ items: [], total: 0 })
   })
 
   it(`GET /edu/roles returns nothing if user do not have any permissions`, async () => {

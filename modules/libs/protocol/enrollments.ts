@@ -45,23 +45,36 @@ export type EnrollmentSummary = Pick<
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export type GetEnrollmentsQuery = {
+export type GetEnrollmentsQuery = crud.PageQuery & {
   courseId?: domain.CourseId
   groupId?: domain.GroupId
   studentId?: domain.UserId
   status?: domain.EnrollmentStatus
+
+  /**
+   * Narrows the answer to one school.
+   *
+   * The list is otherwise scoped only by the caller's grants, which can span
+   * several. `scopedBySchool` intersects the two, so this cannot widen.
+   */
+  schoolId?: domain.SchoolId
 }
 
-export type GetEnrollmentsResponse = crud.GetItemsListResponse<EnrollmentSummary>
+export type GetEnrollmentsResponse = crud.GetPagedItemsListResponse<EnrollmentSummary>
 export type GetEnrollmentResponse = crud.GetItemResponse<EnrollmentDetails>
 
 /* -------------------------------------------------------------------------- */
 /*                                 Moderation                                 */
 /* -------------------------------------------------------------------------- */
 
-/** Accept or decline a request, optionally placing the student in a group. */
+/**
+ * What the school decides about a place.
+ *
+ * `revoked` takes back a place already given, without ending the student's
+ * membership of the school. `withdrawn` is absent: it is the student's to make.
+ */
 export type ModerateEnrollmentRequest = {
-  status: Extract<domain.EnrollmentStatus, 'accepted' | 'declined'>
+  status: Extract<domain.EnrollmentStatus, 'accepted' | 'declined' | 'revoked'>
   groupId?: domain.GroupId
 }
 

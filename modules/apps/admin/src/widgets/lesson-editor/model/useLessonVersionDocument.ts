@@ -23,8 +23,15 @@ export const useLessonVersionDocument = (lessonId: LessonId) => {
   const error = ref<string | undefined>(undefined)
   const version = ref<LessonVersionDetails | undefined>(undefined)
 
-  const open = async (preferred?: LessonVersionId): Promise<void> => {
-    loading.value = true
+  /**
+   * `quiet` keeps the page-level skeleton down.
+   *
+   * A fork opens a version behind an author who is typing, and the skeleton
+   * replaces the document: unmounting it would take the caret and the
+   * keystrokes made while the two requests are in flight.
+   */
+  const open = async (preferred?: LessonVersionId, quiet = false): Promise<boolean> => {
+    loading.value = !quiet
     error.value = undefined
 
     try {
@@ -35,12 +42,14 @@ export const useLessonVersionDocument = (lessonId: LessonId) => {
 
       if (!target) {
         error.value = 'editor-no-versions'
-        return
+        return false
       }
 
       version.value = await getLessonVersion(http, lessonId, target)
+      return true
     } catch (caught) {
       error.value = reasonOf(caught, 'editor-load-failed')
+      return false
     } finally {
       loading.value = false
     }

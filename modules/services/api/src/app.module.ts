@@ -8,11 +8,13 @@ import {
   CorsConfig,
   DbConfig,
   JwtConfig,
+  LoggingConfig,
   MailerConfig,
   MigrationsConfig,
   OtpConfig,
   RedisConfig,
   SecurityHeadersConfig,
+  SentryConfig,
   ThrottlerConfig,
   TrustProxyConfig,
 } from '@vidya/api/configs'
@@ -21,6 +23,9 @@ import { Entities } from '@vidya/entities'
 
 import { AuthModule } from './auth/auth.module'
 import { EduModule } from './edu/edu.module'
+import { HealthModule } from './shared/health/health.module'
+import { LoggingModule } from './shared/logging/logging.module'
+import { SentryModule } from './shared/sentry/sentry.module'
 import { SyncModule } from './sync/sync.module'
 
 @Module({
@@ -36,7 +41,9 @@ import { SyncModule } from './sync/sync.module'
         AuthConfig,
         MailerConfig,
         MigrationsConfig,
+        LoggingConfig,
         SecurityHeadersConfig,
+        SentryConfig,
         ThrottlerConfig,
         TrustProxyConfig,
       ],
@@ -54,6 +61,17 @@ import { SyncModule } from './sync/sync.module'
         schema: dbConfig.schema,
         autoLoadEntities: true,
         useUTC: true,
+        ...(dbConfig.type === 'postgres'
+          ? {
+              extra: {
+                max: dbConfig.poolSize,
+                min: dbConfig.minPoolSize,
+                idleTimeoutMillis: dbConfig.idleTimeoutMillis,
+                connectionTimeoutMillis: dbConfig.connectionTimeoutMillis,
+                ...(dbConfig.ssl ? { ssl: dbConfig.ssl } : {}),
+              },
+            }
+          : {}),
       }),
       inject: [DbConfig.KEY],
     }),
@@ -73,6 +91,9 @@ import { SyncModule } from './sync/sync.module'
         setHeaders: false,
       }),
     }),
+    LoggingModule,
+    SentryModule,
+    HealthModule,
     AuthModule,
     EduModule,
     SyncModule,

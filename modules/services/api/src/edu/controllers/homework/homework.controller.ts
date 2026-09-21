@@ -49,11 +49,19 @@ export class HomeworkController {
     @Query() query: dto.GetHomeworkQuery,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetHomeworkListResponse> {
-    const found = await this.homework
+    const [found, total] = await this.homework
       .scopedBy({ permissions: auth.permissions })
-      .findAll({ where: { enrollmentId: query.enrollmentId, status: query.status } })
+      .findAndCount({
+        where: {
+          enrollmentId: query.enrollmentId,
+          status: query.status,
+          schoolId: query.schoolId,
+        },
+        order: { createdAt: 'DESC', id: 'ASC' },
+        ...dto.pageOf(query),
+      })
 
-    return { items: toHomeworkSummaries(found) }
+    return { items: toHomeworkSummaries(found), total }
   }
 
   /* -------------------------------------------------------------------------- */

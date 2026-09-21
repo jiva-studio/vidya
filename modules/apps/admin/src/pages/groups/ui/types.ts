@@ -1,9 +1,15 @@
 import type { GroupSummary } from '@vidya/protocol'
+import type { SelectOption } from '@vidya/ui'
 
 import type { GroupFormValues, GroupMember } from '@/entities/group'
 
+/** A group as the list shows it: the summary, with its course named. */
+export type GroupListRow = GroupSummary & { courseName?: string }
+
 export interface GroupsTableProps {
-  rows: GroupSummary[]
+  rows: GroupListRow[]
+  emptyTitle?: string
+  emptyDescription?: string
   loading?: boolean
   error?: string
   canCreate?: boolean
@@ -18,7 +24,7 @@ export interface GroupsTableEmits {
 }
 
 export interface GroupRowProps {
-  row: GroupSummary
+  row: GroupListRow
   canEdit?: boolean
 }
 
@@ -45,12 +51,48 @@ export interface GroupMembersProps {
   rows: GroupMember[]
   loading?: boolean
   error?: string
+
+  /** Without `enrollments:moderate` the roster is a list, not a set of levers. */
+  canModerate?: boolean
+
+  busy?: string
 }
 
 export interface GroupMembersEmits {
   retry: []
+  revoke: [enrollmentId: string]
+  move: [enrollmentId: string]
 }
 
 export interface GroupMemberRowProps {
   row: GroupMember
+  canModerate?: boolean
+  busy?: boolean
+}
+
+export interface GroupMemberRowEmits {
+  revoke: [enrollmentId: string]
+  move: [enrollmentId: string]
+}
+
+export interface GroupsCourseFilterProps {
+  modelValue: string
+  options: SelectOption[]
+}
+
+export interface GroupsCourseFilterEmits {
+  'update:modelValue': [value: string]
+}
+
+export interface GroupsFiltersProps {
+  search: string
+  courseId: string
+  courseOptions: SelectOption[]
+  filtersApplied: boolean
+}
+
+export interface GroupsFiltersEmits {
+  'update:search': [term: string]
+  'update:courseId': [courseId: string]
+  clear: []
 }

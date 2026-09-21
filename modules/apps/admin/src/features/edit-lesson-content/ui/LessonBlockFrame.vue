@@ -3,12 +3,13 @@ import type { LessonBlock } from '@vidya/domain'
 import { useFluent } from 'fluent-vue'
 import { computed, nextTick, ref, watch } from 'vue'
 
-import { atFieldEdge, stepToNeighbourField } from '../lib'
+import { atFieldEdge, blockAnchorOf, stepToNeighbourField } from '../lib'
+import { useIsFaulted } from '../model'
 import type { BlockType, MoveDirection } from '../types'
 import BlockHandle from './BlockHandle.vue'
 import BlockInserter from './BlockInserter.vue'
 import LessonBlockEditor from './LessonBlockEditor.vue'
-import { blockBodyClasses, blockFrameClasses, gutterClasses } from './styles'
+import { blockBodyClasses, blockFaultClasses, blockFrameClasses, gutterClasses } from './styles'
 import type { LessonBlockFrameEmits, LessonBlockFrameProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -38,6 +39,9 @@ const insertOpen = ref(false)
 const chrome = computed(
   () => !props.frozen && (hovered.value || focused.value || menuOpen.value || insertOpen.value),
 )
+
+const faulted = useIsFaulted(() => props.block.id)
+const frameClasses = computed(() => [blockFrameClasses, faulted.value ? blockFaultClasses : []])
 
 /* --------------------------------- Hooks ---------------------------------- */
 
@@ -161,9 +165,11 @@ function focusInside() {
 
 <template>
   <div
+    :id="blockAnchorOf(props.block.id)"
     :data-block-id="props.block.id"
     data-block-frame
-    :class="blockFrameClasses"
+    :aria-invalid="faulted || undefined"
+    :class="frameClasses"
     @mouseenter="onEnter"
     @mouseleave="onLeave"
     @focusin="onFocusIn"

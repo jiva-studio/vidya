@@ -46,7 +46,10 @@ describe('the presentation of a school', () => {
   it('keeps the logo in the list, which is what a row is drawn from', async () => {
     await store()
 
-    const res = await ctr.getMany(await ctx.authenticate(ctx.one.users.owner))
+    const res = await ctr.getMany(
+      new dto.GetSchoolsQuery(),
+      await ctx.authenticate(ctx.one.users.owner),
+    )
     const row = res.items.find((item) => item.id === ctx.one.school.id)
 
     expect(row.logoUrl).toBe(LOGO_URL)

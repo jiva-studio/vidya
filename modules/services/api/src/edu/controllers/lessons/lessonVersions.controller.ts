@@ -104,11 +104,12 @@ export class LessonVersionsController {
     @Param('lessonId', new ParseUUIDPipe()) lessonId: domain.LessonId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.LessonVersionSummary> {
-    if (!auth.permissions.has(['lessons:update'])) {
+    const lesson = await this.lessonOr404(lessonId, auth)
+
+    if (!auth.permissions.has(['lessons:update'], { schoolId: lesson.schoolId })) {
       throw new ForbiddenException('User does not have permission')
     }
 
-    await this.lessonOr404(lessonId, auth)
     const created = await this.versions.openDraft(lessonId)
 
     return toVersionSummary(created)
@@ -125,11 +126,12 @@ export class LessonVersionsController {
     @Body() request: dto.UpdateLessonVersionRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateLessonVersionResponse> {
-    if (!auth.permissions.has(['lessons:update'])) {
+    const lesson = await this.lessonOr404(lessonId, auth)
+
+    if (!auth.permissions.has(['lessons:update'], { schoolId: lesson.schoolId })) {
       throw new ForbiddenException('User does not have permission')
     }
 
-    await this.lessonOr404(lessonId, auth)
     const updated = await this.versions.saveDraft(lessonId, versionId, request.content)
 
     return toVersionDetails(updated)
@@ -145,12 +147,13 @@ export class LessonVersionsController {
     @Param('versionId', new ParseUUIDPipe()) versionId: domain.LessonVersionId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.PublishLessonVersionResponse> {
+    const lesson = await this.lessonOr404(lessonId, auth)
+
     // Publishing freezes what students work against, so it is its own permission.
-    if (!auth.permissions.has(['lessons:publish'])) {
+    if (!auth.permissions.has(['lessons:publish'], { schoolId: lesson.schoolId })) {
       throw new ForbiddenException('User does not have permission')
     }
 
-    await this.lessonOr404(lessonId, auth)
     const published = await this.versions.publish(lessonId, versionId)
 
     return toVersionSummary(published)

@@ -3,7 +3,7 @@ import { ConfigType } from '@nestjs/config'
 import { OtpConfig } from '@vidya/api/configs'
 import { RedisService } from '@vidya/api/shared/services'
 import { Otp, OtpAttemptsStorageKey, OtpStorageKey, OtpType } from '@vidya/protocol'
-import { randomInt } from 'crypto'
+import { randomInt, timingSafeEqual } from 'crypto'
 
 /**
  * Service for generating and validating one-time passwords (OTPs) using Redis.
@@ -80,7 +80,11 @@ export class OtpService {
     const stored: Otp = JSON.parse(await this.redis.get(key))
     if (!stored) return undefined
 
-    if (code === stored.code) {
+    const codeBuf = Buffer.from(code)
+    const storedBuf = Buffer.from(stored.code)
+    const matches = codeBuf.length === storedBuf.length && timingSafeEqual(codeBuf, storedBuf)
+
+    if (matches) {
       await this.redis.del(key)
       await this.redis.del(attemptsKey)
       return stored

@@ -28,15 +28,18 @@ export class SchoolsService extends ScopedEntitiesService<School, Scope> {
         .getScopes(['schools:read'])
         .filter((s) => !where?.id || s.schoolId === where?.id)
 
-      // No scope means no access, so the empty list is a deliberate fail-closed result.
+      // No scope means no access, so the empty list is a deliberate fail-closed
+      // result. Everything but `where` is carried over: a scope that rebuilt
+      // the query from nothing dropped the paging and the ordering with it.
       return scopes.length > 0
         ? {
+            ...query,
             where: scopes.map((s) => ({
               ...query?.where,
               id: s.schoolId,
             })),
           }
-        : { where: { id: In([]) } }
+        : { ...query, where: { id: In([]) } }
     })
   }
 

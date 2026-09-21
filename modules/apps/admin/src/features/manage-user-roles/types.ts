@@ -1,5 +1,15 @@
-import type { UserId } from '@vidya/domain'
+import type { RoleId } from '@vidya/domain'
+
+import type { RoleRow } from '@/entities/role'
 
 export interface UserRolesSelectorProps {
-  userId: UserId
+  available: RoleRow[]
+  selected: RoleId[]
+  loading?: boolean
+  error?: string
+}
+
+export interface UserRolesSelectorEmits {
+  toggle: [roleId: RoleId, wanted: boolean]
+  retry: []
 }

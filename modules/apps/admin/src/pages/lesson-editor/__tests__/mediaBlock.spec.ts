@@ -2,7 +2,7 @@ import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { FailingUploadPrefix, FakeMediaGateway } from '@/entities/media'
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 import { manualClock } from '@/shared/lib'
 
 import { messages } from '../i18n'
@@ -12,7 +12,7 @@ import { accessibleName, openEditor, saveDraft } from './harness'
 addMessages(messages)
 locale.value = 'en'
 
-const AddLabel = 'Add an image'
+const AddLabel = translate('editor-media-add-image')
 
 const lesson = () => contentOf(sectionOf('s1', 'The alphabet', [imageBlock('m1')]))
 
@@ -170,7 +170,7 @@ describe('an upload that does not arrive', () => {
     await drop(wrapper, picture(`${FailingUploadPrefix}ing.png`))
     await run(clock)
 
-    const retry = control(wrapper, 'Try again')
+    const retry = control(wrapper, translate('action-retry'))
     expect(retry).toBeDefined()
 
     retry?.click()
@@ -190,7 +190,7 @@ describe('an upload the author changes their mind about', () => {
     clock.advance(50)
     await flushPromises()
 
-    control(wrapper, 'Cancel')?.click()
+    control(wrapper, translate('action-cancel'))?.click()
     await flushPromises()
     await run(clock)
 

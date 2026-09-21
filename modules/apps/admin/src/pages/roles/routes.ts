@@ -6,13 +6,16 @@ export const routes: RouteRecordRaw[] = [
     path: '/s/:schoolId/roles',
     name: 'roles',
     component: () => import('./ui/RolesPage.vue'),
-    meta: { permission: 'roles:read', breadcrumbs: ['nav-roles'] },
+    meta: { permission: 'roles:read' },
   },
   {
     path: '/s/:schoolId/roles/new',
     name: 'role-new',
     component: () => import('./ui/RoleFormPage.vue'),
-    meta: { permission: 'roles:create', breadcrumbs: ['nav-roles', 'roles-form-create-title'] },
+    meta: {
+      permission: 'roles:create',
+      nav: { parent: 'roles', label: 'roles-form-create-title' },
+    },
   },
   {
     // The identifier is a prop rather than something read from the router, so
@@ -24,7 +27,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       section: 'roles',
       permission: 'roles:update',
-      breadcrumbs: ['nav-roles', 'roles-form-edit-title'],
+      nav: { parent: 'roles', label: 'roles-form-edit-title' },
     },
   },
 ]

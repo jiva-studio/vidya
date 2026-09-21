@@ -29,6 +29,7 @@ import { education } from '@/usecases'
 import App from './App.vue'
 import { fluent } from './i18n'
 import router from './router'
+import { initSentry } from './shared/sentry'
 
 const ROOT = '#app'
 
@@ -49,6 +50,7 @@ async function createAndRunApp(db: IDatabase) {
   await startDeviceSync(db)
 
   const app = createApp(App).use(IonicVue).use(router).use(fluent)
+  initSentry(app, router)
 
   await router.isReady()
   app.mount(ROOT)

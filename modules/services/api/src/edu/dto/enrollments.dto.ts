@@ -3,6 +3,8 @@ import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import { IsEnum, IsIn, IsOptional, IsUUID, ValidateIf } from 'class-validator'
 
+import { PagedQuery } from './paging.dto'
+
 export class EnrollmentDetails implements protocol.EnrollmentDetails {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   id: domain.EnrollmentId
@@ -72,7 +74,7 @@ export class EnrollmentSummary implements protocol.EnrollmentSummary {
   createdAt: domain.IsoDateTime
 }
 
-export class GetEnrollmentsQuery implements protocol.GetEnrollmentsQuery {
+export class GetEnrollmentsQuery extends PagedQuery implements protocol.GetEnrollmentsQuery {
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
@@ -92,19 +94,27 @@ export class GetEnrollmentsQuery implements protocol.GetEnrollmentsQuery {
   @IsOptional()
   @IsEnum(domain.EnrollmentStatuses)
   status?: domain.EnrollmentStatus
+
+  @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  @IsOptional()
+  @IsUUID()
+  schoolId?: domain.SchoolId
 }
 
 export class GetEnrollmentsResponse implements protocol.GetEnrollmentsResponse {
   @ApiProperty({ type: [EnrollmentSummary] })
   items: EnrollmentSummary[]
+
+  @ApiProperty({ example: 137 })
+  total: number
 }
 
 export class GetEnrollmentResponse extends EnrollmentDetails {}
 
 export class ModerateEnrollmentRequest implements protocol.ModerateEnrollmentRequest {
-  @ApiProperty({ enum: ['accepted', 'declined'], example: 'accepted' })
-  @IsIn(['accepted', 'declined'])
-  status: Extract<domain.EnrollmentStatus, 'accepted' | 'declined'>
+  @ApiProperty({ enum: ['accepted', 'declined', 'revoked'], example: 'accepted' })
+  @IsIn(['accepted', 'declined', 'revoked'])
+  status: Extract<domain.EnrollmentStatus, 'accepted' | 'declined' | 'revoked'>
 
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
