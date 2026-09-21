@@ -154,7 +154,7 @@ describe('/edu/lessons', () => {
   it('refuses to retitle without the permission', () => {
     return request(app.getHttpServer())
       .patch(routes.update(ctx.lessonId))
-      .auth(ctx.tokens.noPermissions, { type: 'bearer' })
+      .auth(ctx.tokens.reader, { type: 'bearer' })
       .send({ title: 'Renamed' })
       .expect(403)
   })
