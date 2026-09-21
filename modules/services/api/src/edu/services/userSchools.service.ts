@@ -1,10 +1,17 @@
-import { Injectable } from '@nestjs/common'
+import { ConflictException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import * as domain from '@vidya/domain'
 import { Role, School, User } from '@vidya/entities'
 import { In, Repository } from 'typeorm'
 
 import { RolesService } from './roles.service'
+
+/**
+ * Refused rather than failed: a school whose settings name no role for a new
+ * student, or name one that has since been deleted, cannot take anyone. The
+ * same answer the code route gives, so a link and the join behind it agree.
+ */
+export const NO_STUDENT_ROLE = 'The school is not accepting students yet'
 
 @Injectable()
 export class UserSchoolsService {
@@ -47,9 +54,16 @@ export class UserSchoolsService {
         where: { id: userId },
         relations: ['roles'],
       })
-      const studentDefaultRole = await transactionalEntityManager.findOneByOrFail(Role, {
-        id: school.config.defaultStudentRoleId,
-      })
+      const studentDefaultRole = school.config.defaultStudentRoleId
+        ? await transactionalEntityManager.findOneBy(Role, {
+            id: school.config.defaultStudentRoleId,
+          })
+        : null
+
+      if (!studentDefaultRole) {
+        throw new ConflictException(NO_STUDENT_ROLE)
+      }
+
       user.roles.push(studentDefaultRole)
       await transactionalEntityManager.save(user)
     })
