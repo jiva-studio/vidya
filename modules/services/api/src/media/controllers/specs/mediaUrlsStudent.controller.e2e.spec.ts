@@ -45,6 +45,14 @@ describe('a student asking for a playable address', () => {
     expect(response.body.urls).toBeUndefined()
   })
 
+  it('draws the published lesson even when a draft file is asked for beside it', async () => {
+    const response = await read.askUrls([shown, hidden], coursework.studentToken)
+
+    expect(response.status).toBe(200)
+    expect(Object.keys(response.body.urls)).toEqual([shown])
+    expect(hidden in response.body.urls).toBe(false)
+  })
+
   it('refuses someone with an account and no place on the course', async () => {
     const response = await read.askUrls([shown], coursework.strangerToken)
 

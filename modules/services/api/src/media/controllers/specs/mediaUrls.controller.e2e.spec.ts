@@ -65,6 +65,25 @@ describe('asking for a playable address', () => {
     expect(response.body.urls).toBeUndefined()
   })
 
+  it('answers with the files it may read and leaves the others out, never as null', async () => {
+    const mine = await ownFile()
+    const theirs = await foreignFile()
+
+    const response = await read.askUrls([mine, theirs], await asStaffOfOne())
+
+    expect(response.status).toBe(200)
+    expect(Object.keys(response.body.urls)).toEqual([mine])
+    expect(theirs in response.body.urls).toBe(false)
+    expect(response.body.urls[mine].url).toBeTruthy()
+  })
+
+  it('answers an empty ask with an empty answer, having nothing to refuse', async () => {
+    const response = await read.askUrls([], await asStaffOfOne())
+
+    expect(response.status).toBe(200)
+    expect(response.body.urls).toEqual({})
+  })
+
   it('hands back an address storage answers to, never the path the lesson stored', async () => {
     const mediaId = await ownFile()
 

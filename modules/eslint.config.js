@@ -38,6 +38,7 @@ const upward = (layers) => [
 ]
 
 // Within a layer, a slice is reached through its public index.ts and no deeper.
+
 const sidestep = [
   {
     group: ['@/pages/*/*', '@/widgets/*/*', '@/features/*/*', '@/entities/*/*'],
@@ -101,7 +102,6 @@ export default tseslint.config(
 
       // An empty catch silently swallows a failure; say why or handle it.
       'no-empty': ['error', { allowEmptyCatch: false }],
-
 
       // Cross-package imports go through the package's public entry point.
       // A relative path that climbs out of a package bypasses it, and with it

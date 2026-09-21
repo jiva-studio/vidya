@@ -13,7 +13,7 @@ import { Routes } from '@vidya/protocol'
 
 import { useCurrentSchool } from '@/shared/access'
 import type { HttpClient } from '@/shared/api'
-import { HttpError, useApi } from '@/shared/api'
+import { HttpError } from '@/shared/api'
 
 import type {
   MediaGateway,
@@ -69,7 +69,7 @@ const reasonOf = (failure: unknown, fallback: string): MediaError => {
 export class HttpMediaGateway implements MediaGateway {
   private readonly signed = new Map<string, string>()
 
-  constructor(private readonly transport?: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   async prime(urls: string[]): Promise<void> {
     const ids = [...new Set(urls)]
@@ -78,7 +78,7 @@ export class HttpMediaGateway implements MediaGateway {
 
     if (ids.length === 0) return
 
-    const answer = await this.http().post<ResolveMediaResponse>(Routes().media.urls(), {
+    const answer = await this.http.post<ResolveMediaResponse>(Routes().media.urls(), {
       ids,
     } satisfies ResolveMediaRequest)
 
@@ -102,7 +102,7 @@ export class HttpMediaGateway implements MediaGateway {
 
   async list(query: MediaQuery): Promise<MediaPage> {
     try {
-      const page = await this.http().get<GetMediaResponse>(Routes().media.find(), {
+      const page = await this.http.get<GetMediaResponse>(Routes().media.find(), {
         schoolId: this.schoolId(),
         term: query.term || undefined,
         kind: query.kind,
@@ -126,7 +126,7 @@ export class HttpMediaGateway implements MediaGateway {
     const { file, onProgress, signal } = request
 
     try {
-      const granted = await this.http().post<CreateUploadResponse>(Routes().media.uploads(), {
+      const granted = await this.http.post<CreateUploadResponse>(Routes().media.uploads(), {
         schoolId: this.schoolId(),
         kind: detectKind(file.type),
         name: file.name,
@@ -136,7 +136,7 @@ export class HttpMediaGateway implements MediaGateway {
 
       await putByGrant(granted.grant, file, { onProgress, signal })
 
-      const stored = await this.http().post<CompleteUploadResponse>(
+      const stored = await this.http.post<CompleteUploadResponse>(
         Routes().media.complete(granted.mediaId),
         {},
       )
@@ -152,9 +152,5 @@ export class HttpMediaGateway implements MediaGateway {
     if (!schoolId.value) throw new MediaError(Unavailable)
 
     return schoolId.value
-  }
-
-  private http(): HttpClient {
-    return this.transport ?? useApi()
   }
 }

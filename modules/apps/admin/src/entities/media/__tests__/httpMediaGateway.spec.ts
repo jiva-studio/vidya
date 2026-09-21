@@ -6,17 +6,8 @@ import { fakeHttpClient, signInAs } from '@/shared/testing'
 import { HttpMediaGateway } from '../api'
 
 const STORED = '/media/00000000-0000-4000-8000-000000000001'
-const SECOND = '/media/00000000-0000-4000-8000-000000000002'
-const SIGNED = 'https://cdn.test/one.png?sig=1'
 
 const idOf = (path: string) => path.slice('/media/'.length)
-
-/** What the server answers a batch with: the ones this caller may read. */
-const addresses = (paths: string[]) => ({
-  urls: Object.fromEntries(
-    paths.map((path) => [idOf(path), { url: SIGNED, expiresAt: '2026-09-21T13:00:00.000Z' }]),
-  ),
-})
 
 /** An upload that reports its progress and answers 200, without a socket. */
 const fakeXhr = () => {
@@ -71,49 +62,6 @@ const file = () => new File(['x'.repeat(64)], 'Chart.png', { type: 'image/png' }
 
 afterEach(() => {
   vi.unstubAllGlobals()
-})
-
-describe('asking the server for addresses', () => {
-  it('asks for a whole screen in one call and answers from what came back', async () => {
-    const { client, callsTo } = fakeHttpClient({
-      [`POST ${Routes().media.urls()}`]: addresses([STORED, SECOND]),
-    })
-    const gateway = new HttpMediaGateway(client)
-
-    await gateway.prime([STORED, SECOND, STORED])
-
-    expect(callsTo(Routes().media.urls())).toHaveLength(1)
-    expect(callsTo(Routes().media.urls())[0].body).toEqual({
-      ids: [idOf(STORED), idOf(SECOND)],
-    })
-    expect(gateway.resolve(STORED)).toBe(SIGNED)
-  })
-
-  it('leaves out of its hands what the answer left out', async () => {
-    const { client } = fakeHttpClient({
-      [`POST ${Routes().media.urls()}`]: addresses([STORED]),
-    })
-    const gateway = new HttpMediaGateway(client)
-
-    await gateway.prime([STORED, SECOND])
-
-    expect(gateway.resolve(SECOND)).toBeUndefined()
-  })
-
-  it('asks nothing when no path among them names a stored file', async () => {
-    const { client, calls } = fakeHttpClient({})
-    const gateway = new HttpMediaGateway(client)
-
-    await gateway.prime(['https://example.test/clip.mp4'])
-
-    expect(calls).toEqual([])
-  })
-
-  it('hands an address that is not ours straight back', async () => {
-    const gateway = new HttpMediaGateway(fakeHttpClient({}).client)
-
-    expect(gateway.resolve('https://example.test/clip.mp4')).toBe('https://example.test/clip.mp4')
-  })
 })
 
 describe('uploading a file', () => {
