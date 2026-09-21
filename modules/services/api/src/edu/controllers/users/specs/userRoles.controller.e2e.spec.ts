@@ -1,5 +1,8 @@
 import { INestApplication } from '@nestjs/common'
-import { createTestingApp } from '@vidya/api/edu/shared'
+import { AuthService } from '@vidya/api/auth/services'
+import { RolesService } from '@vidya/api/edu/services'
+import { createTestingApp, newId } from '@vidya/api/edu/shared'
+import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
 
@@ -100,5 +103,44 @@ describe('/edu/users/:userId/roles', () => {
     const body = asTwo.body as protocol.GetUserRolesListResponse
 
     expect(body.userRoles.map((r) => r.roleId)).toEqual([ctx.two.roles.twoAdmin.id])
+  })
+
+  it('refuses to grant a role containing permissions the caller lacks in that school', async () => {
+    const rolesService = app.get(RolesService)
+    const superRole = await rolesService.create({
+      name: 'Lessons Superuser',
+      schoolId: ctx.one.school.id,
+      permissions: ['lessons:delete', 'lessons:publish'],
+    })
+
+    // ctx.one.tokens.oneAdmin holds users:* in school one, but lacks lessons:delete and lessons:publish
+    return request(app.getHttpServer())
+      .post(routes(ctx.misc.users.empty.id).create())
+      .auth(ctx.one.tokens.oneAdmin, { type: 'bearer' })
+      .send({ roleIds: [superRole.id] })
+      .expect(403)
+  })
+
+  it('refuses to grant a role when caller holds permissions in another school but not in target school', async () => {
+    const rolesService = app.get(RolesService)
+    const superRole = await rolesService.create({
+      name: 'Lessons Superuser in One',
+      schoolId: ctx.one.school.id,
+      permissions: ['lessons:delete'],
+    })
+
+    const auth = app.get(AuthService)
+    const token = (
+      await auth.generateTokens(newId<domain.UserId>(), [
+        { sid: ctx.two.school.id, p: ['*'] },
+        { sid: ctx.one.school.id, p: ['users:update'] },
+      ])
+    ).accessToken
+
+    return request(app.getHttpServer())
+      .post(routes(ctx.misc.users.empty.id).create())
+      .auth(token, { type: 'bearer' })
+      .send({ roleIds: [superRole.id] })
+      .expect(403)
   })
 })
