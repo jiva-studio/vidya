@@ -141,10 +141,39 @@ export const appDouble = {
   useSyncStatus: () => syncStatus,
   useOutboxView: () => outboxView,
   useConnections: () => ({ awaitingSignIn }),
+  useMediaUrls: () => mediaUrls,
+}
+
+/* -------------------------------------------------------------------------- */
+/*                             Playable addresses                             */
+/* -------------------------------------------------------------------------- */
+
+/** The addresses the school has issued, keyed by the path a block stores. */
+export const mediaAddresses = new Map<string, string>()
+
+/** Every batch a screen asked to have primed, newest last. */
+export const primedBatches: string[][] = []
+
+/**
+ * The resolver as a screen uses it: priming needs the network, reading does not.
+ *
+ * An address is read while the element is being drawn, so `resolve` answers
+ * from memory or answers nothing. `prime` fails with the radio off, which is
+ * the case a lesson already on the device has to survive.
+ */
+export const mediaUrls = {
+  prime: async (paths: readonly string[]): Promise<void> => {
+    primedBatches.push([...paths])
+    if (!online) throw new Error('the addresses could not be asked for')
+  },
+  resolve: (path: string): string | undefined =>
+    path.startsWith('https://') ? path : mediaAddresses.get(path),
 }
 
 /** A controllable `@capacitor/network`, so a test can switch the radio off. */
 const networkListeners: ((status: { connected: boolean }) => void)[] = []
+
+let online = true
 
 export const capacitorNetworkDouble = {
   Network: {
@@ -157,6 +186,7 @@ export const capacitorNetworkDouble = {
 }
 
 export function setOnline(connected: boolean): void {
+  online = connected
   networkListeners.forEach((listener) => listener({ connected }))
 }
 
@@ -239,6 +269,8 @@ export function resetLocalScreens(): void {
   outboxRows.clear()
   navigations.length = 0
   mintedIds.length = 0
+  mediaAddresses.clear()
+  primedBatches.length = 0
   education.useUuidSource(nextUuid)
   setOnline(true)
   syncStatus.syncing.value = false

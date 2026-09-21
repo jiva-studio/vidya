@@ -16,6 +16,7 @@
         v-if="selectedSection"
         :blocks="selectedSection.blocks"
         :states="blockStates"
+        :addresses="addresses"
         @change="onBlockStateChanged"
       />
 
@@ -44,12 +45,17 @@ import type { LessonBlockState } from '@vidya/protocol'
 import { IonToolbar } from '@ionic/vue'
 import { computed, ref } from 'vue'
 
-import { useOutboxView, useRepositories } from '@/app'
+import { useMediaUrls, useOutboxView, useRepositories } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
 import type { LocalBlockState, LocalHomework, LocalLesson, LocalLessonVersion } from '@vidya/client'
 import { isHomeworkEditable } from '@vidya/client'
 import { useLocalData } from '@/shared'
-import { HomeworkAnswer, LessonSectionsList, LessonSectionView } from '@/ui/education'
+import {
+  HomeworkAnswer,
+  LessonSectionsList,
+  LessonSectionView,
+  useSectionMedia,
+} from '@/ui/education'
 import type { SubmissionState } from '@/ui/sync'
 import { LessonContentGate, SubmittedHomeworkItem } from '@/ui/sync'
 import { education } from '@vidya/client'
@@ -80,6 +86,13 @@ const contentSchemaVersion = computed(() => data.value.version?.content.schemaVe
 const sectionViews = computed(() =>
   sections.value.map((section) => ({ id: section.id, title: section.title })),
 )
+
+// The page is where a screen's files are asked for: the section on screen is
+// one batch, and the blocks inside it read from what came back.
+const { addresses } = useSectionMedia({
+  urls: useMediaUrls(),
+  blocks: () => selectedSection.value?.blocks ?? [],
+})
 
 const blockStates = computed(
   () =>

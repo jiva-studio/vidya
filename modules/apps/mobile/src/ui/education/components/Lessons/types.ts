@@ -2,6 +2,8 @@ import type { LocalLesson } from '@vidya/client'
 import type { BlockId, LessonId, SectionId } from '@vidya/domain'
 import type { LessonBlock, LessonBlockState } from '@vidya/protocol'
 
+import type { MediaAddresses } from '../../model/sectionMedia'
+
 /** What the section strip shows: a label to press, and which one is pressed. */
 export interface LessonSectionViewModel {
   id: SectionId
@@ -33,6 +35,9 @@ export interface LessonSectionViewProps {
 
   /** What this student has already done, keyed by block. */
   states: Readonly<Record<BlockId, LessonBlockState>>
+
+  /** Where each source of the section plays, keyed by what the block stores. */
+  addresses: MediaAddresses
 }
 
 export interface LessonSectionViewEmits {
