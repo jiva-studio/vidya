@@ -1,10 +1,9 @@
 import { randomUUID } from 'node:crypto'
 
-import { Inject, Injectable } from '@nestjs/common'
 import { Hlc, hlcNow, hlcToString, parseHlc } from '@vidya/domain'
 import { EntityManager } from 'typeorm'
 
-import { CLOCK, Clock } from './clock'
+import { Clock } from './clock'
 
 /**
  * The prefix every server-issued stamp carries. It is a prefix rather than the
@@ -34,7 +33,6 @@ export const isServerDeviceId = (deviceId: string): boolean =>
  * the journal's unique `(collection, doc_id, hlc)` index drops the second row
  * through `ON CONFLICT DO NOTHING`.
  */
-@Injectable()
 export class ServerHlcService {
   private lastSeen: Hlc | null = null
   private seeded = false
@@ -42,7 +40,7 @@ export class ServerHlcService {
   /** This instance's id, and the reason two instances cannot collide. */
   private readonly deviceId = serverDeviceId(randomUUID())
 
-  constructor(@Inject(CLOCK) private readonly clock: Clock) {}
+  constructor(private readonly clock: Clock) {}
 
   /**
    * The next stamp, strictly greater than every stamp this server has issued.

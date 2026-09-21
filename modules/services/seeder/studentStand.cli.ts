@@ -1,5 +1,5 @@
 import { emailFromArgv } from './bootstrap'
-import { SeedDataSource } from './datasource'
+import { openSeedConnection } from './datasource'
 import { seedStudentStand } from './studentStand'
 
 const email = emailFromArgv(process.argv)
@@ -9,7 +9,7 @@ if (!email) {
   process.exit(1)
 }
 
-SeedDataSource.initialize()
+openSeedConnection()
   .then(async (connection) => {
     const result = await seedStudentStand(connection, { email })
     console.log(`school  ${result.schoolId}`)

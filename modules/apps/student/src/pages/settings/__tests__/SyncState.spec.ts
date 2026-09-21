@@ -66,4 +66,15 @@ describe('what the settings screen says about the data', () => {
 
     expect(screen.text()).toContain('Sign in and your courses will arrive')
   })
+
+  it('does not call the device up to date when the first run brought nothing', async () => {
+    signIn()
+    useSiteStatus().runFinished(0, true)
+
+    const screen = render()
+    await screen.vm.$nextTick()
+
+    expect(screen.text()).toContain('nothing has arrived yet')
+    expect(screen.text()).not.toContain('Up to date')
+  })
 })

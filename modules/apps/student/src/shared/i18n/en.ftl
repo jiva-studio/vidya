@@ -65,7 +65,8 @@ settings-sync-title = Synchronisation
 
 sync-running = Getting your courses…
 sync-idle = Up to date. { $rows } records on this device.
-sync-never = Nothing has arrived on this device yet.
+sync-never = No synchronisation has finished on this device yet.
+sync-empty = Synchronisation has run, and nothing has arrived yet.
 sync-signed-out = Sign in and your courses will arrive here.
 
 sync-tab-writer = This tab keeps the data up to date.

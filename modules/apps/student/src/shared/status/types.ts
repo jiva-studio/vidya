@@ -17,6 +17,9 @@ export interface SiteStatus {
   /** A run has completed at least once, so an empty screen means empty. */
   readonly firstRunCompleted: Readonly<Ref<boolean>>
 
+  /** Anything at all has arrived on this device, on this day or an earlier one. */
+  readonly received: Readonly<Ref<boolean>>
+
   /** Rows applied to the local database since this tab opened. */
   readonly done: Readonly<Ref<number>>
 

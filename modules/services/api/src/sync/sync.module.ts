@@ -4,9 +4,11 @@ import { AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services
 import { SchoolMembershipModule } from '@vidya/api/schoolMembership.module'
 import { RedisService } from '@vidya/api/shared/services'
 import { Enrollment, Role, User, UserRole } from '@vidya/entities'
+import { Clock, ServerHlcService, SyncJournalSubscriber } from '@vidya/journal'
+import { DataSource } from 'typeorm'
 
 import { SyncController } from './controllers'
-import { CLOCK, ServerHlcService, SyncJournalSubscriber, systemClock } from './journal'
+import { CLOCK, systemClock } from './journal'
 import {
   SyncChecksumsService,
   SyncCursorsService,
@@ -29,6 +31,10 @@ import {
  * `SyncJournalSubscriber` is eager rather than lazily injected — it registers
  * itself with the `DataSource` in its constructor, so it has to be instantiated
  * at boot or nothing is journalled and nothing complains.
+ *
+ * The journal itself carries no Nest decorators, because the seeder writes
+ * through it too and must not drag a framework in. Its two classes are built
+ * here by hand instead of resolved from their metadata.
  */
 @Module({
   imports: [
@@ -46,8 +52,17 @@ import {
     RevokedTokensService,
 
     { provide: CLOCK, useValue: systemClock },
-    ServerHlcService,
-    SyncJournalSubscriber,
+    {
+      provide: ServerHlcService,
+      useFactory: (clock: Clock) => new ServerHlcService(clock),
+      inject: [CLOCK],
+    },
+    {
+      provide: SyncJournalSubscriber,
+      useFactory: (dataSource: DataSource, hlc: ServerHlcService) =>
+        new SyncJournalSubscriber(dataSource, hlc),
+      inject: [DataSource, ServerHlcService],
+    },
     SyncScopesService,
     SyncChecksumsService,
     SyncCursorsService,

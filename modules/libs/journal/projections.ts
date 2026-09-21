@@ -1,4 +1,3 @@
-import { toStudentContent } from '@vidya/api/edu/mappers/studentContent'
 import { asId, EnrollmentId, SchoolId, SyncCollection } from '@vidya/domain'
 import {
   BlockState,
@@ -12,6 +11,8 @@ import {
   SyncScopeKind,
 } from '@vidya/entities'
 import { EntityManager } from 'typeorm'
+
+import { toStudentContent } from './studentContent'
 
 /** Where a journal row is delivered, and which tenant it belongs to. */
 export interface JournalTarget {

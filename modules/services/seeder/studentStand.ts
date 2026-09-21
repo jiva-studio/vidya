@@ -4,6 +4,8 @@ import { Course, Lesson, LessonVersion, Role, School, User } from '@vidya/entiti
 import { randomUUID } from 'crypto'
 import { DataSource } from 'typeorm'
 
+import { journalWhatIsMissing } from './journalBackfill'
+
 export interface StudentStandOptions {
   /** Who signs in as the student. The account is created if it does not exist. */
   readonly email: string
@@ -144,6 +146,13 @@ export const seedStudentStand = async (
         status: 'published',
         publishedAt: new Date(),
       }))
+
+    await journalWhatIsMissing(manager, [
+      [School, school],
+      [Course, course],
+      [Lesson, lesson],
+      [LessonVersion, version],
+    ])
 
     const existingUser = await users.findOneBy({ email })
     const user = existingUser ?? (await users.save({ email, name: email, roles: [] }))

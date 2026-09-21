@@ -2,6 +2,8 @@ import type { RoleId, SchoolId, UserId } from '@vidya/domain'
 import { Role, School, User } from '@vidya/entities'
 import { DataSource } from 'typeorm'
 
+import { journalWhatIsMissing } from './journalBackfill'
+
 export interface BootstrapOptions {
   /** Who gets the owner role. The account is created if it does not exist. */
   readonly email: string
@@ -72,6 +74,8 @@ export const bootstrap = async (
       existingUser.roles = [...existingUser.roles, role]
       await users.save(existingUser)
     }
+
+    await journalWhatIsMissing(manager, [[School, school]])
 
     return {
       schoolId: school.id,

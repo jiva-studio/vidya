@@ -38,6 +38,18 @@ export const testingDataSource = async (): Promise<DataSource> => {
     implementation: () => 'PostgreSQL 16.1 on x86_64-pc-linux-gnu, 64-bit',
     impure: true,
   })
+  // The journal takes an ordering lock before every insert, so a datasource
+  // that seeds through the journal needs the function to resolve.
+  for (const name of ['pg_advisory_lock', 'pg_advisory_unlock', 'pg_advisory_xact_lock']) {
+    db.public.registerFunction({
+      name,
+      args: [DataType.integer],
+      returns: DataType.bool,
+      implementation: () => true,
+      impure: true,
+    })
+  }
+
   db.registerExtension('uuid-ossp', (schema) => {
     schema.registerFunction({
       name: 'uuid_generate_v4',

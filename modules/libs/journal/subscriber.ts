@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common'
 import { SyncOp } from '@vidya/entities'
 import {
   DataSource,
@@ -9,13 +8,14 @@ import {
   UpdateEvent,
 } from 'typeorm'
 
+import { Clock } from './clock'
 import { currentSyncWriteContext } from './context'
 import { CollectionProjection, projectionFor } from './projections'
 import { ServerHlcService } from './serverHlc'
 import { appendJournalRow } from './writer'
 
 /** Everything a hook hands over, flattened so insert, update and remove agree. */
-interface JournalEvent {
+export interface JournalEvent {
   manager: EntityManager
   entityName: string
   entity: Record<string, unknown> | undefined
@@ -30,7 +30,8 @@ interface JournalEvent {
  * both remember, and on a push it would mean two rows for one change — the
  * push's own, and the subscriber's on the row the push just saved. So the rule
  * is absolute: nothing else inserts into `sync_journal`, and `edu/services`
- * stays untouched.
+ * stays untouched. Every process that saves a synchronised entity — the API and
+ * the seeder alike — registers this rather than writing rows of its own.
  *
  * It writes through `event.manager`, the manager of the transaction that is
  * already open, so the domain row and its journal row commit or roll back
@@ -41,7 +42,6 @@ interface JournalEvent {
  * unjournalled. Synchronised entities are saved through `save()`/`remove()`,
  * which is what `EntitiesService` does.
  */
-@Injectable()
 export class SyncJournalSubscriber implements EntitySubscriberInterface {
   constructor(
     dataSource: DataSource,
@@ -51,7 +51,7 @@ export class SyncJournalSubscriber implements EntitySubscriberInterface {
   }
 
   afterInsert(event: InsertEvent<Record<string, unknown>>): Promise<void> {
-    return this.record({
+    return this.journalEntity({
       manager: event.manager,
       entityName: event.metadata.name,
       entity: event.entity,
@@ -61,7 +61,7 @@ export class SyncJournalSubscriber implements EntitySubscriberInterface {
   }
 
   afterUpdate(event: UpdateEvent<Record<string, unknown>>): Promise<void> {
-    return this.record({
+    return this.journalEntity({
       manager: event.manager,
       entityName: event.metadata.name,
       entity: event.entity as Record<string, unknown> | undefined,
@@ -77,7 +77,7 @@ export class SyncJournalSubscriber implements EntitySubscriberInterface {
     // scope resolves from an undefined id and the delete fails on NOT NULL.
     const removed = (event.databaseEntity ?? event.entity) as Record<string, unknown> | undefined
 
-    return this.record({
+    return this.journalEntity({
       manager: event.manager,
       entityName: event.metadata.name,
       entity: removed,
@@ -86,7 +86,15 @@ export class SyncJournalSubscriber implements EntitySubscriberInterface {
     })
   }
 
-  private async record(event: JournalEvent): Promise<void> {
+  /**
+   * Journals one change, whether a hook reported it or a caller did.
+   *
+   * A row saved by a connection that carried no subscriber has no save left to
+   * fire, and replaying it here keeps one description of what a collection puts
+   * on the wire. The caller owns the question of whether the journal already
+   * holds the document.
+   */
+  async journalEntity(event: JournalEvent): Promise<void> {
     const projection = projectionFor(event.entityName)
 
     if (!projection || !event.entity || !event.docId) return
@@ -127,3 +135,15 @@ export class SyncJournalSubscriber implements EntitySubscriberInterface {
     })
   }
 }
+
+/**
+ * Puts the journal writer behind a connection's saves.
+ *
+ * Call it after `initialize()`: TypeORM rebuilds `subscribers` while it builds
+ * metadata, so one pushed before that is thrown away. A connection that saves a
+ * synchronised entity without it fills the tables and reaches no device.
+ */
+export const registerSyncJournalSubscriber = (
+  dataSource: DataSource,
+  clock: Clock,
+): SyncJournalSubscriber => new SyncJournalSubscriber(dataSource, new ServerHlcService(clock))
