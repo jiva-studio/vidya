@@ -11,7 +11,7 @@
  * describes them are written together.
  */
 
-import { SyncCollection, SyncDoc, SyncPayload } from '../sync/types'
+import { SyncCollection, SyncDoc, SyncPayload, SyncScopeRef } from '../sync/types'
 
 export interface ISyncApplyRepository {
   /**
@@ -37,11 +37,21 @@ export interface ISyncApplyRepository {
    * device's unsent fields, whose stamp is the local one, while the pointer to
    * remember is still the server's.
    *
+   * `scope` is the envelope's, and it is stored on the row. It cannot be
+   * recomputed here: which grant carries a document is the server's decision,
+   * and the columns of the row describe what it is about rather than who was
+   * given it. Written down, erasing a withdrawn scope is one delete per table.
+   *
    * @returns `true` when the document was written, `false` when it was skipped
    *          as stale. The caller advances the scope position either way: a
    *          skipped row is applied, not lost.
    */
-  applyRemote(collection: SyncCollection, doc: SyncDoc, serverHlc: string): Promise<boolean>
+  applyRemote(
+    collection: SyncCollection,
+    doc: SyncDoc,
+    serverHlc: string,
+    scope: SyncScopeRef,
+  ): Promise<boolean>
 
   /** The last server HLC recorded for a document — the `baseHlc` a push sends. */
   lastServerHlc(collection: SyncCollection, docId: string): Promise<string | null>

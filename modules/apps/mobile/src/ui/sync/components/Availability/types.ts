@@ -23,8 +23,14 @@ export interface SignInAgainNoticeEmits {
   'sign-in': []
 }
 
+/** How a place ended: the school took it back, or the student handed it back. */
+export type EnrollmentEnding = 'revoked' | 'withdrawn'
+
 export interface RevokedEnrollmentNoticeProps {
   courseName: string
+
+  /** Which of the two endings to explain. */
+  reason?: EnrollmentEnding
 
   /** Whether anything of this course is already on the device. */
   hasDownloadedContent?: boolean

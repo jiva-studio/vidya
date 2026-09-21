@@ -1,7 +1,7 @@
 {
   "name": "pull-school-scope",
   "endpoint": "POST /sync/pull",
-  "description": "A student who holds a role in a school but is enrolled on nothing. The school scope carries the school itself and its courses; no lesson, version or section rides it, because content belongs to the course scope and the student has no course scope at all.",
+  "description": "A student who holds a role in a school but is enrolled on nothing. The school scope carries the school itself, its courses and the groups of those courses; no lesson, version or section rides it, because content belongs to the course scope and the student has no course scope at all. The groups are what a student who is not enrolled reads before asking for a place, which is why they ride the school and not the course: the course scope is exactly what they do not have. Both statuses travel \u2014 recruitment is closed by the status, and a group whose recruitment has closed still has to reach the device, or it stays in the catalogue for ever.",
   "request": {
     "deviceId": "device-8f2a6c14",
     "cursors": {
@@ -48,10 +48,52 @@
         },
         "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
         "createdAt": "2026-09-18T07:20:10.000Z"
+      },
+      {
+        "serverSeq": 312,
+        "collection": "groups",
+        "docId": "d3f8a1b6-5e29-4c07-b84d-6a1f0e7c2953",
+        "op": "upsert",
+        "data": {
+          "id": "d3f8a1b6-5e29-4c07-b84d-6a1f0e7c2953",
+          "courseId": "b6d40e27-8c31-4a95-b7f2-0e5a1d38c624",
+          "name": "Tuesday evenings",
+          "description": "Two hours a week, online.",
+          "startsAt": null,
+          "status": "pending"
+        },
+        "hlc": "001789689220000:00000:server",
+        "scope": {
+          "kind": "school",
+          "id": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915"
+        },
+        "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+        "createdAt": "2026-09-18T07:20:20.000Z"
+      },
+      {
+        "serverSeq": 313,
+        "collection": "groups",
+        "docId": "e70c2d45-9b13-4f86-a205-3c8e1d6b407f",
+        "op": "upsert",
+        "data": {
+          "id": "e70c2d45-9b13-4f86-a205-3c8e1d6b407f",
+          "courseId": "b6d40e27-8c31-4a95-b7f2-0e5a1d38c624",
+          "name": "Saturday mornings",
+          "description": null,
+          "startsAt": "2026-09-01T06:00:00.000Z",
+          "status": "active"
+        },
+        "hlc": "001789689230000:00000:server",
+        "scope": {
+          "kind": "school",
+          "id": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915"
+        },
+        "schoolId": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915",
+        "createdAt": "2026-09-18T07:20:30.000Z"
       }
     ],
     "cursors": {
-      "school:5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915": 311
+      "school:5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915": 313
     },
     "scopes": [
       {
@@ -59,7 +101,7 @@
           "kind": "school",
           "id": "5c1f2e73-9a48-4c1d-b0e6-8f3a2d7c4915"
         },
-        "headSeq": 311
+        "headSeq": 313
       },
       {
         "scope": {

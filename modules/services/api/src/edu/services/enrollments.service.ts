@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { EnrollmentStatus } from '@vidya/domain'
+import { EnrollmentStatus, isLive, LiveEnrollmentStatuses } from '@vidya/domain'
 import * as domain from '@vidya/domain'
 import { Course, Enrollment } from '@vidya/entities'
 import { EntityManager, In, Repository } from 'typeorm'
@@ -29,22 +29,45 @@ export type ModerationDecision = {
  *
  * `revoked` reopens, and only into `accepted`: the school took the place back,
  * so the school can hand it back — a student who paid late is put where they
- * were rather than made to apply again, which the unique index would refuse
- * anyway. There is no open request there to refuse, hence no way back to
- * `declined`.
+ * were rather than made to start again with nothing they had. There is no open
+ * request there to refuse, hence no way back to `declined`.
  *
  * `declined` is empty and stays empty. A refusal on the merits is an answer,
  * not a pause; reversing it is a new request, not a second answer to the old.
+ *
+ * `withdrawn` reopens the same way, and only the school may do it: a student
+ * who could walk back in alone never really left. Asking again is open to them
+ * and writes a new row beside the old one.
  */
 const MODERATION: Readonly<Record<EnrollmentStatus, readonly ModerationStatus[]>> = Object.freeze({
   pending: ['accepted', 'declined'],
   accepted: [],
   declined: [],
   revoked: ['accepted'],
+  withdrawn: ['accepted'],
 })
 
-/** What a revocation takes back; a refusal was never a place to begin with. */
-const REVOCABLE: EnrollmentStatus[] = ['pending', 'accepted']
+/**
+ * What every new decision takes off the row.
+ *
+ * The group goes because whoever stopped being accepted is off its roll. Both
+ * stamps go because news about a place has to reach the list it was put away
+ * from — the student's, so the explanation is there, and the school's, so the
+ * row comes back where it is now being decided again.
+ */
+const CLEARED_BY_A_NEW_DECISION = Object.freeze({
+  groupId: null,
+  archivedByStudentAt: null,
+  archivedBySchoolAt: null,
+  archivedBySchoolById: null,
+})
+
+/** What a student may ask for beside the course itself. */
+export type EnrollmentWishes = {
+  preferredGroupId?: domain.GroupId
+  preferredTimes?: domain.PreferredTimes
+  comment?: string
+}
 
 /** Postgres reports a broken UNIQUE constraint as SQLSTATE 23505. */
 const isUniqueViolation = (error: unknown): boolean =>
@@ -86,6 +109,10 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
    * link of it is what proves the student may be writing here at all. Both the
    * homework and the progress endpoints need it, which is why it is not a
    * private helper on either of them.
+   *
+   * One row comes back because a student holds at most one live place on a
+   * course, and an accepted place is live. Earlier attempts on the same course
+   * are finished rows and cannot be accepted.
    */
   async forLessonVersion(
     lessonVersionId: domain.LessonVersionId,
@@ -125,16 +152,27 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
   /**
    * A student asks to join. The school decides later.
    *
-   * The check and the insert are two statements, so two requests arriving
-   * together can both pass the check. The unique index is what actually decides
-   * it; the check is only here to give the ordinary case a readable error rather
-   * than a constraint name. Both paths end in the same 409.
+   * Only a live place stands in the way: a course taken and left is history,
+   * and asking again writes a second row beside it rather than reopening the
+   * first. The check and the insert are two statements, so two requests
+   * arriving together can both pass the check. The partial index over live rows
+   * is what actually decides it; the check is only here to give the ordinary
+   * case a readable error rather than a constraint name. Both paths end in the
+   * same 409.
    */
-  async request(course: Course, studentId: domain.UserId): Promise<Enrollment> {
-    const existing = await this.findOneBy({ courseId: course.id, studentId })
+  async request(
+    course: Course,
+    studentId: domain.UserId,
+    wishes: EnrollmentWishes = {},
+  ): Promise<Enrollment> {
+    const live = await this.findLivePlace(course.id, studentId)
 
-    if (existing) {
+    if (live) {
       throw new ConflictException('Already enrolled on this course')
+    }
+
+    if (wishes.preferredGroupId) {
+      await this.assertGroupBelongsToCourse(wishes.preferredGroupId, course.id)
     }
 
     try {
@@ -143,6 +181,9 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
         studentId,
         schoolId: course.schoolId,
         status: 'pending',
+        preferredGroupId: wishes.preferredGroupId ?? null,
+        preferredTimes: wishes.preferredTimes ?? null,
+        comment: wishes.comment ?? null,
       })
     } catch (error) {
       if (!isUniqueViolation(error)) throw error
@@ -170,16 +211,28 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
     const places = await manager.findBy(Enrollment, {
       studentId,
       schoolId,
-      status: In(REVOCABLE),
+      status: In([...LiveEnrollmentStatuses]),
     })
 
     for (const place of places) {
-      place.status = 'revoked'
+      manager.merge(Enrollment, place, {
+        status: 'revoked',
+        decidedAt: new Date(),
+        ...CLEARED_BY_A_NEW_DECISION,
+      })
+
       await manager.save(place)
     }
   }
 
-  /** Accept or decline a request, or give back a place the school took away. */
+  /**
+   * Accept or decline a request, or give back a place the school took away.
+   *
+   * Giving a finished place back adds a row to the partial index over live
+   * ones, so it collides with a request the student made in the meantime. The
+   * check reads that case out loud; the unique violation behind it is the last
+   * line, and it is caught here rather than left to surface as a 500.
+   */
   async moderate(enrollment: Enrollment, decision: ModerationDecision): Promise<Enrollment> {
     if (!MODERATION[enrollment.status].includes(decision.status)) {
       throw new ConflictException(
@@ -191,14 +244,47 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
       await this.assertGroupBelongsToCourse(decision.groupId, enrollment.courseId)
     }
 
+    if (isLive(decision.status)) {
+      await this.assertNoOtherLivePlace(enrollment)
+    }
+
+    try {
+      return await this.updateOneBy(
+        { id: enrollment.id },
+        {
+          status: decision.status,
+          decidedById: decision.decidedById,
+          decidedAt: new Date(),
+          ...CLEARED_BY_A_NEW_DECISION,
+          groupId: decision.groupId ?? null,
+        },
+      )
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error
+
+      throw new ConflictException(
+        `Student ${enrollment.studentId} already holds a live place on course ${enrollment.courseId}`,
+      )
+    }
+  }
+
+  /**
+   * The school puts a finished row out of its own sight.
+   *
+   * Only a finished one: hiding a request nobody answered leaves the student
+   * waiting on an answer that is never coming. The student's own stamp is not
+   * touched — each side tidies its own list.
+   */
+  async archiveForSchool(enrollment: Enrollment, byUserId: domain.UserId): Promise<Enrollment> {
+    if (isLive(enrollment.status)) {
+      throw new ConflictException(
+        `Enrollment ${enrollment.id} is still ${enrollment.status}; answer it before putting it away`,
+      )
+    }
+
     return this.updateOneBy(
       { id: enrollment.id },
-      {
-        status: decision.status,
-        groupId: decision.groupId ?? null,
-        decidedById: decision.decidedById,
-        decidedAt: new Date(),
-      },
+      { archivedBySchoolAt: new Date(), archivedBySchoolById: byUserId },
     )
   }
 
@@ -213,6 +299,24 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
     }
 
     return this.updateOneBy({ id: enrollment.id }, { groupId })
+  }
+
+  /** The live place this student holds on the course, if they hold one. */
+  private findLivePlace(
+    courseId: domain.CourseId,
+    studentId: domain.UserId,
+  ): Promise<Enrollment | null> {
+    return this.findOneBy({ courseId, studentId, status: In([...LiveEnrollmentStatuses]) })
+  }
+
+  private async assertNoOtherLivePlace(enrollment: Enrollment): Promise<void> {
+    const live = await this.findLivePlace(enrollment.courseId, enrollment.studentId)
+
+    if (live && live.id !== enrollment.id) {
+      throw new ConflictException(
+        `Student ${enrollment.studentId} already holds a live place on course ${enrollment.courseId}`,
+      )
+    }
   }
 
   /**

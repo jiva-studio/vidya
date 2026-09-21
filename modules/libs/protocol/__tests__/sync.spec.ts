@@ -13,6 +13,7 @@ import { readdirSync, readFileSync } from 'fs'
 import { join } from 'path'
 
 import {
+  DeviceRejectionReasons,
   isSyncCollection,
   isSyncRejectionReason,
   isSyncRequestErrorCode,
@@ -20,10 +21,10 @@ import {
   PushRequest,
   PushResponse,
   Routes,
+  ServerRejectionReasons,
   SYNC_MAX_SCOPES,
   SyncChange,
   SyncRejectionReason,
-  SyncRejectionReasons,
   SyncScopeKinds,
 } from '../index'
 
@@ -239,8 +240,16 @@ describe('the shape of a push response', () => {
   })
 })
 
+/**
+ * The set is split by who decides, and the fixtures may only show one half.
+ *
+ * A server reason travels: it is an answer to a row that was sent, and the
+ * fixtures are where the two sides agree on what it looks like. A device reason
+ * is settled here with nothing sent and no answer coming — writing one into a
+ * fixture would put a claim on the wire that no server makes.
+ */
 describe('every rejection reason is worked through somewhere', () => {
-  it('covers the whole set, and invents nothing beside it', () => {
+  const refusedInFixtures = (): Set<SyncRejectionReason> => {
     const seen = new Set<SyncRejectionReason>()
     for (const { body } of fixtures) {
       const response = body.response as PushResponse | undefined
@@ -249,7 +258,23 @@ describe('every rejection reason is worked through somewhere', () => {
       }
     }
 
-    expect([...seen].sort()).toEqual([...SyncRejectionReasons].sort())
+    return seen
+  }
+
+  it('covers every reason a server can send, and invents nothing beside it', () => {
+    expect([...refusedInFixtures()].sort()).toEqual([...ServerRejectionReasons].sort())
+  })
+
+  it('never puts a reason the device settles on its own on the wire', () => {
+    const seen = refusedInFixtures()
+
+    for (const reason of DeviceRejectionReasons) {
+      expect(seen.has(reason)).toBe(false)
+
+      // It is still one of the reasons an outbox row carries: the device writes
+      // it onto the row it is giving up on, and the screen reads it from there.
+      expect(isSyncRejectionReason(reason)).toBe(true)
+    }
   })
 
   it('names a request-level code for the failures that are not per-row', () => {

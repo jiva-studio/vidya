@@ -36,6 +36,8 @@ import { ErrorResponse } from './error'
  * `@vidya/protocol`.
  */
 export type {
+  DeviceRejectionReason,
+  ServerRejectionReason,
   SyncCollection,
   SyncOp,
   SyncPayload,
@@ -45,9 +47,11 @@ export type {
   SyncScopeRef,
 } from '@vidya/domain'
 export {
+  DeviceRejectionReasons,
   isSyncCollection,
   isSyncRejectionReason,
   parseSyncScopeKey,
+  ServerRejectionReasons,
   SyncCollections,
   SyncOps,
   SyncRejectionReasons,
@@ -264,7 +268,7 @@ export type PushRejected = {
   collection: domain.SyncCollection
   docId: string
   status: 'rejected'
-  reason: domain.SyncRejectionReason
+  reason: domain.ServerRejectionReason
 
   /** Optional human-readable detail; the client shows the reason, not this. */
   detail?: string

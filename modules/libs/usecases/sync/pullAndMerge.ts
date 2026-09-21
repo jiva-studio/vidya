@@ -49,7 +49,7 @@ export interface PullAndMergeResult {
   /** Scopes started at `0` this run: the whole of "a new course arrived". */
   readonly added: readonly SyncScopeRef[]
 
-  /** Scopes withdrawn. Their downloaded rows are untouched. */
+  /** Scopes withdrawn. The rows they brought were erased with them. */
   readonly removed: readonly SyncScopeRef[]
 
   /** Scopes to refetch because their checksum disagrees. */

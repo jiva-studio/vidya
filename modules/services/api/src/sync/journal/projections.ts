@@ -4,6 +4,7 @@ import {
   BlockState,
   Course,
   Enrollment,
+  Group,
   Homework,
   Lesson,
   LessonVersion,
@@ -96,6 +97,32 @@ const courses: CollectionProjection<Course> = {
   }),
 }
 
+/**
+ * The catalogue of places on a course, addressed to the school.
+ *
+ * The school rather than the course, because the reader is precisely someone
+ * who holds no place yet and therefore no course scope. The price — a group's
+ * name and start date visible to every member of the school — is the same one
+ * already paid for the course card.
+ *
+ * Every status is journalled, closed groups included. Journalling only the
+ * recruiting ones would make `pending -> active` produce no row at all, and the
+ * group would stay in a device's catalogue for ever; the device filters.
+ */
+const groups: CollectionProjection<Group> = {
+  collection: 'groups',
+  scopeKind: 'school',
+  target: async (group) => ({ scopeId: group.schoolId, schoolId: group.schoolId }),
+  project: (group) => ({
+    id: group.id,
+    courseId: group.courseId,
+    name: group.name,
+    description: group.description ?? null,
+    startsAt: group.startsAt ?? null,
+    status: group.status,
+  }),
+}
+
 const lessons: CollectionProjection<Lesson> = {
   collection: 'lessons',
   scopeKind: 'course',
@@ -170,6 +197,12 @@ const enrollments: CollectionProjection<Enrollment> = {
     decidedById: enrollment.decidedById ?? null,
     decidedAt: enrollment.decidedAt ?? null,
     createdAt: enrollment.createdAt,
+    preferredGroupId: enrollment.preferredGroupId ?? null,
+    preferredTimes: enrollment.preferredTimes ?? null,
+    comment: enrollment.comment ?? null,
+    // Named even when empty: the merge reads an absent key as "the server has
+    // nothing to say", so omitting it would make the stamp impossible to clear.
+    archivedByStudentAt: enrollment.archivedByStudentAt ?? null,
   }),
 }
 
@@ -217,6 +250,7 @@ const blockStates: CollectionProjection<BlockState> = {
 export const COLLECTION_PROJECTIONS: Record<string, CollectionProjection<any>> = {
   School: schools,
   Course: courses,
+  Group: groups,
   Lesson: lessons,
   LessonVersion: lessonVersions,
   Enrollment: enrollments,

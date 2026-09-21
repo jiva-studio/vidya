@@ -66,6 +66,14 @@ describe('giving back a place the school took away', () => {
     expect(labels(mount('revoked', false))).toEqual([])
   })
 
+  it('offers the same way back to a student who left of their own accord', () => {
+    const shown = labels(mount('withdrawn'))
+
+    expect(shown).toContain('Вернуть на курс')
+    expect(shown).not.toContain('Отклонить')
+    expect(shown).not.toContain('Принять')
+  })
+
   it('offers nothing of the kind on a place that was refused on its merits', () => {
     expect(labels(mount('declined'))).not.toContain('Вернуть на курс')
   })

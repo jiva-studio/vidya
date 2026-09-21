@@ -2,6 +2,9 @@
 // editor track leans on it for stable section ids.
 import { webcrypto } from 'node:crypto'
 
+import { enableAutoUnmount } from '@vue/test-utils'
+import { afterEach } from 'vitest'
+
 if (!globalThis.crypto) {
   Object.defineProperty(globalThis, 'crypto', { value: webcrypto })
 }
@@ -62,3 +65,10 @@ if (!globalThis.ResizeObserver) {
     disconnect() {}
   } as unknown as typeof ResizeObserver
 }
+
+// A screen keeps its overlays in `document.body` behind a teleport, and a suite
+// that wipes the body between tests would tear those anchors out from under a
+// screen still mounted from the test before; its next update then throws inside
+// Vue, outside any test. Every mounted screen therefore goes away with the test
+// that mounted it.
+enableAutoUnmount(afterEach)

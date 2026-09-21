@@ -1,3 +1,4 @@
+import type { SyncCollection } from '@vidya/domain'
 import { SyncCollections } from '@vidya/domain'
 import { describe, expect, it } from 'vitest'
 
@@ -43,7 +44,7 @@ describe('the collection projection table', () => {
 
     for (const collection of SyncCollections) {
       const projection = projectionOf(collection)
-      const columns = await db.query<ColumnRow>(`PRAGMA table_info(${projection.table})`)
+      const columns = await db.query<ColumnRow>(`PRAGMA table_info("${projection.table}")`)
       const names = columns.map((column) => column.name)
 
       expect(names).toContain('owner_id')
@@ -58,7 +59,7 @@ describe('the collection projection table', () => {
 
     for (const collection of SyncCollections) {
       const projection = projectionOf(collection)
-      const columns = await db.query<ColumnRow>(`PRAGMA table_info(${projection.table})`)
+      const columns = await db.query<ColumnRow>(`PRAGMA table_info("${projection.table}")`)
       const projected = new Set(projection.columns.map((column) => column.column))
 
       const unmet = columns
@@ -85,6 +86,63 @@ describe('the collection projection table', () => {
       expect(requiredFields(collection)).toContain('id')
       expect(requiredFields(collection)).toContain('schoolId')
     }
+  })
+
+  it('projects the catalogue of groups onto its own table', () => {
+    // Read through a widened view so a missing collection arrives as a failed
+    // expectation naming it rather than a compile error here.
+    const table = COLLECTION_PROJECTIONS as Readonly<
+      Record<string, { table: string; tombstone: string | null } | undefined>
+    >
+
+    expect(table.groups).toBeDefined()
+    expect(table.groups?.table).toBe('groups')
+
+    // No tombstone: a group that ends is a group whose status says so, and the
+    // list above pins the two collections that carry one.
+    expect(table.groups?.tombstone).toBeNull()
+  })
+
+  it('names every column a group card is drawn from', () => {
+    const columns = projectionOf('groups' as SyncCollection).columns
+    const fields = columns.map((column) => column.field)
+    const bySpelling = Object.fromEntries(columns.map((column) => [column.field, column.column]))
+
+    expect(fields).toEqual(
+      expect.arrayContaining(['id', 'schoolId', 'courseId', 'name', 'description', 'status']),
+    )
+
+    // `startsAt` is what tells a closed group from one still recruiting, and a
+    // time column filled with a fallback empty string sorts before every real
+    // instant.
+    expect(fields).toContain('startsAt')
+    expect(bySpelling.startsAt).toBe('starts_at')
+    expect(bySpelling.courseId).toBe('course_id')
+  })
+
+  it('stores the times a student offered as json, not as text', () => {
+    const preferredTimes = projectionOf('enrollments').columns.find(
+      (column) => column.field === 'preferredTimes',
+    )
+
+    // Stored as text it would come back a string, and every screen reading it
+    // would have to parse it itself — or, worse, forget to.
+    expect(preferredTimes).toBeDefined()
+    expect(preferredTimes?.kind).toBe('json')
+    expect(preferredTimes?.column).toBe('preferred_times')
+  })
+
+  it('names the four request columns the device keeps for an enrolment', () => {
+    const bySpelling = Object.fromEntries(
+      projectionOf('enrollments').columns.map((column) => [column.field, column.column]),
+    )
+
+    expect(bySpelling).toMatchObject({
+      preferredGroupId: 'preferred_group_id',
+      preferredTimes: 'preferred_times',
+      comment: 'comment',
+      archivedByStudentAt: 'archived_by_student_at',
+    })
   })
 
   it('names the fields a payload is missing, and nothing else', () => {

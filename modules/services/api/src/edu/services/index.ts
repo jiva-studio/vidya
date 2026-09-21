@@ -1,6 +1,7 @@
 export * from './blockStates.service'
 export * from './courses.service'
 export * from './enrollments.service'
+export * from './enrollmentVisibility'
 export * from './groups.service'
 export * from './homework.service'
 export * from './lessons.service'

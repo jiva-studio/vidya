@@ -28,14 +28,16 @@ export default defineConfig([
     rules: { 'fsd/segments-by-purpose': 'off' },
   },
   {
-    // Eight slices have exactly one consumer today, and `insignificant-slice`
+    // Thirteen slices have exactly one consumer today, and `insignificant-slice`
     // suggests merging each into it. They stay separate, named one by one so
     // that a slice nobody uses is still reported everywhere else:
     //
     //   an action of the operator is a feature whether one screen offers it or
-    //   three — moderating a request, grading a piece of work, placing a
-    //   student, giving somebody a role, editing lesson content, publishing a
-    //   version — and merging any of them into the screen that calls it puts
+    //   three — moderating a request, reading one before deciding it, putting
+    //   an answered one out of the school's sight, grading a piece of work,
+    //   placing a student, giving somebody a role, editing lesson content,
+    //   publishing a version — and merging any of them into the screen that
+    //   calls it puts
     //   the request, the rules and the markup in one slice, over the file and
     //   size limits this project enforces (AGENTS.md, §1);
     //
@@ -51,6 +53,7 @@ export default defineConfig([
     files: [
       './src/entities/homework/**',
       './src/entities/media/**',
+      './src/features/archive-enrollment/**',
       './src/features/assign-group/**',
       './src/features/edit-lesson-content/**',
       './src/features/switch-language/**',
@@ -59,6 +62,7 @@ export default defineConfig([
       './src/features/moderate-enrollment/**',
       './src/features/pick-media/**',
       './src/features/publish-lesson/**',
+      './src/features/review-enrollment/**',
       './src/widgets/lesson-editor/**',
     ],
     rules: { 'fsd/insignificant-slice': 'off' },

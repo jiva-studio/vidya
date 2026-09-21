@@ -1,9 +1,10 @@
-import type { IOutboxRepository, OutboxEntry, OutboxScope } from '@vidya/domain'
+import type { OutboxEntry } from '@vidya/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { useOutboxView } from '../outboxView'
 import { useSyncStatus } from '../syncStatus'
+import { journalOf } from './journalDouble'
 
 /**
  * What a screen is told about a row it has written.
@@ -30,11 +31,6 @@ const entry = (overrides: Partial<OutboxEntry> = {}): OutboxEntry => ({
   createdAt: '2026-09-18T00:00:00.000Z' as OutboxEntry['createdAt'],
   ...overrides,
 })
-
-const journalOf = (rows: OutboxEntry[]): IOutboxRepository =>
-  ({
-    listUnsettled: (_scope: OutboxScope) => Promise.resolve(rows),
-  }) as unknown as IOutboxRepository
 
 /** Lets the watcher fire and the journal read behind it settle. */
 const settle = async (): Promise<void> => {
@@ -67,14 +63,8 @@ describe('the outbox as a screen asks about it', () => {
     expect(view.reason('homework', HOMEWORK_DOC)).toBeUndefined()
   })
 
-  it('carries the refusal and its reason', async () => {
-    const view = useOutboxView()
-    view.track('owner-a', journalOf([entry({ status: 'rejected', reason: 'notYourEnrollment' })]))
-    await settle()
-
-    expect(view.state('homework', HOMEWORK_DOC)).toBe('rejected')
-    expect(view.reason('homework', HOMEWORK_DOC)).toBe('notYourEnrollment')
-  })
+  // A refusal is no longer unsettled work, so what a screen is told about one
+  // is stated against the list it now comes from, in `outboxViewRejection.spec.ts`.
 
   it('re-reads the journal when a run finishes', async () => {
     const rows = [entry()]

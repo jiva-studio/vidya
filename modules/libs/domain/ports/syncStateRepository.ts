@@ -25,7 +25,8 @@ export interface SyncScopeState {
 
   /**
    * When the scope left the caller's rights — a course they were withdrawn
-   * from. Set, and nothing else: what was downloaded stays readable.
+   * from. The rows it brought are erased with it; the mark is what explains
+   * the empty screen and what keeps the scope out of the next pull.
    */
   readonly removedAt: IsoDateTime | null
 }
@@ -51,16 +52,34 @@ export interface ISyncStateRepository {
    */
   addScope(scope: SyncScopeRef): Promise<void>
 
-  /** Mark a scope gone at `at`, keeping every row it brought. */
+  /** Mark a scope gone at `at`. Call {@link purgeScope} first. */
   markScopeRemoved(scope: SyncScopeRef, at: IsoDateTime): Promise<void>
+
+  /**
+   * Take a withdrawn scope's data off the device: every row that arrived on it,
+   * the per-document server pointers those rows held, and the position the
+   * scope stood at, which goes back to `0` with no checksum.
+   *
+   * The three go together or not at all, in the caller's transaction. Rows
+   * erased with the position left ahead of them is the one state that cannot
+   * be recovered from: a re-grant would ask only for what happened since, and
+   * the erased history would never be sent again. A pointer left behind is the
+   * same loss by another route — `applyRemote` refuses the returning rows as
+   * stale and the scope comes back empty for ever.
+   *
+   * Unsent work inside the scope is settled as dead work rather than deleted:
+   * it can never be sent under rights nobody holds, and the student is still
+   * owed the sight of what they wrote.
+   */
+  purgeScope(scope: SyncScopeRef): Promise<void>
 
   /**
    * Take the removal mark off a scope the server grants again — the student was
    * enrolled on the course a second time.
    *
    * Its own call rather than a second meaning for {@link addScope}: adding
-   * starts a scope at `0`, and a re-enrolled course must keep the position it
-   * reached, or every pull would fetch its whole history again. Without this,
+   * starts a scope at `0` only when nothing is tracking it yet, and a scope
+   * that is already known has a row to clear the mark on. Without this,
    * nothing in the system ever clears the mark: the position is excluded from
    * the cursors a pull sends, so the server reads the scope from the beginning
    * every time, and the screens go on telling the student they were withdrawn.

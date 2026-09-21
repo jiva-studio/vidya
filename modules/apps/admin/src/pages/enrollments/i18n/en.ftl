@@ -41,8 +41,33 @@ enrollments-requested-at = Asked { $at }
 enrollments-decided-by = { $who }, { $at }
 enrollments-student-unknown = Student
 
+enrollments-review = Review
+enrollments-review-title = The request
+enrollments-review-group = Group asked for
+enrollments-review-group-closed = No longer taking students
+enrollments-review-group-gone = That group is gone
+enrollments-review-times = When it suits
+enrollments-review-zone = Hours in { $zone }
+enrollments-review-comment = Comment
+enrollments-review-decision = Group
+enrollments-review-groups-none = This course has no groups yet
+enrollments-review-groups-unreadable = The list of groups did not load
+enrollments-review-accept = Accept into the group
+enrollments-archive = Put away
+enrollments-archive-title = Put this request away?
+enrollments-archive-consequence = The row leaves the school's list for good. The student keeps theirs.
+
+weekday-mon = Mon
+weekday-tue = Tue
+weekday-wed = Wed
+weekday-thu = Thu
+weekday-fri = Fri
+weekday-sat = Sat
+weekday-sun = Sun
+
 enrollment-status-pending = Waiting
 enrollment-status-accepted = Accepted
 enrollment-status-declined = Declined
 enrollment-status-revoked = Revoked
+enrollment-status-withdrawn = Left the course
 enrollment-status-in-queue = In the queue

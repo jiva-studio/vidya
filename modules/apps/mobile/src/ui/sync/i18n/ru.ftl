@@ -14,6 +14,7 @@ sync-rejection-kept-on-device = Ваша работа сохранена на у
 sync-rejection-readOnlyCollection = Такие записи нельзя отправлять из приложения.
 sync-rejection-notYourEnrollment = Ответ адресован чужой записи на курс.
 sync-rejection-enrollmentRevoked = Вы больше не записаны на этот курс.
+sync-rejection-scopeRevoked = Школа сняла с вас доступ, поэтому ответ не был отправлен.
 sync-rejection-unknownLessonVersion = Школа не знает версию урока, по которой написан ответ.
 sync-rejection-alreadyAccepted = Ответ уже принят, заменить его новым нельзя.
 sync-rejection-payloadTooLarge = Ответ слишком длинный, чтобы его отправить.
@@ -34,6 +35,10 @@ sync-revoked-title = Вы больше не записаны
 sync-revoked-text = Школа завершила вашу запись на курс «{ $course }».
 sync-revoked-downloaded-stays = Всё уже скачанное остаётся доступным для чтения на устройстве.
 sync-revoked-open-downloaded = Открыть скачанное
+
+# Курс, с которого студент ушёл сам
+sync-withdrawn-title = Вы больше не на этом курсе
+sync-withdrawn-text = Вы ушли с курса «{ $course }».
 
 # Содержимое урока, которого эта сборка не понимает
 sync-outdated-app-title = Обновите приложение, чтобы открыть урок

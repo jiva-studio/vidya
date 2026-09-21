@@ -14,6 +14,7 @@ sync-rejection-kept-on-device = Your work is saved on this device. Nothing has b
 sync-rejection-readOnlyCollection = This kind of record cannot be sent from the app.
 sync-rejection-notYourEnrollment = The answer was addressed to an enrolment that is not yours.
 sync-rejection-enrollmentRevoked = You are no longer enrolled on this course.
+sync-rejection-scopeRevoked = The school took away your access, so this answer was never sent.
 sync-rejection-unknownLessonVersion = The school does not know the lesson version this answer was written against.
 sync-rejection-alreadyAccepted = An answer has already been accepted, so this one cannot replace it.
 sync-rejection-payloadTooLarge = The answer is too long to be sent.
@@ -34,6 +35,10 @@ sync-revoked-title = You are no longer enrolled
 sync-revoked-text = The school ended your enrolment on { $course }.
 sync-revoked-downloaded-stays = Everything already downloaded stays readable on this device.
 sync-revoked-open-downloaded = Open what is downloaded
+
+# A course the student handed back themselves
+sync-withdrawn-title = You are no longer on this course
+sync-withdrawn-text = You left { $course }.
 
 # Lesson content this build does not understand
 sync-outdated-app-title = Update the app to open this lesson

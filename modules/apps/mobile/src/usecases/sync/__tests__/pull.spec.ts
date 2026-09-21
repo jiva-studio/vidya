@@ -1,4 +1,12 @@
-import type { HomeworkId, SyncPayload } from '@vidya/domain'
+import type {
+  CourseId,
+  EnrollmentId,
+  HomeworkId,
+  PreferredTimes,
+  SchoolId,
+  SyncPayload,
+  UserId,
+} from '@vidya/domain'
 import { asId, syncScopeKey } from '@vidya/domain'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -14,6 +22,7 @@ import {
   SCHOOL_ID,
   SECTION_ID,
   serverHlc,
+  STUDENT_ID,
   USER_SCOPE,
 } from './fakeSyncServer'
 import { failingDatabase, type Harness, openHarness, OWNER } from './harness'
@@ -506,3 +515,80 @@ const lessonId = (index: number): string =>
 
 /** Every outbox row belongs to the identity that wrote it, and only that one. */
 export const ownerOf = OWNER
+
+/**
+ * What a place a student asked for reads like once it comes back down.
+ *
+ * The request leaves this device as a payload and returns as a page, and the
+ * two have to say the same thing: the times the student offered, and whether
+ * the row is one they have already put away. A clean install has no local row
+ * to merge with, so the page is the only thing the list has to go on.
+ */
+describe('an enrolment coming down the wire', () => {
+  const enrolment = (fields: SyncPayload = {}): SyncPayload => ({
+    id: ENROLLMENT_ID,
+    schoolId: SCHOOL_ID,
+    courseId: COURSE_ID,
+    studentId: STUDENT_ID,
+    groupId: null,
+    status: 'pending',
+    decidedById: null,
+    decidedAt: null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    preferredGroupId: null,
+    preferredTimes: null,
+    comment: null,
+    archivedByStudentAt: null,
+    ...fields,
+  })
+
+  const EVENINGS: PreferredTimes = {
+    timeZone: 'Europe/Berlin',
+    ranges: [{ days: ['mon', 'wed'], startMinute: 1080, endMinute: 1200 }],
+  }
+
+  it('brings the times the student offered back unchanged', async () => {
+    const phone = await openHarness({ deviceId: 'device-phone' })
+
+    await phone.engine.enrollments.request({
+      id: asId<EnrollmentId>(ENROLLMENT_ID),
+      schoolId: asId<SchoolId>(SCHOOL_ID),
+      courseId: asId<CourseId>(COURSE_ID),
+      studentId: asId<UserId>(STUDENT_ID),
+      preferredTimes: EVENINGS,
+    })
+    await phone.engine.runner.run()
+
+    // A second handset of the same student reads the request off the server.
+    const tablet = await openHarness({ server: phone.server, deviceId: 'device-tablet' })
+    await tablet.engine.runner.run()
+
+    const read = await tablet.engine.enrollments.getById(asId<EnrollmentId>(ENROLLMENT_ID))
+
+    expect(read!.preferredTimes).toEqual(EVENINGS)
+  })
+
+  it('keeps a row the student put away out of the list on a fresh install', async () => {
+    const fresh = await openHarness()
+
+    // Nothing local to merge with: the stamp is the server's word alone.
+    fresh.server.journal({
+      collection: 'enrollments',
+      docId: ENROLLMENT_ID,
+      scope: USER_SCOPE,
+      data: enrolment({
+        status: 'declined',
+        decidedAt: '2026-01-05T00:00:00.000Z',
+        archivedByStudentAt: '2026-01-06T00:00:00.000Z',
+      }),
+    })
+
+    await fresh.engine.runner.run()
+
+    expect(await fresh.engine.enrollments.list()).toEqual([])
+
+    const stored = await fresh.engine.enrollments.getById(asId<EnrollmentId>(ENROLLMENT_ID))
+
+    expect(stored!.archivedByStudentAt).toBe('2026-01-06T00:00:00.000Z')
+  })
+})

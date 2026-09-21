@@ -1,3 +1,5 @@
+export { default as EnrollmentDangerAction } from './EnrollmentDangerAction.vue'
+export { default as EnrollmentRejectionNotice } from './EnrollmentRejectionNotice.vue'
 export { default as EnrollmentReviewStatus } from './EnrollmentReviewStatus.vue'
 export { default as EnrollmentsList } from './EnrollmentsList.vue'
 export { default as EnrollmentsListItem } from './EnrollmentsListItem.vue'

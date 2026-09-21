@@ -108,21 +108,30 @@ export interface IOutboxRepository {
   listPending(scope: OutboxScope, limit?: number): Promise<readonly OutboxEntry[]>
 
   /**
-   * Rows whose work the server has not taken: every pending one, plus every
-   * refused one whose reason leaves the text the student's, as
-   * `rejectionKeepsLocalWork` decides.
+   * Rows whose work is still owed to the server: the ones waiting to be sent.
    *
-   * Not the same question as {@link listPending}, and the difference is the
-   * student's answer. A push may refuse a row, and a refusal is a state the row
-   * keeps rather than a delivery — the text still exists only on this device.
-   * The merge asks *this* list whether it may take a document whole, because
-   * "no longer pending" is not "the server has it", and answering the first
-   * question with the second lets the next pull overwrite work nobody else
-   * holds a copy of.
+   * The merge asks *this* list whether it may take a document whole, so a row
+   * belongs here only while a later push could still deliver it. A refused row
+   * cannot: the watermark has stepped over it and nothing will send it again.
+   * Counting it as unsettled would lay the undelivered text over every page the
+   * server sends, for as long as the document exists. Those rows are
+   * {@link listDead}'s, and a screen reads them from there.
    *
-   * Not narrowed by the watermark: a refused row is below it by construction.
+   * Not narrowed by the watermark: a pending row below it is one a push is
+   * carrying right now, and its work is still only on this device.
    */
   listUnsettled(scope: OutboxScope): Promise<readonly OutboxEntry[]>
+
+  /**
+   * Rows that are finished and were never taken — refused, and never to be
+   * sent again.
+   *
+   * The counterpart to {@link listUnsettled}, and disjoint from it. The work
+   * they carry is owed to nobody but the student, who is still owed the sight
+   * of it: without this reading a refused document has no row anywhere and a
+   * screen paints it as accepted.
+   */
+  listDead(scope: OutboxScope): Promise<readonly OutboxEntry[]>
 
   /** Append a journaled change. Called by the journal decorator, in its transaction. */
   append(entry: NewOutboxEntry): Promise<void>

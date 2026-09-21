@@ -82,9 +82,8 @@ async function createContentTables(db: IDatabase): Promise<void> {
 
 /** The student's own rows: written here, pushed up, decided upstream. */
 async function createStudentTables(db: IDatabase): Promise<void> {
-  // `deleted_at` records that the enrolment was withdrawn. It does not erase
-  // anything: what was downloaded stays on the device and stays readable, and
-  // only the server decides whether a later push is accepted.
+  // `deleted_at` has no writer: a request that ends says so in its status, and
+  // the server has no such column for enrolments at all.
   await db.execute(`
     CREATE TABLE IF NOT EXISTS enrollments (
       id             TEXT NOT NULL,
@@ -192,8 +191,8 @@ async function createSyncTables(db: IDatabase): Promise<void> {
   // is exactly why the schema cannot afford foreign keys. A scope not yet
   // present starts at cursor 0, and that alone is what pulls a newly enrolled
   // course down in full. `checksum` is the server's summary to compare
-  // against; `removed_at` marks a scope that left without erasing what it
-  // brought.
+  // against; `removed_at` marks a scope that left, whose rows are erased with
+  // it.
   await db.execute(`
     CREATE TABLE IF NOT EXISTS sync_scopes (
       owner_id   TEXT    NOT NULL,

@@ -3,13 +3,17 @@ import { Course, Enrollment, LessonVersion } from '@vidya/entities'
 import { PushChange } from '@vidya/protocol'
 import { EntityManager } from 'typeorm'
 
-/** Why one row was refused. A value, not an exception: its neighbours still apply. */
+/**
+ * Why one row was refused. A value, not an exception: its neighbours still
+ * apply. Narrowed to the reasons the server decides, so a reason a device
+ * settles for itself cannot be answered with.
+ */
 export interface Rejection {
-  reason: domain.SyncRejectionReason
+  reason: domain.ServerRejectionReason
   detail: string
 }
 
-export const reject = (reason: domain.SyncRejectionReason, detail: string): Rejection => ({
+export const reject = (reason: domain.ServerRejectionReason, detail: string): Rejection => ({
   reason,
   detail,
 })
@@ -67,8 +71,18 @@ export interface PushApplier {
     context: PushRowContext,
   ): Promise<PreparedRow | Rejection>
 
-  /** Whether the stored row may still be written by its student. */
-  editable(manager: EntityManager, change: PushChange): Promise<Rejection | null>
+  /**
+   * Whether the row this push acts on may still be written by its student.
+   *
+   * That row is not always the one `change.docId` names: a collection may
+   * resolve a name the server never learned onto the row it does hold, and the
+   * checks belong on the row that will actually be written.
+   */
+  editable(
+    manager: EntityManager,
+    change: PushChange,
+    context: PushRowContext,
+  ): Promise<Rejection | null>
 
   /**
    * Writes the row through the ORM, so the journal subscriber sees it, and

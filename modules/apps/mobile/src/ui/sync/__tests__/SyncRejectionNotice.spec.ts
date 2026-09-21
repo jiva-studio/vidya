@@ -31,6 +31,7 @@ const about: Record<(typeof SyncRejectionReasons)[number], Record<Locale, RegExp
   },
   notYourEnrollment: { en: /not yours/i, ru: /чужой записи/i },
   enrollmentRevoked: { en: /no longer enrolled/i, ru: /больше не записаны/i },
+  scopeRevoked: { en: /took away your access/i, ru: /сняла с вас доступ/i },
   unknownLessonVersion: { en: /lesson version/i, ru: /версию урока/i },
   alreadyAccepted: { en: /already been accepted/i, ru: /уже принят/i },
   payloadTooLarge: { en: /too long/i, ru: /слишком длинный/i },
@@ -72,6 +73,21 @@ describe('a refused answer explains itself', () => {
 
     expect(text).toContain(keptOnDevice[locale])
   })
+
+  it.each(['en', 'ru'] as const)(
+    'tells a lost place from a lost role in %s, which is why they are two reasons',
+    (locale) => {
+      const revokedRole = render('scopeRevoked', locale).text()
+      const revokedPlace = render('enrollmentRevoked', locale).text()
+
+      // A place on a course ending and the school taking a role away are
+      // different events with different answers for the student, and the
+      // screen is the only place that difference reaches them. Explained with
+      // one another's words, the second reason buys nothing.
+      expect(revokedRole).not.toMatch(about.enrollmentRevoked[locale])
+      expect(revokedPlace).not.toMatch(about.scopeRevoked[locale])
+    },
+  )
 
   it('keeps the reason on the element, because a refusal is a row state', () => {
     expect(render('payloadTooLarge').attributes('data-reason')).toBe('payloadTooLarge')

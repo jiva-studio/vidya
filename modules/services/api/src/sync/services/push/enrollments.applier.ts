@@ -1,7 +1,7 @@
 import * as domain from '@vidya/domain'
-import { Course, Enrollment } from '@vidya/entities'
+import { Course, Enrollment, Group } from '@vidya/entities'
 import { PushChange } from '@vidya/protocol'
-import { EntityManager } from 'typeorm'
+import { EntityManager, In } from 'typeorm'
 
 import { isUuid } from './access'
 import {
@@ -14,21 +14,37 @@ import {
   Rejection,
 } from './types'
 
-/** The one status a device may bring about. Every other one is a decision. */
+/** The one status a device may ask for. Every other one is a decision. */
 const REQUESTED: domain.EnrollmentStatus = 'pending'
+
+/** The one status a device may bring about on a place it already holds. */
+const GIVEN_BACK: domain.EnrollmentStatus = 'withdrawn'
 
 const find = async (manager: EntityManager, change: PushChange): Promise<Enrollment | null> =>
   isUuid(change.docId)
     ? manager.findOneBy(Enrollment, { id: change.docId as domain.EnrollmentId })
     : null
 
+const instant = (value: unknown): Date | null =>
+  value === null || value === undefined ? null : new Date(String(value))
+
+// A stored instant is a `Date` and a pushed one an ISO string, and rendering
+// the first as text would drop its milliseconds before the two ever met.
+const moment = (value: unknown): number | null => {
+  if (value === null || value === undefined) return null
+
+  return value instanceof Date ? value.getTime() : Date.parse(String(value))
+}
+
 /**
- * A student asking to join a course, from a device that was offline.
+ * A student asking to join a course, and everything they do with that place
+ * afterwards, from a device that was offline.
  *
  * `enrollments` replicates both ways — up goes the request, down comes the
  * decision (`SYNC_DIRECTION`) — so a request written on a train is a row the
- * server has to be able to take.
- * Refusing it would strand an outbox row that is never deleted and never
+ * server has to be able to take, and so is the cancellation, the departure and
+ * the putting away that may follow it.
+ * Refusing one would strand an outbox row that is never deleted and never
  * accepted, which is a permanent, and false, refusal sitting in the app.
  *
  * The rules are `EnrollmentsService.request`'s, applied here rather than
@@ -38,13 +54,13 @@ const find = async (manager: EntityManager, change: PushChange): Promise<Enrollm
  * - the course has to exist, which is the whole of what `POST /edu/enrollments`
  *   asks of it — access to a course *comes from* being enrolled, so there is no
  *   further permission a student could be missing here;
- * - a student already holding a row on that course keeps it exactly as it is.
+ * - a group may only be wished for on the course being asked for.
  *
- * **A request that meets a decision is answered, not refused.** Accepted, and
- * declined too: the school has spoken, the server owns `status`, and a refusal
- * would put back the undeletable rejected row this applier exists to remove.
- * A declined student asking again is a new request, made online against a row
- * the school can see — not the replay of one written before the answer came.
+ * **A request that meets a decision is answered, not refused**, as long as the
+ * device knew of that decision when it wrote: a row echoing the stored
+ * `decidedAt` was written in full knowledge and is applied. One echoing another
+ * moment was written behind the school's back, and only `alreadyAccepted` lets
+ * the device drop its copy and take the server's.
  */
 export const enrollmentsApplier: PushApplier = {
   collection: 'enrollments',
@@ -58,7 +74,7 @@ export const enrollmentsApplier: PushApplier = {
       return reject('malformed', 'a request names itself with a uuid')
     }
 
-    const existing = await find(manager, change)
+    const existing = await targetOf(manager, change, context)
 
     if (!mayWrite(existing, change.data, context.userId)) {
       return reject('notYourEnrollment', 'a device may only ask for a place of its own')
@@ -68,14 +84,31 @@ export const enrollmentsApplier: PushApplier = {
 
     if (isRejection(course)) return course
 
-    return { course, body: requestBody(change.data) }
+    const wish = await checkWishes(manager, course, change.data)
+
+    if (wish) return wish
+
+    return { course, body: requestBody(change.data, existing) }
   },
 
-  // Nothing here is frozen, because nothing here is overwritten: a request that
-  // arrives after the school has decided changes no field, and is answered as
-  // the repeat it is rather than refused.
-  async editable(): Promise<Rejection | null> {
-    return null
+  /**
+   * Whether the device wrote this row knowing where the place stood.
+   *
+   * The order is fixed. A device that has fallen behind is answered first,
+   * because the same push — a finished status on a row the school has since
+   * brought back to life — would otherwise fail an invariant with `malformed`,
+   * and a `malformed` row keeps its local copy over the server's for good.
+   */
+  async editable(
+    manager: EntityManager,
+    change: PushChange,
+    context: PushRowContext,
+  ): Promise<Rejection | null> {
+    const existing = await targetOf(manager, change, context)
+
+    if (!existing) return checkNames(change.data)
+
+    return checkKnowledge(existing, change.data) ?? checkPutAway(existing, change.data)
   },
 
   async apply(
@@ -84,13 +117,15 @@ export const enrollmentsApplier: PushApplier = {
     prepared: PreparedRow,
     context: PushRowContext,
   ): Promise<string> {
-    const existing = await locate(manager, change, prepared, context)
+    const target = await targetOf(manager, change, context)
 
-    // Already asked, or already decided. Either way the row stands as it is and
-    // the push has nothing to add — writing would only restate `pending` over
-    // an answer the school gave. Its id is the answer: a student who asked from
-    // two devices has one place, under the name the first of them gave it.
-    if (existing) return existing.id
+    if (target) return write(manager, target, prepared.body)
+
+    const live = await liveOn(manager, prepared.course.id, context.userId)
+
+    // The same request under a second name: a student who asked from two
+    // devices has one place, under the name the first of them gave it.
+    if (live) return live.id
 
     await manager.save(
       Enrollment,
@@ -103,6 +138,10 @@ export const enrollmentsApplier: PushApplier = {
         groupId: null,
         decidedById: null,
         decidedAt: null,
+        preferredGroupId: (prepared.body.preferredGroupId as domain.GroupId) ?? null,
+        preferredTimes: (prepared.body.preferredTimes as domain.PreferredTimes) ?? null,
+        comment: (prepared.body.comment as string) ?? null,
+        archivedByStudentAt: null,
         // When the request reached the school, by the server's clock. The moment
         // the student tapped is the HLC the row is journalled under.
         createdAt: new Date(context.now),
@@ -111,6 +150,27 @@ export const enrollmentsApplier: PushApplier = {
 
     return change.docId
   },
+}
+
+/** The fields the student owns, written onto the row the push names. */
+const write = async (
+  manager: EntityManager,
+  stored: Enrollment,
+  body: domain.SyncPayload,
+): Promise<string> => {
+  if ('preferredGroupId' in body) stored.preferredGroupId = body.preferredGroupId as domain.GroupId
+  if ('preferredTimes' in body) stored.preferredTimes = body.preferredTimes as domain.PreferredTimes
+  if ('comment' in body) stored.comment = body.comment as string
+  if ('archivedByStudentAt' in body) stored.archivedByStudentAt = instant(body.archivedByStudentAt)
+
+  stored.status = body.status as domain.EnrollmentStatus
+
+  // A student who hands the place back does not stay in the group they held.
+  if (!domain.isLive(stored.status)) stored.groupId = null
+
+  await manager.save(Enrollment, stored)
+
+  return stored.id
 }
 
 /**
@@ -159,40 +219,206 @@ const courseOf = async (
   return course
 }
 
+/** What the student asked for besides the place itself. */
+const checkWishes = async (
+  manager: EntityManager,
+  course: Course,
+  data: domain.SyncPayload | null,
+): Promise<Rejection | null> => checkTimes(data) ?? (await checkGroup(manager, course, data))
+
+const countRanges = (times: unknown): number => {
+  const ranges = (times as { ranges?: unknown } | null)?.ranges
+
+  return Array.isArray(ranges) ? ranges.length : 0
+}
+
 /**
- * The row the student already holds on this course, whatever it is called.
+ * A set of ranges the school can read, or none at all.
+ *
+ * Nothing is salvaged from a body that fails: a half-understood wish written
+ * into the row would be a request the student never made. Too many ranges is
+ * told apart from a shape nobody can read, because a student can act on a
+ * limit and cannot act on 'unreadable'.
+ */
+const checkTimes = (data: domain.SyncPayload | null): Rejection | null => {
+  const times = data?.preferredTimes
+
+  if (times === undefined || times === null) return null
+
+  if (domain.isValidPreferredTimes(times)) return null
+
+  if (countRanges(times) > domain.MAX_TIME_RANGES) {
+    return reject('malformed', `a request asks for at most ${domain.MAX_TIME_RANGES} time ranges`)
+  }
+
+  return reject('malformed', 'the times asked for are not a set of ranges')
+}
+
+/**
+ * The group wished for, which has to be one of this course's.
+ *
+ * The rule is `EnrollmentsService.assertGroupBelongsToCourse`'s, repeated here
+ * rather than called, because that one runs through another service while a
+ * push holds its own transaction: placing a student in a group of a different
+ * course would give them a place on a course they never applied to.
+ *
+ * Whether the group is still taking anyone is deliberately not asked. The wish
+ * outlives the intake: a school that has closed a group places the student
+ * somewhere else, and refusing the request instead would lose it over a race
+ * with a curator.
+ */
+const checkGroup = async (
+  manager: EntityManager,
+  course: Course,
+  data: domain.SyncPayload | null,
+): Promise<Rejection | null> => {
+  const groupId = data?.preferredGroupId
+
+  if (groupId === undefined || groupId === null) return null
+
+  if (!isUuid(groupId)) return reject('malformed', 'a preferred group is named with a uuid')
+
+  const group = await manager.findOneBy(Group, { id: domain.asId<domain.GroupId>(groupId) })
+
+  if (!group || group.courseId !== course.id) {
+    return reject('malformed', 'a preferred group belongs to the course being asked for')
+  }
+
+  return null
+}
+
+/**
+ * Whether the device wrote this row knowing the decision that stands on it.
+ *
+ * A cancellation that went stale on a phone and a deliberate departure arrive
+ * as the same pair of statuses, so the pair cannot tell them apart. What can is
+ * the decision the device echoes back: the same moment means it wrote knowing
+ * where the place stood, a different one means it wrote before the school
+ * spoke. Two server moments, compared by value — the clock of neither side
+ * takes part, and a stored `Date` never equals the string it travels as.
+ */
+const checkKnowledge = (
+  existing: Enrollment,
+  data: domain.SyncPayload | null,
+): Rejection | null => {
+  if (!data) return null
+
+  if (moment(existing.decidedAt) === moment(data.decidedAt)) return null
+
+  return reject('alreadyAccepted', 'the school has answered since this row left the device')
+}
+
+/** Whether this push only asks for a place, rather than acting on one it has. */
+const isNewRequest = (data: domain.SyncPayload | null): boolean => {
+  const status = data?.status
+  const finished = typeof status === 'string' && !domain.isLive(status as domain.EnrollmentStatus)
+
+  return !finished && (data?.archivedByStudentAt ?? null) === null
+}
+
+/**
+ * A push that is not a new request, on a pair holding no live place at all.
+ *
+ * Within one batch a device can have its first row resolved onto a place the
+ * server already stores, and send the second under a name the server never
+ * learns. That one lands on the live place of the pair; with no live place to
+ * land on, creating one would invent a request nobody made, and
+ * `alreadyAccepted` is the one answer that makes the device take the server's
+ * rows and act again.
+ */
+const checkNames = (data: domain.SyncPayload | null): Rejection | null => {
+  if (isNewRequest(data)) return null
+
+  return reject('alreadyAccepted', 'the place this row speaks of is not the one the server holds')
+}
+
+/**
+ * Only a finished request may be put away, and the status this very push leaves
+ * behind is the one that counts: leaving a course sets the status and the stamp
+ * in one write, and reading the stored status would refuse it.
+ */
+const checkPutAway = (existing: Enrollment, data: domain.SyncPayload | null): Rejection | null => {
+  if ((data?.archivedByStudentAt ?? null) === null) return null
+
+  if (!domain.isLive(resultingStatus(existing, data))) return null
+
+  return reject('malformed', 'a request still open cannot be put away')
+}
+
+/**
+ * The live place the student holds on this course, whatever it is called.
  *
  * A device names the request itself, so the id it sends and the id an online
- * request left behind are two names for one place. `(courseId, studentId)` is
- * unique, and writing under the second name would fail that constraint and lose
- * the decision stored under the first.
+ * request left behind are two names for one place. Only live rows answer:
+ * finished ones are a history the student may add to, and writing onto one of
+ * them would restate an answer the school has already given.
  */
-const locate = async (
+const liveOn = async (
+  manager: EntityManager,
+  courseId: unknown,
+  studentId: domain.UserId,
+): Promise<Enrollment | null> =>
+  isUuid(courseId)
+    ? manager.findOne(Enrollment, {
+        where: {
+          courseId: domain.asId<domain.CourseId>(courseId),
+          studentId,
+          status: In([...domain.LiveEnrollmentStatuses]),
+        },
+        order: { createdAt: 'DESC' },
+      })
+    : null
+
+/**
+ * The row this push acts on.
+ *
+ * A request is written under the name the device gave it. Anything that follows
+ * acts on a place that already exists, so a name the server never learned — the
+ * device's own, when the request reached the server under another one — resolves
+ * to the live place of the same course and student. Nothing is created that way:
+ * a pair with no live row is left unresolved, and refused.
+ */
+const targetOf = async (
   manager: EntityManager,
   change: PushChange,
-  prepared: PreparedRow,
   context: PushRowContext,
 ): Promise<Enrollment | null> => {
-  const byId = await find(manager, change)
+  const stored = await find(manager, change)
 
-  if (byId) return byId
+  if (stored || isNewRequest(change.data)) return stored
 
-  return manager.findOneBy(Enrollment, {
-    courseId: prepared.course.id,
-    studentId: context.userId,
-  })
+  return liveOn(manager, change.data?.courseId, context.userId)
 }
 
 /**
  * What the device actually asked for.
  *
- * `FIELD_OWNER.enrollments.client` is `['status']`, so the decision, the group
- * and the times are dropped from whatever arrived without a word — the
- * device must not have to know the server's model to send a row it wrote
- * itself. And the only status a client may bring about is `pending`, so a row
- * claiming another is not refused either: it is read as the request it is.
+ * `FIELD_OWNER.enrollments.client` names the fields it may write, so the
+ * decision and the group assigned are dropped from whatever arrived without a
+ * word — the device must not have to know the server's model to send a row it
+ * wrote itself.
  */
-const requestBody = (data: domain.SyncPayload | null): domain.SyncPayload => ({
+const requestBody = (
+  data: domain.SyncPayload | null,
+  existing: Enrollment | null,
+): domain.SyncPayload => ({
   ...ownedBy('enrollments', data ?? {}),
-  status: REQUESTED,
+  status: resultingStatus(existing, data),
 })
+
+/**
+ * The status this push leaves on the row.
+ *
+ * A new row is a request, and nothing else. A stored one keeps the status it
+ * has unless the student hands the place back: every other status is the
+ * school's answer, and a replayed outbox row claiming one would put `pending`
+ * back over a decision.
+ */
+const resultingStatus = (
+  existing: Enrollment | null,
+  data: domain.SyncPayload | null,
+): domain.EnrollmentStatus => {
+  if (!existing) return REQUESTED
+
+  return data?.status === GIVEN_BACK ? GIVEN_BACK : existing.status
+}

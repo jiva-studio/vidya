@@ -7,10 +7,11 @@ import { computed } from 'vue'
 import { EnrollmentStatusBadge } from '@/entities/enrollment'
 
 import StudentCell from './StudentCell.vue'
+import { ArchiveAction } from '@/features/archive-enrollment'
 import { ModerationActions } from '@/features/moderate-enrollment'
 import { formatDate } from '@/shared/lib'
 
-import { secondaryLineClasses, stackClasses } from './styles'
+import { refusalLineClasses, secondaryLineClasses, stackClasses } from './styles'
 import type { EnrollmentsTableRowEmits, EnrollmentsTableRowProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -18,6 +19,8 @@ import type { EnrollmentsTableRowEmits, EnrollmentsTableRowProps } from './types
 const props = withDefaults(defineProps<EnrollmentsTableRowProps>(), {
   canModerate: false,
   busy: false,
+  archiving: false,
+  archiveError: undefined,
 })
 
 /* --------------------------------- Events --------------------------------- */
@@ -43,6 +46,14 @@ function onDecline(id: EnrollmentId) {
 
 function onAssign(id: EnrollmentId) {
   emit('assign-group', id)
+}
+
+function onReview(id: EnrollmentId) {
+  emit('review', id)
+}
+
+function onArchive(id: EnrollmentId) {
+  emit('archive', id)
 }
 </script>
 
@@ -82,7 +93,17 @@ function onAssign(id: EnrollmentId) {
         @accept="onAccept"
         @decline="onDecline"
         @assign-group="onAssign"
+        @review="onReview"
       />
+      <ArchiveAction
+        :enrollment="props.enrollment"
+        :can-moderate="props.canModerate"
+        :busy="props.archiving"
+        @archive="onArchive"
+      />
+      <p v-if="props.archiveError" :class="refusalLineClasses" role="alert">
+        {{ $t(props.archiveError) }}
+      </p>
     </TableCell>
   </TableRow>
 </template>

@@ -91,8 +91,8 @@ class PushResultDto {
   @ApiPropertyOptional({ example: false, description: 'The server assigned a new stamp.' })
   restamped?: boolean
 
-  @ApiPropertyOptional({ enum: domain.SyncRejectionReasons, example: 'readOnlyCollection' })
-  reason?: domain.SyncRejectionReason
+  @ApiPropertyOptional({ enum: domain.ServerRejectionReasons, example: 'readOnlyCollection' })
+  reason?: domain.ServerRejectionReason
 
   @ApiPropertyOptional({ example: 'courses replicate downward only' })
   detail?: string

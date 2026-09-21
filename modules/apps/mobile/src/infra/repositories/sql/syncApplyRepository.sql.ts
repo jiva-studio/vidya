@@ -16,7 +16,7 @@ import {
   isTombstoned,
   readSyncRow,
   sameProjectedColumns,
-  writeSyncRow,
+  writeScopedRow,
 } from './rowWriter'
 
 /**
@@ -130,13 +130,18 @@ export function createSqlSyncApplyRepository(
     /**
      * Write a merged document unjournaled, and move its server pointer.
      *
+     * The scope is the envelope's and is stored on the row, never inferred
+     * from its columns: the server addresses a course card to the school and a
+     * student's answer to the student, and a device that guessed would take
+     * the wrong rows off when a grant is withdrawn.
+     *
      * The guard is the point: `serverHlc` has to be strictly above what is on
      * record, or nothing is written and the answer is `false`. The caller
      * advances the scope position either way — a row skipped as stale has been
      * *handled*, not lost, and stalling the position on it would replay the
      * page forever.
      */
-    async applyRemote(collection, doc, serverHlc): Promise<boolean> {
+    async applyRemote(collection, doc, serverHlc, scope): Promise<boolean> {
       const recorded = await lastServerHlc(collection, doc.docId)
       if (recorded !== null && compareHlcString(serverHlc, recorded) <= 0) return false
 
@@ -144,7 +149,7 @@ export function createSqlSyncApplyRepository(
       if (doc.deleted || doc.data === null) await deleteSyncRow(db, ref, now)
       else {
         await dropLocalRival(db, ref, doc.data)
-        await writeSyncRow(db, ref, doc.data)
+        await writeScopedRow(db, ref, doc.data, scope)
       }
 
       await recordServerHlc(collection, doc.docId, serverHlc)

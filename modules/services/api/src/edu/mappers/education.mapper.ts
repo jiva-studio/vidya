@@ -13,7 +13,7 @@ const COURSE = ['id', 'schoolId', 'name', 'description', 'learningType'] as cons
 const COURSE_SUMMARY = ['id', 'name', 'description'] as const
 
 const GROUP = ['id', 'courseId', 'name', 'description'] as const
-const GROUP_SUMMARY = ['id', 'name'] as const
+const GROUP_SUMMARY = ['id', 'name', 'status'] as const
 
 const LESSON = ['id', 'courseId', 'lessonNumber', 'title'] as const
 const LESSON_SUMMARY = ['id', 'lessonNumber', 'title'] as const
@@ -31,6 +31,12 @@ const ENROLLMENT = [
   'decidedById',
   'decidedAt',
   'createdAt',
+  'preferredGroupId',
+  'preferredTimes',
+  'comment',
+  'archivedByStudentAt',
+  'archivedBySchoolAt',
+  'archivedBySchoolById',
 ] as const
 const ENROLLMENT_SUMMARY = ['id', 'courseId', 'groupId', 'status', 'createdAt'] as const
 

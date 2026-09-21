@@ -7,6 +7,10 @@
   >
     <p v-if="course?.description">{{ course.description }}</p>
 
+    <WithListHeader v-if="groups.length > 0" :title="$t('course-groups-title')">
+      <GroupsList :items="groups" />
+    </WithListHeader>
+
     <IonButton v-if="enrollment" expand="block" @click="onOpenEnrollmentClicked">
       {{ $t('course-open-enrollment') }}
     </IonButton>
@@ -22,9 +26,10 @@ import { IonButton, useIonRouter } from '@ionic/vue'
 import { computed } from 'vue'
 
 import { useRepositories } from '@/app'
-import { PageWithHeaderLayout } from '@/design'
+import { PageWithHeaderLayout, WithListHeader } from '@/design'
 import { useLocalData } from '@/shared'
 
+import { GroupsList } from '../components/Groups'
 import type { CourseDetailsPageProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -40,16 +45,30 @@ const router = useIonRouter()
 // screen that offers to enrol someone who is already enrolled is offering a
 // second request — and one course holds one place, so the second would never
 // become one.
+//
+// The groups are the ones still taking students, as the repository answers it:
+// the catalogue shows what a student could ask to join, and choosing is done
+// on the request itself.
 const { data, busy, loaded } = useLocalData(
-  async () => ({
-    course: await repositories.courses.getById(props.id),
-    enrollment: await repositories.enrollments.getByCourse(props.id),
-  }),
-  { course: null, enrollment: null },
+  async () => {
+    const course = await repositories.courses.getById(props.id)
+    const groups =
+      course?.learningType === 'group'
+        ? await repositories.groups.listRecruitingByCourse(props.id)
+        : []
+
+    return {
+      course,
+      groups,
+      enrollment: await repositories.enrollments.getLiveByCourse(props.id),
+    }
+  },
+  { course: null, groups: [], enrollment: null },
   { watching: [() => props.id] },
 )
 
 const course = computed(() => data.value.course)
+const groups = computed(() => data.value.groups)
 const enrollment = computed(() => data.value.enrollment)
 
 /* -------------------------------- Handlers -------------------------------- */

@@ -19,6 +19,21 @@ export type EnrollmentDetails = {
   decidedById?: domain.UserId
   decidedAt?: domain.IsoDateTime
   createdAt: domain.IsoDateTime
+
+  /** The group the student asked for. A wish, not the school's placement. */
+  preferredGroupId?: domain.GroupId
+
+  /** When the student can attend, in their own time zone. */
+  preferredTimes?: domain.PreferredTimes
+
+  comment?: string
+
+  /** Set when the student puts a finished request away; cleared by a new decision. */
+  archivedByStudentAt?: domain.IsoDateTime
+
+  /** The school's own side of the archiving. Read by the console, never sent to a device. */
+  archivedBySchoolAt?: domain.IsoDateTime
+  archivedBySchoolById?: domain.UserId
 }
 
 export type EnrollmentSummary = Pick<
@@ -62,6 +77,12 @@ export type ModerateEnrollmentRequest = {
 }
 
 export type ModerateEnrollmentResponse = crud.UpdateItemResponse<EnrollmentDetails>
+
+/**
+ * The school puts an answered row out of its own sight. No body: the tidying
+ * carries no data, and who did it is read from the caller.
+ */
+export type ArchiveEnrollmentResponse = crud.UpdateItemResponse<EnrollmentDetails>
 
 /** Move an already accepted student between groups, or out of the queue. */
 export type AssignEnrollmentGroupRequest = { groupId: domain.GroupId | null }

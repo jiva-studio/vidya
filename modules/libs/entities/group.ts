@@ -1,21 +1,15 @@
-import { CourseId, GroupId, SchoolId } from '@vidya/domain'
+import { CourseId, GroupId, GroupStatus, GroupStatuses, SchoolId } from '@vidya/domain'
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 import { Course } from './course'
 import { School } from './school'
-
-export enum GroupStatus {
-  Pending = 'pending',
-  Active = 'active',
-  Inactive = 'inactive',
-}
 
 @Entity({ name: 'groups' })
 export class Group {
   @PrimaryGeneratedColumn('uuid')
   id: GroupId
 
-  @Column({ unique: true })
+  @Column({ nullable: false })
   name: string
 
   @Column({ nullable: true })
@@ -35,14 +29,9 @@ export class Group {
   @JoinColumn()
   school: School
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   startsAt: Date
 
-  @Column({
-    type: 'enum',
-    enum: GroupStatus,
-    default: GroupStatus.Pending,
-    enumName: 'groupStatus',
-  })
+  @Column({ type: 'enum', enum: GroupStatuses, enumName: 'groupStatus', default: 'pending' })
   status: GroupStatus
 }

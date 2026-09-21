@@ -12,6 +12,7 @@ export const enrollmentTones: Record<EnrollmentStatus, BadgeTone> = {
   accepted: 'success',
   declined: 'neutral',
   revoked: 'neutral',
+  withdrawn: 'info',
 }
 
 export const enrollmentLabels: Record<EnrollmentStatus, string> = {
@@ -19,4 +20,5 @@ export const enrollmentLabels: Record<EnrollmentStatus, string> = {
   accepted: 'enrollment-status-accepted',
   declined: 'enrollment-status-declined',
   revoked: 'enrollment-status-revoked',
+  withdrawn: 'enrollment-status-withdrawn',
 }

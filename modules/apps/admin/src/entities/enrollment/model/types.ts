@@ -1,4 +1,12 @@
-import type { CourseId, EnrollmentId, EnrollmentStatus, GroupId, UserId } from '@vidya/domain'
+import type {
+  CourseId,
+  EnrollmentId,
+  EnrollmentStatus,
+  GroupId,
+  IsoDateTime,
+  PreferredTimes,
+  UserId,
+} from '@vidya/domain'
 import type { EnrollmentSummary } from '@vidya/protocol'
 import type { Ref } from 'vue'
 
@@ -16,6 +24,10 @@ export type EnrollmentRow = EnrollmentSummary & {
   groupName?: string
   decidedByName?: string
   decidedAt?: string
+  preferredGroupId?: GroupId
+  preferredTimes?: PreferredTimes
+  comment?: string
+  archivedBySchoolAt?: IsoDateTime
 
   /** Accepted and still without a group: the student waits for one. */
   inQueue: boolean
@@ -56,6 +68,10 @@ export interface ResolvedEnrollment {
   groupId?: GroupId
   decidedById?: UserId
   decidedAt?: string
+  preferredGroupId?: GroupId
+  preferredTimes?: PreferredTimes
+  comment?: string
+  archivedBySchoolAt?: IsoDateTime
 }
 
 export type EnrollmentDetailsById = Map<EnrollmentId, ResolvedEnrollment>

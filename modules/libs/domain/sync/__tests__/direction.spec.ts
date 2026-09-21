@@ -6,6 +6,7 @@
  * fails here instead of surfacing as a row that silently never replicates.
  */
 
+import type { SyncDirection } from '../direction'
 import {
   clientOwnedFields,
   FIELD_OWNER,
@@ -29,6 +30,20 @@ describe('SYNC_DIRECTION', () => {
     }
   })
 
+  it('replicates the catalogue of groups, downward', () => {
+    // The table is read through a widened view on purpose: a missing key has to
+    // arrive as a failed expectation naming it, not as a compile error that
+    // takes every other case in this file down with it.
+    const collections: readonly string[] = SyncCollections
+    const direction = SYNC_DIRECTION as Readonly<Record<string, SyncDirection | undefined>>
+
+    expect(collections).toContain('groups')
+
+    // The school writes the group and the student only reads it: a place in a
+    // group is assigned by moderation, never claimed from a phone.
+    expect(direction.groups).toBe('down')
+  })
+
   it('keeps content flowing down and student-written rows going up', () => {
     expect(SYNC_DIRECTION.courses).toBe('down')
     expect(SYNC_DIRECTION.lessons).toBe('down')
@@ -36,6 +51,28 @@ describe('SYNC_DIRECTION', () => {
     expect(SYNC_DIRECTION.block_states).toBe('up')
     expect(SYNC_DIRECTION.enrollments).toBe('both')
     expect(SYNC_DIRECTION.homework).toBe('both')
+  })
+})
+
+describe('EnrollmentSyncFields', () => {
+  //
+  it('names every field either side may write', () => {
+    expect([...EnrollmentSyncFields].sort()).toEqual(
+      [
+        'status',
+        'decidedById',
+        'decidedAt',
+        'groupId',
+        'preferredGroupId',
+        'preferredTimes',
+        'comment',
+        'archivedByStudentAt',
+      ].sort(),
+    )
+  })
+
+  it('names each field once', () => {
+    expect([...new Set(EnrollmentSyncFields)]).toHaveLength(EnrollmentSyncFields.length)
   })
 })
 
@@ -56,6 +93,29 @@ describe('FIELD_OWNER', () => {
     for (const collection of twoWay) {
       expect(isTwoWaySyncCollection(collection)).toBe(true)
     }
+  })
+
+  it('lets the student write the request and the school write the answer', () => {
+    expect([...FIELD_OWNER.enrollments.client].sort()).toEqual(
+      ['status', 'preferredGroupId', 'preferredTimes', 'comment', 'archivedByStudentAt'].sort(),
+    )
+    expect([...FIELD_OWNER.enrollments.server].sort()).toEqual(
+      ['status', 'decidedById', 'decidedAt', 'groupId', 'archivedByStudentAt'].sort(),
+    )
+  })
+
+  it('gives both sides the stamp that hides a finished request', () => {
+    // The student puts it on and takes it off; the server clears it when a new
+    // decision brings the request back. Shared like `status`, never contested.
+    expect(FIELD_OWNER.enrollments.client).toContain('archivedByStudentAt')
+    expect(FIELD_OWNER.enrollments.server).toContain('archivedByStudentAt')
+  })
+
+  it('keeps the school-side archiving off the wire', () => {
+    const both = [...FIELD_OWNER.enrollments.client, ...FIELD_OWNER.enrollments.server]
+
+    expect(both).not.toContain('archivedBySchoolAt')
+    expect(both).not.toContain('archivedBySchoolById')
   })
 
   it('gives the client something to write and the server something to answer', () => {

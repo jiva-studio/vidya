@@ -204,7 +204,9 @@ describe('POST /sync/push: a request for a place on a course', () => {
     // The device is still carrying the row it wrote offline, under a later stamp.
     const [result] = await results([{ ...change, outboxId: 2, hlc: hlc(NOW - 10_000) }])
 
-    expect(result.status).toBe('accepted')
+    // It wrote without knowing the answer, so its copy is the one that gives
+    // way: `alreadyAccepted` is the reason a device does not keep its own.
+    expect((result as protocol.PushRejected).reason).toBe('alreadyAccepted')
 
     const enrollment = await stored(change.docId)
 

@@ -34,6 +34,9 @@ const arrive = async (payload: SyncPayload): Promise<void> => {
     'schools',
     { docId: payload.id as string, hlc, deleted: false, data: payload },
     hlc,
+    // A school row is addressed to its own school scope, the way
+    // `sync/journal/projections.ts` journals it.
+    { kind: 'school', id: payload.id as string },
   )
 }
 

@@ -89,7 +89,7 @@ export function withSyncJournaling(
   const enrollments: IEnrollmentRepository = {
     list: () => base.enrollments.list(),
     getById: (id) => base.enrollments.getById(id),
-    getByCourse: (courseId) => base.enrollments.getByCourse(courseId),
+    getLiveByCourse: (courseId) => base.enrollments.getLiveByCourse(courseId),
 
     request: (input) =>
       runInTransaction(deps.db, async () => {
@@ -98,10 +98,26 @@ export function withSyncJournaling(
         return saved
       }),
 
+    // Withdrawal is a change to the row and not its removal: the server writes
+    // every tombstone itself and refuses a device that sends one.
     withdraw: (id) =>
       runInTransaction(deps.db, async () => {
         const saved = await base.enrollments.withdraw(id)
-        await journal('enrollments', saved.id, 'delete', null)
+        await journal('enrollments', saved.id, 'upsert', { ...saved })
+        return saved
+      }),
+
+    archive: (id) =>
+      runInTransaction(deps.db, async () => {
+        const saved = await base.enrollments.archive(id)
+        await journal('enrollments', saved.id, 'upsert', { ...saved })
+        return saved
+      }),
+
+    unarchive: (id) =>
+      runInTransaction(deps.db, async () => {
+        const saved = await base.enrollments.unarchive(id)
+        await journal('enrollments', saved.id, 'upsert', { ...saved })
         return saved
       }),
   }

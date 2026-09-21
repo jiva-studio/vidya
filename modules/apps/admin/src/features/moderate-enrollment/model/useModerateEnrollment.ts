@@ -1,4 +1,4 @@
-import type { EnrollmentId, EnrollmentStatus } from '@vidya/domain'
+import type { EnrollmentId, EnrollmentStatus, GroupId } from '@vidya/domain'
 import { ref } from 'vue'
 
 import { useEnrollmentApi } from '@/entities/enrollment'
@@ -14,8 +14,12 @@ type Decision = Extract<EnrollmentStatus, 'accepted' | 'declined'>
  * confirmation that names the consequence instead, which is the honest reading
  * of an action that cannot be taken back.
  *
- * `accept` carries the one reversal the server does allow — a revoked place
- * returning to `accepted` — which is why it needs no call of its own.
+ * `accept` carries the one reversal the server does allow — a place the school
+ * took back, or the student handed back, returning to `accepted` — which is
+ * why it needs no call of its own. It also carries the group, because a request
+ * is answered and placed in one move: a decision that left the group for a
+ * second request would put a student on the course before the school had
+ * chosen where.
  */
 export const useModerateEnrollment = () => {
   const api = useEnrollmentApi()
@@ -23,12 +27,16 @@ export const useModerateEnrollment = () => {
   const deciding = ref<EnrollmentId | undefined>(undefined)
   const error = ref<string | undefined>(undefined)
 
-  const decide = async (id: EnrollmentId, status: Decision): Promise<boolean> => {
+  const decide = async (
+    id: EnrollmentId,
+    status: Decision,
+    groupId?: GroupId,
+  ): Promise<boolean> => {
     deciding.value = id
     error.value = undefined
 
     try {
-      await api.moderate(id, { status })
+      await api.moderate(id, groupId ? { status, groupId } : { status })
       return true
     } catch (failure) {
       error.value = reasonOf(failure)
@@ -38,8 +46,14 @@ export const useModerateEnrollment = () => {
     }
   }
 
-  const accept = (id: EnrollmentId) => decide(id, 'accepted')
+  const accept = (id: EnrollmentId, groupId?: GroupId) => decide(id, 'accepted', groupId)
   const decline = (id: EnrollmentId) => decide(id, 'declined')
 
-  return { accept, decline, deciding, error }
+  // A refusal belongs to the decision that earned it, and a screen that opens
+  // again is not the place the last one failed.
+  const forget = () => {
+    error.value = undefined
+  }
+
+  return { accept, decline, deciding, error, forget }
 }

@@ -17,6 +17,7 @@
 export const SyncCollections = [
   'schools',
   'courses',
+  'groups',
   'lessons',
   'lesson_versions',
   'enrollments',
@@ -124,7 +125,16 @@ export const HomeworkSyncFields = [
 
 export type HomeworkSyncField = (typeof HomeworkSyncFields)[number]
 
-export const EnrollmentSyncFields = ['status', 'decidedById', 'decidedAt', 'groupId'] as const
+export const EnrollmentSyncFields = [
+  'status',
+  'decidedById',
+  'decidedAt',
+  'groupId',
+  'preferredGroupId',
+  'preferredTimes',
+  'comment',
+  'archivedByStudentAt',
+] as const
 
 export type EnrollmentSyncField = (typeof EnrollmentSyncFields)[number]
 
@@ -133,7 +143,10 @@ export type EnrollmentSyncField = (typeof EnrollmentSyncFields)[number]
 /* -------------------------------------------------------------------------- */
 
 /**
- * Why the server refused one pushed row.
+ * Why one pushed row is finished without being taken.
+ *
+ * Split by who decides it: a device reason never appears on the wire, and a
+ * new one cannot be added without choosing a side.
  *
  * These live in the domain rather than in `@vidya/protocol` for the same reason
  * lesson content does: a reason is not only a wire value. The device stores it
@@ -144,7 +157,7 @@ export type EnrollmentSyncField = (typeof EnrollmentSyncFields)[number]
  * A refusal is a per-row state, never a failure of the batch: one rejected
  * answer must not hold up the video progress travelling beside it.
  */
-export const SyncRejectionReasons = [
+export const ServerRejectionReasons = [
   /** The collection replicates downward only — the client may not write it. */
   'readOnlyCollection',
 
@@ -167,26 +180,20 @@ export const SyncRejectionReasons = [
   'malformed',
 ] as const
 
+export type ServerRejectionReason = (typeof ServerRejectionReasons)[number]
+
+/** Refusals the device settles on its own, with nothing sent and no answer. */
+export const DeviceRejectionReasons = [
+  /** The scope the row belongs to left the caller's rights before it was sent. */
+  'scopeRevoked',
+] as const
+
+export type DeviceRejectionReason = (typeof DeviceRejectionReasons)[number]
+
+/** Every reason an outbox row can carry, whichever side decided it. */
+export const SyncRejectionReasons = [...ServerRejectionReasons, ...DeviceRejectionReasons] as const
+
 export type SyncRejectionReason = (typeof SyncRejectionReasons)[number]
 
 export const isSyncRejectionReason = (value: string): value is SyncRejectionReason =>
   (SyncRejectionReasons as readonly string[]).includes(value)
-
-/**
- * Whether a refusal leaves the text on the device the student's own.
- *
- * A refused row keeps the work, and keeping it means more than leaving
- * a row in the outbox: until something takes the student's text, the next pull
- * must not paint the server's copy over it. So every reason answers
- * `true` — the row was never accepted, the text was never delivered, and the
- * only copy of it is the one on the phone.
- *
- * `alreadyAccepted` is the one exception, and it is not a matter of taste. It
- * says the work has been reviewed and its text frozen for good: there is no
- * later push that could deliver the edit, and holding the unsent version on top
- * of the server's would show the student an answer nobody will ever grade,
- * differing from the one their teacher is looking at, with nothing on any
- * screen to explain the difference. There the server's copy is the truth.
- */
-export const rejectionKeepsLocalWork = (reason: SyncRejectionReason): boolean =>
-  reason !== 'alreadyAccepted'

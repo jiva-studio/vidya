@@ -1,7 +1,14 @@
 <template>
-  <ImageAndButtonLayout :image="image" :action="actionText" @click="onButtonClicked">
+  <ImageAndButtonLayout
+    :image="image"
+    :action="actionText"
+    :danger-action="dangerActionText"
+    :danger-action-alert="dangerActionAlert"
+    @click="onButtonClicked"
+  >
     <h1>{{ header }}</h1>
     {{ text }}
+    <slot />
   </ImageAndButtonLayout>
 </template>
 
@@ -11,9 +18,10 @@ import type { EnrollmentReviewStatusEmits, EnrollmentReviewStatusProps } from '.
 
 /* --------------------------------- Props ---------------------------------- */
 
-// Cancelling a request is not offered: the API has no route a student may call
-// to withdraw one. Recorded as a deficit rather than faked here.
-defineProps<EnrollmentReviewStatusProps>()
+withDefaults(defineProps<EnrollmentReviewStatusProps>(), {
+  dangerActionText: undefined,
+  dangerActionAlert: undefined,
+})
 
 /* --------------------------------- Events --------------------------------- */
 
@@ -21,7 +29,7 @@ const emit = defineEmits<EnrollmentReviewStatusEmits>()
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onButtonClicked() {
-  emit('click')
+function onButtonClicked(action: 'normal' | 'danger') {
+  emit('click', action)
 }
 </script>
