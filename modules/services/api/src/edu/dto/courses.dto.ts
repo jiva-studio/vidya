@@ -32,6 +32,9 @@ export class CourseSummary implements protocol.CourseSummary {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   id: domain.CourseId
 
+  @ApiProperty({ enum: domain.CourseStatuses, example: 'published' })
+  status: domain.CourseStatus
+
   @ApiProperty({ example: 'Bhakti-shastri' })
   name: string
 

@@ -17,7 +17,7 @@ export type CourseDetails = {
   status: domain.CourseStatus
 }
 
-export type CourseSummary = Pick<CourseDetails, 'id' | 'name' | 'description'>
+export type CourseSummary = Pick<CourseDetails, 'id' | 'name' | 'description' | 'status'>
 
 /* -------------------------------------------------------------------------- */
 /*                                   Create                                   */

@@ -9,7 +9,7 @@ import { project, projectAll } from './project'
 /* -------------------------------------------------------------------------- */
 
 const COURSE = ['id', 'schoolId', 'name', 'description', 'learningType', 'status'] as const
-const COURSE_SUMMARY = ['id', 'name', 'description'] as const
+const COURSE_SUMMARY = ['id', 'name', 'description', 'status'] as const
 
 const GROUP = ['id', 'courseId', 'name', 'description'] as const
 const GROUP_SUMMARY = ['id', 'name', 'status'] as const
