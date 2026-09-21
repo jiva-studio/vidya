@@ -6,7 +6,7 @@ import { computed, ref } from 'vue'
 import { mutedClasses } from '@/shared/ui'
 
 import { useLeaveSchool } from '../model'
-import type { LeaveSchoolPanelProps } from '../types'
+import type { LeaveSchoolPanelProps, LeaveStage } from '../types'
 import { schoolRowClasses } from './styles'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -41,7 +41,8 @@ async function onConfirmed() {
 
 /* -------------------------------- Helpers --------------------------------- */
 
-const NOTICES: Record<string, string | undefined> = {
+const NOTICES: Record<LeaveStage, string | undefined> = {
+  idle: undefined,
   leaving: 'leave-leaving',
   left: 'leave-left',
   owner: 'leave-owner',
