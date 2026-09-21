@@ -35,26 +35,23 @@ const { $t } = useFluent()
 
 const failed = computed(() => props.status === 'failed')
 
-// One word, where three coloured pills used to be: what is happening to the
-// draft, or — while nothing is — whether what is open is what students read.
+// What is happening to the draft, or — while nothing is — what is open.
 const state = computed(() =>
   props.status === 'idle'
     ? $t(props.frozen ? 'editor-state-published' : 'editor-state-draft')
     : $t(`editor-status-${props.status}`),
 )
 
-// Which snapshot is on screen. Saving a published one writes the next number,
-// so the author needs to see the number to know which is which.
+// Saving a published version writes the next number, so the number is shown.
 const versionLabel = computed(() =>
   props.version === undefined ? undefined : $t('editor-version', { version: props.version }),
 )
 
-// The document saves itself, and the word above says so; the button is for
-// whoever wants it now, and it says plainly when there is nothing to send.
-const savable = computed(() => props.dirty || failed.value)
+// `blocked` is content this build cannot author, so the save is refused and
+// the button must not offer it. A frozen version is not blocked: saving forks.
+const savable = computed(() => !props.blocked && (props.dirty || failed.value))
 
-// A frozen version is what students already read; there is nothing to publish
-// until an edit has forked the next draft.
+// Nothing to publish until an edit has forked the next draft.
 const canPublish = computed(() => props.publishable && !props.frozen)
 
 // The path to the lesson. Its name is the heading below, not a crumb as well.

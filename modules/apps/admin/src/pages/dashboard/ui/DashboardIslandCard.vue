@@ -34,16 +34,12 @@ const action = computed(() => $t(`dashboard-${props.island.key}-action`))
 const isQueue = computed(() => props.island.kind === 'queue')
 const waiting = computed(() => props.island.count ?? 0)
 
-// Nothing waiting is still a number, and it is the good news: it is printed
-// quietly so a full queue beside it is the thing the eye lands on.
+// An empty queue is good news, printed quietly so a full one leads.
 const figureClasses = computed(() => (waiting.value > 0 ? countClasses : countQuietClasses))
 
-// A count nobody was allowed to read is not zero, and a card that showed one
-// would tell a reviewer their queue was empty when they simply cannot see it.
+// A count nobody may read is not zero, and must not be shown as one.
 const unreadable = computed(() => isQueue.value && props.island.count === undefined)
 
-// The whole card is the link, so the figure and the words are part of the
-// target rather than a label beside a small one.
 const note = computed(() => (unreadable.value ? $t('dashboard-count-unreadable') : undefined))
 
 /* -------------------------------- Handlers -------------------------------- */

@@ -58,10 +58,18 @@ export type GetEnrollmentsQuery = {
   groupId?: domain.GroupId
   studentId?: domain.UserId
   status?: domain.EnrollmentStatus
+
+  /**
+   * Narrows the answer to one school.
+   *
+   * The list is otherwise scoped only by the caller's grants, which can span
+   * several. `scopedBySchool` intersects the two, so this cannot widen.
+   */
+  schoolId?: domain.SchoolId
 }
 
 /** The caller is the student, so naming one would only let them ask about someone else. */
-export type GetMyEnrollmentsQuery = Omit<GetEnrollmentsQuery, 'studentId' | 'groupId'>
+export type GetMyEnrollmentsQuery = Omit<GetEnrollmentsQuery, 'studentId' | 'groupId' | 'schoolId'>
 
 export type GetEnrollmentsResponse = crud.GetItemsListResponse<EnrollmentSummary>
 export type GetEnrollmentResponse = crud.GetItemResponse<EnrollmentDetails>
@@ -73,10 +81,8 @@ export type GetEnrollmentResponse = crud.GetItemResponse<EnrollmentDetails>
 /**
  * What the school decides about a place.
  *
- * `accepted` and `declined` answer a request; `revoked` takes back a place
- * already given, which is how a school expels a student without ending their
- * membership of the school. The student's own `withdrawn` is not here: it is
- * theirs to make, not the school's.
+ * `revoked` takes back a place already given, without ending the student's
+ * membership of the school. `withdrawn` is absent: it is the student's to make.
  */
 export type ModerateEnrollmentRequest = {
   status: Extract<domain.EnrollmentStatus, 'accepted' | 'declined' | 'revoked'>

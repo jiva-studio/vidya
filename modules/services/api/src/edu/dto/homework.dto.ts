@@ -109,6 +109,11 @@ export class GetHomeworkQuery implements protocol.GetHomeworkQuery {
   @IsOptional()
   @IsIn(domain.HomeworkStatuses)
   status?: domain.HomeworkStatus
+
+  @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  @IsOptional()
+  @IsUUID()
+  schoolId?: domain.SchoolId
 }
 
 export class GetHomeworkListResponse implements protocol.GetHomeworkListResponse {

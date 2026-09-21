@@ -98,9 +98,14 @@ export class EnrollmentsController {
     // Staff see the school's enrollments; everyone else sees only their own, and
     // each side is shown its own list with its own tidying-up taken off it.
     const found = auth.permissions.has(['enrollments:read'])
-      ? await this.enrollments
-          .scopedBy({ permissions: auth.permissions })
-          .findAll({ where: { ...where, studentId: query.studentId, ...visibleToSchool() } })
+      ? await this.enrollments.scopedBy({ permissions: auth.permissions }).findAll({
+          where: {
+            ...where,
+            schoolId: query.schoolId,
+            studentId: query.studentId,
+            ...visibleToSchool(),
+          },
+        })
       : await this.enrollments.findAll({
           where: { ...where, studentId: auth.userId, ...visibleToStudent() },
         })

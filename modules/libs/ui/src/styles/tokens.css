@@ -72,11 +72,9 @@
   --color-primary-border: var(--color-accent-200);
   --color-focus: var(--color-accent-500);
 
-  /* Avatar tints. A person with no picture still needs to be told apart from
-     the person above them, so the initials sit on one of six fixed pairs
-     chosen by a hash of the name — never at random, or the same face changes
-     colour between two renders of the same list. Each pair is a surface and a
-     foreground that passes AA together. */
+  /* Avatar tints. Initials sit on one of six pairs chosen by a hash of the
+     name, never at random: one face keeps one colour. Each pair is a surface
+     and a foreground that pass AA together. */
   --color-avatar-1-surface: #ccfbf1;
   --color-avatar-1-fg: #115e59;
   --color-avatar-2-surface: #dbeafe;

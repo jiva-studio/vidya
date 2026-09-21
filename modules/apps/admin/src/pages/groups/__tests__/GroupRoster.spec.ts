@@ -7,7 +7,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { httpClientKey, resetApi } from '@/shared/api'
 import { addMessages, locale } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
-import { fakeHttpClient, mountWithApp } from '@/shared/testing'
+import { fakeHttpClient, mountWithApp, refusal } from '@/shared/testing'
 
 import { messages } from '../i18n'
 import GroupMembersPage from '../ui/GroupMembersPage.vue'
@@ -129,18 +129,34 @@ describe('the roster of a group', () => {
     })
   })
 
-  it('puts an expelled student back into this very group', async () => {
-    const { transport, page } = await open({
-      [`${ENROLLMENTS}/e1`]: enrollment('e1', 'u1', { status: 'revoked' }),
+  // The decision nulls the group, and the roster is read by group, so a row
+  // that ended is not here to put back. Requests is where those rows are.
+  it('asks for nobody the school list could not name either', async () => {
+    const { transport } = await open({
+      [`${ENROLLMENTS}/e1`]: enrollment('e1', 'u1'),
+      [ENROLLMENTS]: { items: [{ id: 'e1' }] },
+      [USERS]: refusal(403, 'Forbidden'),
+    })
+
+    expect(transport.callsTo(`${USERS}/u1`)).toHaveLength(0)
+  })
+
+  it('says why an expulsion did not happen', async () => {
+    const { page } = await open({
+      [`${ENROLLMENTS}/e1`]: enrollment('e1', 'u1'),
       [ENROLLMENTS]: { items: [{ id: 'e1' }] },
       [USERS]: { items: [{ id: 'u1', name: 'Anna' }] },
+      [`${ENROLLMENTS}/e1/moderation`]: refusal(409, 'Too late'),
     })
 
-    await click(page, 'Put back on the course')
+    await click(page, 'Expel')
+    const confirm = [...document.body.querySelectorAll('button')].find(
+      (button) => button.textContent?.trim() === 'Expel',
+    )
+    confirm?.click()
+    await flushPromises()
 
-    expect(transport.callsTo(`${ENROLLMENTS}/e1/moderation`)[0]).toMatchObject({
-      body: { status: 'accepted', groupId: GROUP },
-    })
+    expect(page.find('[role="alert"]').exists()).toBe(true)
   })
 
   it('offers no levers to somebody who may not moderate', async () => {

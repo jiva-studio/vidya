@@ -45,7 +45,7 @@ const editor = useLessonContentEditor()
 const draft = useDraftSaving(props.lessonId)
 const publishing = useLessonPublishing(props.lessonId)
 const autosave = useAutosave(send)
-const fork = useDraftFork(publishing.openRevision, versionDoc.open)
+const fork = useDraftFork(publishing.openRevision, (id) => versionDoc.open(id, true))
 
 const publishable = useCan('lessons:publish')
 const publishOpen = ref(false)
@@ -75,9 +75,7 @@ onMounted(() => {
 
 /* -------------------------------- Handlers -------------------------------- */
 
-// The first edit to a published version starts the next one. The edit is kept
-// on screen whatever the fork does: it exists nowhere else, and taking it away
-// to report a failed request would be the most expensive message in the admin.
+// The edit stays on screen whatever the fork does: it exists nowhere else.
 async function onContent(content: LessonContent) {
   editor.set(content)
 
@@ -107,8 +105,9 @@ function onRetry() {
   void versionDoc.open()
 }
 
-function onSaveRetry() {
-  void autosave.retry()
+async function onSaveRetry() {
+  if (frozen.value) return onSave()
+  await autosave.retry()
 }
 
 function onPublish() {
@@ -127,8 +126,14 @@ function onPublishOpen(open: boolean) {
   publishOpen.value = open
 }
 
-function onSave() {
-  void autosave.flush()
+// Saving a document still on the frozen version means forking first.
+async function onSave() {
+  if (frozen.value) {
+    if (!(await fork.start())) return
+    queue()
+  }
+
+  await autosave.flush()
 }
 
 // Publishing freezes what the server holds, so anything still on screen has to
@@ -200,7 +205,12 @@ function reveal(id: BlockId) {
       :retry-label="$t('editor-retry')"
       @retry="onRetry"
     />
-    <LessonDocument v-else :content="editor.content.value" @update:content="onContent" />
+    <LessonDocument
+      v-else
+      :content="editor.content.value"
+      :frozen="blocked"
+      @update:content="onContent"
+    />
     <PublishDialog
       :open="publishOpen"
       :version="versionDoc.version.value?.version ?? 0"

@@ -3,7 +3,7 @@ import type { EnrollmentStatus } from '@vidya/domain'
 import { AlertDialog, Avatar, Badge, IconButton, TableCell, TableRow } from '@vidya/ui'
 import type { BadgeTone } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { RotateCcw, UserMinus, Users } from 'lucide-vue-next'
+import { UserMinus, Users } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import { formatDate } from '@/shared/lib'
@@ -35,10 +35,6 @@ const tones: Record<EnrollmentStatus, BadgeTone> = {
   withdrawn: 'info',
 }
 
-// Only a place that was given can be taken back, and only one that was taken
-// back can be put there again; a refusal is neither.
-const RETURNABLE: EnrollmentStatus[] = ['revoked', 'withdrawn']
-
 const revoking = ref(false)
 
 const name = computed(() => nameText())
@@ -46,10 +42,11 @@ const tone = computed<BadgeTone>(() => tones[props.row.status])
 const status = computed(() => `group-members-status-${props.row.status}`)
 const since = computed(() => formatDate(props.row.enrolledAt))
 
+// A place that ended has no group, and the roster is read by group, so every
+// row here is a live one. Putting a student back is offered on Requests.
 const isAccepted = computed(() => props.row.status === 'accepted')
 const canRevoke = computed(() => props.canModerate && isAccepted.value)
 const canMove = computed(() => props.canModerate && isAccepted.value)
-const canRestore = computed(() => props.canModerate && RETURNABLE.includes(props.row.status))
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -60,10 +57,6 @@ function onRevokeAsked() {
 function onRevokeConfirmed() {
   revoking.value = false
   emit('revoke', props.row.enrollmentId)
-}
-
-function onRestore() {
-  emit('restore', props.row.enrollmentId)
 }
 
 function onMove() {
@@ -95,14 +88,6 @@ function nameText(): string {
     <TableCell actions>
       <IconButton v-if="canMove" :label="$t('group-members-move')" @click="onMove">
         <Users />
-      </IconButton>
-      <IconButton
-        v-if="canRestore"
-        :label="$t('group-members-restore')"
-        :busy="props.busy"
-        @click="onRestore"
-      >
-        <RotateCcw />
       </IconButton>
       <IconButton
         v-if="canRevoke"

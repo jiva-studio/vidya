@@ -117,12 +117,16 @@ describe('group requests', () => {
 
     expect(fake.calls).toHaveLength(1)
     expect(fake.calls[0]).toMatchObject({ method: 'GET', path: USERS, query: { schoolId: SCHOOL } })
-    expect(names.get(asId('u1'))).toBe('Anna')
+    expect(names.names.get(asId('u1'))).toBe('Anna')
+    expect(names.refused).toBe(false)
   })
 
   it('leaves the roster nameless rather than failing when names may not be read', async () => {
     const fake = fakeHttpClient({ [USERS]: new Error('forbidden') })
 
-    await expect(getSchoolUserNames(fake.client, SCHOOL)).resolves.toEqual(new Map())
+    await expect(getSchoolUserNames(fake.client, SCHOOL)).resolves.toEqual({
+      names: new Map(),
+      refused: true,
+    })
   })
 })

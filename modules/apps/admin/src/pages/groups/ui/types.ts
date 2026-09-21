@@ -7,6 +7,8 @@ export type GroupListRow = GroupSummary & { courseName?: string }
 
 export interface GroupsTableProps {
   rows: GroupListRow[]
+  emptyTitle?: string
+  emptyDescription?: string
   loading?: boolean
   error?: string
   canCreate?: boolean
@@ -58,7 +60,6 @@ export interface GroupMembersProps {
 export interface GroupMembersEmits {
   retry: []
   revoke: [enrollmentId: string]
-  restore: [enrollmentId: string]
   move: [enrollmentId: string]
 }
 
@@ -70,6 +71,5 @@ export interface GroupMemberRowProps {
 
 export interface GroupMemberRowEmits {
   revoke: [enrollmentId: string]
-  restore: [enrollmentId: string]
   move: [enrollmentId: string]
 }

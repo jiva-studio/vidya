@@ -13,6 +13,8 @@ groups-open-members = Состав
 groups-edit = Изменить
 groups-empty-title = Групп пока нет
 groups-empty-body = Создайте группу, а затем принимайте в неё студентов по заявкам.
+groups-no-matches-title = Ничего не нашли
+groups-no-matches-body = Попробуйте другой курс или очистите фильтры.
 groups-empty-action = Создать группу
 groups-load-failed = Не удалось загрузить группы.
 
@@ -40,7 +42,6 @@ group-members-move = Перевести в другую группу
 group-members-revoke = Отчислить
 group-members-revoke-title = Отчислить студента с курса?
 group-members-revoke-consequence = Место и доступ к курсу пропадут на устройстве студента. Вернуть можно кнопкой «Вернуть на курс».
-group-members-restore = Вернуть на курс
 group-members-status-pending = Ждёт решения
 group-members-status-accepted = Принят
 group-members-status-declined = Отклонён

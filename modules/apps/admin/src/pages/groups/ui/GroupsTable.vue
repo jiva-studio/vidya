@@ -10,6 +10,8 @@ import type { GroupListRow, GroupsTableEmits, GroupsTableProps } from './types'
 /* --------------------------------- Props ---------------------------------- */
 
 const props = withDefaults(defineProps<GroupsTableProps>(), {
+  emptyTitle: undefined,
+  emptyDescription: undefined,
   loading: false,
   error: undefined,
   canCreate: false,
@@ -63,8 +65,8 @@ function asGroup(row: unknown): GroupListRow {
     :rows="props.rows"
     :loading="props.loading"
     :error="props.error"
-    :empty-title="$t('groups-empty-title')"
-    :empty-description="$t('groups-empty-body')"
+    :empty-title="props.emptyTitle ?? $t('groups-empty-title')"
+    :empty-description="props.emptyDescription ?? $t('groups-empty-body')"
     :empty-action-label="emptyAction"
     :retry-label="$t('action-retry')"
     @retry="onRetry"

@@ -10,14 +10,14 @@ import { useEnrollments, useStudentNames } from '@/entities/enrollment'
 import { useUserApi } from '@/entities/user'
 import { useArchiveEnrollment } from '@/features/archive-enrollment'
 import { GroupAssignDialog, useGroupAssignment } from '@/features/assign-group'
-import { useModerateEnrollment } from '@/features/moderate-enrollment'
+import { decidePlacement, useModerateEnrollment } from '@/features/moderate-enrollment'
 import { EnrollmentReviewDialog } from '@/features/review-enrollment'
 import { useDirectory } from '@/features/school-directory'
 import { useCan } from '@/shared/access'
 
 import EnrollmentsFilters from './EnrollmentsFilters.vue'
 import EnrollmentsTableRow from './EnrollmentsTableRow.vue'
-import { sectionClasses } from './styles'
+import { refusalClasses, sectionClasses } from './styles'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -31,6 +31,9 @@ const assignment = useGroupAssignment()
 const archiving = useArchiveEnrollment()
 
 const canModerate = useCan('enrollments:moderate')
+
+// The dialog shows its own refusal; a decision taken from a row has this line.
+const rowRefusal = computed(() => (reviewing.value ? undefined : moderation.error.value))
 const placing = ref<EnrollmentRow | undefined>(undefined)
 const reviewing = ref<EnrollmentRow | undefined>(undefined)
 
@@ -59,20 +62,35 @@ function onRetry() {
   void enrollments.load()
 }
 
-// Accepting from the row honours what the student asked for: a decision that
-// dropped the wish would put them on the course in no group at all, and the
-// school would never know a group had been named. A group that has since gone
-// is not passed on — the review dialog is where a new one is chosen.
+// Anything the row cannot explain — a closed group, or one from another
+// course — opens the dialog that can, rather than being decided silently.
 async function onAccept(id: EnrollmentId) {
   const row = enrollments.rows.value.find((candidate) => candidate.id === id)
-  if (await moderation.accept(id, stillThere(row?.preferredGroupId))) await enrollments.load()
+  if (!row) return
+
+  moderation.forget()
+  const placement = decidePlacement({
+    courseId: row.courseId,
+    preferredGroupId: row.preferredGroupId,
+    groups: directory.groupsById.value,
+    groupsUnreadable: directory.groupsUnreadable.value,
+  })
+
+  if (placement.kind === 'review') {
+    reviewing.value = row
+    return
+  }
+
+  if (await moderation.accept(id, placement.groupId)) await enrollments.load()
 }
 
 async function onRevoke(id: EnrollmentId) {
+  moderation.forget()
   if (await moderation.revoke(id)) await enrollments.load()
 }
 
 async function onDecline(id: EnrollmentId) {
+  moderation.forget()
   if (await moderation.decline(id)) await enrollments.load()
 }
 
@@ -123,11 +141,6 @@ async function onUndo(id: string) {
 }
 
 /* -------------------------------- Helpers --------------------------------- */
-
-function stillThere(groupId: GroupId | undefined): GroupId | undefined {
-  if (!groupId) return undefined
-  return directory.groupNames.value.has(groupId) ? groupId : undefined
-}
 
 function asEnrollment(row: TableRowData): EnrollmentRow {
   return row as EnrollmentRow
@@ -182,6 +195,7 @@ function refusalFor(row: TableRowData): string | undefined {
         />
       </template>
     </Table>
+    <p v-if="rowRefusal" :class="refusalClasses" role="alert">{{ $t(rowRefusal) }}</p>
     <EnrollmentReviewDialog
       :open="!!reviewing"
       :enrollment="reviewing"

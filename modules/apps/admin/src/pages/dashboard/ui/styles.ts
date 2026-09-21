@@ -8,20 +8,14 @@ export const titleClasses = [
   'text-[var(--color-text)]',
 ]
 
-/**
- * The islands.
- *
- * `auto-fill` rather than a fixed column count: the page has between one and
- * five of these depending on what the role grants, and a three-column grid
- * holding one card leaves a card and a hole.
- */
+// `auto-fill` rather than a fixed count: the page holds one to five of these
+// depending on the role, and a fixed grid leaves holes.
 export const gridClasses = [
   'grid gap-[var(--space-4)]',
   'grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]',
 ]
 
-// The whole card is the control, so the figure and the words are inside the
-// target rather than labels beside a small link at the bottom.
+// The whole card is the control, not a link at the bottom of one.
 export const cardClasses = [
   'flex flex-col justify-between gap-[var(--space-4)] text-start',
   'rounded-[var(--radius-lg)] border border-[var(--color-border)]',

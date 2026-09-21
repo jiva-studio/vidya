@@ -23,9 +23,7 @@ export const avatarVariants = cva(
 /**
  * The tint pairs, spelled out one class at a time.
  *
- * Tailwind scans source text, so a class assembled from a number at runtime is
- * a class it never emits. The index into this array is what varies; the strings
- * themselves are literals it can find.
+ * Tailwind scans source text, so a class assembled at runtime is never emitted.
  */
 export const tintClasses = [
   'bg-[var(--color-avatar-1-surface)] text-[var(--color-avatar-1-fg)]',

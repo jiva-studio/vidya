@@ -1,10 +1,8 @@
 /**
  * The "no narrowing" row of a filter select.
  *
- * A placeholder alone cannot be chosen, so a select that starts narrowed has no
- * way back to the whole list. The row needs a value of its own, and it cannot
- * be the empty string: the select refuses one. This sentinel is never an
- * identifier, so it cannot collide with a course or a group.
+ * A placeholder cannot be chosen, so the row needs a value, and it cannot be
+ * the empty string: the select refuses one. Never a valid identifier.
  */
 export const ANY = '*'
 

@@ -13,6 +13,8 @@ groups-open-members = Members
 groups-edit = Edit
 groups-empty-title = No groups yet
 groups-empty-body = Create a group, then accept students into it from requests.
+groups-no-matches-title = Nothing matches that
+groups-no-matches-body = Try another course, or clear the filters.
 groups-empty-action = Create a group
 groups-load-failed = The groups could not be loaded.
 
@@ -40,7 +42,6 @@ group-members-move = Move to another group
 group-members-revoke = Expel
 group-members-revoke-title = Take this place back?
 group-members-revoke-consequence = The place and the course go from the student’s device. "Put back on the course" returns both.
-group-members-restore = Put back on the course
 group-members-status-pending = Awaiting a decision
 group-members-status-accepted = Accepted
 group-members-status-declined = Declined

@@ -17,3 +17,6 @@ export const secondaryLineClasses = [
 export const refusalLineClasses = [
   'text-[length:var(--text-xs)] text-[var(--color-text-danger)] text-right',
 ]
+
+// A refusal of a decision taken from a row, which has no dialog to land in.
+export const refusalClasses = ['text-[length:var(--text-sm)]', 'text-[var(--color-danger-fg)]']

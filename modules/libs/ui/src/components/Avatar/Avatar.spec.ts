@@ -21,11 +21,21 @@ describe('avatarTint', () => {
     expect(avatarTint('Radha Devi')).toBe(avatarTint('Radha Devi'))
   })
 
-  it('does not put every name on the same colour', () => {
-    const names = Array.from({ length: 40 }, (_, index) => `Person ${index}`)
-    const used = new Set(names.map(avatarTint))
+  it('reaches every tint the tokens define', () => {
+    const names = Array.from({ length: 200 }, (_, index) => `Person ${index}`)
 
-    expect(used.size).toBeGreaterThan(1)
+    expect(new Set(names.map(avatarTint)).size).toBe(AVATAR_TINTS)
+  })
+
+  // Russian women's names nearly all end in one of two letters, and a hash
+  // whose multiplier shares a factor with the palette lets the last character
+  // decide the colour on its own: a roster of them came out in two of six.
+  it('does not let the last letter decide the colour', () => {
+    for (const ending of ['а', 'я', 'в', 'о', 'и', 'н']) {
+      const names = Array.from({ length: 200 }, (_, index) => `Имя${index}${ending}`)
+
+      expect(new Set(names.map(avatarTint)).size, `names ending in ${ending}`).toBe(AVATAR_TINTS)
+    }
   })
 })
 

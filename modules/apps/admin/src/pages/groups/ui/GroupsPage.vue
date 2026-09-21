@@ -51,6 +51,14 @@ const displayedItems = computed(() => {
 
 const filtersApplied = computed(() => !!search.value || !!groups.courseId.value)
 
+// A list narrowed to nothing is not a school without groups.
+const emptyTitle = computed(() =>
+  filtersApplied.value ? $t('groups-no-matches-title') : $t('groups-empty-title'),
+)
+const emptyDescription = computed(() =>
+  filtersApplied.value ? $t('groups-no-matches-body') : $t('groups-empty-body'),
+)
+
 /* -------------------------------- Handlers -------------------------------- */
 
 function onCreate() {
@@ -112,6 +120,8 @@ function matches(group: GroupListRow, query: string): boolean {
     </TableFilters>
     <GroupsTable
       :rows="displayedItems"
+      :empty-title="emptyTitle"
+      :empty-description="emptyDescription"
       :loading="groups.loading.value"
       :error="groups.error.value ? $t('state-error') : undefined"
       :can-create="canCreate"

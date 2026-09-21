@@ -31,6 +31,18 @@ export const getEnrollment = (http: HttpClient, id: EnrollmentId): Promise<GetEn
   http.get<GetEnrollmentResponse>(Routes().edu.enrollments.get(id))
 
 /**
+ * Names for the roster, and whether the list could be read at all.
+ *
+ * `refused` separates "may not read people" from "the school lists nobody",
+ * which are the same empty map: the per-user route is gated on the same
+ * `users:read`, so following up on an unnamed student is pointless after one.
+ */
+export interface SchoolUserNames {
+  names: Map<UserId, string>
+  refused: boolean
+}
+
+/**
  * Names for the students on the roster, in one request rather than one per row.
  *
  * Reading the user list needs `users:read`, which a teacher may not have, so a
@@ -39,24 +51,22 @@ export const getEnrollment = (http: HttpClient, id: EnrollmentId): Promise<GetEn
 export const getSchoolUserNames = async (
   http: HttpClient,
   schoolId: SchoolId,
-): Promise<Map<UserId, string>> => {
+): Promise<SchoolUserNames> => {
   try {
     const response = await http.get<GetUsersResponse>(Routes().edu.user().find(), { schoolId })
-    return new Map(response.items.map((user) => [user.id, user.name]))
+    return { names: new Map(response.items.map((user) => [user.id, user.name])), refused: false }
     // Refused or unreachable: the roster still lists who is in the group.
   } catch {
-    return new Map()
+    return { names: new Map(), refused: true }
   }
 }
 
 /**
- * The name of one student, for a roster the school list could not name.
+ * The name of one student the school list does not carry.
  *
- * `GET /edu/users` lists the people who hold a role in the school, and an
- * accepted student need hold none — enrolment is a place on a course, not a
- * role. Those are the rows that used to print an identifier. Quiet, because
- * `users:read` is a right a teacher may not have and a refusal here is not the
- * screen's failure.
+ * `GET /edu/users` lists whoever holds a role, and an accepted student need
+ * hold none: a place on a course is not a role. Quiet, because a refusal here
+ * is not the screen's failure.
  */
 export const getUserName = async (http: HttpClient, id: UserId): Promise<string | undefined> => {
   try {

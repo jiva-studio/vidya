@@ -173,12 +173,32 @@ describe('saving', () => {
     })
 
     // Saving strips what this build did not model, and the stripped block is
-    // one a student has already answered against.
-    await addSection(wrapper)
+    // one a student has already answered against. So the document is not
+    // offered for editing at all, rather than editable and quietly unsaved.
+    const names = [...wrapper.element.querySelectorAll('button')].map(accessibleName)
+    expect(names).not.toContain('Add section')
+
     await saveDraft()
 
     expect(http.calls.filter((call) => call.method === 'PATCH')).toHaveLength(0)
     expect(plain(wrapper.text())).toContain('This lesson cannot be saved')
+  })
+
+  it('offers no save for a lesson it cannot author, rather than a button that does nothing', async () => {
+    const withUnknown = details('v1', 1, 'draft')
+    withUnknown.content.sections[0].blocks.push({
+      id: 'b2',
+      type: 'diagram',
+    } as unknown as LessonContent['sections'][number]['blocks'][number])
+
+    const { wrapper } = await openEditor({
+      ...draftAnswers(),
+      [`GET ${VERSIONS}/v1`]: withUnknown,
+    })
+
+    const save = wrapper.findAll('button').find((node) => plain(node.text()) === 'Save')
+
+    expect(save?.attributes('disabled')).toBeDefined()
   })
 })
 

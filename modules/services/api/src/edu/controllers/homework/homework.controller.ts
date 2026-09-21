@@ -88,9 +88,13 @@ export class HomeworkController {
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetHomeworkListResponse> {
     if (auth.permissions.has(['homework:read'])) {
-      const found = await this.homework
-        .scopedBy({ permissions: auth.permissions })
-        .findAll({ where: { enrollmentId: query.enrollmentId, status: query.status } })
+      const found = await this.homework.scopedBy({ permissions: auth.permissions }).findAll({
+        where: {
+          enrollmentId: query.enrollmentId,
+          status: query.status,
+          schoolId: query.schoolId,
+        },
+      })
 
       return { items: toHomeworkSummaries(found) }
     }

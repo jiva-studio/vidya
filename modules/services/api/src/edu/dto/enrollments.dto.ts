@@ -129,6 +129,11 @@ export class GetEnrollmentsQuery implements protocol.GetEnrollmentsQuery {
   @IsOptional()
   @IsEnum(domain.EnrollmentStatuses)
   status?: domain.EnrollmentStatus
+
+  @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  @IsOptional()
+  @IsUUID()
+  schoolId?: domain.SchoolId
 }
 
 export class GetMyEnrollmentsQuery implements protocol.GetMyEnrollmentsQuery {

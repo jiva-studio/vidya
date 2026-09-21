@@ -13,7 +13,7 @@ import { useModerateEnrollment } from '@/features/moderate-enrollment'
 import { useCan } from '@/shared/access'
 
 import GroupMembers from './GroupMembers.vue'
-import { pageClasses } from './styles'
+import { pageClasses, refusalClasses } from './styles'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -49,13 +49,8 @@ function onRetry() {
 }
 
 async function onRevoke(enrollmentId: string) {
+  moderation.forget()
   if (await moderation.revoke(asId<EnrollmentId>(enrollmentId))) await roster.reload()
-}
-
-async function onRestore(enrollmentId: string) {
-  // Back onto the course, and back into this group: the roster is the one
-  // screen where the group the place belongs to is never in doubt.
-  if (await moderation.accept(asId<EnrollmentId>(enrollmentId), groupId)) await roster.reload()
 }
 
 function onMove(enrollmentId: string) {
@@ -99,9 +94,11 @@ async function onUndo(id: string) {
       :busy="moderation.deciding.value"
       @retry="onRetry"
       @revoke="onRevoke"
-      @restore="onRestore"
       @move="onMove"
     />
+    <p v-if="moderation.error.value" :class="refusalClasses" role="alert">
+      {{ $t(moderation.error.value) }}
+    </p>
     <GroupAssignDialog
       :open="!!moving"
       :course-id="moving?.courseId"

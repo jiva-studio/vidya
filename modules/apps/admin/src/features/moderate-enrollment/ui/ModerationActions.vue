@@ -115,6 +115,7 @@ function onReview() {
     <IconButton
       v-if="canRevoke"
       variant="danger"
+      :busy="props.busy"
       :label="$t('enrollments-revoke')"
       @click="onRevokeAsked"
     >

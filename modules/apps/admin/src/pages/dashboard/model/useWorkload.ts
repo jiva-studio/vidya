@@ -1,3 +1,4 @@
+import type { SchoolId } from '@vidya/domain'
 import { ref, watch } from 'vue'
 
 import { useEnrollmentApi } from '@/entities/enrollment'
@@ -9,28 +10,24 @@ import type { Workload } from './types'
 /**
  * How much is waiting in each queue the home screen offers.
  *
- * Counted from the lists themselves: neither endpoint answers a count, and a
- * pair of list requests is cheaper than the endpoint nobody has written. The
- * requests are made side by side and one refusal does not take the other down
- * — a reviewer who may read homework but not requests still gets their number,
- * and the card whose count is missing says so rather than showing a zero.
- *
- * Requests are narrowed to the current school here, as the list screen does:
- * the endpoint answers for every school the token grants.
+ * Counted from the lists themselves: neither endpoint answers a count. Each is
+ * narrowed to the school on screen, because both answer for every school the
+ * token grants. One refusal does not take the other down, so a reviewer who
+ * may read homework but not requests still gets their figure.
  */
 export const useWorkload = () => {
   const enrollments = useEnrollmentApi()
   const homework = useHomeworkApi()
-  const { generation } = useCurrentSchool()
+  const { schoolId, generation } = useCurrentSchool()
 
   const counts = ref<Workload>({})
   const loading = ref(false)
 
   let ticket = 0
 
-  const countWaitingRequests = async (): Promise<number | undefined> => {
+  const countWaitingRequests = async (school: SchoolId): Promise<number | undefined> => {
     try {
-      const { items } = await enrollments.list({ status: 'pending' })
+      const { items } = await enrollments.list({ status: 'pending', schoolId: school })
       return items.length
     } catch {
       // Unreadable is not none; the card leaves its figure out.
@@ -38,9 +35,9 @@ export const useWorkload = () => {
     }
   }
 
-  const countWaitingHomework = async (): Promise<number | undefined> => {
+  const countWaitingHomework = async (school: SchoolId): Promise<number | undefined> => {
     try {
-      const { items } = await homework.list({ status: 'pending' })
+      const { items } = await homework.list({ status: 'pending', schoolId: school })
       return items.length
     } catch {
       return undefined
@@ -49,11 +46,19 @@ export const useWorkload = () => {
 
   const load = async (): Promise<void> => {
     const mine = ++ticket
+    const school = schoolId.value
     loading.value = true
 
+    // A count over every school the token grants is not this school's workload.
+    if (!school) {
+      counts.value = {}
+      loading.value = false
+      return
+    }
+
     const [waitingRequests, waitingHomework] = await Promise.all([
-      countWaitingRequests(),
-      countWaitingHomework(),
+      countWaitingRequests(school),
+      countWaitingHomework(school),
     ])
 
     if (mine !== ticket) return

@@ -43,10 +43,6 @@ function onRevoke(enrollmentId: string) {
   emit('revoke', enrollmentId)
 }
 
-function onRestore(enrollmentId: string) {
-  emit('restore', enrollmentId)
-}
-
 function onMove(enrollmentId: string) {
   emit('move', enrollmentId)
 }
@@ -76,7 +72,6 @@ function asMember(row: unknown): GroupMember {
         :can-moderate="props.canModerate"
         :busy="props.busy === asMember(row).enrollmentId"
         @revoke="onRevoke"
-        @restore="onRestore"
         @move="onMove"
       />
     </template>
