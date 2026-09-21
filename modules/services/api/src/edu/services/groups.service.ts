@@ -8,10 +8,7 @@ import { scopedBySchool } from './scoped-by-school'
 
 @Injectable()
 export class GroupsService extends ScopedEntitiesService<Group, Scope> {
-  constructor(
-    @InjectRepository(Group) repository: Repository<Group>,
-    @InjectRepository(Enrollment) private readonly enrollments: Repository<Enrollment>,
-  ) {
+  constructor(@InjectRepository(Group) repository: Repository<Group>) {
     super(repository, scopedBySchool<Group>('groups:read'))
   }
 
@@ -22,19 +19,25 @@ export class GroupsService extends ScopedEntitiesService<Group, Scope> {
    * left to a cascade: the journal is written by an entity subscriber, so a
    * cascade would clear the column inside the database and no device would ever
    * be told the group it asked for had gone.
+   *
+   * Nothing in the database ties the two halves together, so the transaction
+   * does: a group that survives its removal must leave every wish for it, and
+   * every journal row about one, exactly where they were.
    */
   async deleteOneBy(query: FindOptionsWhere<Group>): Promise<void> {
     const group = await this.repository.findOneBy(query)
 
     if (!group) return
 
-    const asked = await this.enrollments.findBy({ preferredGroupId: group.id })
+    await this.repository.manager.transaction(async (manager) => {
+      const asked = await manager.findBy(Enrollment, { preferredGroupId: group.id })
 
-    for (const request of asked) {
-      request.preferredGroupId = null
-      await this.enrollments.save(request)
-    }
+      for (const request of asked) {
+        request.preferredGroupId = null
+        await manager.save(request)
+      }
 
-    await this.repository.remove(group)
+      await manager.remove(group)
+    })
   }
 }

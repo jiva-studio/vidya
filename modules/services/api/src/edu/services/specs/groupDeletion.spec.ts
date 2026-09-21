@@ -1,11 +1,16 @@
 import { INestApplication } from '@nestjs/common'
 import { GroupsService } from '@vidya/api/edu/services'
 import { createTestingApp } from '@vidya/api/edu/shared'
+import { testDatabase } from '@vidya/api/shared/datasources'
 import * as domain from '@vidya/domain'
 import { Group } from '@vidya/entities'
-import { DataSource } from 'typeorm'
+import { DataSource, EntityManager } from 'typeorm'
 
 import { createEnrollmentWorld, EnrollmentWorld, placeFor, reload } from './enrollmentWorld'
+
+// pg-mem keeps what a rolled-back transaction wrote, so only the real database
+// can tell a rollback from a write that never happened.
+const itOnPostgres = testDatabase() === 'postgres' ? it : it.skip
 
 /**
  * Deleting a group has to walk over the requests that asked for it.
@@ -67,5 +72,29 @@ describe('deleting a group', () => {
     await app.get(GroupsService).deleteOneBy({ id: domain.asId<domain.GroupId>(world.groupId) })
 
     expect((await reload(app, asked.id)).preferredGroupId).toBe(other.id)
+  })
+
+  itOnPostgres('keeps the wishes when the group itself cannot go', async () => {
+    const asked = await placeFor(app, world, 'pending', { preferredGroupId: world.groupId })
+
+    const before = (await enrollmentJournalRows()).length
+
+    const removeSpy = jest.spyOn(EntityManager.prototype, 'remove').mockImplementationOnce(() => {
+      throw new Error('simulated failure')
+    })
+
+    try {
+      await expect(
+        app.get(GroupsService).deleteOneBy({ id: domain.asId<domain.GroupId>(world.groupId) }),
+      ).rejects.toThrow('simulated failure')
+    } finally {
+      removeSpy.mockRestore()
+    }
+
+    expect((await reload(app, asked.id)).preferredGroupId).toBe(world.groupId)
+    expect((await enrollmentJournalRows()).slice(before)).toHaveLength(0)
+    expect(
+      await app.get(DataSource).getRepository(Group).findOneBy({ id: world.groupId }),
+    ).not.toBeNull()
   })
 })
