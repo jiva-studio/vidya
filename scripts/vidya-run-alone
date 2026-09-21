@@ -6,6 +6,12 @@ set -euo pipefail
 # turn rather than refusing, so a caller needs no retry logic of its own — the
 # command simply takes longer and then runs.
 #
+# The turn is a `flock` where one is available: the kernel releases it when the
+# holder dies, so a run killed outright — which is how a stuck one ends — leaves
+# nothing to clean up and nobody waiting on a turn that will never end. Systems
+# without `flock(1)` fall back to a lock directory whose holder pid is checked
+# for liveness, which reclaims the same case a beat later.
+#
 # Every worktree shares one machine and nothing in a checkout reports what
 # another checkout is doing, so the turn is taken in the common git directory —
 # `git rev-parse --git-common-dir` resolves to the same path from every
@@ -102,22 +108,42 @@ take_turn() {
 waited=0
 announced=-1
 
-while ! take_turn; do
-  if [ "$waited" -ge "$WAIT_SECONDS" ]; then
-    echo "Gave up after ${waited}s: $(holder_line) still holds the machine." >&2
-    echo "Ask whoever owns that run, or set VIDYA_WAIT_SECONDS higher." >&2
-    exit 1
+if command -v flock >/dev/null 2>&1; then
+  # The wait happens in the kernel: no polling, and no turn outlives its holder.
+  exec 9>"$LOCK.flock"
+
+  if ! flock -n 9; then
+    echo "Waiting for the machine: $(holder_line)." >&2
+    note "waiting" "behind $(holder_line)"
+
+    if ! flock -w "$WAIT_SECONDS" 9; then
+      echo "Gave up after ${WAIT_SECONDS}s: $(holder_line) still holds the machine." >&2
+      echo "Ask whoever owns that run, or set VIDYA_WAIT_SECONDS higher." >&2
+      exit 1
+    fi
   fi
 
-  if [ "$announced" -lt 0 ] || [ $((waited - announced)) -ge "$ANNOUNCE_EVERY" ]; then
-    echo "Waiting for the machine: $(holder_line). ${waited}s so far." >&2
-    [ "$announced" -lt 0 ] && note "waiting" "behind $(holder_line)"
-    announced="$waited"
-  fi
+  rm -rf "$LOCK"
+  mkdir -p "$LOCK"
+  printf '%s\n%s\n%s\n' "$$" "$LABEL" "$PWD" >"$LOCK/holder"
+else
+  while ! take_turn; do
+    if [ "$waited" -ge "$WAIT_SECONDS" ]; then
+      echo "Gave up after ${waited}s: $(holder_line) still holds the machine." >&2
+      echo "Ask whoever owns that run, or set VIDYA_WAIT_SECONDS higher." >&2
+      exit 1
+    fi
 
-  sleep "$POLL_SECONDS"
-  waited=$((waited + POLL_SECONDS))
-done
+    if [ "$announced" -lt 0 ] || [ $((waited - announced)) -ge "$ANNOUNCE_EVERY" ]; then
+      echo "Waiting for the machine: $(holder_line). ${waited}s so far." >&2
+      [ "$announced" -lt 0 ] && note "waiting" "behind $(holder_line)"
+      announced="$waited"
+    fi
+
+    sleep "$POLL_SECONDS"
+    waited=$((waited + POLL_SECONDS))
+  done
+fi
 
 started="$(date +%s)"
 note "took the machine" "$PWD${waited:+ (waited ${waited}s)}"
