@@ -5,6 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
 import { addMessages } from '@/shared/i18n'
+import { PAGE_SIZE } from '@/shared/lib'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, pending, refusal } from '@/shared/testing'
@@ -72,7 +73,7 @@ describe('RolesPage', () => {
     expect(transport.calls[0]).toEqual({
       method: 'GET',
       path: ROLES,
-      query: { schoolId: 'school-1' },
+      query: { schoolId: 'school-1', limit: PAGE_SIZE, offset: 0 },
     })
     expect(page.text()).toContain('Teacher')
     expect(page.text()).toContain('Runs a group')
