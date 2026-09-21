@@ -38,7 +38,7 @@ install:
 # ---------------------------------------------------------------------------
 
 check:
-	$(NPM) run check
+	./scripts/vidya-exclusive-run "the full gate" $(NPM) run check
 
 check-package:
 	./scripts/vidya-workspace-check $(PKG)
@@ -100,10 +100,10 @@ coverage-package:
 # ---------------------------------------------------------------------------
 
 mutate-diff:
-	./scripts/vidya-mutation-suite-run diff $(PKG)
+	./scripts/vidya-exclusive-run "mutation testing" ./scripts/vidya-mutation-suite-run diff $(PKG)
 
 mutate-full:
-	./scripts/vidya-mutation-suite-run full $(PKG)
+	./scripts/vidya-exclusive-run "mutation testing" ./scripts/vidya-mutation-suite-run full $(PKG)
 
 # ---------------------------------------------------------------------------
 # API service

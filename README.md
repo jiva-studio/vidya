@@ -121,7 +121,7 @@ make mutate-full PKG=@vidya/api   # the whole package — hours; run it locally
 Both run incrementally against the baseline committed in `.stryker/incremental/`,
 so a branch is scored against what main produced rather than from zero.
 
-Mind what this costs: each mutant re-runs the package's suite, so on a machine shared with other worktrees the run stops converging — suites start timing out at 60 seconds and the report reads like a wall of defects that are nothing but load. Score the diff once, when the branch is otherwise green and the machine is quiet, rather than per change, and never from inside parallel work, where the runs contend with each other and with the very suites they are measuring.
+Score a branch once, when it is otherwise green, rather than per change: every mutant re-runs the package's suite. Both targets, and `make check`, refuse to start while another of them runs in any worktree or while the load average is above one and a half times the core count — above that the suites time out at 60 seconds and report contention as failing hooks. `VIDYA_RUN_ANYWAY=1` overrides the refusal.
 
 ### Service and database
 

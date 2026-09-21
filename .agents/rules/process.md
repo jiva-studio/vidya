@@ -97,15 +97,13 @@ Not "I believe it works". Evidence, in the handover:
 
 An agent that cannot produce these says so and names what is missing. Reporting a band as complete when it is not is the one failure that costs more than the defect.
 
-### The gate and the mutation score belong to whoever owns the band
+### The gate and the mutation score
 
-One person runs `make check` and `make mutate-diff` for the branch, once, when the bands are green and the machine is quiet. Not every agent, not per change.
+`make check` and `make mutate-diff` are run once per branch, by whoever owns it, after the bands are green. An agent runs neither. Mid-branch a full gate executes the red suites of every band still in flight, so it says nothing about the one asking; and two heavy runs on one machine make each other time out, which reports as failing hooks rather than as contention.
 
-Two reasons, both learned the expensive way. Each mutant re-runs the whole package suite, so on a machine shared with other worktrees the run stops converging: suites time out at 60 seconds, and the report reads like a wall of defects that are nothing but load. And a directive to stop only reaches an agent when its current tool call returns — an agent half an hour into a mutation run cannot be told to stop, it has to be killed. Two agents whose code was already green spent three and a half hours this way.
+Both targets refuse to start while another holds the lock in any worktree, or while the load average is above one and a half times the core count. Wait, or run your own suite narrowly instead — `--testPathPattern`, `--runInBand`. `VIDYA_RUN_ANYWAY=1` exists for the band owner, not for getting past a refusal.
 
-The same goes for the full gate while a branch has several bands in flight: it runs the red suites of everyone else's unfinished work, so it tells an agent nothing about its own.
-
-An agent that finds itself needing a mutation score, or a gate wider than its own suites, asks the band owner for it instead of running it.
+An agent that needs a mutation score, or a gate wider than its own suites, asks the band owner for it.
 
 ---
 
