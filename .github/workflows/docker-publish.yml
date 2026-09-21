@@ -62,19 +62,20 @@ jobs:
           SERVICES="[]"
 
           if [ "$FORCE_ALL" = "true" ] || [ "${{ steps.filter.outputs.api }}" = "true" ]; then
-            SERVICES=$(echo "$SERVICES" | jq '. + [{"name": "vidya-api", "file": "modules/services/api/Dockerfile", "context": "."}]')
+            SERVICES=$(echo "$SERVICES" | jq -c '. + [{"name": "vidya-api", "file": "modules/services/api/Dockerfile", "context": "."}]')
           fi
 
           if [ "$FORCE_ALL" = "true" ] || [ "${{ steps.filter.outputs.admin }}" = "true" ]; then
-            SERVICES=$(echo "$SERVICES" | jq '. + [{"name": "vidya-admin", "file": "modules/apps/admin/Dockerfile", "context": "."}]')
+            SERVICES=$(echo "$SERVICES" | jq -c '. + [{"name": "vidya-admin", "file": "modules/apps/admin/Dockerfile", "context": "."}]')
           fi
 
           if [ "$FORCE_ALL" = "true" ] || [ "${{ steps.filter.outputs.gateway }}" = "true" ]; then
-            SERVICES=$(echo "$SERVICES" | jq '. + [{"name": "vidya-gateway", "file": "modules/services/gateway/Dockerfile", "context": "modules/services/gateway"}]')
+            SERVICES=$(echo "$SERVICES" | jq -c '. + [{"name": "vidya-gateway", "file": "modules/services/gateway/Dockerfile", "context": "modules/services/gateway"}]')
           fi
 
           COUNT=$(echo "$SERVICES" | jq 'length')
-          echo "matrix={\"include\":$SERVICES}" >> "$GITHUB_OUTPUT"
+          MATRIX=$(echo "$SERVICES" | jq -c '{include: .}')
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
           echo "has_changes=$([ "$COUNT" -gt 0 ] && echo "true" || echo "false")" >> "$GITHUB_OUTPUT"
 
   build-and-publish:
