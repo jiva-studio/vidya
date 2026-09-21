@@ -1,4 +1,5 @@
-import { collectLatestOutboxRows, outboxKeyOf } from '@vidya/client'
+import type { SubmissionState } from '@vidya/client'
+import { collectLatestOutboxRows, outboxKeyOf, submissionStateOf } from '@vidya/client'
 import type {
   IOutboxRepository,
   OutboxEntry,
