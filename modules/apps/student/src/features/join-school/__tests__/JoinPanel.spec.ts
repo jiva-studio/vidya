@@ -93,7 +93,6 @@ describe('the school page behind a joining link', () => {
     await flushPromises()
 
     expect(screen.text()).toContain('Your courses are on their way')
-    expect(screen.text()).toContain('Records on this device so far')
 
     useSiteStatus().runFinished(0, false)
   })

@@ -1,10 +1,10 @@
-import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
+import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { RedisConfig } from '@vidya/api/configs'
 import Redis from 'ioredis'
 
 @Injectable()
-export class RedisService implements OnModuleDestroy {
+export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly redis: Redis
   private readonly logger = new Logger(RedisService.name)
 
@@ -19,8 +19,20 @@ export class RedisService implements OnModuleDestroy {
       lazyConnect: true,
       enableOfflineQueue: false,
       maxRetriesPerRequest: 1,
-      retryStrategy: () => null,
+
+      // Reconnects; commands still fail fast while it is down.
+      retryStrategy: (attempt: number) => Math.min(attempt * 200, 2000),
     })
+  }
+
+  // The client is lazy and queues nothing, so an unconnected first command
+  // fails however healthy Redis is.
+  async onModuleInit(): Promise<void> {
+    try {
+      await this.redis.connect()
+    } catch (error) {
+      this.logger.error(`Redis is not reachable: ${String(error)}`)
+    }
   }
 
   async ping(): Promise<string> {

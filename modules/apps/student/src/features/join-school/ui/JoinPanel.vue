@@ -84,7 +84,7 @@ function onRetry() {
 
       <template v-else-if="hasJoined">
         <p>{{ $t('join-joined') }}</p>
-        <BackfillProgress :rows="status.done.value" :running="status.syncing.value" />
+        <BackfillProgress :running="status.syncing.value" />
       </template>
     </template>
   </div>

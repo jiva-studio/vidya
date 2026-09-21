@@ -24,9 +24,9 @@ describe('/edu/users/:id/schools', () => {
   /*                          Authentication Validation                         */
   /* -------------------------------------------------------------------------- */
 
-  it(`PATCH /edu/users/:id/schools returns 401 for unauthenticated user`, () => {
+  it(`POST /edu/users/:id/schools returns 401 for unauthenticated user`, () => {
     return request(app.getHttpServer())
-      .patch(Routes().edu.user(ctx.one.users.oneAdmin.id).schools.create())
+      .post(Routes().edu.user(ctx.one.users.oneAdmin.id).schools.create())
       .send({ schoolId: faker.string.uuid() })
       .expect(401)
       .expect({
@@ -35,9 +35,9 @@ describe('/edu/users/:id/schools', () => {
       })
   })
 
-  it(`PATCH /edu/users/:id/schools returns 403 for unauthorized user`, async () => {
+  it(`POST /edu/users/:id/schools returns 403 for unauthorized user`, async () => {
     return request(app.getHttpServer())
-      .patch(Routes().edu.user(ctx.one.users.oneAdmin.id).schools.create())
+      .post(Routes().edu.user(ctx.one.users.oneAdmin.id).schools.create())
       .set('Authorization', await ctx.getAuthTokenFor(ctx.two.users.twoAdmin))
       .send({ schoolId: ctx.two.school.id })
       .expect(403)
@@ -54,7 +54,7 @@ describe('/edu/users/:id/schools', () => {
 
   const join = (userId: string, schoolId: string, token: string) =>
     request(app.getHttpServer())
-      .patch(Routes().edu.user(userId).schools.create())
+      .post(Routes().edu.user(userId).schools.create())
       .set('Authorization', token)
       .send({ schoolId })
 
@@ -108,7 +108,7 @@ describe('/edu/users/:id/schools', () => {
       .get(SchoolsService)
       .updateOneBy({ id: ctx.one.school.id }, { config: { defaultStudentRoleId: studentRole.id } })
 
-    await join(joiner.id, ctx.one.school.id, token).expect(200)
+    await join(joiner.id, ctx.one.school.id, token).expect(201)
 
     expect(await app.get(UserSchoolsService).getUserSchools(joiner.id)).toContain(ctx.one.school.id)
     expect(await app.get(RolesService).getRolesOfUser(joiner.id)).toContainEqual(

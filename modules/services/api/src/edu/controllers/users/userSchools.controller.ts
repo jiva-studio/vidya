@@ -57,7 +57,7 @@ export class UserSchoolsController {
   /*                        POST /edu/users/:userId/schools                     */
   /* -------------------------------------------------------------------------- */
 
-  @Crud.UpdateOne(Routes().edu.user(':userId').schools.create())
+  @Crud.CreateOne(Routes().edu.user(':userId').schools.create())
   async set(
     @Param('userId', new ParseUUIDPipe(), UserExistsPipe) userId: domain.UserId,
     @Body() request: dto.AddUserSchoolsRequest,
