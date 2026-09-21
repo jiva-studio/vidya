@@ -101,7 +101,7 @@ An agent that cannot produce these says so and names what is missing. Reporting 
 
 `make check` and `make mutate-diff` are run once per branch, by whoever owns it, after the bands are green. An agent runs neither. Mid-branch a full gate executes the red suites of every band still in flight, so it says nothing about the one asking; and two heavy runs on one machine make each other time out, which reports as failing hooks rather than as contention.
 
-Both targets refuse to start while another holds the lock in any worktree, or while the load average is above one and a half times the core count. Wait, or run your own suite narrowly instead — `--testPathPattern`, `--runInBand`. `VIDYA_RUN_ANYWAY=1` exists for the band owner, not for getting past a refusal.
+Both targets go through `scripts/vidya-run-alone`, which waits for its turn rather than failing: the turn is taken in the common git directory, which every worktree resolves to the same path whatever branch it is on, and each turn is appended to `vidya-run-alone.log` beside it — who ran what, where, and for how long, readable from any checkout. Waiting is announced on stderr every minute, and `VIDYA_WAIT_SECONDS` (default 900) caps it.
 
 An agent that needs a mutation score, or a gate wider than its own suites, asks the band owner for it.
 
