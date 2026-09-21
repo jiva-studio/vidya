@@ -11,7 +11,7 @@ import type {
 import { OtpType, Routes } from '@vidya/protocol'
 
 /**
- * The three requests the site makes outside synchronisation.
+ * The three requests signing in makes.
  *
  * They exist before there is anything to synchronise with: no session, and on
  * a new machine no local database either. Every one of them is handed the

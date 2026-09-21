@@ -23,3 +23,8 @@ export const navLinkClasses = ['text-[length:var(--text-sm)] hover:underline']
 export const contentClasses = ['flex-1 p-[var(--space-4)]']
 
 export const sectionClasses = ['flex flex-col gap-[var(--space-2)]']
+
+export const backfillClasses = [
+  'flex flex-col items-start gap-[var(--space-2)]',
+  'rounded-[var(--radius-md)] border border-[var(--color-border)] p-[var(--space-4)]',
+]

@@ -8,6 +8,7 @@ export const useSiteStatus = createGlobalState((): SiteStatus => {
   const firstRunCompleted = ref(false)
   const done = ref(0)
   const writing = ref(false)
+  const joined = ref(false)
   const storage = ref<StorageDurability>('unknown')
 
   const runStarted = () => {
@@ -25,11 +26,15 @@ export const useSiteStatus = createGlobalState((): SiteStatus => {
     firstRunCompleted,
     done,
     writing,
+    joined,
     storage,
     runStarted,
     runFinished,
     markFilled: () => {
       firstRunCompleted.value = true
+    },
+    markJoined: () => {
+      joined.value = true
     },
     markWriting: (isWriting: boolean) => {
       writing.value = isWriting

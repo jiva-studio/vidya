@@ -7,6 +7,8 @@ nav-settings = Настройки
 
 learning-title = Моё обучение
 learning-empty = Здесь пока ничего нет.
+learning-uninvited-title = Вас пока никуда не приглашали
+learning-uninvited-text = Школа присылает ссылку, и по ней вы в неё вступаете. Попросите ссылку у своей школы.
 
 homework-title = Мои домашки
 homework-empty = Здесь пока ничего нет.
@@ -16,8 +18,9 @@ school-empty = Здесь пока ничего нет.
 course-title = Курс
 lesson-title = Урок
 
-join-title = Вступление в школу { $code }
-join-empty = Здесь пока ничего нет.
+backfill-title = Ваши курсы уже едут
+backfill-running = Загружаем ваши курсы…
+backfill-rows = Записей на устройстве: { $rows }
 
 settings-title = Настройки
 settings-sync-title = Синхронизация

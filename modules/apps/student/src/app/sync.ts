@@ -7,6 +7,7 @@ import { watch } from 'vue'
 import { useConnection } from '@/shared/connection'
 import { type INetworkStatus, LocalStorageDeviceId } from '@/shared/platform'
 import { useSiteStatus } from '@/shared/status'
+import { useSyncRuns } from '@/shared/sync'
 
 import { renewSession } from './connection'
 
@@ -104,6 +105,11 @@ const startSiteSync = async (
 
   const offOnline = network.onOnline(() => void run())
 
+  // Joining a school changes what the server will send, and a tab is never
+  // woken in the background: without this the catalogue would arrive at the
+  // next reload rather than at the moment somebody joined.
+  useSyncRuns().adoptRunner(() => void run())
+
   // A database that already holds scope positions was filled by a run on some
   // other day: the courses are there, and the screens must not promise to
   // fetch them again before saying so.
@@ -116,6 +122,7 @@ const startSiteSync = async (
     stop: () => {
       stopped = true
       offOnline()
+      useSyncRuns().adoptRunner(undefined)
     },
   }
 }

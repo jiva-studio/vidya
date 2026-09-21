@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useConnection } from '@/shared/connection'
 import type { INetworkStatus } from '@/shared/platform'
 import { useSiteStatus } from '@/shared/status'
+import { useSyncRuns } from '@/shared/sync'
 
 import { syncWithConnection } from '../sync'
 
@@ -77,6 +78,7 @@ describe('the engine of the writing tab', () => {
   beforeEach(async () => {
     localStorage.clear()
     useConnection().signOut()
+    useSyncRuns().adoptRunner(undefined)
     db = (await openTestDatabase()).db
   })
 
@@ -138,6 +140,32 @@ describe('the engine of the writing tab', () => {
     connected.comeBack()
 
     await vi.waitFor(() => expect(http.calls.length).toBeGreaterThan(before))
+  })
+
+  it('lets a screen ask for a run, for the school somebody has just joined', async () => {
+    const http = fakeHttpClient()
+
+    stop = syncWithConnection({ db, http: http.client, network: network() })
+    signIn()
+    await vi.waitFor(() => expect(http.calls).toContain(PULL))
+
+    const before = http.calls.length
+    expect(useSyncRuns().requestRun()).toBe(true)
+
+    await vi.waitFor(() => expect(http.calls.length).toBeGreaterThan(before))
+  })
+
+  it('takes the run back when the engine stops, rather than leaving a dead one', async () => {
+    const http = fakeHttpClient()
+
+    stop = syncWithConnection({ db, http: http.client, network: network() })
+    signIn()
+    await vi.waitFor(() => expect(http.calls).toContain(PULL))
+
+    useConnection().signOut()
+    await settle()
+
+    expect(useSyncRuns().requestRun()).toBe(false)
   })
 
   it('stops the engine when the student signs out', async () => {

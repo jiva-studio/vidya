@@ -7,6 +7,8 @@ nav-settings = Settings
 
 learning-title = My learning
 learning-empty = Nothing here yet.
+learning-uninvited-title = Nobody has invited you anywhere yet
+learning-uninvited-text = A school sends a link, and that link is where you join it. Ask your school for one.
 
 homework-title = My homework
 homework-empty = Nothing here yet.
@@ -16,8 +18,9 @@ school-empty = Nothing here yet.
 course-title = Course
 lesson-title = Lesson
 
-join-title = Joining school { $code }
-join-empty = Nothing here yet.
+backfill-title = Your courses are on their way
+backfill-running = Getting your courses…
+backfill-rows = Records on this device so far: { $rows }
 
 settings-title = Settings
 settings-sync-title = Synchronisation

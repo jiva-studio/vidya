@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
@@ -79,6 +79,16 @@ describe('the site as one thing', () => {
     )
 
     expect(orphans).toEqual([])
+  })
+
+  it('installs the translations of every slice that carries them', () => {
+    const sections = readFileSync(join(root, 'app', 'sections.ts'), 'utf8')
+    const translated = readdirSync(join(root, 'features')).filter((slice) =>
+      existsSync(join(root, 'features', slice, 'i18n')),
+    )
+
+    expect(translated.length).toBeGreaterThan(0)
+    expect(translated.filter((slice) => !sections.includes(`/features/${slice}'`))).toEqual([])
   })
 
   it('has one place that builds a transport, one connection and one device id', () => {

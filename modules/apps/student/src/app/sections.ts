@@ -1,6 +1,7 @@
 import type { RouteRecordRaw } from 'vue-router'
 
 import { messages as authMessages } from '@/features/auth-otp'
+import { messages as joinMessages } from '@/features/join-school'
 import * as homework from '@/pages/homework'
 import * as join from '@/pages/join'
 import * as learning from '@/pages/learning'
@@ -32,6 +33,7 @@ export const sectionRoutes = (): RouteRecordRaw[] =>
 
 export const installSectionMessages = (): void => {
   addMessages(authMessages)
+  addMessages(joinMessages)
   for (const section of sections) {
     if (section.messages) addMessages(section.messages)
   }

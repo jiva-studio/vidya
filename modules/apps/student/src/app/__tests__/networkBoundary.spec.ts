@@ -50,6 +50,19 @@ const TRANSPORT_ROOT = 'app/connection.ts'
 
 const SIGN_IN = 'features/auth-otp/'
 
+/**
+ * The other slice allowed to ask, and why it is the last one.
+ *
+ * Joining is what happens before a student is a student: the card a stranger
+ * decides on has no session behind it, and the membership is what creates the
+ * scope the school's own data then travels in. Two requests, and nothing else
+ * belongs here — every course, lesson and answer of that school afterwards
+ * arrives through synchronisation, so a screen reading one of them over HTTP
+ * would be reading around the outbox, around the retry policy and around the
+ * local database the rest of the site is drawn from.
+ */
+const JOIN = 'features/join-school/'
+
 const ESCAPES: readonly Escape[] = [
   {
     name: 'httpClientFor',
@@ -63,7 +76,7 @@ const ESCAPES: readonly Escape[] = [
     // Not a transport but the way to one: everything that is not signing in
     // reads and writes the local database, and synchronisation carries it.
     pattern: /\buseHttp\b/,
-    allowedIn: [SIGN_IN, 'shared/api/'],
+    allowedIn: [SIGN_IN, JOIN, 'shared/api/'],
     builtHere: true,
     specimens: ['const http = useHttp()'],
   },
@@ -156,6 +169,13 @@ const files = (): string[] => Object.keys(SOURCES)
 const isAllowed = (escape: Escape, file: string): boolean =>
   escape.allowedIn.some((entry) => (entry.endsWith('/') ? file.startsWith(entry) : file === entry))
 
+/** Every route the files of one slice name, so "and nothing else" can be stated. */
+const routesNamedIn = (prefix: string): string[] =>
+  files()
+    .filter((file) => file.startsWith(prefix))
+    .flatMap((file) => [...SOURCES[file]!.matchAll(/Routes\(\)\.([\w.]+)/g)].map((m) => m[1]!))
+    .sort()
+
 const named = (escapes: readonly Escape[]) =>
   escapes.map((escape) => [escape.name, escape] as const)
 
@@ -180,6 +200,14 @@ describe('nothing but signing in talks to the network', () => {
       .sort()
 
     expect(offenders).toEqual([])
+  })
+
+  it('leaves signing in with the three requests it has', () => {
+    expect(routesNamedIn(SIGN_IN)).toEqual(['auth.profile', 'auth.signIn', 'otp.root'])
+  })
+
+  it('gives joining two requests and no more', () => {
+    expect(routesNamedIn(JOIN)).toEqual(['edu.user', 'join.resolve'])
   })
 
   it('reads the files it claims to read, so an empty answer means something', () => {

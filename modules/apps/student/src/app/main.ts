@@ -6,12 +6,14 @@ import { createApp } from 'vue'
 
 import { httpClientKey } from '@/shared/api'
 import { useConnection } from '@/shared/connection'
+import { schoolRepositoryKey } from '@/shared/data'
 import { browserNetwork } from '@/shared/platform'
 import { useSiteStatus } from '@/shared/status'
 
 import App from './App.vue'
 import { createSiteClient } from './connection'
 import { createI18n } from './i18n'
+import { schoolsOf } from './localData'
 import { requestPersistentStorage } from './persistentStorage'
 import { createAppRouter } from './router'
 import { saveOnExit } from './saveOnExit'
@@ -34,11 +36,12 @@ async function startWriting(db: IDatabase, http: HttpClient): Promise<void> {
   useSiteStatus().markWriting(true)
 }
 
-async function mountSite(http: HttpClient): Promise<void> {
+async function mountSite(db: IDatabase, http: HttpClient): Promise<void> {
   const router = createAppRouter()
   const app = createApp(App).use(router).use(createI18n())
 
   app.provide(httpClientKey, http)
+  app.provide(schoolRepositoryKey, schoolsOf(db))
 
   await router.isReady()
   app.mount(ROOT)
@@ -100,7 +103,7 @@ async function start(): Promise<void> {
     return
   }
 
-  await mountSite(http)
+  await mountSite(db, http)
 }
 
 void start()

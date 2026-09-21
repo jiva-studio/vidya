@@ -17,5 +17,8 @@ What is particular to this application, as opposed to the console:
   is why `index.html` carries a policy of its own.
 - **One tab writes.** The writing tab is elected with the Web Locks API; the
   others read.
-- **Nothing but signing in talks HTTP.** `src/app/__tests__/networkBoundary.spec.ts`
-  walks the sources and fails if anything else names a transport.
+- **Only signing in and joining talk HTTP.** Five requests in all: three to
+  sign in, and two to arrive by a school's link — resolving `/j/<code>` before
+  there is a session, and joining the school.
+  `src/app/__tests__/networkBoundary.spec.ts` walks the sources and fails if
+  anything else names a transport or asks for one.

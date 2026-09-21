@@ -25,4 +25,10 @@ export default defineConfig([
     files: ['./src/features/auth-otp/**'],
     rules: { 'fsd/insignificant-slice': 'off' },
   },
+  {
+    // Joining is offered by one screen for the same reason, and is the one
+    // action a person takes before they are a student of anything.
+    files: ['./src/features/join-school/**'],
+    rules: { 'fsd/insignificant-slice': 'off' },
+  },
 ])

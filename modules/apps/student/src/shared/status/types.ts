@@ -23,6 +23,9 @@ export interface SiteStatus {
   /** Whether this tab is the one that writes; the others read. */
   readonly writing: Readonly<Ref<boolean>>
 
+  /** A school was joined in this tab and nothing of it has arrived yet. */
+  readonly joined: Readonly<Ref<boolean>>
+
   readonly storage: Readonly<Ref<StorageDurability>>
 
   runStarted(): void
@@ -37,6 +40,16 @@ export interface SiteStatus {
    * ready" — least of all with no network, when that promise cannot be kept.
    */
   markFilled(): void
+
+  /**
+   * Says a school was joined here a moment ago.
+   *
+   * It holds for the life of the tab. Between the join and the first page of
+   * that school's data there is nothing on the machine to show, and the one
+   * thing the screens must not conclude from that is that nobody ever invited
+   * this student anywhere.
+   */
+  markJoined(): void
 
   markWriting(writing: boolean): void
   markStorage(durability: StorageDurability): void
