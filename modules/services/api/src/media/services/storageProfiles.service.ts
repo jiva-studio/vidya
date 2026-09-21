@@ -49,6 +49,10 @@ export class StorageProfilesService {
       .findOne({ where: { schoolId, retiredAt: IsNull() } })
   }
 
+  async findById(profileId: StorageProfileId): Promise<StorageProfile | null> {
+    return this.dataSource.getRepository(StorageProfile).findOne({ where: { id: profileId } })
+  }
+
   async replaceProfile(draft: StorageProfileDraft): Promise<StorageProfile> {
     return this.dataSource.transaction(async (manager) => {
       await this.retireLive(manager, draft.schoolId)

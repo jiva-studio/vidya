@@ -1,7 +1,6 @@
 import { INestApplication } from '@nestjs/common'
 import { createTestingApp } from '@vidya/api/edu/shared'
-import { UploadGrant } from '@vidya/domain'
-import { mediaPath } from '@vidya/domain'
+import { MediaId, mediaPath, UploadGrant } from '@vidya/domain'
 import { MediaRefusals } from '@vidya/protocol'
 
 import { refusalFor, TEST_MASTER_KEY } from './context'
@@ -54,7 +53,7 @@ describe('saying that the bytes of an upload have landed', () => {
     expect(response.body).toMatchObject({
       id: granted.mediaId,
       status: 'ready',
-      url: mediaPath(granted.mediaId),
+      url: mediaPath(granted.mediaId as MediaId),
     })
     expect((await flow.mediaRow(granted.mediaId))?.status).toBe('ready')
   })
@@ -184,9 +183,9 @@ describe('uploading bytes a school already has', () => {
 
     expect(flow.objectBehind(second.grant)).toBeUndefined()
     expect(flow.objectBehind(first.grant)).toBeDefined()
-    expect((await flow.usageOf(flow.ctx.one.school.id, flow.ctx.one.users.owner)).body).toMatchObject(
-      { usedBytes: 2048 },
-    )
+    expect(
+      (await flow.usageOf(flow.ctx.one.school.id, flow.ctx.one.users.owner)).body,
+    ).toMatchObject({ usedBytes: 2048 })
   })
 
   it('stores its own copy for another school, whose files are not shared', async () => {

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import { INestApplication } from '@nestjs/common'
-import { SchedulerRegistry } from '@nestjs/schedule'
+import { ModulesContainer } from '@nestjs/core'
 import { InMemoryStorage } from '@vidya/api/media/infra'
 import { StoredObject, UploadGrant } from '@vidya/domain'
 import { User } from '@vidya/entities'
@@ -24,9 +24,7 @@ const fixture = (name: string): UploadFixture =>
   JSON.parse(readFileSync(join(FIXTURES, `${name}.json`), 'utf8')) as UploadFixture
 
 export const grantPutFixture = fixture('upload-grant-put')
-export const grantPostFixture = fixture('upload-grant-post')
 export const mediaPageFixture = fixture('media-page')
-export const completeFixture = fixture('upload-complete')
 
 /** One row of `media`, as raw SQL hands it back before any mapper sees it. */
 export type MediaRow = {
@@ -59,7 +57,6 @@ export type MediaFlow = {
 
   /** An upload body of the given size, built from the wire fixture's shape. */
   imageUpload(schoolId: string, overrides?: Record<string, unknown>): Record<string, unknown>
-  videoUpload(schoolId: string, overrides?: Record<string, unknown>): Record<string, unknown>
 
   /** Writes the bytes the way the browser does: by the grant, and nothing else. */
   putBytes(grant: UploadGrant, body: Buffer, contentType?: string): Promise<void>
@@ -128,10 +125,6 @@ export const createMediaFlow = async (app: INestApplication): Promise<MediaFlow>
       return { ...grantPutFixture.request, schoolId, sizeBytes: 2048, ...overrides }
     },
 
-    videoUpload(schoolId, overrides = {}) {
-      return { ...grantPostFixture.request, schoolId, ...overrides }
-    },
-
     async putBytes(grant, body, contentType) {
       const headers = contentType
         ? { ...grant.headers, 'Content-Type': contentType }
@@ -172,12 +165,30 @@ export const createMediaFlow = async (app: INestApplication): Promise<MediaFlow>
   return flow
 }
 
+type CronJobLike = { fireOnTick(): Promise<void> }
+type SchedulerLike = { getCronJobs(): Map<string, CronJobLike> }
+
+/**
+ * The registry the scheduled work is hung on, found by its shape rather than
+ * imported: `@nestjs/schedule` ships as ESM and cannot be required by this
+ * suite at all, so the suite reaches the registry through the container.
+ */
+const schedulerOf = (app: INestApplication): SchedulerLike => {
+  for (const module of app.get(ModulesContainer).values()) {
+    for (const wrapper of module.providers.values()) {
+      const instance = wrapper.instance as Partial<SchedulerLike> | undefined
+      if (typeof instance?.getCronJobs === 'function') return instance as SchedulerLike
+    }
+  }
+
+  throw new Error('no scheduler registry is provided, so nothing runs the sweep')
+}
+
 /**
  * Fires every scheduled job the application registered, in place of waiting an
  * hour for the tick. A suite cannot name the job it wants without pinning a
  * name nothing else depends on, so it fires them all.
  */
 export const runDueJobs = async (app: INestApplication): Promise<void> => {
-  const jobs = app.get(SchedulerRegistry).getCronJobs()
-  for (const [, job] of jobs) await job.fireOnTick()
+  for (const [, job] of schedulerOf(app).getCronJobs()) await job.fireOnTick()
 }

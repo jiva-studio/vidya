@@ -16,6 +16,7 @@ import * as protocol from '@vidya/protocol'
 import { StorageCredentials } from '../infra/ports'
 import { StorageFailedError } from '../storageFailure'
 import { EndpointGuardService } from './endpointGuard.service'
+import { MediaUsageService } from './mediaUsage.service'
 import { SecretSealingService } from './secretSealing.service'
 import { StorageProbeService } from './storageProbe.service'
 import { StorageProfilesService } from './storageProfiles.service'
@@ -49,6 +50,7 @@ export class StorageSetupService {
     private readonly probe: StorageProbeService,
     private readonly profiles: StorageProfilesService,
     private readonly sealing: SecretSealingService,
+    private readonly usage: MediaUsageService,
   ) {}
 
   async findProfileView(schoolId: SchoolId): Promise<protocol.StorageProfileView | null> {
@@ -123,18 +125,19 @@ export class StorageSetupService {
   /**
    * What the school occupies and what it is allowed to occupy.
    *
-   * The counts and the reservation stay at zero until the media table exists:
-   * a profile is the only thing storage knows about so far, and inventing a
-   * number here would be a figure nobody could reconcile with a bucket.
+   * The reservation is reported beside the charge rather than folded into it: a
+   * school looking at a full bucket has to be able to see that the room is
+   * promised to uploads in flight rather than already spent.
    */
   async readUsage(schoolId: SchoolId): Promise<protocol.StorageUsageResponse> {
     const profile = await this.profiles.findCurrentFor(schoolId)
+    const usage = await this.usage.readUsage(schoolId)
 
     return {
       usedBytes: profile ? Number(profile.usedBytes) : 0,
-      reservedBytes: 0,
+      reservedBytes: usage.reservedBytes,
       quotaBytes: this.quotaOf(profile),
-      countsByKind: { image: 0, video: 0, audio: 0 },
+      countsByKind: usage.countsByKind,
     }
   }
 

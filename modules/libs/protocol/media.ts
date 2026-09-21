@@ -79,6 +79,16 @@ export type CreateUploadRequest = {
 export type CreateUploadResponse = {
   mediaId: domain.MediaId
   grant: domain.UploadGrant
+
+  /**
+   * Whether these bytes take part in deduplication.
+   *
+   * Said out loud rather than inferred from a missing checksum: above the
+   * hashing limit the browser is not asked for a digest, and a client that had
+   * to read that from silence could not tell it apart from a grant that simply
+   * carries no checksum header on this provider.
+   */
+  deduplicated: boolean
 }
 
 /**

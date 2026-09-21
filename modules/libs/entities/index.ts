@@ -6,6 +6,7 @@ import { Group } from './group'
 import { Homework } from './homework'
 import { Lesson } from './lesson'
 import { LessonVersion } from './lessonVersion'
+import { Media } from './media'
 import { Role } from './role'
 import { School } from './school'
 import { StorageProfile } from './storageProfile'
@@ -28,6 +29,7 @@ export {
   LearningType,
   Lesson,
   LessonVersion,
+  Media,
   Role,
   School,
   StorageProfile,
@@ -45,6 +47,7 @@ export const Entities = [
   Homework,
   Lesson,
   LessonVersion,
+  Media,
   School,
   StorageProfile,
   SyncJournal,

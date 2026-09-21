@@ -4,9 +4,13 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
 import { MediaConfig } from '@vidya/api/configs'
 import { RedisService } from '@vidya/api/shared/services'
-import { Role, School, StorageProfile, User, UserRole } from '@vidya/entities'
+import { Media, Role, School, StorageProfile, User, UserRole } from '@vidya/entities'
 
-import { StorageProfilesController } from './controllers'
+import {
+  MediaCatalogController,
+  MediaUploadsController,
+  StorageProfilesController,
+} from './controllers'
 import {
   DnsAddressResolver,
   FetchSignedHttp,
@@ -19,7 +23,14 @@ import {
 } from './infra'
 import {
   EndpointGuardService,
+  MediaCatalogService,
   MediaMasterKeyService,
+  MediaRowsService,
+  MediaSweepSchedule,
+  MediaSweepService,
+  MediaUploadsService,
+  MediaUsageService,
+  SchoolStorageService,
   SecretSealingService,
   StorageProbeService,
   StorageProfilesService,
@@ -68,8 +79,8 @@ const storageProviders: Provider[] = [
  * concerns that belong together and beside nothing else.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([StorageProfile, School, User, Role, UserRole])],
-  controllers: [StorageProfilesController],
+  imports: [TypeOrmModule.forFeature([Media, StorageProfile, School, User, Role, UserRole])],
+  controllers: [StorageProfilesController, MediaUploadsController, MediaCatalogController],
   providers: [
     // What the authentication guard needs to read a token; `AuthModule`
     // exports nothing, so every context that guards a route provides them.
@@ -80,6 +91,13 @@ const storageProviders: Provider[] = [
     ...storageProviders,
 
     EndpointGuardService,
+    MediaCatalogService,
+    MediaRowsService,
+    MediaSweepSchedule,
+    MediaSweepService,
+    MediaUploadsService,
+    MediaUsageService,
+    SchoolStorageService,
     SecretSealingService,
     StorageProbeService,
     StorageProfilesService,
