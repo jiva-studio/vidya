@@ -44,7 +44,9 @@ export class MediaDeletionController {
     @Authentication() auth: UserAuthentication,
   ): Promise<protocol.DeleteMediaResponse> {
     const media = await this.deletion.findMedia(id)
-    if (!media) throw new NotFoundException(`Media with id ${id} not found`)
+    if (!media || !this.belongsTo(auth, media.schoolId)) {
+      throw new NotFoundException(`Media with id ${id} not found`)
+    }
 
     if (!auth.permissions.has(['media:delete'], { schoolId: media.schoolId })) {
       throw new ForbiddenException('User does not have permission')
@@ -53,5 +55,16 @@ export class MediaDeletionController {
     await this.deletion.deleteMedia(media, auth.userId)
 
     return { success: true }
+  }
+
+  /**
+   * Whether the caller holds anything at all in the school the file belongs to.
+   *
+   * It decides between "you may not" and "there is no such file": a refusal
+   * aimed at another school's file would otherwise tell a stranger that the id
+   * names something, which is the whole of what an id is worth here.
+   */
+  private belongsTo(auth: UserAuthentication, schoolId: domain.SchoolId): boolean {
+    return auth.permissions.getScopes([]).some((scope) => scope.schoolId === schoolId)
   }
 }

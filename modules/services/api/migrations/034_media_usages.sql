@@ -1,20 +1,6 @@
--- Which files a lesson version points at.
---
--- The table is the answer to "may this file be deleted", so it is written by
--- the same transaction that writes the version's content: a row that outlived
--- its block would keep a file undeletable forever, and a row lost while the
--- content was stored would let a published lesson lose its illustration.
---
--- One row per file per version, however many blocks show it: the question ever
--- asked of this table is whether anything still points at a file, and counting
--- blocks would answer a question nobody has.
---
--- "mediaId" is RESTRICT rather than CASCADE: the row exists to refuse the
--- delete, so the database has to refuse one the application forgot to check.
--- "lessonVersionId" is CASCADE because a version that is gone points at
--- nothing. "schoolId" is copied from the lesson rather than reached through it,
--- so the lessons naming a file can be listed without trusting a join to stay
--- correct across a lesson that moved course.
+-- Which files a lesson version points at, so a deletion can be refused with one
+-- lookup. How it is written, why the two foreign keys differ, and what a
+-- deletion does with it: docs/Media Usage Tracking.md
 
 CREATE TABLE "media_usages" (
   "id"               uuid NOT NULL DEFAULT uuid_generate_v4(),

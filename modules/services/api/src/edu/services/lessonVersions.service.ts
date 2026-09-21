@@ -120,13 +120,7 @@ export class LessonVersionsService extends EntitiesService<LessonVersion> {
     return this.rewriteContent(version, content)
   }
 
-  /**
-   * Stores new content and the files it names together, or neither.
-   *
-   * The recount goes first because it is what refuses a file the school does
-   * not have: content written ahead of the refusal would survive on a database
-   * that does not undo the statements a failing one followed.
-   */
+  /** Stores new content and the files it names together, or neither. */
   private async rewriteContent(
     version: LessonVersion,
     content: LessonContent,

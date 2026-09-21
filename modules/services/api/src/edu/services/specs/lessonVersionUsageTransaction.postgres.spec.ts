@@ -13,33 +13,43 @@ import { DataSource } from 'typeorm'
 const blockId = () => domain.asId<domain.BlockId>(faker.string.uuid())
 const sectionId = () => domain.asId<domain.SectionId>(faker.string.uuid())
 
-const contentWith = (urls: string[]): LessonContent => ({
+/**
+ * What the check constraint below refuses, so the failure lands on the write of
+ * the version itself rather than on the recount before it.
+ */
+const REFUSED_TEXT = 'REFUSE-THIS-SAVE'
+
+/**
+ * A document naming a stored file, and text the column will not take: the
+ * recount succeeds and the version's own write is what fails, which is the
+ * order every real failure of this save arrives in — a clash on the version
+ * number, a serialization failure, a document a constraint turns down.
+ */
+const unstorableContent = (url: string): LessonContent => ({
   schemaVersion: domain.LessonContentSchemaVersion,
   sections: [
     {
       id: sectionId(),
       title: 'Illustrations',
       assessment: 'none',
-      blocks: urls.map((url) => ({
-        id: blockId(),
-        type: 'image' as const,
-        source: 'upload' as const,
-        url,
-      })),
+      blocks: [
+        { id: blockId(), type: 'image', source: 'upload', url },
+        { id: blockId(), type: 'text', content: REFUSED_TEXT },
+      ],
     },
   ],
 })
 
 /**
- * What only a real Postgres can prove about a refused save.
+ * What only a real Postgres can prove about a save that failed halfway.
  *
- * pg-mem does not undo the inserts a failed statement was preceded by, so
- * under it a recount that escaped the version's transaction reads exactly the
- * same as one that never left it.
+ * pg-mem does not undo the inserts a failed statement was preceded by, so under
+ * it a recount that escaped the version's transaction reads exactly the same as
+ * one that never left it.
  */
 const describeOnPostgres = testDatabase() === 'postgres' ? describe : describe.skip
 
-describeOnPostgres('a save refused halfway through its files', () => {
+describeOnPostgres('a save whose version could not be written', () => {
   let app: INestApplication
   let flow: MediaFlow
   let versions: LessonVersionsService
@@ -87,9 +97,19 @@ describeOnPostgres('a save refused halfway through its files', () => {
     ).toBe(200)
 
     known = asked.body.mediaId as domain.MediaId
+
+    // The failure a real save meets after its recount, injected: the version's
+    // own write is refused and nothing before it is asked again.
+    await dataSource.query(
+      'ALTER TABLE "lesson_versions" ADD CONSTRAINT "chk_refused_content"' +
+        ` CHECK (("content"::text) NOT LIKE '%${REFUSED_TEXT}%')`,
+    )
   })
 
   afterEach(async () => {
+    await dataSource.query(
+      'ALTER TABLE "lesson_versions" DROP CONSTRAINT IF EXISTS "chk_refused_content"',
+    )
     await app.close()
   })
 
@@ -99,27 +119,18 @@ describeOnPostgres('a save refused halfway through its files', () => {
     return Number(rows[0].count)
   }
 
-  const saveBothBlocks = async (): Promise<void> => {
-    await versions.saveDraft(
-      lessonId,
-      draftId,
-      contentWith([mediaPath(known), mediaPath(domain.asId(faker.string.uuid()))]),
-    )
+  const saveTheUnstorable = async (): Promise<void> => {
+    await versions.saveDraft(lessonId, draftId, unstorableContent(mediaPath(known)))
   }
 
-  it('leaves behind neither the version it was writing nor the use it had already recorded', async () => {
-    const versionsBefore = await countOf('lesson_versions')
+  it('leaves behind no use of the file it had already counted', async () => {
+    await expect(saveTheUnstorable()).rejects.toThrow()
 
-    // The valid block comes first on purpose: a recount outside the version's
-    // transaction gets its row in before the unknown one refuses the save.
-    await expect(saveBothBlocks()).rejects.toThrow()
-
-    expect(await countOf('lesson_versions')).toBe(versionsBefore)
     expect(await countOf('media_usages')).toBe(0)
   })
 
-  it('leaves the draft with the content it had before the refusal', async () => {
-    await expect(saveBothBlocks()).rejects.toThrow()
+  it('leaves the draft with the content it had before the failure', async () => {
+    await expect(saveTheUnstorable()).rejects.toThrow()
 
     const rows: { content: LessonContent }[] = await dataSource.query(
       'SELECT "content" FROM "lesson_versions" WHERE "id" = $1',
@@ -127,5 +138,23 @@ describeOnPostgres('a save refused halfway through its files', () => {
     )
 
     expect(rows[0].content.sections).toEqual([])
+  })
+
+  it('stores the use of the file once the same document is storable', async () => {
+    await expect(saveTheUnstorable()).rejects.toThrow()
+
+    await versions.saveDraft(lessonId, draftId, {
+      schemaVersion: domain.LessonContentSchemaVersion,
+      sections: [
+        {
+          id: sectionId(),
+          title: 'Illustrations',
+          assessment: 'none',
+          blocks: [{ id: blockId(), type: 'image', source: 'upload', url: mediaPath(known) }],
+        },
+      ],
+    })
+
+    expect(await countOf('media_usages')).toBe(1)
   })
 })

@@ -8,10 +8,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
  * save's transaction: the table is what refuses the deletion of a file a lesson
  * still shows, so a row that drifts from the content is either a file nobody
  * can delete or a lesson that loses its illustration.
- *
- * There is one row per file per version however many blocks show it, and
- * `schoolId` is copied from the lesson so the files a school uses can be listed
- * without joining through the version.
  */
 @Entity({ name: 'media_usages' })
 export class MediaUsage {

@@ -80,6 +80,11 @@ export class MediaUsageIndexService {
   /**
    * A file the school does not have is refused, and another school's file is
    * unknown in exactly the same way: a lesson may only point at its own library.
+   *
+   * A file whose bytes are still landing is refused apart from that, because
+   * the two are acted on differently: an upload in flight is worth waiting for,
+   * while a file that failed or was archived is never going to be shown and the
+   * author has to name another one.
    */
   private async assertSchoolHolds(
     manager: EntityManager,
@@ -90,8 +95,15 @@ export class MediaUsageIndexService {
 
     const held = await manager
       .getRepository(Media)
-      .find({ where: { schoolId, id: In(mediaIds) }, select: ['id'] })
+      .find({ where: { schoolId, id: In(mediaIds) }, select: ['id', 'status'] })
 
     if (held.length !== mediaIds.length) throw new MediaRefusedError('unknown-media')
+
+    const unready = held.filter((row) => row.status !== 'ready')
+    if (unready.length === 0) return
+
+    throw new MediaRefusedError(
+      unready.every((row) => row.status === 'pending') ? 'not-ready' : 'unknown-media',
+    )
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "refusals",
   "endpoint": "various",
-  "description": "Every refusal a client has to render, with the status it arrives as and the message key it carries. The keys live in libs/protocol/media.ts so the admin's locales cannot drift from the API's exceptions. Storage says no in three distinguishable ways and a school acts on each differently: `storage-endpoint-rejected` is us refusing to dial the address at all, `storage-credentials-rejected` is the address answering and turning the keys away, `storage-unreachable` is nothing answering. `storage-secret-unreadable` is none of those three — the stored ciphertext will not decrypt, which is our failure to explain and their credentials to enter again. Note where each one happens: the quota is refused when the grant is asked for, not when the upload completes — making someone upload two gigabytes and then saying there is no room is not a failure mode we ship. `media-in-use` names the lessons, because 'in use' without saying where cannot be acted on.",
+  "description": "Every refusal a client has to render, with the status it arrives as and the message key it carries. The keys live in libs/protocol/media.ts so the admin's locales cannot drift from the API's exceptions. Storage says no in three distinguishable ways and a school acts on each differently: `storage-endpoint-rejected` is us refusing to dial the address at all, `storage-credentials-rejected` is the address answering and turning the keys away, `storage-unreachable` is nothing answering. `storage-secret-unreadable` is none of those three — the stored ciphertext will not decrypt, which is our failure to explain and their credentials to enter again. Note where each one happens: the quota is refused when the grant is asked for, not when the upload completes — making someone upload two gigabytes and then saying there is no room is not a failure mode we ship. `media-in-use` names the lessons, because 'in use' without saying where cannot be acted on. `media-not-ready` arrives from two places: completing an upload whose object storage cannot describe yet, and saving lesson content that names a file whose bytes are still landing — a file that failed instead is `media-unknown`, since nothing is coming.",
   "cases": [
     {
       "endpoint": "POST /media/uploads",
@@ -9,9 +9,7 @@
       "response": {
         "error": "Payload Too Large",
         "statusCode": 413,
-        "message": [
-          "media-quota-exceeded"
-        ]
+        "message": ["media-quota-exceeded"]
       }
     },
     {
@@ -20,9 +18,7 @@
       "response": {
         "error": "Payload Too Large",
         "statusCode": 413,
-        "message": [
-          "media-too-large"
-        ]
+        "message": ["media-too-large"]
       }
     },
     {
@@ -31,9 +27,7 @@
       "response": {
         "error": "Unsupported Media Type",
         "statusCode": 415,
-        "message": [
-          "media-type-not-allowed"
-        ]
+        "message": ["media-type-not-allowed"]
       }
     },
     {
@@ -42,9 +36,7 @@
       "response": {
         "error": "Conflict",
         "statusCode": 409,
-        "message": [
-          "media-not-ready"
-        ]
+        "message": ["media-not-ready"]
       }
     },
     {
@@ -53,9 +45,7 @@
       "response": {
         "error": "Conflict",
         "statusCode": 409,
-        "message": [
-          "media-in-use"
-        ],
+        "message": ["media-in-use"],
         "lessons": [
           {
             "lessonId": "f6071829-3a4b-4c56-de7f-809102132435",
@@ -70,9 +60,7 @@
       "response": {
         "error": "Unprocessable Entity",
         "statusCode": 422,
-        "message": [
-          "storage-endpoint-rejected"
-        ]
+        "message": ["storage-endpoint-rejected"]
       }
     },
     {
@@ -81,9 +69,7 @@
       "response": {
         "error": "Unprocessable Entity",
         "statusCode": 422,
-        "message": [
-          "storage-credentials-rejected"
-        ]
+        "message": ["storage-credentials-rejected"]
       }
     },
     {
@@ -92,9 +78,7 @@
       "response": {
         "error": "Conflict",
         "statusCode": 409,
-        "message": [
-          "storage-secret-unreadable"
-        ]
+        "message": ["storage-secret-unreadable"]
       }
     },
     {
@@ -103,9 +87,7 @@
       "response": {
         "error": "Conflict",
         "statusCode": 409,
-        "message": [
-          "storage-not-configured"
-        ]
+        "message": ["storage-not-configured"]
       }
     },
     {
@@ -114,9 +96,7 @@
       "response": {
         "error": "Bad Gateway",
         "statusCode": 502,
-        "message": [
-          "storage-unreachable"
-        ]
+        "message": ["storage-unreachable"]
       }
     },
     {
@@ -125,9 +105,16 @@
       "response": {
         "error": "Unprocessable Entity",
         "statusCode": 422,
-        "message": [
-          "media-unknown"
-        ]
+        "message": ["media-unknown"]
+      }
+    },
+    {
+      "endpoint": "PUT /edu/lessons/:lessonId/versions/:versionId",
+      "status": 409,
+      "response": {
+        "error": "Conflict",
+        "statusCode": 409,
+        "message": ["media-not-ready"]
       }
     }
   ]

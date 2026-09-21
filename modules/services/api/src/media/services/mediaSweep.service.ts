@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
-import { StorageProfile } from '@vidya/entities'
+import { Media, StorageProfile } from '@vidya/entities'
 import { DataSource, QueryRunner } from 'typeorm'
 
 import { MediaRowsService } from './mediaRows.service'
@@ -33,9 +33,15 @@ const ABANDONED_AFTER_MS = 24 * 60 * 60 * 1000
  * More than one instance of the API runs, so the work is taken under a session
  * advisory lock on a dedicated connection: whoever gets it sweeps, and everyone
  * else leaves without an error rather than deleting the same objects twice.
+ *
+ * A row a deletion archived and never finished is swept the same way. It is the
+ * one state nobody else repairs: the bytes are no longer charged for, so nothing
+ * but this notices that the object is still being paid for.
  */
 @Injectable()
 export class MediaSweepService {
+  private readonly log = new Logger(MediaSweepService.name)
+
   constructor(
     @InjectDataSource() private readonly dataSource: DataSource,
     private readonly rows: MediaRowsService,
@@ -83,10 +89,24 @@ export class MediaSweepService {
 
   private async dropAbandonedRows(before: Date): Promise<void> {
     for (const media of await this.rows.findAbandoned(before)) {
+      await this.clearRow(media)
+    }
+  }
+
+  /**
+   * One row's object and then its row, with whatever went wrong named rather
+   * than raised: the rows are swept oldest first, so a row the sweep cannot
+   * clear would otherwise be met again on every tick and take the rest of the
+   * work — the other rows and the multipart sessions — down with it.
+   */
+  private async clearRow(media: Media): Promise<void> {
+    try {
       const opened = await this.storages.openProfileById(media.profileId)
 
       await opened.storage.remove(media.storageKey)
       await this.rows.deleteRow(media.id)
+    } catch (err) {
+      this.log.error(`Media ${media.id} could not be cleared: ${(err as Error).message}`)
     }
   }
 

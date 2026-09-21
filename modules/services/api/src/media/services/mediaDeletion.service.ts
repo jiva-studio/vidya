@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
-import { AuditLogService } from '@vidya/api/shared/services'
+import { AuditLogEntry, AuditLogService } from '@vidya/api/shared/services'
 import { MediaId, UserId } from '@vidya/domain'
 import { Media } from '@vidya/entities'
 import { DataSource } from 'typeorm'
@@ -17,9 +17,10 @@ import { SchoolStorageService } from './schoolStorage.service'
  * named, because "in use" that does not say where is not something an
  * administrator can act on.
  *
- * The object goes before the row: an object left without its row is found by
- * nothing and is paid for forever, while a row left without its object is a
- * broken thumbnail the next delete clears up.
+ * The row is archived before the object is removed, and dropped only once the
+ * object is gone. A school stops being charged the moment the row is archived,
+ * so no step of this leaves a school paying for bytes it cannot see, and a
+ * deletion that dies halfway leaves the sweep something it can finish.
  */
 @Injectable()
 export class MediaDeletionService {
@@ -40,22 +41,31 @@ export class MediaDeletionService {
     if (lessons.length > 0) throw new MediaRefusedError('in-use', { lessons })
 
     const opened = await this.storages.openProfileById(media.profileId)
-    await opened.storage.remove(media.storageKey)
 
     await this.dataSource.transaction(async (manager) => {
-      await this.rows.deleteRow(media.id, manager)
-
-      await this.auditLog.record(
-        {
-          action: 'media.deleted',
-          actorUserId,
-          schoolId: media.schoolId,
-          subjectType: 'media',
-          subjectId: media.id,
-          payload: { name: media.name, kind: media.kind, sizeBytes: Number(media.sizeBytes) },
-        },
-        manager,
-      )
+      await this.rows.archiveRow(media.id, manager)
+      await this.auditLog.record(this.deletionEntry(media, actorUserId), manager)
     })
+
+    await opened.storage.remove(media.storageKey)
+    await this.rows.deleteRow(media.id)
+  }
+
+  /** Names the object as well as the file, so a deletion can be reconciled with a bucket. */
+  private deletionEntry(media: Media, actorUserId: UserId): AuditLogEntry {
+    return {
+      action: 'media.deleted',
+      actorUserId,
+      schoolId: media.schoolId,
+      subjectType: 'media',
+      subjectId: media.id,
+      payload: {
+        name: media.name,
+        kind: media.kind,
+        sizeBytes: Number(media.sizeBytes),
+        profileId: media.profileId,
+        storageKey: media.storageKey,
+      },
+    }
   }
 }

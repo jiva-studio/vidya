@@ -38,6 +38,7 @@ export type MediaRow = {
   sizeBytes: string | number
   sha256: string | null
   createdAt: Date
+  archivedAt: Date | null
 }
 
 export type MediaFlow = {

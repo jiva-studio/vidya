@@ -5,9 +5,11 @@ import { createTestingApp } from '@vidya/api/edu/shared'
 import { TEST_MASTER_KEY } from '@vidya/api/media/controllers/specs/context'
 import { createMediaFlow, MediaFlow } from '@vidya/api/media/controllers/specs/uploadFlow'
 import * as domain from '@vidya/domain'
-import { mediaPath, parseMediaPath } from '@vidya/domain'
+import { mediaPath } from '@vidya/domain'
 import { LessonContent } from '@vidya/protocol'
 import { DataSource } from 'typeorm'
+
+import { addressedMediaIdsIn } from './contentAddresses'
 
 type VersionRow = { id: string; content: LessonContent }
 
@@ -42,20 +44,42 @@ const contentWith = (urls: string[]): LessonContent => ({
   ],
 })
 
-/** Every `(version, media)` pair the stored documents actually name. */
+/**
+ * Every `(version, media)` pair the stored documents actually name, read off the
+ * address tables rather than off the extractor the save uses: a scan that copies
+ * the extractor agrees with it about the fields it forgot.
+ */
 const scanVersions = async (dataSource: DataSource): Promise<string[]> => {
   const rows: VersionRow[] = await dataSource.query('SELECT "id", "content" FROM "lesson_versions"')
   const pairs = new Set<string>()
 
   for (const row of rows) {
-    const blocks = (row.content?.sections ?? []).flatMap((section) => section.blocks)
-    const used = blocks.map((block) => ('url' in block ? parseMediaPath(block.url) : undefined))
-
-    for (const mediaId of used.filter(Boolean)) pairs.add(`${row.id}:${mediaId}`)
+    for (const mediaId of addressedMediaIdsIn(row.content)) pairs.add(`${row.id}:${mediaId}`)
   }
 
   return [...pairs].sort()
 }
+
+/** A video hosted elsewhere, with a poster out of this school's own library. */
+const contentWithPoster = (posterUrl: string): LessonContent => ({
+  schemaVersion: domain.LessonContentSchemaVersion,
+  sections: [
+    {
+      id: sectionId(),
+      title: 'Watch',
+      assessment: 'none',
+      blocks: [
+        {
+          id: blockId(),
+          type: 'video' as const,
+          source: 'youtube' as const,
+          url: 'https://www.youtube.com/watch?v=Bhakti',
+          posterUrl,
+        },
+      ],
+    },
+  ],
+})
 
 const recordedUsages = async (dataSource: DataSource): Promise<string[]> => {
   const rows: { mediaId: string; lessonVersionId: string }[] = await dataSource.query(
@@ -147,6 +171,16 @@ describe('agreement between the usage table and the lesson documents', () => {
 
     const three = await addLesson(3)
     await versions.createInitialDraft(three)
+
+    expect(await recordedUsages(dataSource)).toEqual(await scanVersions(dataSource))
+  })
+
+  it('holds the poster a video block shows as well as the files beside it', async () => {
+    const poster = await storeAudio()
+    const lesson = await addLesson(1)
+    const draft = await versions.createInitialDraft(lesson)
+
+    await versions.saveDraft(lesson, draft.id, contentWithPoster(mediaPath(poster)))
 
     expect(await recordedUsages(dataSource)).toEqual(await scanVersions(dataSource))
   })
