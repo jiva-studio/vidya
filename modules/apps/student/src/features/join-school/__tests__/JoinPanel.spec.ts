@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { httpClientKey } from '@/shared/api'
 import { useConnection } from '@/shared/connection'
+import { translate } from '@/shared/i18n'
 import { addMessages, fluent } from '@/shared/i18n'
 import { useSiteStatus } from '@/shared/status'
 
@@ -61,7 +62,7 @@ describe('the school page behind a joining link', () => {
     http.get.mockResolvedValue(school)
 
     const screen = await render()
-    expect(screen.text()).toContain('Sign in to join')
+    expect(screen.text()).toContain(translate('join-sign-in'))
 
     await screen.get('button').trigger('click')
 
@@ -79,7 +80,7 @@ describe('the school page behind a joining link', () => {
     await flushPromises()
 
     expect(screen.emitted('sign-in')).toBeUndefined()
-    expect(screen.text()).toContain('You are a student of this school now')
+    expect(screen.text()).toContain(translate('join-joined'))
   })
 
   it('shows the first backfill rather than a school that looks empty', async () => {
@@ -92,7 +93,7 @@ describe('the school page behind a joining link', () => {
     await screen.get('button').trigger('click')
     await flushPromises()
 
-    expect(screen.text()).toContain('Your courses are on their way')
+    expect(screen.text()).toContain(translate('waiting-title'))
 
     useSiteStatus().runFinished(0, false)
   })
@@ -102,7 +103,7 @@ describe('the school page behind a joining link', () => {
 
     const screen = await render()
 
-    expect(screen.text()).toContain('This link leads nowhere')
+    expect(screen.text()).toContain(translate('join-unknown-title'))
     expect(screen.find('button').exists()).toBe(false)
   })
 
@@ -115,7 +116,7 @@ describe('the school page behind a joining link', () => {
     await screen.get('button').trigger('click')
     await flushPromises()
 
-    expect(screen.text()).toContain('not taking students yet')
+    expect(screen.text()).toContain(translate('join-closed-title'))
     expect(screen.text()).not.toContain('409')
 
     // Nothing to try again: the school, not the link, is what has to change.
@@ -126,7 +127,7 @@ describe('the school page behind a joining link', () => {
     http.get.mockRejectedValueOnce(new HttpError(500, '/j/GITA42')).mockResolvedValue(school)
 
     const screen = await render()
-    expect(screen.text()).toContain('could not be reached')
+    expect(screen.text()).toContain(translate('join-failed-title'))
 
     await screen.get('button').trigger('click')
     await flushPromises()

@@ -12,6 +12,7 @@ import {
   type DeviceRows,
   fakeDevice,
 } from '@/shared/data/__tests__/fakeDevice'
+import { translate } from '@/shared/i18n'
 import { addMessages, fluent } from '@/shared/i18n'
 
 import { toSchoolRows } from '../model'
@@ -60,7 +61,7 @@ describe('the schools a student belongs to', () => {
   it('says so plainly while the student is in no school at all', async () => {
     const { screen } = await render({ schools: [] })
 
-    expect(screen.text()).toContain('not in any school')
+    expect(screen.text()).toContain(translate('settings-schools-none'))
   })
 })
 

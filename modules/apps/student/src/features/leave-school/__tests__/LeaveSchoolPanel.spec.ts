@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { httpClientKey } from '@/shared/api'
 import { useConnection } from '@/shared/connection'
+import { translate } from '@/shared/i18n'
 import { addMessages, fluent } from '@/shared/i18n'
 
 import { messages } from '..'
@@ -101,7 +102,7 @@ describe('the school a student is leaving', () => {
     await clickLeave(screen)
     await sayYes(screen)
 
-    expect(screen.text()).toContain('own this school')
+    expect(screen.text()).toContain(translate('leave-owner'))
     expect(screen.text()).not.toContain('went wrong')
   })
 
@@ -112,7 +113,7 @@ describe('the school a student is leaving', () => {
     await clickLeave(screen)
     await sayYes(screen)
 
-    expect(screen.text()).toContain('could not be left')
+    expect(screen.text()).toContain(translate('leave-failed'))
   })
 
   it('says the school is gone once the server has taken the membership back', async () => {
@@ -121,6 +122,6 @@ describe('the school a student is leaving', () => {
     await clickLeave(screen)
     await sayYes(screen)
 
-    expect(screen.text()).toContain('no longer in this school')
+    expect(screen.text()).toContain(translate('leave-left'))
   })
 })
