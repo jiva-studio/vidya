@@ -21,9 +21,11 @@ const placement = computed<NavPlacement | undefined>(
   () => route.meta.nav as NavPlacement | undefined,
 )
 
+// The route's own params, not one key: a parent deeper than a section index
+// needs more than the school, and a missing one throws inside the render.
 const to = computed(() => ({
   name: placement.value?.parent ?? '',
-  params: { schoolId: schoolId.value },
+  params: { ...route.params, schoolId: schoolId.value },
 }))
 
 const label = computed(() => $t(`nav-${placement.value?.parent}`))

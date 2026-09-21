@@ -26,15 +26,18 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
         .getScopes(['roles:read'])
         .filter((s) => !schoolId || s.schoolId === schoolId)
 
-      // No scope means no access, so the empty list is a deliberate fail-closed result.
+      // No scope means no access, so the empty list is a deliberate fail-closed
+      // result. Everything but `where` is carried over: a scope that rebuilt
+      // the query from nothing dropped the paging and the ordering with it.
       return scopes.length > 0
         ? {
+            ...query,
             where: scopes.map((s) => ({
               ...query?.where,
               schoolId: s.schoolId,
             })),
           }
-        : { where: { schoolId: In([]) } }
+        : { ...query, where: { schoolId: In([]) } }
     })
   }
 

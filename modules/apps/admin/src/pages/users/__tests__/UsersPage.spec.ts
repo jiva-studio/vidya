@@ -81,7 +81,7 @@ describe('UsersPage', () => {
     expect(transport.calls[0]).toEqual({
       method: 'GET',
       path: USERS,
-      query: { schoolId: 'school-1', limit: PAGE_SIZE, offset: 0, search: undefined },
+      query: { schoolId: 'school-1', limit: PAGE_SIZE, offset: 0, query: undefined },
     })
     expect(page.text()).toContain('Ann')
   })
@@ -130,7 +130,7 @@ describe('UsersPage', () => {
   it('hands the search to the server and shows what it answers', async () => {
     const { transport, page } = await mountPage({
       [USERS]: (call: RecordedCall) =>
-        call.query?.search === 'Smith'
+        call.query?.query === 'Smith'
           ? { items: [{ id: 'user-0', name: 'Ann Smith' }], total: 1 }
           : {
               items: [
@@ -145,7 +145,7 @@ describe('UsersPage', () => {
 
     await search(page, 'Smith')
 
-    expect(transport.calls.at(-1)?.query).toMatchObject({ search: 'Smith', offset: 0 })
+    expect(transport.calls.at(-1)?.query).toMatchObject({ query: 'Smith', offset: 0 })
     expect(page.text()).toContain('Ann Smith')
     expect(page.text()).not.toContain('Bob Jones')
   })
@@ -171,7 +171,7 @@ describe('UsersPage', () => {
   it('says the search matched nobody rather than that the school is empty', async () => {
     const { page } = await mountPage({
       [USERS]: (call: RecordedCall) =>
-        call.query?.search
+        call.query?.query
           ? { items: [], total: 0 }
           : {
               items: Array.from({ length: 12 }, (_, i) => ({ id: `user-${i}`, name: `User ${i}` })),

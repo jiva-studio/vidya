@@ -73,7 +73,7 @@ export class SchoolsController {
 
   @Crud.GetMany(Routes().edu.schools.find())
   async getMany(
-    @Query() query: dto.GetSchoolsQuery,
+    @Query() filters: dto.GetSchoolsQuery,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetSchoolsResponse> {
     // Check if user has permission to read schools
@@ -84,7 +84,11 @@ export class SchoolsController {
     // Get one page of the schools the caller may see
     const [schools, total] = await this.schoolsService
       .scopedBy({ permissions: auth.permissions })
-      .findAndCount({ order: { name: 'ASC' }, ...dto.pageOf(query) })
+      .findAndCount({
+        where: dto.matchingName(filters.query),
+        order: { name: 'ASC', id: 'ASC' },
+        ...dto.pageOf(filters),
+      })
 
     // Return schools response
     return new dto.GetSchoolsResponse({ items: toSchoolSummaries(schools), total })

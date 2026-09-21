@@ -27,6 +27,7 @@ export const getGroups = (http: HttpClient, query: GetGroupsQuery): Promise<GetG
     courseId: query.courseId,
     limit: query.limit,
     offset: query.offset,
+    query: query.query,
   })
 
 export const getGroup = (http: HttpClient, id: GroupId): Promise<GetGroupResponse> =>

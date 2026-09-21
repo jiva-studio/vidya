@@ -62,6 +62,12 @@ export class GetRoleSummariesListQuery
   @IsUUID()
   @IsOptional()
   schoolId?: domain.SchoolId
+
+  @ApiPropertyOptional({ example: 'teacher' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  query?: string
 }
 
 export class GetRolesResponse implements protocol.GetRolesResponse {

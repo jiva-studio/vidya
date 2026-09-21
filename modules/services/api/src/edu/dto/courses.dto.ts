@@ -78,6 +78,12 @@ export class GetCoursesQuery extends PagedQuery implements protocol.GetCoursesQu
   @IsOptional()
   @IsUUID()
   schoolId?: domain.SchoolId
+
+  @ApiPropertyOptional({ example: 'morning' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  query?: string
 }
 
 export class GetCoursesResponse implements protocol.GetCoursesResponse {

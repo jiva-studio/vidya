@@ -49,7 +49,11 @@ export type GroupSyncDetails = GroupDetails & {
 export type CreateGroupRequest = crud.CreateItemRequest<Omit<GroupDetails, 'id'>>
 export type CreateGroupResponse = crud.CreateItemResponse<GroupDetails['id']>
 
-export type GetGroupsQuery = crud.PageQuery & { courseId?: string }
+export type GetGroupsQuery = crud.PageQuery & {
+  courseId?: string
+  query?: string
+}
+
 export type GetGroupsResponse = crud.GetPagedItemsListResponse<GroupSummary>
 export type GetGroupResponse = crud.GetItemResponse<GroupDetails>
 

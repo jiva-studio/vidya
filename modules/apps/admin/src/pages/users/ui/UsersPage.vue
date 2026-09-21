@@ -27,7 +27,7 @@ const columns = computed<TableColumn[]>(() => [
 
 // A list narrowed to nothing is not an empty school: saying so is the only
 // feedback a search that matched nothing can give.
-const searching = computed(() => users.search.value.trim().length > 0)
+const searching = computed(() => users.query.value.trim().length > 0)
 const emptyTitle = computed(() =>
   searching.value ? $t('users-no-matches-title') : $t('users-empty-title'),
 )
@@ -78,7 +78,7 @@ function asUser(row: TableRowData): UserRow {
       <template #leading><PageBack /></template>
     </PageHeader>
     <TableFilters
-      :search="users.search.value"
+      :search="users.query.value"
       :search-label="$t('users-title')"
       :filters-applied="searching"
       @update:search="onSearch"

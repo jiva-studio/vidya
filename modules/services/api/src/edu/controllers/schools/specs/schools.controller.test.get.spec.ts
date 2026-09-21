@@ -63,7 +63,10 @@ describe('SchoolsController', () => {
         await ctx.authenticate(ctx.misc.users.adminOfOneAndTwo),
       )
       expect(res.items).toHaveLength(2)
-      expect(res.items.map((x) => x.id)).toEqual([ctx.one.school, ctx.two.school].map((x) => x.id))
+      expect(res.items.map((x) => x.id).sort()).toEqual(
+        [ctx.one.school, ctx.two.school].map((x) => x.id).sort(),
+      )
+      expect(res.items.map((x) => x.name)).toEqual([...res.items.map((x) => x.name)].sort())
     })
   })
 })

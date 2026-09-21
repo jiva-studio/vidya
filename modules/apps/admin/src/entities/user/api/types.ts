@@ -14,5 +14,5 @@ export interface GetUserSchoolsResponse {
 export interface UserPageQuery {
   limit?: number
   offset?: number
-  search?: string
+  query?: string
 }

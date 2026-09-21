@@ -16,6 +16,7 @@ import { useHttp } from '@/shared/api'
 export interface SchoolPageQuery {
   limit?: number
   offset?: number
+  query?: string
 }
 
 import type {

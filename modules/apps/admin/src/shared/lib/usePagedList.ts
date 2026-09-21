@@ -11,8 +11,16 @@ export interface PagedAnswer<TRow> {
   total: number
 }
 
+export interface PagedQuery {
+  limit: number
+  offset: number
+
+  /** What the operator typed, or nothing. Matched by the server. */
+  query?: string
+}
+
 export interface PagedListOptions<TRow> {
-  read: (page: { limit: number; offset: number }) => Promise<PagedAnswer<TRow>>
+  read: (query: PagedQuery) => Promise<PagedAnswer<TRow>>
   fallback?: string
 }
 
@@ -28,6 +36,7 @@ export const usePagedList = <TRow>({ read, fallback }: PagedListOptions<TRow>) =
   const rows = ref<TRow[]>([]) as { value: TRow[] }
   const total = ref(0)
   const page = ref(1)
+  const query = ref('')
   const loading = ref(false)
   const error = ref<string | undefined>(undefined)
 
@@ -47,10 +56,22 @@ export const usePagedList = <TRow>({ read, fallback }: PagedListOptions<TRow>) =
     rows.value = []
 
     try {
-      const answer = await read({ limit: PAGE_SIZE, offset: (page.value - 1) * PAGE_SIZE })
+      const answer = await read({
+        limit: PAGE_SIZE,
+        offset: (page.value - 1) * PAGE_SIZE,
+        query: query.value.trim() || undefined,
+      })
       if (mine !== ticket) return
       rows.value = answer.items
       total.value = answer.total ?? answer.items.length
+
+      // The list can shrink under the reader — the last row of the last page
+      // is accepted, archived, deleted — and an offset past the end answers
+      // with nothing under a control that no longer offers a way back.
+      if (page.value > pages.value) {
+        page.value = pages.value
+        return load()
+      }
     } catch (caught) {
       if (mine !== ticket) return
       error.value = reasonOf(caught, fallback)
@@ -70,5 +91,29 @@ export const usePagedList = <TRow>({ read, fallback }: PagedListOptions<TRow>) =
     void load()
   }
 
-  return { rows, total, page, pages, paged, loading, error, load, goTo, restart }
+  /** A search spans the list, so the server does it and the page starts again. */
+  const find = (term: string): void => {
+    query.value = term
+    restart()
+  }
+
+  // The filter row is offered on the size of the list, not of the page: a
+  // threshold read off one page appears and disappears as the reader moves.
+  const searchable = computed(() => total.value >= 10 || query.value.length > 0)
+
+  return {
+    rows,
+    total,
+    page,
+    pages,
+    paged,
+    query,
+    searchable,
+    loading,
+    error,
+    load,
+    goTo,
+    restart,
+    find,
+  }
 }

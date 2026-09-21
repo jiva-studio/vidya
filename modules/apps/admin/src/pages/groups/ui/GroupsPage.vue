@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { SelectOption } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useCourses } from '@/entities/course'
@@ -19,7 +19,6 @@ const { $t } = useFluent()
 const router = useRouter()
 const groups = useGroups()
 const courses = useCourses()
-const search = ref('')
 
 const canCreate = useCan('groups:create')
 const canEdit = useCan('groups:update')
@@ -41,13 +40,7 @@ const named = computed<GroupListRow[]>(() =>
   })),
 )
 
-const displayedItems = computed(() => {
-  if (!search.value.trim()) return named.value
-  const query = search.value.trim().toLowerCase()
-  return named.value.filter((group) => matches(group, query))
-})
-
-const filtersApplied = computed(() => !!search.value || !!groups.courseId.value)
+const filtersApplied = computed(() => !!groups.query.value || !!groups.courseId.value)
 
 // A list narrowed to nothing is not a school without groups.
 const emptyTitle = computed(() =>
@@ -76,7 +69,7 @@ function onRetry() {
 }
 
 function onSearch(term: string) {
-  search.value = term
+  groups.find(term)
 }
 
 function onCourse(value: string) {
@@ -84,16 +77,11 @@ function onCourse(value: string) {
 }
 
 function onClear() {
-  search.value = ''
   groups.courseId.value = ''
+  groups.find('')
 }
 
 /* -------------------------------- Helpers --------------------------------- */
-
-function matches(group: GroupListRow, query: string): boolean {
-  if (group.name.toLowerCase().includes(query)) return true
-  return (group.courseName ?? '').toLowerCase().includes(query)
-}
 </script>
 
 <template>
@@ -108,7 +96,7 @@ function matches(group: GroupListRow, query: string): boolean {
   >
     <template #filters>
       <GroupsFilters
-        :search="search"
+        :search="groups.query.value"
         :course-id="groups.courseId.value"
         :course-options="courseOptions"
         :filters-applied="filtersApplied"
@@ -118,7 +106,7 @@ function matches(group: GroupListRow, query: string): boolean {
       />
     </template>
     <GroupsTable
-      :rows="displayedItems"
+      :rows="named"
       :empty-title="emptyTitle"
       :empty-description="emptyDescription"
       :loading="groups.loading.value"

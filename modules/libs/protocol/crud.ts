@@ -37,9 +37,14 @@ export type GetPagedItemsListResponse<TItemType> = GetItemsListResponse<TItemTyp
   total: number
 }
 
-/** What a list takes to return one page of itself. */
+/**
+ * What a list takes to return one page of itself.
+ *
+ * Absent `limit` means the whole list: these endpoints feed pickers and name
+ * lookups as well as screens. `limit` above the server's maximum is refused,
+ * not clamped.
+ */
 export type PageQuery = {
-  /** How many rows at most. The server caps it; see the DTO. */
   limit?: number
   offset?: number
 }

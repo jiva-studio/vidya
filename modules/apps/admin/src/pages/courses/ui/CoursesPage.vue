@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CourseSummary } from '@vidya/protocol'
 import { TableFilters } from '@vidya/ui'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { getCourses } from '@/entities/course'
@@ -16,8 +16,7 @@ import { ListPage } from '@/widgets/list-page'
 
 const router = useRouter()
 const http = useHttp()
-const { schoolId } = useCurrentSchool()
-const search = ref('')
+const { generation, schoolId } = useCurrentSchool()
 
 // The page is its own list rather than `useCourses`, which the group form and
 // the groups filter read whole: a picker cut to its first page loses courses.
@@ -31,13 +30,12 @@ const courses = usePagedList<CourseSummary>({
 const canCreate = useCan('courses:create')
 const canEdit = useCan('courses:update')
 
-const displayedItems = computed(() => {
-  if (!search.value.trim()) return courses.rows.value
-  const query = search.value.trim().toLowerCase()
-  return courses.rows.value.filter((course) => course.name.toLowerCase().includes(query))
-})
-
 /* ---------------------------------- Hooks --------------------------------- */
+
+// The server answers for the school in hand, so a switch is a new list.
+watch(generation, () => {
+  courses.restart()
+})
 
 onMounted(() => {
   void courses.load()
@@ -61,8 +59,12 @@ function onRetry() {
   void courses.load()
 }
 
+function onSearch(term: string) {
+  courses.find(term)
+}
+
 function onClear() {
-  search.value = ''
+  courses.find('')
 }
 </script>
 
@@ -78,15 +80,16 @@ function onClear() {
   >
     <template #filters>
       <TableFilters
-        v-if="courses.rows.value.length >= 10 || search"
-        v-model:search="search"
+        v-if="courses.searchable.value"
+        :search="courses.query.value"
         :search-label="$t('courses-title')"
-        :filters-applied="!!search"
+        :filters-applied="!!courses.query.value"
+        @update:search="onSearch"
         @clear="onClear"
       />
     </template>
     <CoursesTable
-      :rows="displayedItems"
+      :rows="courses.rows.value"
       :loading="courses.loading.value"
       :error="courses.error.value ? $t('state-error') : undefined"
       :can-create="canCreate"

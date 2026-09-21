@@ -3,7 +3,7 @@ import type { SchoolId } from '@vidya/domain'
 import type { TableColumn, TableRowData } from '@vidya/ui'
 import { Table, TableFilters } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { SchoolRow } from '@/entities/school'
@@ -18,7 +18,6 @@ import { ListPage } from '@/widgets/list-page'
 const { $t } = useFluent()
 const router = useRouter()
 const schools = useSchools()
-const search = ref('')
 
 // Hidden rather than disabled: the server refuses regardless, and a control
 // nobody can explain only spends the reader's attention.
@@ -31,12 +30,6 @@ const columns = computed<TableColumn[]>(() => [
 ])
 
 const emptyActionLabel = computed(() => (canCreate.value ? $t('schools-create') : undefined))
-
-const displayedRows = computed(() => {
-  if (!search.value.trim()) return schools.rows.value
-  const query = search.value.trim().toLowerCase()
-  return schools.rows.value.filter((school) => school.name.toLowerCase().includes(query))
-})
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -62,8 +55,12 @@ function onRetry() {
   void schools.load()
 }
 
+function onSearch(term: string) {
+  schools.find(term)
+}
+
 function onClear() {
-  search.value = ''
+  schools.find('')
 }
 
 /* -------------------------------- Helpers --------------------------------- */
@@ -86,16 +83,17 @@ function asSchool(row: TableRowData): SchoolRow {
   >
     <template #filters>
       <TableFilters
-        v-if="schools.rows.value.length >= 10 || search"
-        v-model:search="search"
+        v-if="schools.searchable.value"
+        :search="schools.query.value"
         :search-label="$t('schools-title')"
-        :filters-applied="!!search"
+        :filters-applied="!!schools.query.value"
+        @update:search="onSearch"
         @clear="onClear"
       />
     </template>
     <Table
       :columns="columns"
-      :rows="displayedRows"
+      :rows="schools.rows.value"
       :loading="schools.loading.value"
       :error="schools.error.value ? $t('state-error') : undefined"
       :empty-title="$t('schools-empty-title')"

@@ -17,6 +17,7 @@ import { useHttp } from '@/shared/api'
 export interface RolePageQuery {
   limit?: number
   offset?: number
+  query?: string
 }
 
 /**

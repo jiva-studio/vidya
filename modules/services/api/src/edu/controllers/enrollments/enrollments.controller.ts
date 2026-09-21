@@ -97,7 +97,7 @@ export class EnrollmentsController {
 
     // Staff see the school's enrollments; everyone else sees only their own, and
     // each side is shown its own list with its own tidying-up taken off it.
-    const page = { order: { createdAt: 'DESC' } as const, ...dto.pageOf(query) }
+    const page = { order: { createdAt: 'DESC', id: 'ASC' } as const, ...dto.pageOf(query) }
 
     const [found, total] = auth.permissions.has(['enrollments:read'])
       ? await this.enrollments.scopedBy({ permissions: auth.permissions }).findAndCount({

@@ -29,7 +29,9 @@ export type CreateSchoolResponse = crud.CreateItemResponse<SchoolDetails['id']>
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export type GetSchoolsQuery = crud.PageQuery
+export type GetSchoolsQuery = crud.PageQuery & {
+  query?: string
+}
 
 export type GetSchoolsResponse = crud.GetPagedItemsListResponse<SchoolSummary>
 

@@ -3,7 +3,7 @@ import type { RoleId } from '@vidya/domain'
 import type { TableColumn, TableRowData } from '@vidya/ui'
 import { Table, TableFilters } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { RoleRow } from '@/entities/role'
@@ -18,7 +18,6 @@ import { ListPage } from '@/widgets/list-page'
 const { $t } = useFluent()
 const router = useRouter()
 const roles = useRoles()
-const search = ref('')
 
 const canCreate = useCan('roles:create')
 const canUpdate = useCan('roles:update')
@@ -30,16 +29,6 @@ const columns = computed<TableColumn[]>(() => [
 ])
 
 const emptyActionLabel = computed(() => (canCreate.value ? $t('roles-create') : undefined))
-
-const displayedRows = computed(() => {
-  if (!search.value.trim()) return roles.rows.value
-  const query = search.value.trim().toLowerCase()
-  return roles.rows.value.filter(
-    (role) =>
-      role.name.toLowerCase().includes(query) ||
-      (role.description && role.description.toLowerCase().includes(query)),
-  )
-})
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -61,8 +50,12 @@ function onRetry() {
   void roles.load()
 }
 
+function onSearch(term: string) {
+  roles.find(term)
+}
+
 function onClear() {
-  search.value = ''
+  roles.find('')
 }
 
 /* -------------------------------- Helpers --------------------------------- */
@@ -84,16 +77,17 @@ function asRole(row: TableRowData): RoleRow {
   >
     <template #filters>
       <TableFilters
-        v-if="roles.rows.value.length >= 10 || search"
-        v-model:search="search"
+        v-if="roles.searchable.value"
+        :search="roles.query.value"
         :search-label="$t('roles-title')"
-        :filters-applied="!!search"
+        :filters-applied="!!roles.query.value"
+        @update:search="onSearch"
         @clear="onClear"
       />
     </template>
     <Table
       :columns="columns"
-      :rows="displayedRows"
+      :rows="roles.rows.value"
       :loading="roles.loading.value"
       :error="roles.error.value ? $t('state-error') : undefined"
       :empty-title="$t('roles-empty-title')"

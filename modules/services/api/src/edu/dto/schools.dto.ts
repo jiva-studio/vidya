@@ -48,7 +48,13 @@ export class SchoolSummary implements protocol.SchoolSummary {
 
 export class GetSchoolResponse extends SchoolDetails implements protocol.GetSchoolResponse {}
 
-export class GetSchoolsQuery extends PagedQuery implements protocol.GetSchoolsQuery {}
+export class GetSchoolsQuery extends PagedQuery implements protocol.GetSchoolsQuery {
+  @ApiPropertyOptional({ example: 'morning' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  query?: string
+}
 
 export class GetSchoolsResponse implements protocol.GetSchoolsResponse {
   constructor(options: { items: Array<SchoolSummary>; total?: number }) {

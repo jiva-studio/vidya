@@ -109,7 +109,7 @@ async function send(): Promise<void> {
   }
 
   const school = schoolId.value
-  if (!school) return
+  if (!school) throw new Error('roles-school-missing')
 
   await api.create({ ...body, schoolId: school })
 }

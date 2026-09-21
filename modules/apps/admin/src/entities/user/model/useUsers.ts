@@ -24,7 +24,7 @@ export const useUsers = () => {
   const rows = ref<UserRow[]>([])
   const total = ref(0)
   const page = ref(1)
-  const search = ref('')
+  const query = ref('')
   const loading = ref(false)
   const error = ref<string | undefined>(undefined)
 
@@ -43,7 +43,7 @@ export const useUsers = () => {
       const response = await api.list({
         limit: PAGE_SIZE,
         offset: (page.value - 1) * PAGE_SIZE,
-        search: search.value.trim() || undefined,
+        query: query.value.trim() || undefined,
       })
 
       if (mine !== ticket) return
@@ -63,7 +63,7 @@ export const useUsers = () => {
   }
 
   const find = (term: string): void => {
-    search.value = term
+    query.value = term
     page.value = 1
     void load()
   }
@@ -73,5 +73,5 @@ export const useUsers = () => {
     void load()
   })
 
-  return { rows, total, page, pages, search, loading, error, load, goTo, find }
+  return { rows, total, page, pages, query, loading, error, load, goTo, find }
 }

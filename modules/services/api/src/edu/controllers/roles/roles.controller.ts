@@ -72,7 +72,7 @@ export class RolesController {
 
   @Crud.GetMany(Routes().edu.roles.find())
   async getMany(
-    @Query() query: dto.GetRoleSummariesListQuery,
+    @Query() filters: dto.GetRoleSummariesListQuery,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetRolesResponse> {
     // Check if user has permission to read roles
@@ -84,9 +84,9 @@ export class RolesController {
     const [roles, total] = await this.rolesService
       .scopedBy({ permissions: auth.permissions })
       .findAndCount({
-        where: { schoolId: query.schoolId },
-        order: { name: 'ASC' },
-        ...dto.pageOf(query),
+        where: { ...dto.matchingName(filters.query), schoolId: filters.schoolId },
+        order: { name: 'ASC', id: 'ASC' },
+        ...dto.pageOf(filters),
       })
 
     // Return role summaries

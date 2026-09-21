@@ -66,7 +66,7 @@ export class CoursesController {
 
   @Crud.GetMany(Routes().edu.courses.find())
   async getMany(
-    @Query() query: dto.GetCoursesQuery,
+    @Query() filters: dto.GetCoursesQuery,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetCoursesResponse> {
     if (!auth.permissions.has(['courses:read'])) {
@@ -76,9 +76,9 @@ export class CoursesController {
     const [courses, total] = await this.courses
       .scopedBy({ permissions: auth.permissions })
       .findAndCount({
-        where: { schoolId: query.schoolId },
-        order: { name: 'ASC' },
-        ...dto.pageOf(query),
+        where: { ...dto.matchingName(filters.query), schoolId: filters.schoolId },
+        order: { name: 'ASC', id: 'ASC' },
+        ...dto.pageOf(filters),
       })
 
     return { items: toCourseSummaries(courses), total }

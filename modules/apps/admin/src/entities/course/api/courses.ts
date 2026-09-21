@@ -26,6 +26,7 @@ export const getCourses = (http: HttpClient, query: GetCoursesQuery): Promise<Ge
     schoolId: query.schoolId,
     limit: query.limit,
     offset: query.offset,
+    query: query.query,
   })
 
 export const getCourse = (http: HttpClient, id: CourseId): Promise<GetCourseResponse> =>

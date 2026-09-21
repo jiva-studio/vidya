@@ -66,6 +66,19 @@ export const useHomeworkRows = () => {
     void load()
   })
 
+  // The entity's own `goTo` reads a page and stops; a row is only readable
+  // once its enrolment and its student have been resolved, which is what the
+  // composed `load` does.
+  const goTo = (next: number): void => {
+    queue.page.value = next
+    void load()
+  }
+
+  const restart = (): void => {
+    queue.page.value = 1
+    void load()
+  }
+
   return {
     rows,
     filters: queue.filters,
@@ -75,8 +88,8 @@ export const useHomeworkRows = () => {
     total: queue.total,
     page: queue.page,
     paged: queue.paged,
-    goTo: queue.goTo,
-    restart: queue.restart,
+    goTo,
+    restart,
     directory,
   }
 }

@@ -37,9 +37,7 @@ export type UserDetails = Omit<UserSummary, 'roles'> & {
 
 export type GetUsersQuery = crud.PageQuery & {
   schoolId?: domain.SchoolId
-
-  /** Matched against the name and the address, case-insensitively. */
-  search?: string
+  query?: string
 }
 
 export type GetUserResponse = crud.GetItemResponse<UserDetails>

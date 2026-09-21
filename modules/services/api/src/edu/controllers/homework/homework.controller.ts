@@ -96,7 +96,7 @@ export class HomeworkController {
             status: query.status,
             schoolId: query.schoolId,
           },
-          order: { createdAt: 'DESC' },
+          order: { createdAt: 'DESC', id: 'ASC' },
           ...dto.pageOf(query),
         })
 

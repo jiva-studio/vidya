@@ -82,7 +82,7 @@ export class GetUsersQuery extends PagedQuery implements protocol.GetUsersQuery 
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  search?: string
+  query?: string
 }
 
 export class GetUserResponse extends UserDetails implements protocol.GetUserResponse {}
