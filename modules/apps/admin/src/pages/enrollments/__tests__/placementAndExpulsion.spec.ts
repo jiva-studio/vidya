@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { setAppRouter } from '@/shared/access'
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
@@ -47,11 +47,11 @@ const details = (over: Record<string, unknown> = {}) => ({
 })
 
 const world = (over: FakeAnswers = {}): FakeAnswers => ({
-  [COURSES]: { items: [{ id: 'c1', name: 'Основы' }] },
-  [GROUPS]: { items: [{ id: 'g1', courseId: 'c1', name: 'Утренняя', status: 'pending' }] },
+  [COURSES]: { items: [{ id: 'c1', name: 'Foundations' }] },
+  [GROUPS]: { items: [{ id: 'g1', courseId: 'c1', name: 'Morning', status: 'pending' }] },
   [ENROLLMENTS]: { items: [summary()] },
   [`${ENROLLMENTS}/e1`]: details(),
-  '/edu/users/u1': { id: 'u1', name: 'Аня Иванова', email: 'a@example.com', roles: [] },
+  '/edu/users/u1': { id: 'u1', name: 'Ann Ivanova', email: 'a@example.com', roles: [] },
   ...over,
 })
 
@@ -108,7 +108,7 @@ describe('EnrollmentsPage: placement and expulsion', () => {
       world({ [`${ENROLLMENTS}/e1`]: details({ preferredGroupId: 'g1' }) }),
     )
 
-    await click(page, 'Принять')
+    await click(page, translate('enrollments-accept'))
 
     expect(moderations(transport)[0]?.body).toEqual({ status: 'accepted', groupId: 'g1' })
   })
@@ -121,7 +121,7 @@ describe('EnrollmentsPage: placement and expulsion', () => {
       }),
     )
 
-    await click(page, 'Принять')
+    await click(page, translate('enrollments-accept'))
 
     expect(moderations(transport)[0]?.body).toEqual({ status: 'accepted' })
   })
@@ -129,7 +129,7 @@ describe('EnrollmentsPage: placement and expulsion', () => {
   it('leaves the group out when no group was asked for', async () => {
     const { transport, page } = await mountPage(world())
 
-    await click(page, 'Принять')
+    await click(page, translate('enrollments-accept'))
 
     expect(moderations(transport)[0]?.body).toEqual({ status: 'accepted' })
   })
@@ -142,12 +142,12 @@ describe('EnrollmentsPage: placement and expulsion', () => {
       }),
     )
 
-    await click(page, 'Отчислить')
+    await click(page, translate('enrollments-revoke'))
     expect(moderations(transport)).toHaveLength(0)
-    expect(document.body.textContent).toContain('Отчислить студента с курса?')
+    expect(document.body.textContent).toContain(translate('enrollments-revoke-title'))
 
     const confirm = [...document.body.querySelectorAll('button')].find(
-      (button) => button.textContent?.trim() === 'Отчислить',
+      (button) => button.textContent?.trim() === translate('enrollments-revoke'),
     )
     confirm?.click()
     await flushPromises()
@@ -168,7 +168,7 @@ describe('EnrollmentsPage: placement and expulsion', () => {
 
     const labels = page.findAll('button').map(nameOf)
 
-    expect(labels).not.toContain('Отчислить')
+    expect(labels).not.toContain(translate('enrollments-revoke'))
   })
 
   it('says only when a decision was taken when it cannot say by whom', async () => {

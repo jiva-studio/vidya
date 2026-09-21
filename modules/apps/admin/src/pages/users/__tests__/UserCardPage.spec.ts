@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, refusal } from '@/shared/testing'
@@ -72,7 +72,7 @@ const rolesWritten = (transport: { calls: { method: string; path: string }[] }) 
 const save = async (page: {
   findAll: (s: string) => { text: () => string; trigger: (e: string) => Promise<unknown> }[]
 }) => {
-  const button = page.findAll('button').find((node) => node.text() === 'Сохранить')
+  const button = page.findAll('button').find((node) => node.text() === translate('action-save'))
   await button?.trigger('click')
   await flushPromises()
 }
@@ -139,7 +139,7 @@ describe('UserCardPage', () => {
     const { transport, page } = await mountPage(card)
 
     await page.findAll('[role="checkbox"]')[1].trigger('click')
-    const cancel = page.findAll('button').find((node) => node.text() === 'Отмена')
+    const cancel = page.findAll('button').find((node) => node.text() === translate('action-cancel'))
     await cancel?.trigger('click')
     await flushPromises()
 
@@ -167,7 +167,9 @@ describe('UserCardPage', () => {
     expect(transport.failures).toContainEqual({ key: 'failure-missing', reason: 'No such person' })
     expect(page.find('[role="alert"]').text()).not.toContain('No such person')
 
-    const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
+    const retry = page
+      .findAll('button')
+      .find((button) => button.text() === translate('action-retry'))
     await retry?.trigger('click')
     await flushPromises()
 
@@ -180,9 +182,9 @@ describe('UserCardPage', () => {
     const { page } = await mountPage(card)
 
     const text = page.text()
-    const name = text.indexOf('Имя')
-    const roles = text.indexOf('Роли в этой школе')
-    const save = text.lastIndexOf('Сохранить')
+    const name = text.indexOf(translate('users-column-name'))
+    const roles = text.indexOf(translate('users-roles-title'))
+    const save = text.lastIndexOf(translate('action-save'))
 
     expect(name).toBeGreaterThan(-1)
     expect(roles).toBeGreaterThan(name)

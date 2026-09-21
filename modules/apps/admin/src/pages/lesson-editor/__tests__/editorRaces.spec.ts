@@ -2,7 +2,7 @@ import type { LessonContent } from '@vidya/domain'
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 
 import { messages } from '../i18n'
 import { contentOf, sectionOf, textBlock } from './documents'
@@ -77,7 +77,7 @@ const writes = (
 
 const saveButton = (wrapper: {
   findAll: (s: string) => { text: () => string; attributes: (n: string) => string | undefined }[]
-}) => wrapper.findAll('button').find((node) => plain(node.text()) === 'Save')
+}) => wrapper.findAll('button').find((node) => plain(node.text()) === translate('action-save'))
 
 const titleSent = (body: unknown): string | undefined =>
   (body as { content: LessonContent }).content.sections[0]?.title
@@ -157,7 +157,7 @@ describe('the editor under rapid edits and answers that arrive late', () => {
     await flushPromises()
 
     expect(sent).toBe(2)
-    expect(saveSays(wrapper)).not.toBe('Saved')
+    expect(saveSays(wrapper)).not.toBe(translate('toast-saved'))
     expect(saveButton(wrapper)?.attributes('disabled')).toBeUndefined()
 
     answers[1]?.settle(details('v1', 1, 'draft'))
@@ -165,7 +165,7 @@ describe('the editor under rapid edits and answers that arrive late', () => {
 
     const patches = writes(http, `${VERSIONS}/v1`).filter((call) => call.method === 'PATCH')
     expect(titleSent(patches.at(-1)?.body)).toBe('Second pass')
-    expect(saveSays(wrapper)).toBe('Saved')
+    expect(saveSays(wrapper)).toBe(translate('toast-saved'))
   })
 
   it('leaves nothing behind when the editor is closed with a revision in flight', async () => {

@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { setAppRouter } from '@/shared/access'
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
@@ -49,11 +49,11 @@ const summary = {
 }
 
 const world = (over: FakeAnswers = {}): FakeAnswers => ({
-  [COURSES]: { items: [{ id: 'c1', name: 'Основы' }] },
+  [COURSES]: { items: [{ id: 'c1', name: 'Foundations' }] },
   [GROUPS]: { items: [] },
   [ENROLLMENTS]: { items: [summary] },
   [`${ENROLLMENTS}/e1`]: { ...summary, studentId: 'u1', schoolId: 'school-1' },
-  '/edu/users/u1': { id: 'u1', name: 'Аня Иванова', email: 'a@example.org', roles: [] },
+  '/edu/users/u1': { id: 'u1', name: 'Ann Ivanova', email: 'a@example.org', roles: [] },
   ...over,
 })
 
@@ -103,7 +103,7 @@ describe('deciding a request twice before the first answer', () => {
       world({ [`PATCH ${MODERATE}`]: () => decision.promise }),
     )
 
-    const accept = buttonLabelled(page, 'Принять')
+    const accept = buttonLabelled(page, translate('enrollments-accept'))
     accept.click()
     accept.click()
     accept.click()

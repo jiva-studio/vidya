@@ -9,7 +9,7 @@ import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 import type { MediaGateway } from '@/entities/media'
 import { FakeMediaGateway, mediaGatewayKey } from '@/entities/media'
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { manualClock } from '@/shared/lib'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
@@ -23,7 +23,7 @@ import LessonEditorPage from '../ui/LessonEditorPage.vue'
 // the two it borrows are stated here rather than imported across.
 addMessages({
   en: 'nav-courses = Courses\nlessons-title = Lessons\n',
-  ru: 'nav-courses = Курсы\nlessons-title = Уроки\n',
+  ru: 'nav-courses = Courses\nlessons-title = Lessons\n',
 })
 
 export const SCHOOL = asId<SchoolId>('11111111-1111-1111-1111-111111111111')
@@ -131,7 +131,12 @@ export const saveDraft = async (): Promise<void> => {
 /** The one control that carries the state of the draft, and what it says. */
 export const saveButton = (wrapper: { element: Element }): HTMLButtonElement | undefined =>
   [...wrapper.element.querySelectorAll('button')].find((node) =>
-    ['Save', 'Saved', 'Saving…', 'Try saving again'].includes(plain(node.textContent ?? '').trim()),
+    [
+      translate('action-save'),
+      translate('toast-saved'),
+      translate('editor-status-saving'),
+      translate('editor-save-retry'),
+    ].includes(plain(node.textContent ?? '').trim()),
   )
 
 export const saveSays = (wrapper: { element: Element }): string =>
@@ -205,7 +210,7 @@ export const clickOverlay = async (label: string): Promise<void> => {
  */
 export const openInsertMenu = async (root: Element): Promise<void> => {
   const tail = [...root.querySelectorAll<HTMLElement>('button')].find((node) =>
-    accessibleName(node).startsWith('Lesson text'),
+    accessibleName(node).startsWith(translate('editor-text-label')),
   )
 
   tail?.click()
@@ -223,7 +228,7 @@ export const openInsertMenu = async (root: Element): Promise<void> => {
 /** Opens a section from the boundary below the one on screen. */
 export const addSection = async (wrapper: { element: Element }): Promise<void> => {
   const boundary = [...wrapper.element.querySelectorAll<HTMLElement>('button')].find(
-    (node) => accessibleName(node) === 'Add section',
+    (node) => accessibleName(node) === translate('editor-section-add'),
   )
 
   if (!boundary) throw new Error('no boundary to open a section from')

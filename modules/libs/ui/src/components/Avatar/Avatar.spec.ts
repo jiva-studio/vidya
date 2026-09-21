@@ -39,7 +39,7 @@ describe('avatarTint', () => {
   })
 
   it('tints a name written in any script, and one outside the basic plane', () => {
-    for (const name of ['Радха Деви', 'श्रीधर', '達磨', '𝒜nanda']) {
+    for (const name of ['Σοφία Παπαδάκη', 'श्रीधर', '達磨', '𝒜nanda']) {
       expect(avatarTint(name)).toBeGreaterThanOrEqual(1)
       expect(avatarTint(name)).toBeLessThanOrEqual(AVATAR_TINTS)
     }

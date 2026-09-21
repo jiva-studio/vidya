@@ -6,7 +6,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { PAGE_SIZE } from '@/entities/user'
 import { setAppRouter, useCurrentSchool } from '@/shared/access'
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers, RecordedCall } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, pending, refusal } from '@/shared/testing'
@@ -109,16 +109,18 @@ describe('UsersPage', () => {
   it('says what to do next when nobody is listed', async () => {
     const { page } = await mountPage({ [USERS]: { items: [] } })
 
-    expect(page.text()).toContain('Здесь пока никого нет')
+    expect(page.text()).toContain(translate('users-empty-title'))
   })
 
   it('shows the reason the server gave and offers another attempt', async () => {
     const { transport, page } = await mountPage({ [USERS]: refusal(500, 'People are unreadable') })
 
     expect(page.find('[role="alert"]').text()).not.toContain('People are unreadable')
-    expect(page.find('[role="alert"]').text()).toContain('Не получилось. Попробуйте ещё раз.')
+    expect(page.find('[role="alert"]').text()).toContain(translate('state-error'))
 
-    const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
+    const retry = page
+      .findAll('button')
+      .find((button) => button.text() === translate('action-retry'))
     await retry?.trigger('click')
     await flushPromises()
 
@@ -181,8 +183,8 @@ describe('UsersPage', () => {
 
     await search(page, 'Nobody by that name')
 
-    expect(page.text()).toContain('Никого не нашли')
-    expect(page.text()).not.toContain('Здесь пока никого нет')
+    expect(page.text()).toContain(translate('users-no-matches-title'))
+    expect(page.text()).not.toContain(translate('users-empty-title'))
   })
 
   it('lets the list use the full width rather than a form column', async () => {
@@ -204,7 +206,7 @@ describe('UsersPage', () => {
     })
 
     expect(page.text()).toContain('Ann Smith')
-    expect(page.text()).toContain('Без имени')
+    expect(page.text()).toContain(translate('users-unnamed'))
     expect(page.findAll('tbody tr')).toHaveLength(3)
   })
 
@@ -216,6 +218,6 @@ describe('UsersPage', () => {
     await search(page, 'User')
 
     expect(page.text()).toContain('User 0')
-    expect(page.text()).toContain('Без имени')
+    expect(page.text()).toContain(translate('users-unnamed'))
   })
 })

@@ -37,7 +37,7 @@ describe('initialsOf', () => {
   })
 
   it('reads a name in any script', () => {
-    expect(initialsOf('Радха Деви')).toBe('РД')
+    expect(initialsOf('Σοφία Παπαδάκη')).toBe('ΣΠ')
     expect(initialsOf('達磨')).toBe('達磨')
   })
 })

@@ -1,7 +1,7 @@
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 
 import { messages } from '../i18n'
 import { contentOf, draftOf, sectionOf, textBlock } from './documents'
@@ -17,7 +17,7 @@ import {
 addMessages(messages)
 locale.value = 'en'
 
-const MenuLabel = 'Block options'
+const MenuLabel = translate('editor-block-menu')
 
 const lesson = () =>
   contentOf(sectionOf('s1', 'The alphabet', [textBlock('b1', 'First words'), textBlock('b2', '')]))
@@ -93,7 +93,14 @@ describe('adding a block', () => {
     const offered = overlayControls().map(accessibleName)
 
     expect(offered).toEqual(
-      expect.arrayContaining(['Text', 'Image', 'Video', 'Audio', 'Quiz', 'Section']),
+      expect.arrayContaining([
+        translate('editor-block-text'),
+        translate('editor-block-image'),
+        translate('editor-block-video'),
+        translate('editor-block-audio'),
+        translate('editor-block-quiz'),
+        translate('editor-block-section'),
+      ]),
     )
   })
 
@@ -102,7 +109,7 @@ describe('adding a block', () => {
   it('turns the line it was called from into the chosen kind', async () => {
     const { wrapper } = await openInsert()
 
-    await clickOverlay('Image')
+    await clickOverlay(translate('editor-block-image'))
 
     expect(orderOf(wrapper)).toEqual(['b1', 'b2'])
     expect(block(wrapper, 'b2').textContent).toContain('Add an image')
@@ -111,7 +118,7 @@ describe('adding a block', () => {
   it('leaves the caret in what it just added', async () => {
     const { wrapper } = await openInsert()
 
-    await clickOverlay('Quiz')
+    await clickOverlay(translate('editor-block-quiz'))
 
     expect(block(wrapper, 'b2').contains(document.activeElement)).toBe(true)
   })
@@ -132,20 +139,20 @@ describe('the menu on a block', () => {
   it('cannot move the first block any higher', async () => {
     await openMenu('b1')
 
-    expect(overlayControl('Move up')?.hasAttribute('disabled')).toBe(true)
-    expect(overlayControl('Move down')?.hasAttribute('disabled')).toBe(false)
+    expect(overlayControl(translate('editor-move-up'))?.hasAttribute('disabled')).toBe(true)
+    expect(overlayControl(translate('editor-move-down'))?.hasAttribute('disabled')).toBe(false)
   })
 
   it('cannot move the last block any lower', async () => {
     await openMenu('b2')
 
-    expect(overlayControl('Move down')?.hasAttribute('disabled')).toBe(true)
+    expect(overlayControl(translate('editor-move-down'))?.hasAttribute('disabled')).toBe(true)
   })
 
   it('moves the block past its neighbour', async () => {
     const { wrapper } = await openMenu('b1')
 
-    await clickOverlay('Move down')
+    await clickOverlay(translate('editor-move-down'))
 
     expect(orderOf(wrapper)).toEqual(['b2', 'b1'])
   })
@@ -162,13 +169,13 @@ describe('the menu on a block', () => {
     handle?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
     await flushPromises()
 
-    expect(overlayControl('Move down')).toBeDefined()
+    expect(overlayControl(translate('editor-move-down'))).toBeDefined()
   })
 
   it('leaves the caret in the block that follows a deleted one', async () => {
     const { wrapper } = await openMenu('b1')
 
-    await clickOverlay('Delete')
+    await clickOverlay(translate('action-delete'))
 
     expect(orderOf(wrapper)).toEqual(['b2'])
     expect(block(wrapper, 'b2').contains(document.activeElement)).toBe(true)
@@ -194,7 +201,13 @@ describe('typing a slash in an empty block', () => {
     await slash()
 
     expect(overlayControls().map(accessibleName)).toEqual(
-      expect.arrayContaining(['Text', 'Image', 'Video', 'Audio', 'Quiz']),
+      expect.arrayContaining([
+        translate('editor-block-text'),
+        translate('editor-block-image'),
+        translate('editor-block-video'),
+        translate('editor-block-audio'),
+        translate('editor-block-quiz'),
+      ]),
     )
   })
 
@@ -204,7 +217,7 @@ describe('typing a slash in an empty block', () => {
     field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     await flushPromises()
 
-    expect(overlayControl('Image')).toBeUndefined()
+    expect(overlayControl(translate('editor-block-image'))).toBeUndefined()
     expect(orderOf(wrapper)).toEqual(['b1', 'b2'])
   })
 })
@@ -264,7 +277,7 @@ describe('a section with nothing in it', () => {
     const root = wrapper.element as Element
 
     const tail = [...root.querySelectorAll('button')].find((node) =>
-      accessibleName(node).startsWith('Lesson text'),
+      accessibleName(node).startsWith(translate('editor-text-label')),
     )
 
     expect(tail).toBeDefined()
@@ -275,7 +288,7 @@ describe('a section with nothing in it', () => {
     const root = wrapper.element as Element
 
     await openInsertMenu(root)
-    await clickOverlay('Text')
+    await clickOverlay(translate('editor-block-text'))
 
     expect(root.querySelectorAll('[data-block-frame]')).toHaveLength(1)
   })

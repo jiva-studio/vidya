@@ -6,7 +6,7 @@ import { createMemoryHistory, createRouter, type RouteRecordRaw } from 'vue-rout
 import { resetSchoolNames } from '@/features/switch-school'
 import { setAppRouter, useCurrentSchool } from '@/shared/access'
 import { httpClientKey } from '@/shared/api'
-import { locale } from '@/shared/i18n'
+import { locale, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
 
@@ -15,10 +15,9 @@ import { createI18n } from '../i18n'
 import { requireSession, resolveSchool, skipLoginWhenSignedIn } from '../router/guards'
 import { sectionRoutes } from '../sections'
 
-// This file reads the assembled application in Russian, and the language is
-// remembered between visits, so it is said here rather than inherited from
-// whatever the last suite in this worker chose.
-locale.value = 'ru'
+// The language is remembered between visits, so this file says which one it
+// reads rather than inheriting whatever the last suite in this worker chose.
+locale.value = 'en'
 
 const school = (value: string) => value as unknown as SchoolId
 
@@ -99,7 +98,7 @@ describe('the assembled application', () => {
 
     expect(router.currentRoute.value.name).toBe('dashboard')
     expect(app.find('aside').exists()).toBe(true)
-    expect(app.text()).toContain('Главная')
+    expect(app.text()).toContain(translate('nav-dashboard'))
     expect(app.text()).toContain('My School')
   })
 
@@ -107,18 +106,20 @@ describe('the assembled application', () => {
     signIn()
     const { app } = await mountApp('/')
 
-    expect(app.find('nav').text()).toContain('Главная')
+    expect(app.find('nav').text()).toContain('Dashboard')
   })
 
   it('ends the session and returns to sign-in when the operator signs out', async () => {
     signIn()
     const { app, router } = await mountApp('/')
 
-    const trigger = app.find('aside button[aria-label="Аккаунт"]')
+    const trigger = app.find('aside button[aria-label="Account"]')
     await trigger.trigger('click')
     await flushPromises()
 
-    const signOut = app.findAll('aside button').find((node) => node.text() === 'Выйти')
+    const signOut = app
+      .findAll('aside button')
+      .find((node) => node.text() === translate('action-sign-out'))
     await signOut?.trigger('click')
     await flushPromises()
 
@@ -163,6 +164,6 @@ describe('the assembled application', () => {
     const { app, router } = await mountApp('/nothing/here')
 
     expect(router.currentRoute.value.name).toBe('not-found')
-    expect(app.text()).toContain('Страница не найдена')
+    expect(app.text()).toContain(translate('page-not-found-title'))
   })
 })

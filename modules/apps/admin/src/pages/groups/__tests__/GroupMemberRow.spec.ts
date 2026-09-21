@@ -3,7 +3,7 @@ import { EnrollmentStatuses } from '@vidya/domain'
 import { Badge } from '@vidya/ui'
 import { describe, expect, it } from 'vitest'
 
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 import { mountWithApp } from '@/shared/testing'
 
 import { messages } from '../i18n'
@@ -51,6 +51,6 @@ describe('GroupMemberRow', () => {
     const row = open('accepted')
 
     expect(row.findComponent(Badge).props('tone')).toBe('success')
-    expect(row.text()).toContain('Accepted')
+    expect(row.text()).toContain(translate('group-members-status-accepted'))
   })
 })

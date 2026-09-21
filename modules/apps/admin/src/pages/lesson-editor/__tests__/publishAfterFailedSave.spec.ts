@@ -1,7 +1,7 @@
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 import { refusal } from '@/shared/testing'
 
 import { messages } from '../i18n'
@@ -31,7 +31,7 @@ const refusingDraft = () => ({
     status: 'draft',
     content: lesson(),
   }),
-  [`PATCH ${VERSIONS}/v1`]: refusal(500, 'The draft could not be saved.'),
+  [`PATCH ${VERSIONS}/v1`]: refusal(500, translate('editor-save-failed')),
   [`POST ${VERSIONS}/v1/publish`]: { id: 'v1', lessonId: 'l1', version: 1, status: 'published' },
 })
 
@@ -66,7 +66,7 @@ const refusedThenPublished = async () => {
 
   await rename(opened.wrapper, Revised)
   await saveDraft()
-  await clickText(opened.wrapper, 'Publish')
+  await clickText(opened.wrapper, translate('editor-publish'))
   await confirmPublish()
 
   return opened
@@ -83,7 +83,7 @@ describe('publishing a version the server never received', () => {
     await rename(wrapper, Revised)
     await saveDraft()
 
-    expect(saveSays(wrapper)).toBe('Try saving again')
+    expect(saveSays(wrapper)).toBe(translate('editor-save-retry'))
   })
 
   it('does not freeze a version while the last edit is still unsaved', async () => {

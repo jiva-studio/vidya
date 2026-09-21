@@ -5,6 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { setAppRouter } from '@/shared/access'
 import { httpClientKey, resetApi } from '@/shared/api'
+import { translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, refusal } from '@/shared/testing'
@@ -80,7 +81,7 @@ describe('DashboardPage', () => {
 
     const { page } = await open()
 
-    expect(page.text()).toContain('В этой школе вам пока ничего не разрешено')
+    expect(page.text()).toContain(translate('page-dashboard-no-access-title'))
   })
 
   it('counts what is waiting in each queue the role may read', async () => {
@@ -88,9 +89,9 @@ describe('DashboardPage', () => {
 
     const { page } = await open({ [ENROLLMENTS]: rows(4), [HOMEWORK]: rows(7) })
 
-    expect(page.text()).toContain('Заявки ждут решения')
+    expect(page.text()).toContain(translate('dashboard-enrollments-title'))
     expect(page.text()).toContain('4')
-    expect(page.text()).toContain('Домашние работы на проверке')
+    expect(page.text()).toContain(translate('dashboard-homework-title'))
     expect(page.text()).toContain('7')
   })
 
@@ -112,16 +113,16 @@ describe('DashboardPage', () => {
 
     const { page } = await open({ [HOMEWORK]: rows(2) })
 
-    expect(page.text()).toContain('Домашние работы на проверке')
-    expect(page.text()).not.toContain('Заявки ждут решения')
-    expect(page.text()).not.toContain('Курсы и уроки')
+    expect(page.text()).toContain(translate('dashboard-homework-title'))
+    expect(page.text()).not.toContain(translate('dashboard-enrollments-title'))
+    expect(page.text()).not.toContain(translate('dashboard-courses-title'))
   })
 
   it('takes the reader to the section the island names', async () => {
     signIn(['enrollments:read'])
 
     const { page, router } = await open({ [ENROLLMENTS]: rows(1) })
-    await click(page, 'Разобрать заявки')
+    await click(page, translate('dashboard-enrollments-action'))
 
     expect(router.currentRoute.value.name).toBe('enrollments')
   })
@@ -134,7 +135,7 @@ describe('DashboardPage', () => {
       [HOMEWORK]: rows(2),
     })
 
-    expect(page.text()).toContain('Не удалось посчитать')
+    expect(page.text()).toContain(translate('dashboard-count-unreadable'))
     expect(page.text()).toContain('2')
   })
 
@@ -151,7 +152,7 @@ describe('DashboardPage', () => {
 
     const { page } = await open()
 
-    expect(page.text()).toContain('Курсы и уроки')
-    expect(page.text()).toContain('Открыть курсы')
+    expect(page.text()).toContain(translate('dashboard-courses-title'))
+    expect(page.text()).toContain(translate('dashboard-courses-action'))
   })
 })

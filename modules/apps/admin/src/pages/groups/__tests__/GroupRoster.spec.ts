@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp, refusal } from '@/shared/testing'
 
@@ -116,10 +116,10 @@ describe('the roster of a group', () => {
       [USERS]: { items: [{ id: 'u1', name: 'Anna' }] },
     })
 
-    await click(page, 'Expel')
+    await click(page, translate('group-members-revoke'))
 
     const confirm = [...document.body.querySelectorAll('button')].find(
-      (button) => button.textContent?.trim() === 'Expel',
+      (button) => button.textContent?.trim() === translate('group-members-revoke'),
     )
     confirm?.click()
     await flushPromises()
@@ -149,9 +149,9 @@ describe('the roster of a group', () => {
       [`${ENROLLMENTS}/e1/moderation`]: refusal(409, 'Too late'),
     })
 
-    await click(page, 'Expel')
+    await click(page, translate('group-members-revoke'))
     const confirm = [...document.body.querySelectorAll('button')].find(
-      (button) => button.textContent?.trim() === 'Expel',
+      (button) => button.textContent?.trim() === translate('group-members-revoke'),
     )
     confirm?.click()
     await flushPromises()
@@ -171,7 +171,7 @@ describe('the roster of a group', () => {
 
     const labels = page.findAll('button').map(nameOf)
 
-    expect(labels).not.toContain('Expel')
-    expect(labels).not.toContain('Move to another group')
+    expect(labels).not.toContain(translate('group-members-revoke'))
+    expect(labels).not.toContain(translate('group-members-move'))
   })
 })

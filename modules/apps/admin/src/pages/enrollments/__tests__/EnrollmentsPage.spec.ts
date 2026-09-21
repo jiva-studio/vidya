@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { setAppRouter, useCurrentSchool } from '@/shared/access'
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, pending, refusal } from '@/shared/testing'
@@ -47,11 +47,11 @@ const details = (over: Record<string, unknown> = {}) => ({
 })
 
 const world = (over: FakeAnswers = {}): FakeAnswers => ({
-  [COURSES]: { items: [{ id: 'c1', name: 'Основы' }] },
-  [GROUPS]: { items: [{ id: 'g1', name: 'Утренняя' }] },
+  [COURSES]: { items: [{ id: 'c1', name: 'Foundations' }] },
+  [GROUPS]: { items: [{ id: 'g1', name: 'Morning' }] },
   [ENROLLMENTS]: { items: [summary()] },
   [`${ENROLLMENTS}/e1`]: details(),
-  '/edu/users/u1': { id: 'u1', name: 'Аня Иванова', email: 'a@example.com', roles: [] },
+  '/edu/users/u1': { id: 'u1', name: 'Ann Ivanova', email: 'a@example.com', roles: [] },
   ...over,
 })
 
@@ -100,8 +100,8 @@ describe('EnrollmentsPage', () => {
   it('names the student the summary does not carry', async () => {
     const { transport, page } = await mountPage(world())
 
-    expect(page.text()).toContain('Аня Иванова')
-    expect(page.text()).toContain('Основы')
+    expect(page.text()).toContain('Ann Ivanova')
+    expect(page.text()).toContain('Foundations')
     expect(transport.callsTo('/edu/users/u1')).toHaveLength(1)
   })
 
@@ -121,7 +121,7 @@ describe('EnrollmentsPage', () => {
       world({ 'PATCH /edu/enrollments/e1/moderation': details({ status: 'accepted' }) }),
     )
 
-    await click(page, 'Принять')
+    await click(page, translate('enrollments-accept'))
 
     expect(transport.calls.find((call) => call.method === 'PATCH')).toMatchObject({
       path: `${ENROLLMENTS}/e1/moderation`,
@@ -134,13 +134,13 @@ describe('EnrollmentsPage', () => {
       world({ 'PATCH /edu/enrollments/e1/moderation': details({ status: 'declined' }) }),
     )
 
-    await click(page, 'Отклонить')
+    await click(page, translate('enrollments-decline'))
 
     expect(transport.calls.some((call) => call.method === 'PATCH')).toBe(false)
-    expect(document.body.textContent).toContain('Решение не изменить')
+    expect(document.body.textContent).toContain(translate('enrollments-decline-consequence'))
 
     const confirm = [...document.body.querySelectorAll('button')].find(
-      (button) => button.textContent?.trim() === 'Отклонить',
+      (button) => button.textContent?.trim() === translate('enrollments-decline'),
     )
     confirm?.click()
     await flushPromises()
@@ -158,7 +158,7 @@ describe('EnrollmentsPage', () => {
       }),
     )
 
-    expect(page.text()).toContain('В очереди')
+    expect(page.text()).toContain(translate('enrollments-group-queue'))
   })
 
   it('offers the change back once a group has been assigned', async () => {
@@ -170,15 +170,15 @@ describe('EnrollmentsPage', () => {
       }),
     )
 
-    await click(page, 'Группа')
+    await click(page, translate('enrollments-column-group'))
 
     const save = [...document.body.querySelectorAll('button')].find(
-      (button) => button.textContent?.trim() === 'Определить',
+      (button) => button.textContent?.trim() === translate('enrollments-group-save'),
     )
     save?.click()
     await flushPromises()
 
-    expect(document.body.textContent).toContain('Вернуть как было')
+    expect(document.body.textContent).toContain(translate('action-undo'))
   })
 
   it('places a student in a group through the group route', async () => {
@@ -190,10 +190,10 @@ describe('EnrollmentsPage', () => {
       }),
     )
 
-    await click(page, 'Группа')
+    await click(page, translate('enrollments-column-group'))
 
     const save = [...document.body.querySelectorAll('button')].find(
-      (button) => button.textContent?.trim() === 'Определить',
+      (button) => button.textContent?.trim() === translate('enrollments-group-save'),
     )
     save?.click()
     await flushPromises()
@@ -207,19 +207,19 @@ describe('EnrollmentsPage', () => {
   it('says what to do next when nobody has asked', async () => {
     const { page } = await mountPage(world({ [ENROLLMENTS]: { items: [] } }))
 
-    expect(page.text()).toContain('Заявок нет')
-    expect(page.text()).toContain('из приложения')
+    expect(page.text()).toContain(translate('enrollments-empty-title'))
+    expect(page.text()).toContain(translate('enrollments-empty-body'))
   })
 
   it('shows the reason the server gave and offers another attempt', async () => {
     const { transport, page } = await mountPage(
-      world({ [ENROLLMENTS]: refusal(500, 'База недоступна') }),
+      world({ [ENROLLMENTS]: refusal(500, 'The database is unavailable') }),
     )
 
-    expect(page.find('[role="alert"]').text()).not.toContain('База недоступна')
-    expect(page.find('[role="alert"]').text()).toContain('Не получилось. Попробуйте ещё раз.')
+    expect(page.find('[role="alert"]').text()).not.toContain('The database is unavailable')
+    expect(page.find('[role="alert"]').text()).toContain(translate('state-error'))
 
-    await click(page, 'Повторить')
+    await click(page, translate('action-retry'))
 
     expect(transport.callsTo(ENROLLMENTS).length).toBeGreaterThan(1)
   })
@@ -248,7 +248,7 @@ describe('EnrollmentsPage', () => {
     const { page } = await mountPage(world())
 
     const labels = page.findAll('button').map(nameOf)
-    expect(labels).not.toContain('Принять')
-    expect(labels).not.toContain('Отклонить')
+    expect(labels).not.toContain(translate('enrollments-accept'))
+    expect(labels).not.toContain(translate('enrollments-decline'))
   })
 })

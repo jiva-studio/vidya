@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 
 import { messages } from '../i18n'
 import { contentOf, draftOf, quizBlock, sectionOf, textBlock } from './documents'
@@ -35,7 +35,7 @@ describe('what stops a publish', () => {
   it('marks the block that is unfinished, not only the section it sits in', async () => {
     const { wrapper } = await openEditor(draftOf(unfinished()))
 
-    await clickText(wrapper, 'Publish')
+    await clickText(wrapper, translate('editor-publish'))
 
     expect(frameOf(wrapper, 'b2')?.getAttribute('aria-invalid')).toBe('true')
     expect(frameOf(wrapper, 'b1')?.getAttribute('aria-invalid')).toBeNull()
@@ -44,7 +44,7 @@ describe('what stops a publish', () => {
   it('takes the reader to the block when the notice naming it is pressed', async () => {
     const { wrapper } = await openEditor(draftOf(unfinished()))
 
-    await clickText(wrapper, 'Publish')
+    await clickText(wrapper, translate('editor-publish'))
 
     const line = [...wrapper.element.querySelectorAll('button')].find((node) =>
       accessibleName(node).startsWith('Section 1, block 2'),
@@ -59,9 +59,9 @@ describe('what stops a publish', () => {
   it('does not open the publish dialog while a block is unfinished', async () => {
     const { wrapper } = await openEditor(draftOf(unfinished()))
 
-    await clickText(wrapper, 'Publish')
+    await clickText(wrapper, translate('editor-publish'))
 
-    expect(document.body.textContent).not.toContain('Publish this version?')
+    expect(document.body.textContent).not.toContain(translate('publish-confirm-title'))
   })
 
   it('marks nothing while the author is still writing', async () => {
@@ -78,7 +78,7 @@ describe('the save button', () => {
   it('is offered, and says there is nothing to send until something changes', async () => {
     const { wrapper } = await openEditor(draftOf(settled()))
 
-    expect(saveSays(wrapper)).toBe('Saved')
+    expect(saveSays(wrapper)).toBe(translate('toast-saved'))
     expect(saveButton(wrapper)?.disabled).toBe(true)
   })
 })

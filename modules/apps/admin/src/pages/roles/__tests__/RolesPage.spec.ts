@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { PAGE_SIZE } from '@/shared/lib'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
@@ -82,8 +82,8 @@ describe('RolesPage', () => {
   it('says what to do next when there is no role yet', async () => {
     const { page } = await mountPage({ [ROLES]: { items: [] } })
 
-    expect(page.text()).toContain('Ролей пока нет')
-    expect(page.text()).toContain('Создайте роль')
+    expect(page.text()).toContain(translate('roles-empty-title'))
+    expect(page.text()).toContain(translate('roles-empty-body'))
   })
 
   it("keeps the server's own words out of a failure and offers another attempt", async () => {
@@ -92,9 +92,11 @@ describe('RolesPage', () => {
     const alert = page.find('[role="alert"]').text()
 
     expect(alert).not.toContain('The database is away')
-    expect(alert).toContain('Не получилось. Попробуйте ещё раз.')
+    expect(alert).toContain(translate('state-error'))
 
-    const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
+    const retry = page
+      .findAll('button')
+      .find((button) => button.text() === translate('action-retry'))
     await retry?.trigger('click')
     await flushPromises()
 
@@ -107,12 +109,16 @@ describe('RolesPage', () => {
 
     const { page } = await mountPage({ [ROLES]: { items: [] } })
 
-    expect(page.findAll('button').map((button) => button.text())).not.toContain('Создать роль')
+    expect(page.findAll('button').map((button) => button.text())).not.toContain(
+      translate('roles-create'),
+    )
   })
 
   it('draws it for someone who may create a role', async () => {
     const { page } = await mountPage({ [ROLES]: { items: [] } })
 
-    expect(page.findAll('button').map((button) => button.text())).toContain('Создать роль')
+    expect(page.findAll('button').map((button) => button.text())).toContain(
+      translate('roles-create'),
+    )
   })
 })

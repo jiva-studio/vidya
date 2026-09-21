@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, refusal } from '@/shared/testing'
@@ -50,7 +50,9 @@ const mountForm = async (answers: FakeAnswers, props: Record<string, unknown> = 
 }
 
 const save = async (page: Awaited<ReturnType<typeof mountForm>>['page']) => {
-  const button = page.findAll('button').find((candidate) => candidate.text() === 'Сохранить')
+  const button = page
+    .findAll('button')
+    .find((candidate) => candidate.text() === translate('action-save'))
   await button?.trigger('click')
   await flushPromises()
 }
@@ -84,7 +86,7 @@ describe('SchoolFormPage', () => {
     await save(page)
 
     expect(transport.calls).toHaveLength(0)
-    expect(page.text()).toContain('Укажите название.')
+    expect(page.text()).toContain(translate('schools-form-name-required'))
   })
 
   it('loads the school it is editing and patches it', async () => {
