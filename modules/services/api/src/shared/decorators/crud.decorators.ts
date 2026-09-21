@@ -1,5 +1,6 @@
 import { Delete, Get, Patch, Post } from '@nestjs/common'
 import {
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -35,6 +36,9 @@ export function CrudDecorators(options: {
       ApiUnauthorizedResponse({
         description: 'Unauthorized',
       })(target, propertyKey, descriptor)
+      ApiForbiddenResponse({
+        description: 'User does not have permission',
+      })(target, propertyKey, descriptor)
 
       return descriptor
     }
@@ -58,6 +62,9 @@ export function CrudDecorators(options: {
       ApiUnauthorizedResponse({
         description: 'Unauthorized',
       })(target, propertyKey, descriptor)
+      ApiForbiddenResponse({
+        description: 'User does not have permission',
+      })(target, propertyKey, descriptor)
 
       return descriptor
     }
@@ -80,6 +87,9 @@ export function CrudDecorators(options: {
       })(target, propertyKey, descriptor)
       ApiUnauthorizedResponse({
         description: 'Unauthorized',
+      })(target, propertyKey, descriptor)
+      ApiForbiddenResponse({
+        description: 'User does not have permission',
       })(target, propertyKey, descriptor)
 
       return descriptor
@@ -107,6 +117,9 @@ export function CrudDecorators(options: {
       ApiUnauthorizedResponse({
         description: 'Unauthorized',
       })(target, propertyKey, descriptor)
+      ApiForbiddenResponse({
+        description: 'User does not have permission',
+      })(target, propertyKey, descriptor)
 
       return descriptor
     }
@@ -132,6 +145,9 @@ export function CrudDecorators(options: {
       })(target, propertyKey, descriptor)
       ApiUnauthorizedResponse({
         description: 'Unauthorized',
+      })(target, propertyKey, descriptor)
+      ApiForbiddenResponse({
+        description: 'User does not have permission',
       })(target, propertyKey, descriptor)
 
       return descriptor

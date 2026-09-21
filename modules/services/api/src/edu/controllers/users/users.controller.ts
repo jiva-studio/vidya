@@ -22,6 +22,14 @@ import { Routes } from '@vidya/protocol'
 
 import { toUserDetails, toUserSummaries } from '../../mappers/org.mapper'
 
+function isSelfProfileUpdate(
+  authUserId: domain.UserId,
+  targetId: domain.UserId,
+  request: dto.UpdateUserRequest,
+): boolean {
+  return authUserId === targetId && request.email === undefined && request.phone === undefined
+}
+
 const Crud = CrudDecorators({
   entityName: 'User',
   getOneResponseDto: dto.GetUserResponse,
@@ -106,21 +114,27 @@ export class UsersController {
     @Param('id', new ParseUUIDPipe(), UserExistsPipe) id: domain.UserId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateUserResponse> {
-    // TODO user can update himself without any permission
-    const roles = await this.rolesService.getRolesOfUser(id)
-    const scopes = roles.map((role) => ({
-      schoolId: role.schoolId,
-    }))
-
-    // Check if user has permission to update users
-    if (!auth.permissions.has(['users:update'], scopes)) {
-      throw new ForbiddenException('User does not have permission')
-    }
+    await this.assertCanUpdate(auth, id, request)
 
     // Update user
     const updatedUser = await this.usersService.updateOneBy({ id }, request)
 
     // Return updated user response
     return toUserDetails(updatedUser)
+  }
+
+  private async assertCanUpdate(
+    auth: UserAuthentication,
+    id: domain.UserId,
+    request: dto.UpdateUserRequest,
+  ): Promise<void> {
+    if (isSelfProfileUpdate(auth.userId, id, request)) return
+
+    const roles = await this.rolesService.getRolesOfUser(id)
+    const scopes = roles.map((role) => ({ schoolId: role.schoolId }))
+
+    if (!auth.permissions.has(['users:update'], scopes)) {
+      throw new ForbiddenException('User does not have permission')
+    }
   }
 }
