@@ -18,7 +18,12 @@ export type HomeworkDetails = {
   schoolId: domain.SchoolId
   status: domain.HomeworkStatus
   text: string
+
+  /** A percentage, 0 to 100 — the same scale whether a person or the server marked it. */
   grade?: number
+
+  /** What the reviewer wrote back. Returned work without it says nothing. */
+  comment?: string | null
   reviewedById?: domain.UserId
   submittedAt?: domain.IsoDateTime
   reviewedAt?: domain.IsoDateTime
@@ -87,5 +92,9 @@ export type BlockStateDetails = {
   blockId: domain.BlockId
   schoolId: domain.SchoolId
   state: LessonBlockState
+
+  /** Written by the server alone; absent until an answer has been marked. */
+  verdict?: domain.QuizVerdict | null
+
   updatedAt: domain.IsoDateTime
 }

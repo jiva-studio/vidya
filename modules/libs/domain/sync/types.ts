@@ -121,6 +121,7 @@ export const HomeworkSyncFields = [
   'reviewedById',
   'reviewedAt',
   'answeredSupersededVersion',
+  'comment',
 ] as const
 
 export type HomeworkSyncField = (typeof HomeworkSyncFields)[number]
@@ -137,6 +138,10 @@ export const EnrollmentSyncFields = [
 ] as const
 
 export type EnrollmentSyncField = (typeof EnrollmentSyncFields)[number]
+
+export const BlockStateSyncFields = ['state', 'verdict', 'updatedAt'] as const
+
+export type BlockStateSyncField = (typeof BlockStateSyncFields)[number]
 
 /* -------------------------------------------------------------------------- */
 /*                              Rejection reasons                             */

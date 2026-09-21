@@ -9,7 +9,12 @@
  * overwrite. Two implementations of the same rule could disagree; one cannot.
  */
 
-import { EnrollmentSyncField, HomeworkSyncField, SyncCollection } from './types'
+import {
+  BlockStateSyncField,
+  EnrollmentSyncField,
+  HomeworkSyncField,
+  SyncCollection,
+} from './types'
 
 /**
  * `down` — the server writes, the device only reads.
@@ -36,7 +41,8 @@ export const SYNC_DIRECTION: Readonly<Record<SyncCollection, SyncDirection>> = O
   // Up goes the answer, down comes the review status and the grade.
   homework: 'both',
 
-  block_states: 'up',
+  // Up goes the answer, down comes the verdict the server alone may write.
+  block_states: 'both',
 })
 
 /**
@@ -59,12 +65,20 @@ export interface SyncFieldOwnership<TField extends string> {
 export interface SyncFieldOwners {
   readonly homework: SyncFieldOwnership<HomeworkSyncField>
   readonly enrollments: SyncFieldOwnership<EnrollmentSyncField>
+  readonly block_states: SyncFieldOwnership<BlockStateSyncField>
 }
 
 export const FIELD_OWNER: Readonly<SyncFieldOwners> = Object.freeze({
   homework: Object.freeze({
     client: ['text', 'submittedAt'] as const,
-    server: ['status', 'grade', 'reviewedById', 'reviewedAt', 'answeredSupersededVersion'] as const,
+    server: [
+      'status',
+      'grade',
+      'comment',
+      'reviewedById',
+      'reviewedAt',
+      'answeredSupersededVersion',
+    ] as const,
   }),
   enrollments: Object.freeze({
     client: [
@@ -75,6 +89,12 @@ export const FIELD_OWNER: Readonly<SyncFieldOwners> = Object.freeze({
       'archivedByStudentAt',
     ] as const,
     server: ['status', 'decidedById', 'decidedAt', 'groupId', 'archivedByStudentAt'] as const,
+  }),
+
+  // The answer is the student's; whether it is right is not theirs to say.
+  block_states: Object.freeze({
+    client: ['state', 'updatedAt'] as const,
+    server: ['verdict'] as const,
   }),
 })
 

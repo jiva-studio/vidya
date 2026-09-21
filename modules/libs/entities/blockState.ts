@@ -4,6 +4,7 @@ import {
   EnrollmentId,
   LessonBlockState,
   LessonVersionId,
+  QuizVerdict,
   SchoolId,
 } from '@vidya/domain'
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
@@ -44,6 +45,10 @@ export class BlockState {
 
   @Column('json')
   state: LessonBlockState
+
+  /** The server's answer to the student's: written here, never by a device. */
+  @Column({ type: 'json', nullable: true })
+  verdict: QuizVerdict | null
 
   @Column({ type: 'timestamptz', nullable: false, default: () => 'now()' })
   updatedAt: Date

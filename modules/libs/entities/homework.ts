@@ -55,8 +55,13 @@ export class Homework {
   @Column({ nullable: false, default: '' })
   text: string
 
+  /** A percentage, 0 to 100, whoever marked it. */
   @Column({ nullable: true })
   grade: number
+
+  /** What the reviewer wrote back; the half of a refusal that is worth reading. */
+  @Column({ nullable: true, type: 'character varying' })
+  comment: string | null
 
   /** True when the answered version had already been superseded at submit time. */
   @Column({ nullable: false, default: false })

@@ -89,6 +89,7 @@ export const SYNC_WIRE_FIELDS: Readonly<Record<domain.SyncCollection, readonly s
       'status',
       'text',
       'grade',
+      'comment',
       'answeredSupersededVersion',
       'reviewedById',
       'submittedAt',
@@ -103,6 +104,7 @@ export const SYNC_WIRE_FIELDS: Readonly<Record<domain.SyncCollection, readonly s
       'blockId',
       'schoolId',
       'state',
+      'verdict',
       'updatedAt',
     ] satisfies readonly (keyof BlockStateDetails)[],
   })
