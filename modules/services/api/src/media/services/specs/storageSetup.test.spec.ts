@@ -53,7 +53,10 @@ describe('a school storage profile as it is configured', () => {
     setup = new StorageSetupService(
       config,
       {
-        assertEndpointAllowed: async (endpoint: string) => void policed.push(endpoint),
+        assertEndpointAllowed: async (endpoint: string) => {
+          policed.push(endpoint)
+          return { endpoint, addresses: ['203.0.113.10'] }
+        },
       } as unknown as EndpointGuardService,
       {
         probeCredentials: async (credentials: { endpoint: string }) =>
