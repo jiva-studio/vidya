@@ -27,11 +27,20 @@ export const useModerateEnrollment = () => {
   const deciding = ref<EnrollmentId | undefined>(undefined)
   const error = ref<string | undefined>(undefined)
 
+  // A plain Set and not the ref above: `busy` on the button reaches the DOM on
+  // the next render, so every click landing in the same tick gets through, and
+  // the server answers the second with a 409 over a decision that worked.
+  // Keyed by row, so deciding one request never blocks the next.
+  const inFlight = new Set<EnrollmentId>()
+
   const decide = async (
     id: EnrollmentId,
     status: Decision,
     groupId?: GroupId,
   ): Promise<boolean> => {
+    if (inFlight.has(id)) return false
+
+    inFlight.add(id)
     deciding.value = id
     error.value = undefined
 
@@ -42,6 +51,7 @@ export const useModerateEnrollment = () => {
       error.value = reasonOf(failure)
       return false
     } finally {
+      inFlight.delete(id)
       deciding.value = undefined
     }
   }
