@@ -20,6 +20,20 @@ const boundaries = (kind: MediaKind, from: number, to: number): string[] => [
   ),
 ]
 
+/**
+ * Whether an expiry sits on the grid this kind's window divides time into.
+ *
+ * Stated as a grid rather than as "more than an hour of life left", which is
+ * what this suite asked for first and was wrong to: rounding up to a boundary
+ * leaves a remainder anywhere in the window, so a run inside the last hour of
+ * a six-hour window has minutes left and is no less correct for it. The grid
+ * holds at every instant, and a video handed an hourly window falls off it —
+ * except on the one boundary in six where the two grids meet, which is why the
+ * criterion is also pinned to `windowExpiry` by kind above.
+ */
+const onGrid = (kind: MediaKind, expiresAt: string): boolean =>
+  Date.parse(expiresAt) % (ReadWindowSeconds[kind] * 1000) === 0
+
 describe('how long a playable address lasts', () => {
   let app: INestApplication
   let read: ReadFlow
@@ -64,7 +78,7 @@ describe('how long a playable address lasts', () => {
     const { entry, before, after } = await askFor(mediaId)
 
     expect(boundaries('video', before, after)).toContain(entry.expiresAt)
-    expect(Date.parse(entry.expiresAt) - after).toBeGreaterThan(ReadWindowSeconds.image * 1000)
+    expect(onGrid('video', entry.expiresAt)).toBe(true)
   })
 
   it('gives audio the same six hours a video gets', async () => {
@@ -74,7 +88,22 @@ describe('how long a playable address lasts', () => {
     const { entry, before, after } = await askFor(mediaId)
 
     expect(boundaries('audio', before, after)).toContain(entry.expiresAt)
-    expect(Date.parse(entry.expiresAt) - after).toBeGreaterThan(ReadWindowSeconds.image * 1000)
+    expect(onGrid('audio', entry.expiresAt)).toBe(true)
+  })
+
+  it('never expires a video before the image asked for beside it', async () => {
+    await boot()
+    const ids = { video: await store('video'), image: await store('image') }
+
+    const answered = await read.askUrls([ids.video, ids.image], await staff())
+
+    expect(answered.status).toBe(200)
+    const video = answered.body.urls[ids.video].expiresAt
+    const image = answered.body.urls[ids.image].expiresAt
+
+    expect(onGrid('video', video)).toBe(true)
+    expect(onGrid('image', image)).toBe(true)
+    expect(Date.parse(video)).toBeGreaterThanOrEqual(Date.parse(image))
   })
 
   it('hands two askers inside one window the very same bytes of address', async () => {
