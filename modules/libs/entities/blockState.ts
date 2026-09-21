@@ -13,7 +13,12 @@ import { Enrollment } from './enrollment'
 import { LessonVersion } from './lessonVersion'
 import { School } from './school'
 
-/** How far a student got through one block: video watched, quiz answered. */
+/**
+ * How far a student got through one block: video watched, quiz answered.
+ *
+ * `verdict` is the server's answer to a quiz, written there and never by a
+ * device; it is null for a block that is not marked.
+ */
 @Entity({ name: 'block_states' })
 export class BlockState {
   @PrimaryGeneratedColumn('uuid')
@@ -46,7 +51,6 @@ export class BlockState {
   @Column('json')
   state: LessonBlockState
 
-  /** The server's answer to the student's: written here, never by a device. */
   @Column({ type: 'json', nullable: true })
   verdict: QuizVerdict | null
 

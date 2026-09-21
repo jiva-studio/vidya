@@ -19,6 +19,9 @@ import { School } from './school'
  * `schoolId` is denormalised because these rows sync to devices and the sync
  * engine filters by school; deriving it through the enrolment on every pull
  * would make the query the slowest part of syncing.
+ *
+ * `grade` is a percentage, 0 to 100, whoever marked it, and `comment` is what
+ * the reviewer wrote back.
  */
 @Entity({ name: 'homework' })
 export class Homework {
@@ -55,11 +58,9 @@ export class Homework {
   @Column({ nullable: false, default: '' })
   text: string
 
-  /** A percentage, 0 to 100, whoever marked it. */
   @Column({ nullable: true })
   grade: number
 
-  /** What the reviewer wrote back; the half of a refusal that is worth reading. */
   @Column({ nullable: true, type: 'character varying' })
   comment: string | null
 

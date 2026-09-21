@@ -7,11 +7,15 @@ import { LessonBlockState } from './lessons'
 /*                                   Models                                   */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * `lessonVersionId` names the version answered, not the lesson: published
+ * versions are frozen. `grade` is a percentage, 0 to 100, on the same scale
+ * whether a person or the server marked the work, and `comment` is what the
+ * reviewer wrote back.
+ */
 export type HomeworkDetails = {
   id: domain.HomeworkId
   enrollmentId: domain.EnrollmentId
-
-  /** The version answered, not the lesson: published versions are frozen. */
   lessonVersionId: domain.LessonVersionId
 
   sectionId: domain.SectionId
@@ -19,10 +23,7 @@ export type HomeworkDetails = {
   status: domain.HomeworkStatus
   text: string
 
-  /** A percentage, 0 to 100 — the same scale whether a person or the server marked it. */
   grade?: number
-
-  /** What the reviewer wrote back. Returned work without it says nothing. */
   comment?: string | null
   reviewedById?: domain.UserId
   submittedAt?: domain.IsoDateTime
@@ -85,6 +86,7 @@ export type ReviewHomeworkResponse = crud.UpdateItemResponse<HomeworkDetails>
 /*                                  Progress                                  */
 /* -------------------------------------------------------------------------- */
 
+/** `verdict` is written by the server alone, and is absent until an answer is marked. */
 export type BlockStateDetails = {
   id: domain.BlockStateId
   enrollmentId: domain.EnrollmentId
@@ -93,8 +95,6 @@ export type BlockStateDetails = {
   schoolId: domain.SchoolId
   state: LessonBlockState
 
-  /** Written by the server alone; absent until an answer has been marked. */
   verdict?: domain.QuizVerdict | null
-
   updatedAt: domain.IsoDateTime
 }
