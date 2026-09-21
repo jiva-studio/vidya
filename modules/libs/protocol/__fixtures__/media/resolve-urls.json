@@ -1,0 +1,25 @@
+{
+  "name": "resolve-urls",
+  "endpoint": "POST /media/urls",
+  "description": "Playable addresses for a whole screen in one call — an image element cannot wait for a promise, so a screen resolves before it draws. `expiresAt` is rounded up to the window boundary (an hour for images, six for audio and video), which makes every reader inside the window share one address and lets the CDN and the browser cache it; a per-reader expiry is a cache miss on every view. An id the caller may not read is simply absent, never null: a present key with an empty value would look like a file that exists and is broken.",
+  "request": {
+    "ids": [
+      "b2c3d4e5-6f70-4812-9a3b-4c5d6e7f8091",
+      "c3d4e5f6-7081-4923-ab4c-5d6e7f809102",
+      "d4e5f607-1829-4a34-bc5d-6e7f80910213"
+    ]
+  },
+  "status": 200,
+  "response": {
+    "urls": {
+      "b2c3d4e5-6f70-4812-9a3b-4c5d6e7f8091": {
+        "url": "https://cdn.demo-school.example/school/6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f/image/b2c3d4e5-6f70-4812-9a3b-4c5d6e7f8091/original.png?token=REDACTED&expires=1790000000",
+        "expiresAt": "2026-09-21T13:00:00.000Z"
+      },
+      "c3d4e5f6-7081-4923-ab4c-5d6e7f809102": {
+        "url": "https://cdn.demo-school.example/school/6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f/video/c3d4e5f6-7081-4923-ab4c-5d6e7f809102/original.mp4?token=REDACTED&expires=1790021600",
+        "expiresAt": "2026-09-21T18:00:00.000Z"
+      }
+    }
+  }
+}

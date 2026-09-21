@@ -31,6 +31,8 @@ export type UserId = Id<'User'>
 export type RoleId = Id<'Role'>
 export type UserRoleId = Id<'UserRole'>
 export type AuditLogId = Id<'AuditLog'>
+export type MediaId = Id<'Media'>
+export type StorageProfileId = Id<'StorageProfile'>
 
 /** Identifies a block or section inside lesson content, not a table row. */
 export type BlockId = Id<'Block'>

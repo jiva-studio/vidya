@@ -8,6 +8,7 @@ import { Lesson } from './lesson'
 import { LessonVersion } from './lessonVersion'
 import { Role } from './role'
 import { School } from './school'
+import { StorageProfile } from './storageProfile'
 import { SyncJournal } from './syncJournal'
 import { User } from './user'
 import { UserRole } from './userRole'
@@ -29,6 +30,7 @@ export {
   LessonVersion,
   Role,
   School,
+  StorageProfile,
   SyncJournal,
   User,
   UserRole,
@@ -44,6 +46,7 @@ export const Entities = [
   Lesson,
   LessonVersion,
   School,
+  StorageProfile,
   SyncJournal,
   User,
   Role,

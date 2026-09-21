@@ -1,0 +1,23 @@
+{
+  "name": "upload-complete",
+  "endpoint": "POST /media/:id/complete",
+  "description": "Said after the bytes landed. The server re-reads the object and answers with the record as storage describes it, not as the client declared it: `sizeBytes` and `mimeType` come from the HEAD. `url` is the durable path a block stores, and it is a path rather than a signed address on purpose — the signature would outlive neither the lesson nor the key that made it.",
+  "request": {
+    "sha256": "qvS1pYTxvE0ByS3+7t7nB3qP0uZ8mM+8Jt2cM6bP0Wc="
+  },
+  "status": 200,
+  "response": {
+    "id": "b2c3d4e5-6f70-4812-9a3b-4c5d6e7f8091",
+    "schoolId": "6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f",
+    "kind": "image",
+    "status": "ready",
+    "url": "/media/b2c3d4e5-6f70-4812-9a3b-4c5d6e7f8091",
+    "name": "lesson-cover.png",
+    "mimeType": "image/png",
+    "sizeBytes": 402118,
+    "sha256": "qvS1pYTxvE0ByS3+7t7nB3qP0uZ8mM+8Jt2cM6bP0Wc=",
+    "width": 1600,
+    "height": 900,
+    "createdAt": "2026-09-21T12:03:44.120Z"
+  }
+}

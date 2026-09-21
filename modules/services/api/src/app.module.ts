@@ -9,6 +9,7 @@ import {
   DbConfig,
   JwtConfig,
   MailerConfig,
+  MediaConfig,
   MigrationsConfig,
   OtpConfig,
   RedisConfig,
@@ -21,6 +22,7 @@ import { Entities } from '@vidya/entities'
 
 import { AuthModule } from './auth/auth.module'
 import { EduModule } from './edu/edu.module'
+import { MediaModule } from './media/media.module'
 import { SyncModule } from './sync/sync.module'
 
 @Module({
@@ -35,6 +37,7 @@ import { SyncModule } from './sync/sync.module'
         JwtConfig,
         AuthConfig,
         MailerConfig,
+        MediaConfig,
         MigrationsConfig,
         SecurityHeadersConfig,
         ThrottlerConfig,
@@ -75,6 +78,7 @@ import { SyncModule } from './sync/sync.module'
     }),
     AuthModule,
     EduModule,
+    MediaModule,
     SyncModule,
   ],
   controllers: [],

@@ -8,7 +8,8 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
  * The authentication events are wired from
  * `auth/controllers/tokens.controller.ts` and
  * `auth/controllers/user-authentication.controller.ts`. The `edu` events are
- * wired from `RolesService` and `SchoolCreationService`.
+ * wired from `RolesService` and `SchoolCreationService`, and
+ * `media.role.storageGranted` from `RolesService` as well.
  */
 export type AuditAction =
   | 'auth.signIn.success'
@@ -21,6 +22,11 @@ export type AuditAction =
   | 'edu.role.permissionsUpdated'
   | 'edu.role.deleted'
   | 'edu.school.created'
+  | 'media.role.storageGranted'
+  | 'media.storage.configured'
+  | 'media.storage.retired'
+  | 'media.storage.verifyFailed'
+  | 'media.deleted'
 
 /**
  * One recorded action: who did it (or tried to), what they did, what it

@@ -1,6 +1,6 @@
 .PHONY: install \
         check check-package typecheck lint lint-fix format format-check \
-        test test-package test-postgres-required test-postgres \
+        test test-package test-postgres-required test-postgres test-storage-required \
         coverage coverage-package \
         mutate-diff mutate-full \
         api-build api-run api-test \
@@ -74,6 +74,13 @@ test-postgres-required:
 # slower; run it by hand or on a schedule, not per change.
 test-postgres:
 	./scripts/vidya-test-suite-run postgres
+
+# Only the suites a real S3 is required for: whether a signed Content-Length is
+# honoured, whether a range request answers 206, whether a POST policy exists.
+# A fake port cannot answer any of those — they are the provider's properties,
+# not ours. Needs the stand (`make dev-up`).
+test-storage-required:
+	./scripts/vidya-test-suite-run storage-required
 
 # ---------------------------------------------------------------------------
 # Coverage
@@ -169,12 +176,25 @@ export VIDYA_DB_LOGGING   := true
 # local stand only; anything beyond one developer's machine sets its own.
 export VIDYA_JWT_SECRET   := local-dev-fixture-jwt-secret-do-not-use-elsewhere
 
+# The stand's S3, which is also the installation's default storage: a school
+# that hands over no credentials of its own writes here. Fixtures, like the
+# secret above — `media.config.ts` refuses a master key that is not 32 bytes of
+# base64, so the stand carries one that is.
+export VIDYA_MEDIA_DEFAULT_ENDPOINT      := http://127.0.0.1:7804
+export VIDYA_MEDIA_DEFAULT_REGION        := us-east-1
+export VIDYA_MEDIA_DEFAULT_BUCKET        := vidya-media
+export VIDYA_MEDIA_DEFAULT_ACCESS_KEY_ID := vidya
+export VIDYA_MEDIA_DEFAULT_SECRET        := vidya-dev-secret
+export VIDYA_MEDIA_MASTER_KEY            := bG9jYWwtZGV2LWZpeHR1cmUtbWFzdGVyLWtleS0yNTY=
+export VIDYA_MEDIA_ENDPOINT_ALLOWLIST    := 127.0.0.1
+
 dev-up:
 	$(COMPOSE) up -d
 	@echo ""
 	@echo "  postgres  localhost:7800"
 	@echo "  redis     localhost:7801"
 	@echo "  smtp      localhost:7802"
+	@echo "  s3        localhost:7804 (console 7805)"
 	@echo "  mail ui   $(MAIL_UI)"
 	@echo ""
 
