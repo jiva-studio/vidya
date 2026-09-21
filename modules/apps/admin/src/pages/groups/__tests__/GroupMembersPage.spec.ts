@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp, pending, refusal } from '@/shared/testing'
 
@@ -118,7 +118,7 @@ describe('GroupMembersPage', () => {
   it('says how students get into a group when nobody is in it', async () => {
     const { page } = await open({ [ENROLLMENTS]: { items: [] } })
 
-    expect(page.text()).toContain('Nobody is in this group yet')
+    expect(page.text()).toContain(translate('group-members-empty-title'))
     expect(page.text()).toContain('Accept a request into this group')
   })
 
@@ -128,9 +128,11 @@ describe('GroupMembersPage', () => {
     })
 
     expect(page.text()).not.toContain('The database is asleep')
-    expect(page.text()).toContain('That did not work. Try again.')
+    expect(page.text()).toContain(translate('state-error'))
 
-    const retry = page.findAll('button').find((button) => button.text() === 'Try again')
+    const retry = page
+      .findAll('button')
+      .find((button) => button.text() === translate('action-retry'))
     await retry?.trigger('click')
     await flushPromises()
 

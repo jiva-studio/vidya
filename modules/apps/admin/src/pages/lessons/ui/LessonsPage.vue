@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { CourseId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
-import { Breadcrumbs, Button, PageHeader } from '@vidya/ui'
+import { Button, PageHeader } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useCourseLessons } from '@/entities/lesson'
@@ -12,6 +12,7 @@ import { useCan } from '@/shared/access'
 import AddLessonDialog from './AddLessonDialog.vue'
 import LessonsTable from './LessonsTable.vue'
 import { pageClasses } from './styles'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -28,16 +29,7 @@ const canEdit = useCan('lessons:update')
 const adding = ref(false)
 const busy = ref(false)
 
-const breadcrumbs = computed(() => [
-  { key: 'courses', label: $t('courses-title') },
-  { key: 'lessons', label: $t('lessons-title') },
-])
-
 /* -------------------------------- Handlers -------------------------------- */
-
-function onBreadcrumb(key: string) {
-  if (key === 'courses') void router.push({ name: 'courses' })
-}
 
 function onCreate() {
   adding.value = true
@@ -72,9 +64,7 @@ function onRetry() {
 <template>
   <section :class="pageClasses">
     <PageHeader :title="$t('lessons-title')">
-      <template #breadcrumbs>
-        <Breadcrumbs :items="breadcrumbs" @select="onBreadcrumb" />
-      </template>
+      <template #leading><PageBack /></template>
       <template #actions>
         <Button variant="ghost" @click="onBack">{{ $t('lessons-back') }}</Button>
         <Button v-if="canCreate" @click="onCreate">{{ $t('lessons-add') }}</Button>

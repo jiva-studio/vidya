@@ -45,7 +45,7 @@ const network = fakeSyncNetwork()
 const running = async () => {
   const { useConnections, connectionStore } = await import('../connections')
   const { startSync } = await import('../sync')
-  const { openTestDatabase } = await import('@/infra/persistence/testing')
+  const { openTestDatabase } = await import('@vidya/client/testing')
 
   const server = network.server(SCHOOL_A)
   const connections = useConnections()

@@ -1,4 +1,4 @@
-import type { LocalCourse, LocalEnrollment, LocalGroup } from '@/ports'
+import type { LocalCourse, LocalEnrollment, LocalGroup } from '@vidya/client'
 
 import type { EnrollmentViewModel } from '../components/Enrollments'
 

@@ -14,6 +14,8 @@ import type { GroupMembersEmits, GroupMembersProps } from './types'
 const props = withDefaults(defineProps<GroupMembersProps>(), {
   loading: false,
   error: undefined,
+  canModerate: false,
+  busy: undefined,
 })
 
 /* --------------------------------- Events --------------------------------- */
@@ -28,12 +30,21 @@ const columns = computed<TableColumn[]>(() => [
   { key: 'name', label: $t('group-members-column-name') },
   { key: 'status', label: $t('group-members-column-status') },
   { key: 'since', label: $t('group-members-column-since') },
+  { key: 'actions', label: $t('group-members-column-actions'), align: 'end' },
 ])
 
 /* -------------------------------- Handlers -------------------------------- */
 
 function onRetry() {
   emit('retry')
+}
+
+function onRevoke(enrollmentId: string) {
+  emit('revoke', enrollmentId)
+}
+
+function onMove(enrollmentId: string) {
+  emit('move', enrollmentId)
 }
 
 /* -------------------------------- Helpers --------------------------------- */
@@ -56,7 +67,13 @@ function asMember(row: unknown): GroupMember {
     @retry="onRetry"
   >
     <template #row="{ row }">
-      <GroupMemberRow :row="asMember(row)" />
+      <GroupMemberRow
+        :row="asMember(row)"
+        :can-moderate="props.canModerate"
+        :busy="props.busy === asMember(row).enrollmentId"
+        @revoke="onRevoke"
+        @move="onMove"
+      />
     </template>
   </Table>
 </template>

@@ -2,4 +2,4 @@
 export type { GetUserSchoolsResponse, UserApi } from './api'
 export { userApi, useUserApi } from './api'
 export type { UserFormValues, UserRow } from './model'
-export { useUsers } from './model'
+export { PAGE_SIZE, useUsers } from './model'

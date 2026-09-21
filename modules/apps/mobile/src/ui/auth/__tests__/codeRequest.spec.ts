@@ -1,6 +1,5 @@
+import { HttpError, OfflineError } from '@vidya/client'
 import { describe, expect, it } from 'vitest'
-
-import { HttpError, OfflineError } from '@/ports'
 
 import { outcomeOfCodeRequest } from '../model/codeRequest'
 

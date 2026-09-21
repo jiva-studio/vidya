@@ -14,8 +14,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/app', async () => (await import('./localScreens')).appDouble)
 vi.mock('@capacitor/network', async () => (await import('./localScreens')).capacitorNetworkDouble)
 
-import { AsyncButton, TimePicker } from '@/design'
-import { fixedClock, openTestDatabase } from '@/infra/persistence/testing'
 import {
   createSqlBlockStateRepository,
   createSqlEnrollmentRepository,
@@ -23,7 +21,10 @@ import {
   createSqlOutboxRepository,
   createSqlSyncApplyRepository,
   withSyncJournaling,
-} from '@/infra/repositories'
+} from '@vidya/client'
+import { fixedClock, openTestDatabase } from '@vidya/client/testing'
+
+import { AsyncButton, TimePicker } from '@/design'
 
 import { TimeRangeItem, TimeRangeSelector } from '../components/TimeRange'
 import GroupSelector from '../containers/GroupSelector.vue'

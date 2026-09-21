@@ -4,7 +4,14 @@ import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
 import { DataSource } from 'typeorm'
 
-import { createSyncContext, journalRows, QUIZ_BLOCK_ID, RIGHT_ANSWER, SyncContext } from './context'
+import {
+  createSyncContext,
+  EXPLANATION,
+  journalRows,
+  QUIZ_BLOCK_ID,
+  RIGHT_ANSWER,
+  SyncContext,
+} from './context'
 
 /**
  * The quiz key does not travel down the sync path.
@@ -20,16 +27,25 @@ import { createSyncContext, journalRows, QUIZ_BLOCK_ID, RIGHT_ANSWER, SyncContex
  * The walk is recursive and structural, exactly like the REST guard: content
  * with a `schemaVersion` this build has never seen is stored and replicated
  * verbatim, so a shape nobody anticipated has to be searched too.
+ *
+ * Two fields give the answer away, not one: the index, and the prose that names
+ * it in words. A projection that drops only the index leaves the student
+ * holding the answer written out, so both are searched for separately.
  */
 const KEY = 'rightAnswer'
+const PROSE = 'explanation'
 
-/** Whether `KEY` appears anywhere in `node`, at any depth, under any parent. */
-const holdsAnswerKey = (node: unknown): boolean => {
-  if (Array.isArray(node)) return node.some(holdsAnswerKey)
+/** Whether `field` appears anywhere in `node`, at any depth, under any parent. */
+const holds = (field: string, node: unknown): boolean => {
+  if (Array.isArray(node)) return node.some((item) => holds(field, item))
   if (node === null || typeof node !== 'object') return false
 
-  return Object.entries(node).some(([key, value]) => key === KEY || holdsAnswerKey(value))
+  return Object.entries(node).some(([key, value]) => key === field || holds(field, value))
 }
+
+const holdsAnswerKey = (node: unknown): boolean => holds(KEY, node)
+
+const holdsExplanation = (node: unknown): boolean => holds(PROSE, node)
 
 const routes = protocol.Routes().sync
 const DEVICE = 'device-8f2a6c14'
@@ -67,6 +83,11 @@ describe('-sync: the answer key never reaches a device', () => {
     expect(holdsAnswerKey({ a: { b: [{ answers: ['x'] }] } })).toBe(false)
   })
 
+  it('can find the explanation it is looking for', () => {
+    expect(holdsExplanation({ a: { b: [{ [PROSE]: 'because' }] } })).toBe(true)
+    expect(holdsExplanation({ a: { b: [{ answers: ['x'] }] } })).toBe(false)
+  })
+
   it('the pull response carries no answer key at any depth', async () => {
     const response = await pull().expect(200)
     const body = response.body as protocol.PullResponse
@@ -89,6 +110,27 @@ describe('-sync: the answer key never reaches a device', () => {
     expect(holdsAnswerKey(versions)).toBe(false)
   })
 
+  it('the pull response carries no explanation at any depth', async () => {
+    const response = await pull().expect(200)
+    const body = response.body as protocol.PullResponse
+
+    // Prose that names the answer is the answer, so it travels no further than
+    // the index does.
+    const versions = body.changes.filter((change) => change.collection === 'lesson_versions')
+    expect(versions.length).toBeGreaterThan(0)
+    expect(holdsExplanation(versions)).toBe(false)
+
+    expect(holdsExplanation(body)).toBe(false)
+  })
+
+  it('the journal itself carries no explanation at any depth', async () => {
+    const rows = await journalRows(ds)
+    const versions = rows.filter((row) => row.collection === 'lesson_versions')
+
+    expect(versions.length).toBeGreaterThan(0)
+    expect(holdsExplanation(versions)).toBe(false)
+  })
+
   it('keeps the rest of the quiz, so the lesson is still answerable', async () => {
     const response = await pull().expect(200)
     const body = response.body as protocol.PullResponse
@@ -105,9 +147,14 @@ describe('-sync: the answer key never reaches a device', () => {
       answers: ['Arjuna', 'Sanjaya', 'Krishna'],
     })
 
-    // And the fixture really does carry a key on the server side, or the case
-    // above would be green against content that never had one.
+    // And the fixture really does carry a key and an explanation on the server
+    // side, or the case above would be green against content that never had one.
     expect(RIGHT_ANSWER).toBe(2)
+    expect(EXPLANATION.length).toBeGreaterThan(0)
+    expect(ctx.mine.published.content.sections[0].blocks[1]).toMatchObject({
+      [KEY]: RIGHT_ANSWER,
+      [PROSE]: EXPLANATION,
+    })
   })
 })
 

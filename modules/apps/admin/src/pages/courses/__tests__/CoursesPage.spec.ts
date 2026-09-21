@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp, pending, refusal } from '@/shared/testing'
 
@@ -90,8 +90,8 @@ describe('CoursesPage', () => {
     const { page } = open({ [COURSES]: { items: [] } })
     await flushPromises()
 
-    expect(page.text()).toContain('No courses yet')
-    expect(page.text()).toContain('Create a course')
+    expect(page.text()).toContain(translate('courses-empty-title'))
+    expect(page.text()).toContain(translate('courses-create'))
   })
 
   it('shows the reason the server gave, and offers another go', async () => {
@@ -99,9 +99,11 @@ describe('CoursesPage', () => {
     await flushPromises()
 
     expect(page.text()).not.toContain('The database is asleep')
-    expect(page.text()).toContain('That did not work. Try again.')
+    expect(page.text()).toContain(translate('state-error'))
 
-    const retry = page.findAll('button').find((button) => button.text() === 'Try again')
+    const retry = page
+      .findAll('button')
+      .find((button) => button.text() === translate('action-retry'))
     await retry?.trigger('click')
     await flushPromises()
 
@@ -115,6 +117,8 @@ describe('CoursesPage', () => {
     const { page } = open({ [COURSES]: { items: [] } })
     await flushPromises()
 
-    expect(page.findAll('button').map((button) => button.text())).not.toContain('Create a course')
+    expect(page.findAll('button').map((button) => button.text())).not.toContain(
+      translate('courses-create'),
+    )
   })
 })

@@ -14,10 +14,12 @@ plan.md
 .agents/specs/*
 !.agents/specs/TEMPLATE.md
 
-# Stryker's sandbox and HTML reports. The incremental baseline under
-# .stryker/incremental/ is committed on purpose: it is what a branch is
-# measured against.
+# Stryker's sandbox, HTML reports and incremental baseline. The baseline is
+# local on purpose: it is reused between runs on one checkout, and `diff` mode —
+# the only mode a branch has to pass — mutates exactly the files a baseline
+# cannot hold, the ones the branch changed.
 .stryker-tmp
+.stryker/
 modules/**/reports
 stryker.log
 

@@ -1,13 +1,8 @@
 import { Capacitor } from '@capacitor/core'
+import { deviceMigrations, type IDatabase, runMigrations, useSqlJsPersistence } from '@vidya/client'
 import { toIsoDateTime } from '@vidya/domain'
 
-import {
-  deviceMigrations,
-  runMigrations,
-  useCapacitorSqlPersistence,
-  useSqlJsPersistence,
-} from '@/infra/persistence'
-import type { IDatabase } from '@/ports'
+import { useCapacitorSqlPersistence } from '@/infra/persistence/capacitor'
 
 /**
  * The device's database: opened once, migrated before anything reads it.

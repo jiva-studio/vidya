@@ -7,12 +7,26 @@ import { useContainer } from 'class-validator'
 
 import { AppModule } from './app.module'
 import { corsOptionsFor } from './shared/cors'
+import { LoggerService } from './shared/logging'
 import { bootstrapMigrations } from './shared/migrations'
 import { securityHeaders } from './shared/security-headers'
+import { SentryExceptionFilter } from './shared/sentry'
 import { setupSwagger } from './shared/swagger'
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  })
+
+  // Use structured logger
+  const customLogger = app.get(LoggerService)
+  app.useLogger(customLogger)
+
+  // Graceful shutdown
+  app.enableShutdownHooks()
+
+  // Global Exception Filter with Sentry reporting
+  app.useGlobalFilters(app.get(SentryExceptionFilter))
 
   // A sync push is answered row by row, so the batch has to reach the handler:
   // the framework default of 100kB would turn a long homework answer into a 413
@@ -57,7 +71,6 @@ async function bootstrap() {
     }),
   )
 
-  // TODO Change environment variable to VIDYA_PORT
   await app.listen(process.env.PORT ?? 8001)
 }
 bootstrap()

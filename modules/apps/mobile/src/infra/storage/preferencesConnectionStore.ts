@@ -1,6 +1,5 @@
 import { Preferences } from '@capacitor/preferences'
-
-import type { Connection, IConnectionStore } from '@/ports'
+import type { Connection, IConnectionStore } from '@vidya/client'
 
 const KEY = 'connections'
 

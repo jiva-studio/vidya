@@ -25,6 +25,15 @@ export const QUIZ_BLOCK_ID = domain.asId<domain.BlockId>('33333333-3333-4333-833
  */
 export const RIGHT_ANSWER = 2
 
+/**
+ * The prose the fixture carries beside the key.
+ *
+ * An explanation names the answer in words, so a projection that drops only the
+ * index still hands the student the answer; the fixture has to carry both for a
+ * test to be able to tell the difference.
+ */
+export const EXPLANATION = 'Krishna speaks the Gita; Sanjaya only relays what he hears.'
+
 /** A course with a lesson, a published version and a draft nobody may see. */
 export interface CourseWorld {
   course: Course
@@ -73,6 +82,7 @@ const content = (): domain.LessonContent => ({
           question: 'Who speaks the Gita?',
           answers: ['Arjuna', 'Sanjaya', 'Krishna'],
           rightAnswer: RIGHT_ANSWER,
+          explanation: EXPLANATION,
         },
       ],
     },
@@ -151,7 +161,12 @@ const createCourse = async (
   const lessons = app.get(LessonsService)
   const versions = app.get(LessonVersionsService)
 
-  const course = await courses.create({ name, learningType: 'individual', schoolId })
+  const course = await courses.create({
+    name,
+    learningType: 'individual',
+    schoolId,
+    status: 'published',
+  })
 
   const lesson = await lessons.create({
     courseId: course.id,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EnrollmentStatus } from '@vidya/domain'
 import { AlertDialog, IconButton } from '@vidya/ui'
-import { Check, Eye, RotateCcw, Users, X } from 'lucide-vue-next'
+import { Check, Eye, RotateCcw, UserMinus, Users, X } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { ModerationActionsEmits, ModerationActionsProps } from '../types'
@@ -22,10 +22,15 @@ const emit = defineEmits<ModerationActionsEmits>()
 
 const confirming = ref(false)
 const restoring = ref(false)
+const revoking = ref(false)
 
 const isPending = computed(() => props.enrollment.status === 'pending')
 const canDecide = computed(() => props.canModerate && isPending.value)
 const canPlace = computed(() => props.canModerate && props.enrollment.status === 'accepted')
+
+// Expelling is taking the place back, and it is the same action whether the
+// student sits in a group or still waits in the queue.
+const canRevoke = computed(() => props.canModerate && props.enrollment.status === 'accepted')
 
 // A place that has been given up is the one decision that may be reversed, and
 // the only way back is onto the course: there is no open request left to
@@ -58,6 +63,15 @@ function onRestoreAsked() {
 function onRestoreConfirmed() {
   restoring.value = false
   emit('accept', props.enrollment.id)
+}
+
+function onRevokeAsked() {
+  revoking.value = true
+}
+
+function onRevokeConfirmed() {
+  revoking.value = false
+  emit('revoke', props.enrollment.id)
 }
 
 function onAssign() {
@@ -99,6 +113,15 @@ function onReview() {
       <Users />
     </IconButton>
     <IconButton
+      v-if="canRevoke"
+      variant="danger"
+      :busy="props.busy"
+      :label="$t('enrollments-revoke')"
+      @click="onRevokeAsked"
+    >
+      <UserMinus />
+    </IconButton>
+    <IconButton
       v-if="props.canModerate"
       variant="ghost"
       :label="$t('enrollments-review')"
@@ -114,6 +137,15 @@ function onReview() {
       :confirm-label="$t('enrollments-decline')"
       :cancel-label="$t('action-cancel')"
       @confirm="onDeclineConfirmed"
+    />
+    <AlertDialog
+      v-model:open="revoking"
+      destructive
+      :title="$t('enrollments-revoke-title')"
+      :description="$t('enrollments-revoke-consequence')"
+      :confirm-label="$t('enrollments-revoke')"
+      :cancel-label="$t('action-cancel')"
+      @confirm="onRevokeConfirmed"
     />
     <AlertDialog
       v-model:open="restoring"

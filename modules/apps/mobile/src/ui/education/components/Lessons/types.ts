@@ -1,7 +1,6 @@
+import type { LocalLesson } from '@vidya/client'
 import type { BlockId, LessonId, SectionId } from '@vidya/domain'
 import type { LessonBlock, LessonBlockState } from '@vidya/protocol'
-
-import type { LocalLesson } from '@/ports'
 
 /** What the section strip shows: a label to press, and which one is pressed. */
 export interface LessonSectionViewModel {

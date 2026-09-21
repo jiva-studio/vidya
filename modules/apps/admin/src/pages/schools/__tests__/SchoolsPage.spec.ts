@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, pending, refusal } from '@/shared/testing'
@@ -74,17 +74,19 @@ describe('SchoolsPage', () => {
   it('says what to do next when there is no school yet', async () => {
     const { page } = await mountPage({ [SCHOOLS]: { items: [] } })
 
-    expect(page.text()).toContain('Школ пока нет')
-    expect(page.text()).toContain('Создайте школу')
+    expect(page.text()).toContain(translate('schools-empty-title'))
+    expect(page.text()).toContain(translate('schools-create'))
   })
 
   it('shows the reason the server gave and offers another attempt', async () => {
     const { transport, page } = await mountPage({ [SCHOOLS]: refusal(503, 'Try again later') })
 
     expect(page.find('[role="alert"]').text()).not.toContain('Try again later')
-    expect(page.find('[role="alert"]').text()).toContain('Не получилось. Попробуйте ещё раз.')
+    expect(page.find('[role="alert"]').text()).toContain(translate('state-error'))
 
-    const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
+    const retry = page
+      .findAll('button')
+      .find((button) => button.text() === translate('action-retry'))
     await retry?.trigger('click')
     await flushPromises()
 
@@ -101,8 +103,8 @@ describe('SchoolsPage', () => {
       .findAll('button')
       .map((button) => button.attributes('aria-label') ?? button.text())
 
-    expect(labels).not.toContain('Новая школа')
-    expect(labels).not.toContain('Изменить')
+    expect(labels).not.toContain(translate('schools-form-create-title'))
+    expect(labels).not.toContain(translate('schools-edit'))
   })
 
   it('leads to the settings of a school that may be changed', async () => {
@@ -112,7 +114,7 @@ describe('SchoolsPage', () => {
 
     const settings = page
       .findAll('button')
-      .find((button) => button.attributes('aria-label') === 'Настройки')
+      .find((button) => button.attributes('aria-label') === translate('schools-settings'))
     await settings?.trigger('click')
     await flushPromises()
 

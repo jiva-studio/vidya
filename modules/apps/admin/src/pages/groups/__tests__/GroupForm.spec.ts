@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp, refusal } from '@/shared/testing'
 
@@ -74,7 +74,7 @@ describe('GroupFormPage', () => {
 
     const labels = page.findAll('label').map((label) => label.text())
 
-    expect(labels).toEqual(['Name*', 'Course*', 'Description'])
+    expect(labels).toEqual(['Name*', 'Course*', translate('group-form-description-label')])
   })
 
   it('sends the course chosen in the combobox with the name and the description', async () => {
@@ -112,8 +112,8 @@ describe('GroupFormPage', () => {
     await flushPromises()
 
     expect(transport.callsTo(GROUPS)).toHaveLength(0)
-    expect(page.text()).toContain('Enter a name.')
-    expect(page.text()).toContain('Choose a course.')
+    expect(page.text()).toContain(translate('group-form-name-required'))
+    expect(page.text()).toContain(translate('group-form-course-required'))
   })
 
   it('locks the course of a group that already exists', async () => {
@@ -127,7 +127,7 @@ describe('GroupFormPage', () => {
       },
     })
 
-    expect(page.text()).toContain('The course cannot be changed once the group exists')
+    expect(page.text()).toContain(translate('group-form-course-locked'))
   })
 
   it('reports the reason a save was refused, and keeps it out of the form', async () => {

@@ -10,13 +10,13 @@ const work = (id: string, enrollmentId: string): HomeworkSummary =>
 
 const context: Record<string, WorkContext> = {
   e1: {
-    studentName: 'Аня',
+    studentName: 'Ann',
     courseId: 'c1' as CourseId,
     groupId: 'g1' as GroupId,
-    courseName: 'Курс',
-    groupName: 'Группа',
+    courseName: 'Course',
+    groupName: 'Group',
   },
-  e2: { studentName: 'Боря', courseId: 'c2' as CourseId },
+  e2: { studentName: 'Boris', courseId: 'c2' as CourseId },
 }
 
 const contextOf = (id: EnrollmentId) => context[id]
@@ -25,8 +25,8 @@ describe('homework rows', () => {
   it('names the student through the enrolment the work was handed in against', () => {
     const rows = toHomeworkRows([work('h1', 'e1')], contextOf)
 
-    expect(rows[0].studentName).toBe('Аня')
-    expect(rows[0].groupName).toBe('Группа')
+    expect(rows[0].studentName).toBe('Ann')
+    expect(rows[0].groupName).toBe('Group')
   })
 
   it('keeps a work whose enrolment could not be read', () => {

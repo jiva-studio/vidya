@@ -73,12 +73,12 @@ function onClear() {
         :placeholder="props.searchPlaceholder"
         :aria-label="props.searchLabel"
         type="search"
-        size="md"
+        size="lg"
         :class="cn(searchInputClasses)"
         @update:model-value="onTerm"
       />
       <button
-        v-if="term"
+        v-if="term || props.filtersApplied"
         type="button"
         :class="clearButtonClasses"
         :aria-label="props.clearLabel"

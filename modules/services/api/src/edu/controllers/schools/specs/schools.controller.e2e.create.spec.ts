@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker'
 import { INestApplication } from '@nestjs/common'
 import * as dto from '@vidya/api/edu/dto'
 import { createTestingApp } from '@vidya/api/edu/shared'
@@ -35,7 +34,7 @@ describe('/edu/schools', () => {
     return request(app.getHttpServer())
       .post(Routes().edu.schools.create())
       .set('Authorization', await ctx.getAuthTokenFor(ctx.one.users.readonly))
-      .send(new dto.CreateSchoolRequest({ name: faker.company.name() }))
+      .send(new dto.CreateSchoolRequest({ name: 'A School' }))
       .expect(403)
       .expect({
         message: 'User does not have permission',

@@ -1,4 +1,5 @@
-import type { CourseId, GroupId } from '@vidya/domain'
+import type { CourseId } from '@vidya/domain'
+import type { GroupSummary } from '@vidya/protocol'
 import type { SelectOption } from '@vidya/ui'
 import { computed, ref } from 'vue'
 
@@ -24,10 +25,14 @@ export const useDirectory = () => {
   const { schoolId, generation } = useCurrentSchool()
 
   const courses = ref<{ id: CourseId; name: string }[]>([])
-  const groups = ref<{ id: GroupId; name: string }[]>([])
+  const groups = ref<GroupSummary[]>([])
+
+  // Refused is not empty, and a caller that confuses them decides on nothing.
+  const groupsUnreadable = ref(false)
 
   const courseNames = computed(() => new Map(courses.value.map((item) => [item.id, item.name])))
   const groupNames = computed(() => new Map(groups.value.map((item) => [item.id, item.name])))
+  const groupsById = computed(() => new Map(groups.value.map((item) => [item.id, item])))
 
   const toOptions = (items: { id: string; name: string }[]): SelectOption[] =>
     items.map((item) => ({ value: item.id, label: item.name }))
@@ -41,7 +46,6 @@ export const useDirectory = () => {
 
   const load = async (): Promise<void> => {
     if (loadedFor.value === generation.value) return
-    loadedFor.value = generation.value
 
     const [read, grouped] = await Promise.allSettled([
       getCourses(http, { schoolId: schoolId.value }),
@@ -50,7 +54,22 @@ export const useDirectory = () => {
 
     if (read.status === 'fulfilled') courses.value = read.value.items
     if (grouped.status === 'fulfilled') groups.value = grouped.value.items
+    groupsUnreadable.value = grouped.status === 'rejected'
+
+    // Stamped only by a read that worked, or one refusal settles the question
+    // for the rest of the session.
+    if (read.status === 'fulfilled' && grouped.status === 'fulfilled') {
+      loadedFor.value = generation.value
+    }
   }
 
-  return { courseNames, groupNames, courseOptions, groupOptions, load }
+  return {
+    courseNames,
+    groupNames,
+    groupsById,
+    groupsUnreadable,
+    courseOptions,
+    groupOptions,
+    load,
+  }
 }

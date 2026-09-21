@@ -34,7 +34,7 @@ import { computed } from 'vue'
 
 import { useConnections, useRepositories, useSyncStatus } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
-import type { LocalEnrollment, LocalGroup } from '@/ports'
+import type { LocalEnrollment, LocalGroup } from '@vidya/client'
 import { useLocalData, useNetworkStatus } from '@/shared'
 import {
   type EnrollmentActionView,

@@ -1,21 +1,23 @@
 <script setup lang="ts">
-import type { LessonContent, SectionId } from '@vidya/domain'
+import type { BlockId, LessonContent } from '@vidya/domain'
 import { FailureState, Skeleton } from '@vidya/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import type { BlockFault } from '@/features/edit-lesson-content'
 import {
+  blockAnchorOf,
   findBlockFaults,
   contentProblems,
+  provideFaultedBlocks,
   pruneForSave,
   useLessonContentEditor,
 } from '@/features/edit-lesson-content'
 import { PublishDialog } from '@/features/publish-lesson'
 import { useCan } from '@/shared/access'
 
-import { anchorOf } from '../lib'
 import {
   useAutosave,
+  useDraftFork,
   useDraftSaving,
   useEditorShortcuts,
   useLessonPublishing,
@@ -43,6 +45,7 @@ const editor = useLessonContentEditor()
 const draft = useDraftSaving(props.lessonId)
 const publishing = useLessonPublishing(props.lessonId)
 const autosave = useAutosave(send)
+const fork = useDraftFork(publishing.openRevision, (id) => versionDoc.open(id, true))
 
 const publishable = useCan('lessons:publish')
 const publishOpen = ref(false)
@@ -52,6 +55,9 @@ const frozen = computed(() => versionDoc.version.value?.status === 'published')
 const problems = computed(() => contentProblems(editor.content.value))
 const blocked = computed(() => problems.value.length > 0)
 const noticed = computed(() => blocked.value || faults.value.length > 0)
+const faultedBlocks = computed(() => faults.value.map((fault) => fault.blockId))
+
+provideFaultedBlocks(faultedBlocks)
 
 /* --------------------------------- Hooks ---------------------------------- */
 
@@ -69,8 +75,11 @@ onMounted(() => {
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onContent(content: LessonContent) {
+// The edit stays on screen whatever the fork does: it exists nowhere else.
+async function onContent(content: LessonContent) {
   editor.set(content)
+
+  if (frozen.value && !(await fork.start())) return
   queue()
 }
 
@@ -96,24 +105,35 @@ function onRetry() {
   void versionDoc.open()
 }
 
-function onSaveRetry() {
-  void autosave.retry()
+async function onSaveRetry() {
+  if (frozen.value) return onSave()
+  await autosave.retry()
 }
 
 function onPublish() {
   faults.value = findBlockFaults(editor.content.value)
   const first = faults.value.at(0)
 
-  if (first) reveal(first.sectionId)
+  if (first) reveal(first.blockId)
   else publishOpen.value = true
+}
+
+function onReveal(blockId: BlockId) {
+  reveal(blockId)
 }
 
 function onPublishOpen(open: boolean) {
   publishOpen.value = open
 }
 
-function onSave() {
-  void autosave.flush()
+// Saving a document still on the frozen version means forking first.
+async function onSave() {
+  if (frozen.value) {
+    if (!(await fork.start())) return
+    queue()
+  }
+
+  await autosave.flush()
 }
 
 // Publishing freezes what the server holds, so anything still on screen has to
@@ -126,11 +146,6 @@ async function onPublishConfirm() {
 
   publishOpen.value = false
   await versionDoc.open(version.id)
-}
-
-async function onRevision() {
-  const opened = await publishing.openRevision()
-  if (opened) await versionDoc.open(opened)
 }
 
 /* -------------------------------- Helpers --------------------------------- */
@@ -151,8 +166,10 @@ async function send(content: LessonContent): Promise<boolean> {
   return stored
 }
 
-function reveal(id: SectionId) {
-  document.getElementById(anchorOf(id))?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+function reveal(id: BlockId) {
+  document
+    .getElementById(blockAnchorOf(id))
+    ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 </script>
 
@@ -167,14 +184,19 @@ function reveal(id: SectionId) {
       :busy="publishing.busy.value"
       :publishable="publishable"
       :blocked="blocked"
+      :error="publishing.error.value && $t(publishing.error.value)"
       @rename="onRename"
       @back="onBack"
       @save="onSave"
       @retry="onSaveRetry"
       @publish="onPublish"
-      @revision="onRevision"
     />
-    <ContentProblemsNotice v-if="noticed" :problems="problems" :faults="faults" />
+    <ContentProblemsNotice
+      v-if="noticed"
+      :problems="problems"
+      :faults="faults"
+      @reveal="onReveal"
+    />
     <Skeleton v-if="versionDoc.loading.value" shape="block" />
     <FailureState
       v-else-if="versionDoc.error.value"
@@ -186,7 +208,7 @@ function reveal(id: SectionId) {
     <LessonDocument
       v-else
       :content="editor.content.value"
-      :frozen="frozen"
+      :frozen="blocked"
       @update:content="onContent"
     />
     <PublishDialog

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useFluent } from 'fluent-vue'
 import type { GroupId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
 import { FailureState, PageHeader, Skeleton } from '@vidya/ui'
@@ -10,11 +11,15 @@ import { useGroupForm } from '@/entities/group'
 
 import GroupForm from './GroupForm.vue'
 import { formLoadingClasses, pageClasses } from './styles'
+import { PageBack } from '@/shared/navigation'
+import { useToasts } from '@/shared/lib'
 
 /* --------------------------------- State ---------------------------------- */
 
 const route = useRoute()
+const { $t } = useFluent()
 const router = useRouter()
+const toasts = useToasts()
 
 const groupId = idFromRoute()
 const form = useGroupForm(groupId)
@@ -38,7 +43,10 @@ onMounted(() => {
 /* -------------------------------- Handlers -------------------------------- */
 
 async function onSubmit() {
-  if (await form.save()) void router.push({ name: 'groups' })
+  if (!(await form.save())) return
+
+  toasts.show({ title: $t('toast-saved'), tone: 'success' })
+  void router.push({ name: 'groups' })
 }
 
 function onCancel() {
@@ -59,7 +67,9 @@ function idFromRoute(): GroupId | undefined {
 
 <template>
   <section :class="pageClasses">
-    <PageHeader :title="$t(title)" />
+    <PageHeader :title="$t(title)">
+      <template #leading><PageBack /></template>
+    </PageHeader>
     <div v-if="form.loading.value" :class="formLoadingClasses">
       <Skeleton shape="text" :lines="2" />
       <Skeleton shape="block" :lines="4" />

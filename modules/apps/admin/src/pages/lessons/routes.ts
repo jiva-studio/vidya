@@ -14,7 +14,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       section: 'courses',
       permission: 'lessons:read',
-      breadcrumbs: ['nav-courses', 'lessons-title'],
+      nav: { parent: 'courses', label: 'lessons-title' },
     },
   },
 ]

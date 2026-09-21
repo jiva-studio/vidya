@@ -11,7 +11,7 @@ export const routes: RouteRecordRaw[] = [
     path: '/s/:schoolId/courses',
     name: 'courses',
     component: () => import('./ui/CoursesPage.vue'),
-    meta: { permission: 'courses:read', breadcrumbs: ['nav-courses'] },
+    meta: { permission: 'courses:read' },
   },
   {
     path: '/s/:schoolId/courses/new',
@@ -19,7 +19,7 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('./ui/CourseFormPage.vue'),
     meta: {
       permission: 'courses:create',
-      breadcrumbs: ['nav-courses', 'course-form-create-title'],
+      nav: { parent: 'courses', label: 'course-form-create-title' },
     },
   },
   {
@@ -29,7 +29,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       section: 'courses',
       permission: 'courses:update',
-      breadcrumbs: ['nav-courses', 'course-form-edit-title'],
+      nav: { parent: 'courses', label: 'course-form-edit-title' },
     },
   },
 ]
