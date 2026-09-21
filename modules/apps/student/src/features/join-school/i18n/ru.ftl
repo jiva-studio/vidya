@@ -4,6 +4,7 @@ join-action = Вступить в школу
 join-sign-in = Войти и вступить
 join-joining = Вступаем…
 join-joined = Теперь вы студент этой школы.
+join-open-home = Перейти к курсам
 join-retry = Попробовать ещё раз
 
 join-unknown-title = Ссылка никуда не ведёт

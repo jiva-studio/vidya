@@ -4,6 +4,7 @@ join-action = Join the school
 join-sign-in = Sign in to join
 join-joining = Joining…
 join-joined = You are a student of this school now.
+join-open-home = Go to courses
 join-retry = Try again
 
 join-unknown-title = This link leads nowhere

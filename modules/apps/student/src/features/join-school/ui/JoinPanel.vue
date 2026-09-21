@@ -53,6 +53,10 @@ function onJoin() {
 function onRetry() {
   void retry()
 }
+
+function onOpenHome() {
+  emit('joined')
+}
 </script>
 
 <template>
@@ -85,6 +89,7 @@ function onRetry() {
       <template v-else-if="hasJoined">
         <p>{{ $t('join-joined') }}</p>
         <BackfillProgress :running="status.syncing.value" />
+        <Button @click="onOpenHome">{{ $t('join-open-home') }}</Button>
       </template>
     </template>
   </div>

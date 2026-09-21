@@ -70,7 +70,7 @@ describe('the school page behind a joining link', () => {
     expect(http.post).not.toHaveBeenCalled()
   })
 
-  it('joins for a signed-in student without leaving the page', async () => {
+  it('joins for a signed-in student and allows proceeding to home', async () => {
     http.get.mockResolvedValue(school)
     http.post.mockResolvedValue({ success: true })
     signIn()
@@ -81,6 +81,9 @@ describe('the school page behind a joining link', () => {
 
     expect(screen.emitted('sign-in')).toBeUndefined()
     expect(screen.text()).toContain(translate('join-joined'))
+
+    await screen.get('button').trigger('click')
+    expect(screen.emitted('joined')).toHaveLength(1)
   })
 
   it('shows the first backfill rather than a school that looks empty', async () => {

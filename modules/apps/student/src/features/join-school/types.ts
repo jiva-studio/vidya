@@ -30,4 +30,6 @@ export interface JoinPanelProps {
 export interface JoinPanelEmits {
   /** There is no session yet; the page decides where signing in happens. */
   (event: 'sign-in'): void
+  /** Joined the school; the page navigates to the student home. */
+  (event: 'joined'): void
 }

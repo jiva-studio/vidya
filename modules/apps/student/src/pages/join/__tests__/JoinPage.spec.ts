@@ -65,4 +65,40 @@ describe('the joining address', () => {
     expect(router.currentRoute.value.name).toBe('login')
     expect(router.currentRoute.value.query.redirect).toBe('/j/GITA42')
   })
+
+  it('navigates to the student home after joining', async () => {
+    http.post.mockResolvedValue({ success: true })
+    const connection = useConnection()
+    connection.offer({ accessToken: 'access', refreshToken: 'refresh' })
+    connection.signIn('user-1' as never)
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        ...(routes as RouteRecordRaw[]),
+        { path: '/', name: 'courses', component: {} },
+      ],
+    })
+    await router.push('/j/GITA42')
+    await router.isReady()
+
+    const screen = mount(
+      { template: '<RouterView />' },
+      {
+        global: {
+          plugins: [router, fluent],
+          provide: { [httpClientKey as symbol]: http as unknown as HttpClient },
+        },
+      },
+    )
+    await flushPromises()
+
+    await screen.get('button').trigger('click')
+    await flushPromises()
+
+    await screen.get('button').trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.path).toBe('/')
+  })
 })

@@ -22,8 +22,12 @@ const code = computed(() => String(route.params.code ?? ''))
 function onSignIn() {
   void router.push({ name: 'login', query: { redirect: route.fullPath } })
 }
+
+function onJoined() {
+  void router.push('/')
+}
 </script>
 
 <template>
-  <div :class="panelClasses"><JoinPanel :code="code" @sign-in="onSignIn" /></div>
+  <div :class="panelClasses"><JoinPanel :code="code" @sign-in="onSignIn" @joined="onJoined" /></div>
 </template>
