@@ -1,10 +1,10 @@
 import type { SchoolId } from '@vidya/domain'
 import type {
+  CreateSchoolCodeResponse,
   CreateSchoolRequest,
   CreateSchoolResponse,
   GetSchoolResponse,
   GetSchoolsResponse,
-  CreateSchoolCodeResponse,
   UpdateSchoolRequest,
   UpdateSchoolResponse,
 } from '@vidya/protocol'
