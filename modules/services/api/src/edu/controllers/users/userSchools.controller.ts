@@ -63,7 +63,7 @@ export class UserSchoolsController {
     @Body() request: dto.AddUserSchoolsRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.AddUserSchoolsResponse> {
-    if (auth.userId != userId) {
+    if (auth.userId !== userId) {
       throw new ForbiddenException('User does not have permission')
     }
     await this.userSchoolsService.addUser(userId, request.schoolId)
@@ -93,7 +93,7 @@ export class UserSchoolsController {
     @Param('schoolId', new ParseUUIDPipe()) schoolId: domain.SchoolId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.LeaveSchoolResponse> {
-    if (auth.userId != userId) {
+    if (auth.userId !== userId) {
       throw new ForbiddenException('User does not have permission')
     }
 

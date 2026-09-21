@@ -55,6 +55,7 @@ describe('how far a journaled row got', () => {
 
   it('is taken once the push carried it', () => {
     expect(submissionStateOf('pushed')).toBe('accepted')
+    expect(submissionStateOf('pushed', true)).toBe('accepted')
   })
 
   it('tells waiting here apart from leaving right now', () => {
