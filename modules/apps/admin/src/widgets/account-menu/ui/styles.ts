@@ -60,9 +60,11 @@ export const headerClasses = [
   'px-[var(--space-2)]',
   'py-[var(--space-1)]',
   'flex',
-  'flex-col',
-  'gap-[2px]',
+  'items-center',
+  'gap-[var(--space-2)]',
 ]
+
+export const headerTextClasses = ['flex', 'flex-col', 'gap-[2px]', 'min-w-0']
 
 export const headerNameClasses = [
   'text-[length:var(--text-sm)]',

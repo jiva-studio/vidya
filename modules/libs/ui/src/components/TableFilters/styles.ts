@@ -10,7 +10,13 @@ export const searchIconClasses = [
   'size-[var(--space-4)] text-[var(--color-text-muted)]',
 ]
 
-export const searchInputClasses = ['w-full pl-[var(--space-8)] pr-[var(--space-8)]']
+// The icon sits at space-3 and is space-4 wide, so the text starts one space-2
+// past its right edge; the clear button is sized the same way from the right.
+export const searchInputClasses = [
+  'w-full',
+  'pl-[calc(var(--space-3)+var(--space-4)+var(--space-2))]',
+  'pr-[calc(var(--space-2)+var(--space-6))]',
+]
 
 export const clearButtonClasses = [
   'absolute right-[var(--space-2)] top-1/2 -translate-y-1/2',

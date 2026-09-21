@@ -151,9 +151,9 @@ export class GetEnrollmentsResponse implements protocol.GetEnrollmentsResponse {
 export class GetEnrollmentResponse extends EnrollmentDetails {}
 
 export class ModerateEnrollmentRequest implements protocol.ModerateEnrollmentRequest {
-  @ApiProperty({ enum: ['accepted', 'declined'], example: 'accepted' })
-  @IsIn(['accepted', 'declined'])
-  status: Extract<domain.EnrollmentStatus, 'accepted' | 'declined'>
+  @ApiProperty({ enum: ['accepted', 'declined', 'revoked'], example: 'accepted' })
+  @IsIn(['accepted', 'declined', 'revoked'])
+  status: Extract<domain.EnrollmentStatus, 'accepted' | 'declined' | 'revoked'>
 
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()

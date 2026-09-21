@@ -22,6 +22,9 @@ export class GroupSummary implements protocol.GroupSummary {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   id: domain.GroupId
 
+  @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  courseId: domain.CourseId
+
   @ApiProperty({ example: 'Morning group' })
   name: string
 

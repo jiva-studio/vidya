@@ -2,6 +2,7 @@ import type { EnrollmentId, GroupId, SchoolId, UserId } from '@vidya/domain'
 import type {
   GetEnrollmentResponse,
   GetEnrollmentsResponse,
+  GetUserResponse,
   GetUsersResponse,
 } from '@vidya/protocol'
 import { Routes } from '@vidya/protocol'
@@ -45,5 +46,25 @@ export const getSchoolUserNames = async (
     // Refused or unreachable: the roster still lists who is in the group.
   } catch {
     return new Map()
+  }
+}
+
+/**
+ * The name of one student, for a roster the school list could not name.
+ *
+ * `GET /edu/users` lists the people who hold a role in the school, and an
+ * accepted student need hold none — enrolment is a place on a course, not a
+ * role. Those are the rows that used to print an identifier. Quiet, because
+ * `users:read` is a right a teacher may not have and a refusal here is not the
+ * screen's failure.
+ */
+export const getUserName = async (http: HttpClient, id: UserId): Promise<string | undefined> => {
+  try {
+    const user = await http.get<GetUserResponse>(Routes().edu.user(id).get(), undefined, {
+      quiet: true,
+    })
+    return user.name
+  } catch {
+    return undefined
   }
 }

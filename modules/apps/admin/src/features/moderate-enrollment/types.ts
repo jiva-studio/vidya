@@ -14,6 +14,7 @@ export interface ModerationActionsProps {
 export interface ModerationActionsEmits {
   accept: [id: EnrollmentId]
   decline: [id: EnrollmentId]
+  revoke: [id: EnrollmentId]
   'assign-group': [id: EnrollmentId]
   review: [id: EnrollmentId]
 }

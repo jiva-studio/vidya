@@ -70,9 +70,16 @@ export type GetEnrollmentResponse = crud.GetItemResponse<EnrollmentDetails>
 /*                                 Moderation                                 */
 /* -------------------------------------------------------------------------- */
 
-/** Accept or decline a request, optionally placing the student in a group. */
+/**
+ * What the school decides about a place.
+ *
+ * `accepted` and `declined` answer a request; `revoked` takes back a place
+ * already given, which is how a school expels a student without ending their
+ * membership of the school. The student's own `withdrawn` is not here: it is
+ * theirs to make, not the school's.
+ */
 export type ModerateEnrollmentRequest = {
-  status: Extract<domain.EnrollmentStatus, 'accepted' | 'declined'>
+  status: Extract<domain.EnrollmentStatus, 'accepted' | 'declined' | 'revoked'>
   groupId?: domain.GroupId
 }
 

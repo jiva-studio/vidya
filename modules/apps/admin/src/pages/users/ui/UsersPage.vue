@@ -9,7 +9,7 @@ import { useRouter } from 'vue-router'
 import type { UserRow } from '@/entities/user'
 import { useUsers } from '@/entities/user'
 
-import { sectionClasses } from './styles'
+import { pageClasses } from './styles'
 import UsersTableRow from './UsersTableRow.vue'
 
 /* --------------------------------- State ---------------------------------- */
@@ -29,6 +29,16 @@ const displayedRows = computed(() => {
   const query = search.value.trim().toLowerCase()
   return users.rows.value.filter((user) => user.name.toLowerCase().includes(query))
 })
+
+// A list narrowed to nothing is not an empty school: saying so is the only
+// feedback a search that matched nothing can give.
+const searching = computed(() => search.value.trim().length > 0)
+const emptyTitle = computed(() =>
+  searching.value ? $t('users-no-matches-title') : $t('users-empty-title'),
+)
+const emptyDescription = computed(() =>
+  searching.value ? $t('users-no-matches-body') : $t('users-empty-body'),
+)
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -58,7 +68,7 @@ function asUser(row: TableRowData): UserRow {
 </script>
 
 <template>
-  <section :class="sectionClasses">
+  <section :class="pageClasses">
     <PageHeader :title="$t('users-title')" :description="$t('users-description')" />
     <TableFilters
       v-if="users.rows.value.length >= 10 || search"
@@ -72,8 +82,8 @@ function asUser(row: TableRowData): UserRow {
       :rows="displayedRows"
       :loading="users.loading.value"
       :error="users.error.value ? $t('state-error') : undefined"
-      :empty-title="$t('users-empty-title')"
-      :empty-description="$t('users-empty-body')"
+      :empty-title="emptyTitle"
+      :empty-description="emptyDescription"
       :retry-label="$t('action-retry')"
       @retry="onRetry"
     >

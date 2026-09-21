@@ -16,7 +16,7 @@ import { LessonsService } from './lessons.service'
 import { LessonVersionsService } from './lessonVersions.service'
 import { scopedBySchool } from './scoped-by-school'
 
-export type ModerationStatus = Extract<EnrollmentStatus, 'accepted' | 'declined'>
+export type ModerationStatus = Extract<EnrollmentStatus, 'accepted' | 'declined' | 'revoked'>
 
 export type ModerationDecision = {
   status: ModerationStatus
@@ -32,6 +32,12 @@ export type ModerationDecision = {
  * were rather than made to start again with nothing they had. There is no open
  * request there to refuse, hence no way back to `declined`.
  *
+ * `accepted` goes to `revoked` and nowhere else: a place already given can be
+ * taken back — that is what expelling a student from a course is — but it
+ * cannot be turned into a refusal, because there is no longer a request to
+ * refuse. `revoked` reopens to `accepted`, so the pair is reversible and an
+ * expulsion by mistake costs one click, not a new request.
+ *
  * `declined` is empty and stays empty. A refusal on the merits is an answer,
  * not a pause; reversing it is a new request, not a second answer to the old.
  *
@@ -41,7 +47,7 @@ export type ModerationDecision = {
  */
 const MODERATION: Readonly<Record<EnrollmentStatus, readonly ModerationStatus[]>> = Object.freeze({
   pending: ['accepted', 'declined'],
-  accepted: [],
+  accepted: ['revoked'],
   declined: [],
   revoked: ['accepted'],
   withdrawn: ['accepted'],

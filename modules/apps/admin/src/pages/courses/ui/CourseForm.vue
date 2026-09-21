@@ -97,7 +97,7 @@ function nameErrorText(): string | undefined {
       <template #default="field">
         <Textarea
           :id="field.id"
-          :rows="4"
+          :rows="12"
           :model-value="props.modelValue.description"
           :described-by="field.describedBy"
           @update:model-value="onDescription"

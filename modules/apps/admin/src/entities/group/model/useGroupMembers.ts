@@ -5,7 +5,7 @@ import { useCurrentSchool } from '@/shared/access'
 import { useHttp } from '@/shared/api'
 import { reasonOf } from '@/shared/lib'
 
-import { getEnrollment, getGroupEnrollments, getSchoolUserNames } from '../api'
+import { getEnrollment, getGroupEnrollments, getSchoolUserNames, getUserName } from '../api'
 import type { GroupMember } from '../types'
 
 /**
@@ -14,6 +14,11 @@ import type { GroupMember } from '../types'
  * Membership lives on the enrolment, and `EnrollmentSummary` carries neither
  * the student nor a name, so the roster reads each enrolment for its student
  * and then resolves every name in a single request rather than one per row.
+ *
+ * The school's user list is that single request, but it only holds people with
+ * a role in the school, and an accepted student need hold none — a place on a
+ * course is not a role. Whoever it leaves unnamed is read one at a time, which
+ * is what keeps identifiers off the screen.
  */
 export const useGroupMembers = (groupId: GroupId) => {
   const http = useHttp()
@@ -31,6 +36,7 @@ export const useGroupMembers = (groupId: GroupId) => {
     return details.map((enrollment) => ({
       enrollmentId: enrollment.id,
       studentId: enrollment.studentId,
+      courseId: enrollment.courseId,
       status: enrollment.status,
       enrolledAt: enrollment.createdAt,
     }))
@@ -41,6 +47,28 @@ export const useGroupMembers = (groupId: GroupId) => {
       ...member,
       name: member.studentId ? names.get(member.studentId) : undefined,
     }))
+
+  const fillGaps = async (
+    roster: GroupMember[],
+    names: Map<UserId, string>,
+  ): Promise<Map<UserId, string>> => {
+    const missing = [
+      ...new Set(
+        roster
+          .map((member) => member.studentId)
+          .filter((id): id is UserId => !!id && !names.has(id)),
+      ),
+    ]
+
+    const read = await Promise.all(
+      missing.map(async (id) => [id, await getUserName(http, id)] as const),
+    )
+
+    const filled = new Map(names)
+    for (const [id, name] of read) if (name) filled.set(id, name)
+
+    return filled
+  }
 
   const load = async (): Promise<void> => {
     const mine = ++ticket
@@ -53,7 +81,8 @@ export const useGroupMembers = (groupId: GroupId) => {
     try {
       const { items } = await getGroupEnrollments(http, groupId)
       const roster = await readStudents(items.map((item) => item.id))
-      const names = school ? await getSchoolUserNames(http, school) : new Map<UserId, string>()
+      const listed = school ? await getSchoolUserNames(http, school) : new Map<UserId, string>()
+      const names = await fillGaps(roster, listed)
       if (mine !== ticket) return
       members.value = named(roster, names)
     } catch (caught) {

@@ -59,8 +59,17 @@ function onRetry() {
   void enrollments.load()
 }
 
+// Accepting from the row honours what the student asked for: a decision that
+// dropped the wish would put them on the course in no group at all, and the
+// school would never know a group had been named. A group that has since gone
+// is not passed on — the review dialog is where a new one is chosen.
 async function onAccept(id: EnrollmentId) {
-  if (await moderation.accept(id)) await enrollments.load()
+  const row = enrollments.rows.value.find((candidate) => candidate.id === id)
+  if (await moderation.accept(id, stillThere(row?.preferredGroupId))) await enrollments.load()
+}
+
+async function onRevoke(id: EnrollmentId) {
+  if (await moderation.revoke(id)) await enrollments.load()
 }
 
 async function onDecline(id: EnrollmentId) {
@@ -115,6 +124,11 @@ async function onUndo(id: string) {
 
 /* -------------------------------- Helpers --------------------------------- */
 
+function stillThere(groupId: GroupId | undefined): GroupId | undefined {
+  if (!groupId) return undefined
+  return directory.groupNames.value.has(groupId) ? groupId : undefined
+}
+
 function asEnrollment(row: TableRowData): EnrollmentRow {
   return row as EnrollmentRow
 }
@@ -161,6 +175,7 @@ function refusalFor(row: TableRowData): string | undefined {
           :archive-error="refusalFor(row)"
           @accept="onAccept"
           @decline="onDecline"
+          @revoke="onRevoke"
           @assign-group="onAssignAsked"
           @review="onReviewAsked"
           @archive="onArchive"

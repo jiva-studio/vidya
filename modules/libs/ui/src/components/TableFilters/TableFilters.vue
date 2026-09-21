@@ -78,7 +78,7 @@ function onClear() {
         @update:model-value="onTerm"
       />
       <button
-        v-if="term"
+        v-if="term || props.filtersApplied"
         type="button"
         :class="clearButtonClasses"
         :aria-label="props.clearLabel"

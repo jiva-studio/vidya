@@ -6,11 +6,10 @@ import { ref } from 'vue'
 
 import { LanguageSwitch } from '@/features/switch-language'
 
+import AccountMenuHeader from './AccountMenuHeader.vue'
+
 import {
   dividerClasses,
-  headerClasses,
-  headerEmailClasses,
-  headerNameClasses,
   iconClasses,
   menuClasses,
   nameClasses,
@@ -66,12 +65,7 @@ function onSignOut() {
     </button>
 
     <div v-if="isOpen" :class="menuClasses" role="menu">
-      <div :class="headerClasses">
-        <p :class="headerNameClasses">{{ props.name }}</p>
-        <p v-if="props.email && props.email !== props.name" :class="headerEmailClasses">
-          {{ props.email }}
-        </p>
-      </div>
+      <AccountMenuHeader :name="props.name" :email="props.email" />
       <div :class="dividerClasses" />
       <div :class="rowClasses">
         <span :class="rowLabelClasses">{{ $t('language-label') }}</span>

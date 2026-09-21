@@ -97,11 +97,13 @@ async function load(): Promise<void> {
       @retry="onRetry"
     />
     <div v-else-if="user" :class="sectionClasses">
-      <UserDetailsForm v-if="canUpdate" :user="user" />
-      <UserFacts v-else :user="user" />
-      <Separator />
-      <FieldGroup :title="$t('users-roles-title')">
+      <FieldGroup :title="$t('users-roles-title')" :description="$t('users-roles-hint')">
         <UserRolesSelector :user-id="user.id" />
+      </FieldGroup>
+      <Separator />
+      <FieldGroup :title="$t('users-form-title')">
+        <UserDetailsForm v-if="canUpdate" :user="user" />
+        <UserFacts v-else :user="user" />
       </FieldGroup>
     </div>
   </section>

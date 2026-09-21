@@ -32,7 +32,18 @@ const emit = defineEmits<EnrollmentsTableRowEmits>()
 const { $t } = useFluent()
 
 const group = computed(() => props.enrollment.groupName ?? '—')
-const decidedBy = computed(() => props.enrollment.decidedByName ?? '—')
+
+// Who decided is often unreadable — naming a person needs `users:read`, which a
+// reviewer may not hold. The line then says when, and drops the dash that used
+// to stand in for the name and read as a broken cell.
+const decidedLine = computed(() =>
+  props.enrollment.decidedByName
+    ? $t('enrollments-decided-by', {
+        who: props.enrollment.decidedByName,
+        at: formatDate(props.enrollment.decidedAt!),
+      })
+    : $t('enrollments-decided-at', { at: formatDate(props.enrollment.decidedAt!) }),
+)
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -42,6 +53,10 @@ function onAccept(id: EnrollmentId) {
 
 function onDecline(id: EnrollmentId) {
   emit('decline', id)
+}
+
+function onRevoke(id: EnrollmentId) {
+  emit('revoke', id)
 }
 
 function onAssign(id: EnrollmentId) {
@@ -76,12 +91,7 @@ function onArchive(id: EnrollmentId) {
           :in-queue="props.enrollment.inQueue"
         />
         <span v-if="props.enrollment.decidedAt" :class="secondaryLineClasses">
-          {{
-            $t('enrollments-decided-by', {
-              who: decidedBy,
-              at: formatDate(props.enrollment.decidedAt),
-            })
-          }}
+          {{ decidedLine }}
         </span>
       </div>
     </TableCell>
@@ -92,6 +102,7 @@ function onArchive(id: EnrollmentId) {
         :busy="props.busy"
         @accept="onAccept"
         @decline="onDecline"
+        @revoke="onRevoke"
         @assign-group="onAssign"
         @review="onReview"
       />

@@ -26,7 +26,9 @@ export const useEnrollments = (students: StudentNames, directory: Directory) => 
   const { generation } = useCurrentSchool()
 
   const items = ref<EnrollmentSummary[]>([])
-  const filters = ref<EnrollmentFilters>({})
+  // The screen exists to answer requests, so it opens on the ones still
+  // waiting; every other state is a record, and a record does not need doing.
+  const filters = ref<EnrollmentFilters>({ status: 'pending' })
   const loading = ref(false)
   const error = ref<string | undefined>(undefined)
 

@@ -1,17 +1,25 @@
 <script setup lang="ts">
 import type { EnrollmentStatus } from '@vidya/domain'
-import { Avatar, Badge, TableCell, TableRow } from '@vidya/ui'
+import { AlertDialog, Avatar, Badge, IconButton, TableCell, TableRow } from '@vidya/ui'
 import type { BadgeTone } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { computed } from 'vue'
+import { RotateCcw, UserMinus, Users } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
 
 import { formatDate } from '@/shared/lib'
 
-import type { GroupMemberRowProps } from './types'
+import type { GroupMemberRowEmits, GroupMemberRowProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<GroupMemberRowProps>()
+const props = withDefaults(defineProps<GroupMemberRowProps>(), {
+  canModerate: false,
+  busy: false,
+})
+
+/* --------------------------------- Events --------------------------------- */
+
+const emit = defineEmits<GroupMemberRowEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -27,10 +35,40 @@ const tones: Record<EnrollmentStatus, BadgeTone> = {
   withdrawn: 'info',
 }
 
+// Only a place that was given can be taken back, and only one that was taken
+// back can be put there again; a refusal is neither.
+const RETURNABLE: EnrollmentStatus[] = ['revoked', 'withdrawn']
+
+const revoking = ref(false)
+
 const name = computed(() => nameText())
 const tone = computed<BadgeTone>(() => tones[props.row.status])
 const status = computed(() => `group-members-status-${props.row.status}`)
 const since = computed(() => formatDate(props.row.enrolledAt))
+
+const isAccepted = computed(() => props.row.status === 'accepted')
+const canRevoke = computed(() => props.canModerate && isAccepted.value)
+const canMove = computed(() => props.canModerate && isAccepted.value)
+const canRestore = computed(() => props.canModerate && RETURNABLE.includes(props.row.status))
+
+/* -------------------------------- Handlers -------------------------------- */
+
+function onRevokeAsked() {
+  revoking.value = true
+}
+
+function onRevokeConfirmed() {
+  revoking.value = false
+  emit('revoke', props.row.enrollmentId)
+}
+
+function onRestore() {
+  emit('restore', props.row.enrollmentId)
+}
+
+function onMove() {
+  emit('move', props.row.enrollmentId)
+}
 
 /* -------------------------------- Helpers --------------------------------- */
 
@@ -54,5 +92,36 @@ function nameText(): string {
       <Badge :tone="tone">{{ $t(status) }}</Badge>
     </TableCell>
     <TableCell nowrap>{{ since }}</TableCell>
+    <TableCell actions>
+      <IconButton v-if="canMove" :label="$t('group-members-move')" @click="onMove">
+        <Users />
+      </IconButton>
+      <IconButton
+        v-if="canRestore"
+        :label="$t('group-members-restore')"
+        :busy="props.busy"
+        @click="onRestore"
+      >
+        <RotateCcw />
+      </IconButton>
+      <IconButton
+        v-if="canRevoke"
+        variant="danger"
+        :label="$t('group-members-revoke')"
+        :busy="props.busy"
+        @click="onRevokeAsked"
+      >
+        <UserMinus />
+      </IconButton>
+      <AlertDialog
+        v-model:open="revoking"
+        destructive
+        :title="$t('group-members-revoke-title')"
+        :description="$t('group-members-revoke-consequence')"
+        :confirm-label="$t('group-members-revoke')"
+        :cancel-label="$t('action-cancel')"
+        @confirm="onRevokeConfirmed"
+      />
+    </TableCell>
   </TableRow>
 </template>

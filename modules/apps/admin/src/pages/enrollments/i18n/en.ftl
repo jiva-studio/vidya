@@ -27,6 +27,9 @@ enrollments-accept = Accept
 enrollments-decline = Decline
 enrollments-decline-title = Decline this request?
 enrollments-decline-consequence = A decision cannot be undone. The student would have to ask again.
+enrollments-revoke = Expel
+enrollments-revoke-title = Take this place back?
+enrollments-revoke-consequence = The place and the course go from the student’s device. "Put back on the course" returns both.
 enrollments-restore = Give the place back
 enrollments-restore-title = Give this student their place back?
 enrollments-restore-consequence = The place returns, and with it the course on the student's device.
@@ -39,6 +42,7 @@ enrollments-group-save = Place
 enrollments-group-done = Group changed
 enrollments-requested-at = Asked { $at }
 enrollments-decided-by = { $who }, { $at }
+enrollments-decided-at = { $at }
 enrollments-student-unknown = Student
 
 enrollments-review = Review

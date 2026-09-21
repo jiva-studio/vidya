@@ -25,7 +25,11 @@ users-form-phone-hint = For contact only: signing in by phone is not possible
 users-form-name-required = Enter a name.
 users-form-saved = Saved
 
+users-no-matches-title = Nobody matches that
+users-no-matches-body = Try another name, or clear the search.
+
 users-roles-title = Roles in this school
+users-roles-hint = A role is given and taken back at once, with nothing to save.
 users-roles-empty-title = This school has no roles yet
 users-roles-empty-body = Create a role first, then give it to this person.
 

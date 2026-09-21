@@ -32,6 +32,13 @@ const courseHint = computed(() =>
   props.courseLocked ? $t('group-form-course-locked') : $t('group-form-course-hint'),
 )
 
+// A locked field is read, not searched, and a combobox handed an identifier it
+// has no option for falls back to printing the identifier. A plain read-only
+// input shows the name or nothing, and never a UUID.
+const courseName = computed(
+  () => props.courses.find((course) => course.value === props.modelValue.courseId)?.label ?? '',
+)
+
 /* -------------------------------- Handlers -------------------------------- */
 
 function onName(value: string) {
@@ -89,12 +96,19 @@ function errorFor(field: 'name' | 'courseId', key: string): string | undefined {
       required
     >
       <template #default="field">
+        <Input
+          v-if="props.courseLocked"
+          :id="field.id"
+          :model-value="courseName"
+          readonly
+          :described-by="field.describedBy"
+        />
         <Combobox
+          v-else
           :id="field.id"
           :empty-label="$t('state-nothing-matches')"
           :model-value="props.modelValue.courseId"
           :options="props.courses"
-          :disabled="props.courseLocked"
           :placeholder="$t('groups-course-placeholder')"
           :described-by="field.describedBy"
           :invalid="field.invalid"
@@ -107,7 +121,7 @@ function errorFor(field: 'name' | 'courseId', key: string): string | undefined {
       <template #default="field">
         <Textarea
           :id="field.id"
-          :rows="4"
+          :rows="6"
           :model-value="props.modelValue.description"
           :described-by="field.describedBy"
           @update:model-value="onDescription"

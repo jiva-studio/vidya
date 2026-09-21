@@ -21,7 +21,9 @@ export type GroupDetails = {
  * `PATCH` field and let recruitment close around the one action that stamps
  * `startsAt`.
  */
-export type GroupSummary = Pick<GroupDetails, 'id' | 'name'> & { status: domain.GroupStatus }
+export type GroupSummary = Pick<GroupDetails, 'id' | 'courseId' | 'name'> & {
+  status: domain.GroupStatus
+}
 
 /**
  * A group as it travels to a device.

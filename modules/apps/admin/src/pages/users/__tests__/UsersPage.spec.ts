@@ -136,4 +136,25 @@ describe('UsersPage', () => {
     expect(page.text()).toContain('Ann Smith')
     expect(page.text()).not.toContain('Bob Jones')
   })
+  it('says the search matched nobody rather than that the school is empty', async () => {
+    const { page } = await mountPage({
+      [USERS]: {
+        items: Array.from({ length: 12 }, (_, i) => ({ id: `user-${i}`, name: `User ${i}` })),
+      },
+    })
+
+    const input = page.find('input[type="search"]')
+    await input.setValue('Nobody by that name')
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flushPromises()
+
+    expect(page.text()).toContain('Никого не нашли')
+    expect(page.text()).not.toContain('Здесь пока никого нет')
+  })
+
+  it('lets the list use the full width rather than a form column', async () => {
+    const { page } = await mountPage({ [USERS]: { items: [{ id: 'user-1', name: 'Ann' }] } })
+
+    expect(page.find('section').classes()).not.toContain('max-w-[var(--form-max)]')
+  })
 })

@@ -27,6 +27,9 @@ enrollments-accept = Принять
 enrollments-decline = Отклонить
 enrollments-decline-title = Отклонить заявку?
 enrollments-decline-consequence = Решение не изменить. Студенту придётся подать заявку заново.
+enrollments-revoke = Отчислить
+enrollments-revoke-title = Отчислить студента с курса?
+enrollments-revoke-consequence = Место и доступ к курсу пропадут на устройстве студента. Вернуть можно кнопкой «Вернуть на курс».
 enrollments-restore = Вернуть на курс
 enrollments-restore-title = Вернуть студента на курс?
 enrollments-restore-consequence = Место вернётся вместе с доступом к курсу на устройстве студента.
@@ -39,6 +42,7 @@ enrollments-group-save = Определить
 enrollments-group-done = Группа изменена
 enrollments-requested-at = Подана { $at }
 enrollments-decided-by = { $who }, { $at }
+enrollments-decided-at = { $at }
 enrollments-student-unknown = Студент
 
 enrollments-review = Рассмотреть
