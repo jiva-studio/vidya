@@ -8,8 +8,6 @@ import type {
 import { createGlobalState } from '@vueuse/core'
 import { ref, watch } from 'vue'
 
-import { type SubmissionState, submissionStateOf } from '@/ui/sync/model/submissionState'
-
 import { useSyncStatus } from './syncStatus'
 
 /**

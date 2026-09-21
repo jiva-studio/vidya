@@ -1,6 +1,5 @@
+import type { SubmissionState } from '@vidya/client'
 import type { SyncRejectionReason } from '@vidya/domain'
-
-import type { SubmissionState } from '../../model/submissionState'
 
 export interface SyncStateBadgeProps {
   state: SubmissionState

@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { IonIcon } from '@ionic/vue'
+import { submissionStateOf, SubmissionStates } from '@vidya/client'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 import SyncStateBadge from '../components/Outbox/SyncStateBadge.vue'
-import { submissionStateOf, SubmissionStates } from '../model/submissionState'
 import { fluentFor } from './fluentFor'
 
 const render = (state: (typeof SubmissionStates)[number], locale: 'en' | 'ru' = 'en') =>

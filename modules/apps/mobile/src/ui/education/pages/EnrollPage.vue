@@ -45,7 +45,6 @@ import { education } from '@vidya/client'
 
 import { TimeRangeSelector } from '../components/TimeRange'
 import GroupSelector from '../containers/GroupSelector.vue'
-import { buildPreferredTimes, readTimeZone } from '../model/timeRanges'
 import type { EnrollPageProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -143,7 +142,8 @@ async function writeRequest() {
     schoolId: course.schoolId,
     courseId: course.id,
     preferredGroupId: preferredGroupId.value ?? undefined,
-    preferredTimes: buildPreferredTimes(ranges.value, readTimeZone()) ?? undefined,
+    preferredTimes:
+      education.buildPreferredTimes(ranges.value, education.readTimeZone()) ?? undefined,
     comment: written === '' ? undefined : written,
   })
 }

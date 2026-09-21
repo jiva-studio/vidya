@@ -1,11 +1,10 @@
+import type { SubmissionState } from '@vidya/client'
 import {
   alertCircleOutline,
   checkmarkCircleOutline,
   cloudOfflineOutline,
   cloudUploadOutline,
 } from 'ionicons/icons'
-
-import type { SubmissionState } from '../../model/submissionState'
 
 /** One icon and one colour per state, so the four are told apart at a glance. */
 export const stateIcons: Record<SubmissionState, string> = {
