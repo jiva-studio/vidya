@@ -24,4 +24,5 @@ modules/**/reports
 stryker.log
 
 # Plans are working documents and live in the project's own docs, not here.
+docs/PLAN.md
 docs/PLAN-*.md
