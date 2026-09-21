@@ -11,9 +11,7 @@ import { type EnrollmentWrites, useOutboxView, useSyncRuns } from '@/shared/sync
  * and the journal is re-read straight away, so what the student just wrote
  * shows as waiting rather than as accepted until a run comes round.
  */
-export const announceEnrollmentWrites = (
-  enrollments: IEnrollmentRepository,
-): EnrollmentWrites => ({
+export const announceEnrollmentWrites = (enrollments: IEnrollmentRepository): EnrollmentWrites => ({
   request: announcing(enrollments.request.bind(enrollments)),
   withdraw: announcing(enrollments.withdraw.bind(enrollments)),
   archive: announcing(enrollments.archive.bind(enrollments)),

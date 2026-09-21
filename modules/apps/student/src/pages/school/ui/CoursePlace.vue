@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Badge, Button } from '@vidya/ui'
+import { Badge } from '@vidya/ui'
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import { describePlace } from '@/shared/lib'
-import { mutedClasses, SubmissionNotice } from '@/shared/ui'
+import { SubmissionNotice } from '@/shared/ui'
 
 import type { CoursePlaceProps } from '../types'
 import { placeClasses } from './styles'
@@ -15,21 +16,31 @@ const props = defineProps<CoursePlaceProps>()
 /* --------------------------------- State ---------------------------------- */
 
 const badge = computed(() => (props.status === null ? null : describePlace(props.status)))
+
+const enroll = computed(() => ({
+  name: 'enroll',
+  params: { code: props.code, courseId: props.courseId },
+}))
+
+const place = computed(() => ({
+  name: 'place',
+  params: { code: props.code, courseId: props.courseId },
+}))
 </script>
 
 <template>
   <div :class="placeClasses">
-    <Badge v-if="badge" :tone="badge.tone">{{ $t(badge.key) }}</Badge>
+    <template v-if="badge">
+      <Badge :tone="badge.tone">{{ $t(badge.key) }}</Badge>
+      <RouterLink :to="place">{{ $t('course-place') }}</RouterLink>
 
-    <SubmissionNotice
-      v-if="badge && props.submission"
-      :state="props.submission"
-      :reason="props.reason"
-    />
-
-    <template v-else>
-      <Button disabled>{{ $t('course-ask') }}</Button>
-      <p :class="mutedClasses">{{ $t('course-ask-elsewhere') }}</p>
+      <SubmissionNotice
+        v-if="props.submission"
+        :state="props.submission"
+        :reason="props.reason"
+      />
     </template>
+
+    <RouterLink v-else :to="enroll">{{ $t('course-ask') }}</RouterLink>
   </div>
 </template>

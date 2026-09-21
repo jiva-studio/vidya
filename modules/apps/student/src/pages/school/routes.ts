@@ -19,6 +19,16 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('./ui/CoursePage.vue'),
   },
   {
+    path: '/s/:code/c/:courseId/enroll',
+    name: 'enroll',
+    component: () => import('./ui/EnrollPage.vue'),
+  },
+  {
+    path: '/s/:code/c/:courseId/place',
+    name: 'place',
+    component: () => import('./ui/PlacePage.vue'),
+  },
+  {
     path: '/s/:code/c/:courseId/l/:lessonId',
     name: 'lesson',
     component: () => import('./ui/LessonPage.vue'),

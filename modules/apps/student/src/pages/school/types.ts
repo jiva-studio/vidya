@@ -10,6 +10,10 @@ import type {
   SyncRejectionReason,
 } from '@vidya/domain'
 import type { LessonPreviewLabels, LessonProgress } from '@vidya/ui'
+import type { LocalCourse, LocalEnrollment, LocalGroup } from '@vidya/client'
+import type { EnrollmentStatus, GroupId, LessonId } from '@vidya/domain'
+
+import type { OfferedHours } from './model/toOfferedHours'
 
 /**
  * One lesson as the course screen lists it.
@@ -97,4 +101,52 @@ export interface LessonBodyEmits {
   change: [blockId: BlockId, state: LessonBlockState]
   save: [section: LessonSection, text: string]
   hand: [section: LessonSection]
+  /** Both addresses are written under the school's public code. */
+  code: string
+  courseId: string
+}
+
+/** The one thing a request offers to do with itself, given where it stands. */
+export type PlaceActionName = 'withdraw' | 'archive' | 'unarchive'
+
+/**
+ * What a student asks for, as the form collects it.
+ *
+ * All three are wishes and none of them gates the others: the school reads
+ * them and answers with a group of its own choosing, at hours of its own.
+ * `times` names presets; the stretches behind them are the request's.
+ */
+export interface PlaceWish {
+  readonly preferredGroupId: GroupId | null
+  readonly times: readonly string[]
+  readonly comment: string
+}
+
+export interface EnrollTimesProps {
+  chosen: readonly string[]
+}
+
+export interface EnrollTimesEmits {
+  'update:chosen': [chosen: readonly string[]]
+}
+
+export interface PlaceHoursProps {
+  offers: readonly OfferedHours[]
+}
+
+export interface PlaceSummaryProps {
+  place: LocalEnrollment
+
+  /** The group the school put the student in, and the one they asked for. */
+  group: LocalGroup | null
+  preferredGroup: LocalGroup | null
+}
+
+export interface PlaceDispatchProps {
+  place: LocalEnrollment
+  busy: boolean
+}
+
+export interface PlaceDispatchEmits {
+  act: [action: PlaceActionName]
 }

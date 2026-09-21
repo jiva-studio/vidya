@@ -83,7 +83,7 @@ describe('one course', () => {
     const { screen } = await render()
 
     expect(screen.text()).toContain('Ask for a place')
-    expect(screen.find('button').attributes('disabled')).toBeDefined()
+    expect(screen.find('a[href="/s/GITA/c/course-1/enroll"]').exists()).toBe(true)
   })
 
   it('says where the place stands instead of offering another one', async () => {
@@ -94,6 +94,7 @@ describe('one course', () => {
 
     expect(screen.text()).toContain('Waiting for an answer')
     expect(screen.text()).not.toContain('Ask for a place')
+    expect(screen.find('a[href="/s/GITA/c/course-1/place"]').exists()).toBe(true)
   })
 
   it('says the course is not on this device rather than that it does not exist', async () => {

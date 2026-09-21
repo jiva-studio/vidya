@@ -63,6 +63,8 @@ const lessonsView = computed(() =>
 
       <CoursePlace
         :status="place?.status ?? null"
+        :code="code"
+        :course-id="courseId"
         :submission="place ? outbox.state('enrollments', place.id) : undefined"
         :reason="place ? outbox.reason('enrollments', place.id) : undefined"
       />

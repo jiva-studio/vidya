@@ -186,6 +186,15 @@ export const fakeDevice = (rows: DeviceRows = {}) => {
   const homework = rows.homework ?? []
   const blockStates = rows.blockStates ?? []
   const groups = rows.groups ?? []
+  // Copied rather than held: the writes below amend this list, and a fixture
+  // shared between tests would carry one test's withdrawal into the next.
+  const schools = [...(rows.schools ?? [])]
+  const courses = [...(rows.courses ?? [])]
+  const lessons = [...(rows.lessons ?? [])]
+  const versions = [...(rows.versions ?? [])]
+  const enrollments = [...(rows.enrollments ?? [])]
+  const blockStates = [...(rows.blockStates ?? [])]
+  const groups = [...(rows.groups ?? [])]
 
   const schoolRepository: ISchoolRepository = {
     list: vi.fn(async () => schools),
@@ -225,9 +234,7 @@ export const fakeDevice = (rows: DeviceRows = {}) => {
       // The device keeps a live place on the list whether or not it was put
       // away: only a finished request leaves it.
       list: vi.fn(async () =>
-        enrollments.filter(
-          (place) => place.archivedByStudentAt === null || isLive(place.status),
-        ),
+        enrollments.filter((place) => place.archivedByStudentAt === null || isLive(place.status)),
       ),
       getById: vi.fn(async (id) => enrollments.find((place) => place.id === id) ?? null),
       getLiveByCourse: vi.fn(
@@ -317,6 +324,10 @@ export const letTheTabWrite = (writes: EnrollmentWrites | undefined): void => {
  */
 export const textOf = (screen: VueWrapper): string => screen.text().replace(/[\u2066-\u2069]/g, '')
 
+/** The name of the route a screen has navigated to, after it has done so. */
+export const addressOf = (screen: VueWrapper): string =>
+  String((screen.vm as unknown as { $route: { name?: string } }).$route.name ?? '')
+
 const blank = { template: '<div />' }
 
 /**
@@ -330,6 +341,8 @@ const addresses: RouteRecordRaw[] = [
   { path: '/s/:code/c/:courseId', name: 'course', component: blank },
   { path: '/s/:code/c/:courseId/l/:lessonId', name: 'lesson', component: blank },
   { path: '/homework', name: 'homework', component: blank },
+  { path: '/s/:code/c/:courseId/enroll', name: 'enroll', component: blank },
+  { path: '/s/:code/c/:courseId/place', name: 'place', component: blank },
 ]
 
 /** Mounts a screen at one address, with the site's own routes behind it. */

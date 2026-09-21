@@ -21,3 +21,8 @@ export const noticeClasses = [
   'flex flex-col items-start gap-[var(--space-2)]',
   'rounded-[var(--radius-md)] border border-[var(--color-border)] p-[var(--space-4)]',
 ]
+export const formClasses = ['flex flex-col gap-[var(--space-5)]']
+
+export const fieldClasses = ['flex flex-col gap-[var(--space-2)] border-0 p-0']
+
+export const choiceListClasses = ['flex flex-col gap-[var(--space-2)]']

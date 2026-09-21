@@ -48,6 +48,8 @@ const reachedFromElsewhere: Record<string, string> = {
   school: 'a course of that school, and the school page of the catalogue',
   course: 'a row of the school catalogue',
   lesson: 'a row of the course',
+  enroll: 'the course, when the student holds no place on it',
+  place: 'the course, when they do — and the form, once it has been sent',
   'not-found': 'an address no section owns, or a code that is not one',
 }
 
