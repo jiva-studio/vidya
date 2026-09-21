@@ -144,6 +144,7 @@ export const aHomework = (overrides: Partial<LocalHomework> = {}): LocalHomework
   status: 'pending',
   text: 'The vowels are a, aa, i.',
   grade: null,
+  comment: null,
   answeredSupersededVersion: false,
   reviewedById: null,
   submittedAt: parseIsoDateTime('2026-09-18T08:00:00.000Z'),

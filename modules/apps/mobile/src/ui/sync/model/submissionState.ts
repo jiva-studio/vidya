@@ -6,4 +6,4 @@
  * import it under.
  */
 
-export { type SubmissionState, SubmissionStates, submissionStateOf } from '@vidya/client'
+export { type SubmissionState, submissionStateOf, SubmissionStates } from '@vidya/client'
