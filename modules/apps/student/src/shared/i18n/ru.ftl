@@ -20,7 +20,8 @@ place-revoked = Место отозвано
 place-withdrawn = Вы ушли с курса
 
 homework-title = Мои домашки
-homework-empty = Здесь пока ничего нет.
+homework-empty-title = Вы ещё не писали домашек
+homework-empty-text = Откройте урок курса, на котором учитесь: у частей с домашкой есть форма.
 
 school-title = Школа { $code }
 school-empty = Здесь пока ничего нет.
@@ -75,3 +76,45 @@ storage-unknown = Этот браузер не сообщает, сохрани�
 
 not-found-title = Такой страницы нет
 not-found-text = Проверьте адрес или начните с обучения.
+
+lesson-answer-correct = Верный ответ
+lesson-answer-incorrect = Неверный ответ
+
+answer-title = Домашка по этой части
+answer-placeholder = Напишите ответ здесь
+answer-save = Сохранить
+answer-hand-in = Сдать
+answer-none = Вы ещё не написали ответ на эту часть.
+answer-frozen = Ответ у школы, изменить его можно будет после ответа проверяющего.
+answer-read-only = Данные обновляет другая вкладка — отсюда ничего не записывается.
+answer-marked-here = Эту часть проверяют по ответам на квизы, сдавать нечего.
+answer-grade = Оценка: { $grade } %
+answer-lesson-not-here = Урок, к которому относится ответ, ещё не приехал
+
+answer-open = Не сдано
+answer-pending = У школы
+answer-in-review = Читают
+answer-returned = Вернули на доработку
+answer-accepted = Принято
+
+sync-state-notSent = Не отправлено
+sync-state-notSent-hint = Сохранено на устройстве. Уйдёт, как только появится связь.
+sync-state-sending = Отправляется
+sync-state-sending-hint = Запись идёт в школу.
+sync-state-accepted = Принято
+sync-state-accepted-hint = Школа получила эту запись.
+sync-state-rejected = Не принято
+sync-state-rejected-hint = Школа не приняла эту запись.
+
+sync-rejection-kept-here = Ваша работа сохранена на этом устройстве. Ничего не потеряно.
+sync-rejection-readOnlyCollection = Такие записи нельзя отправлять с этого сайта.
+sync-rejection-notYourEnrollment = Ответ адресован чужой записи на курс.
+sync-rejection-enrollmentRevoked = Вы больше не записаны на этот курс.
+sync-rejection-scopeRevoked = Школа сняла с вас доступ, поэтому запись не была отправлена.
+sync-rejection-unknownLessonVersion = Школа не знает версию урока, по которой написан ответ.
+sync-rejection-alreadyAccepted = Ответ уже принят, заменить его новым нельзя.
+sync-rejection-underReview = Работу сейчас смотрит преподаватель — изменить её можно будет после ответа.
+sync-rejection-courseNotOffered = Школа пока не набирает на этот курс.
+sync-rejection-alreadyGraded = На этот вопрос уже отвечено, ответ проверен и остаётся прежним.
+sync-rejection-payloadTooLarge = Ответ слишком длинный, чтобы его отправить.
+sync-rejection-malformed = Школа не смогла прочитать эту запись.

@@ -28,3 +28,17 @@ export const backfillClasses = [
   'flex flex-col items-start gap-[var(--space-2)]',
   'rounded-[var(--radius-md)] border border-[var(--color-border)] p-[var(--space-4)]',
 ]
+
+export const submissionClasses = ['flex flex-col items-start gap-[var(--space-1)]']
+
+export const answerClasses = [
+  'flex flex-col gap-[var(--space-2)]',
+  'rounded-[var(--radius-md)] border border-[var(--color-border)] p-[var(--space-3)]',
+]
+
+export const answerRowClasses = ['flex flex-wrap items-center gap-[var(--space-2)]']
+
+export const commentClasses = [
+  'border-s-2 border-[var(--color-border)] ps-[var(--space-3)]',
+  'text-[var(--color-text-muted)]',
+]

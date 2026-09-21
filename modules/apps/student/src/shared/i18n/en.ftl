@@ -20,7 +20,8 @@ place-revoked = Place taken back
 place-withdrawn = You left this course
 
 homework-title = My homework
-homework-empty = Nothing here yet.
+homework-empty-title = You have not written any homework yet
+homework-empty-text = Open a lesson of a course you are on; the parts that ask for homework carry a form.
 
 school-title = School { $code }
 school-empty = Nothing here yet.
@@ -75,3 +76,45 @@ storage-unknown = This browser does not say whether it keeps the data.
 
 not-found-title = No such page
 not-found-text = Check the address, or start from your learning.
+
+lesson-answer-correct = Right answer
+lesson-answer-incorrect = Wrong answer
+
+answer-title = Homework for this part
+answer-placeholder = Write your answer here
+answer-save = Save
+answer-hand-in = Hand in
+answer-none = You have not written an answer to this part yet.
+answer-frozen = Your answer is with the school and cannot be changed until they answer.
+answer-read-only = Another tab keeps this data up to date, so nothing is written from here.
+answer-marked-here = This part is marked from your quiz answers; there is nothing to hand in.
+answer-grade = Grade: { $grade }%
+answer-lesson-not-here = The lesson this answer belongs to has not arrived yet
+
+answer-open = Not handed in
+answer-pending = With the school
+answer-in-review = Being read
+answer-returned = Returned to you
+answer-accepted = Accepted
+
+sync-state-notSent = Not sent
+sync-state-notSent-hint = Saved on this device. It goes out as soon as there is a connection.
+sync-state-sending = Sending
+sync-state-sending-hint = On its way to the school.
+sync-state-accepted = Accepted
+sync-state-accepted-hint = The school has your record.
+sync-state-rejected = Not accepted
+sync-state-rejected-hint = The school did not take this record.
+
+sync-rejection-kept-here = Your work is saved on this device. Nothing has been lost.
+sync-rejection-readOnlyCollection = This kind of record cannot be sent from this site.
+sync-rejection-notYourEnrollment = The answer was addressed to an enrolment that is not yours.
+sync-rejection-enrollmentRevoked = You are no longer enrolled on this course.
+sync-rejection-scopeRevoked = The school took away your access, so this record was never sent.
+sync-rejection-unknownLessonVersion = The school does not know the lesson version this answer was written against.
+sync-rejection-alreadyAccepted = An answer has already been accepted, so this one cannot replace it.
+sync-rejection-underReview = A teacher has this work open, so it cannot be changed until they answer.
+sync-rejection-courseNotOffered = The school is not taking students onto this course yet.
+sync-rejection-alreadyGraded = This question has been answered and marked; the answer stands.
+sync-rejection-payloadTooLarge = The answer is too long to be sent.
+sync-rejection-malformed = The school could not read this record.

@@ -2,6 +2,7 @@ import type {
   IBlockStateRepository,
   ICourseRepository,
   IEnrollmentRepository,
+  IHomeworkRepository,
   ILessonRepository,
   ILessonVersionRepository,
 } from '@vidya/client'
@@ -9,7 +10,7 @@ import type {
 /**
  * What a screen may read of the school's material on this machine.
  *
- * `enrollments` and `blockStates` are narrowed to their reads. The repositories
+ * `enrollments`, `homework` and `blockStates` are narrowed to their reads. The repositories
  * behind them also write, and a local write has to be journaled in the same
  * transaction that performs it or it is never sent to the server. The journal
  * belongs to the engine, which only the writing tab runs, so the writing half
@@ -20,5 +21,6 @@ export interface LocalEducation {
   readonly lessons: ILessonRepository
   readonly lessonVersions: ILessonVersionRepository
   readonly enrollments: Pick<IEnrollmentRepository, 'list' | 'getLiveByCourse'>
+  readonly homework: Pick<IHomeworkRepository, 'listByEnrollment'>
   readonly blockStates: Pick<IBlockStateRepository, 'listByLessonVersion'>
 }

@@ -3,6 +3,7 @@ import type {
   LocalBlockState,
   LocalCourse,
   LocalEnrollment,
+  LocalHomework,
   LocalLesson,
   LocalLessonVersion,
   LocalSchool,
@@ -12,9 +13,11 @@ import {
   type BlockId,
   type CourseId,
   type EnrollmentId,
+  type HomeworkId,
   type LessonId,
   type LessonVersionId,
   type SchoolId,
+  type SectionId,
   toIsoDateTime,
 } from '@vidya/domain'
 import { mount, type VueWrapper } from '@vue/test-utils'
@@ -52,6 +55,7 @@ export interface DeviceRows {
   lessons?: LocalLesson[]
   versions?: LocalLessonVersion[]
   enrollments?: LocalEnrollment[]
+  homework?: LocalHomework[]
   blockStates?: LocalBlockState[]
 }
 
@@ -131,7 +135,26 @@ export const aBlockState = (overrides: Partial<LocalBlockState> = {}): LocalBloc
   lessonVersionId: asId<LessonVersionId>('version-1'),
   blockId: asId<BlockId>('block-1'),
   state: { type: 'text', read: true },
+  verdict: null,
   updatedAt: toIsoDateTime(new Date('2026-01-02T00:00:00.000Z')),
+  ...overrides,
+})
+
+export const anAnswer = (overrides: Partial<LocalHomework> = {}): LocalHomework => ({
+  id: asId<HomeworkId>('homework-1'),
+  schoolId: asId<SchoolId>('school-1'),
+  enrollmentId: asId<EnrollmentId>('enrollment-1'),
+  lessonVersionId: asId<LessonVersionId>('version-1'),
+  sectionId: asId<SectionId>('section-1'),
+  status: 'open',
+  text: '',
+  grade: null,
+  comment: null,
+  answeredSupersededVersion: false,
+  reviewedById: null,
+  submittedAt: null,
+  reviewedAt: null,
+  createdAt: toIsoDateTime(new Date('2026-01-03T00:00:00.000Z')),
   ...overrides,
 })
 
@@ -143,6 +166,7 @@ export const fakeDevice = (rows: DeviceRows = {}) => {
   const lessons = rows.lessons ?? []
   const versions = rows.versions ?? []
   const enrollments = rows.enrollments ?? []
+  const homework = rows.homework ?? []
   const blockStates = rows.blockStates ?? []
 
   const schoolRepository: ISchoolRepository = {
@@ -179,6 +203,11 @@ export const fakeDevice = (rows: DeviceRows = {}) => {
         async (courseId) =>
           enrollments.find((place) => place.courseId === courseId && LIVE.includes(place.status)) ??
           null,
+      ),
+    },
+    homework: {
+      listByEnrollment: vi.fn(async (enrollmentId) =>
+        homework.filter((answer) => answer.enrollmentId === enrollmentId),
       ),
     },
     blockStates: {
@@ -219,6 +248,7 @@ const addresses: RouteRecordRaw[] = [
   { path: '/s/:code', name: 'school', component: blank },
   { path: '/s/:code/c/:courseId', name: 'course', component: blank },
   { path: '/s/:code/c/:courseId/l/:lessonId', name: 'lesson', component: blank },
+  { path: '/homework', name: 'homework', component: blank },
 ]
 
 /** Mounts a screen at one address, with the site's own routes behind it. */

@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useSiteStatus } from '@/shared/status'
+import { useOutboxView } from '@/shared/sync'
 import { BackfillProgress, mutedClasses, pageClasses, titleClasses } from '@/shared/ui'
 
 import { pickCourseView, pickLessonsView, useCourseView } from '../model'
@@ -15,6 +16,7 @@ import { listClasses } from './styles'
 
 const route = useRoute()
 const status = useSiteStatus()
+const outbox = useOutboxView()
 
 const code = computed(() => String(route.params.code ?? ''))
 const courseId = computed(() => String(route.params.courseId ?? ''))
@@ -59,7 +61,11 @@ const lessonsView = computed(() =>
     <template v-else>
       <p v-if="course?.description" :class="mutedClasses">{{ course.description }}</p>
 
-      <CoursePlace :status="place?.status ?? null" />
+      <CoursePlace
+        :status="place?.status ?? null"
+        :submission="place ? outbox.state('enrollments', place.id) : undefined"
+        :reason="place ? outbox.reason('enrollments', place.id) : undefined"
+      />
 
       <ol v-if="lessonsView === 'lessons'" :class="listClasses">
         <LessonRow

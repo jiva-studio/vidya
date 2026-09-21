@@ -2,6 +2,7 @@ import {
   createSqlBlockStateRepository,
   createSqlCourseRepository,
   createSqlEnrollmentRepository,
+  createSqlHomeworkRepository,
   createSqlLessonRepository,
   createSqlLessonVersionRepository,
   createSqlSchoolRepository,
@@ -29,7 +30,7 @@ export const schoolsOf = (db: IDatabase): ISchoolRepository =>
 /**
  * The rest of what a screen reads, over the same database and the same owner.
  *
- * The two repositories that also write are stamped with a clock they never
+ * The three repositories that also write are stamped with a clock they never
  * reach for here: only their reads are handed out, because a write of theirs
  * would skip the journal that makes it reach the server.
  */
@@ -41,6 +42,7 @@ export const educationOf = (db: IDatabase): LocalEducation => {
     lessons: createSqlLessonRepository({ db, ownerId }),
     lessonVersions: createSqlLessonVersionRepository({ db, ownerId }),
     enrollments: createSqlEnrollmentRepository({ db, ownerId, now }),
+    homework: createSqlHomeworkRepository({ db, ownerId, now }),
     blockStates: createSqlBlockStateRepository({ db, ownerId, now }),
   }
 }

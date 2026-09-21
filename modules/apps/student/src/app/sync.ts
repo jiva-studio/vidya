@@ -5,10 +5,10 @@ import { toIsoDateTime } from '@vidya/domain'
 import { watch } from 'vue'
 
 import { useConnection } from '@/shared/connection'
-import { useBlockStateWriter } from '@/shared/data'
+import { useBlockStateWriter, useHomeworkWriter } from '@/shared/data'
 import { type INetworkStatus, LocalStorageDeviceId } from '@/shared/platform'
 import { useSiteStatus } from '@/shared/status'
-import { useSyncRuns } from '@/shared/sync'
+import { useOutboxView, useSyncRuns } from '@/shared/sync'
 
 import { renewSession } from './connection'
 
@@ -111,9 +111,14 @@ const startSiteSync = async (
   // next reload rather than at the moment somebody joined.
   useSyncRuns().adoptRunner(() => void run())
 
-  // The journaled repository and no other: progress recorded through it is
+  // The journaled repositories and no others: what is written through them is
   // appended to the outbox in the same transaction, which is what sends it.
   useBlockStateWriter().adoptWriter(engine.blockStates)
+  useHomeworkWriter().adoptWriter(engine.homework)
+
+  // The same journal, read rather than written: it is where a screen learns
+  // that the work beside it is still waiting, or was refused and why.
+  useOutboxView().adoptJournal(connection.ownerId, engine.outbox)
 
   // A database that already holds scope positions was filled by a run on some
   // other day: the courses are there, and the screens must not promise to
@@ -129,6 +134,8 @@ const startSiteSync = async (
       offOnline()
       useSyncRuns().adoptRunner(undefined)
       useBlockStateWriter().adoptWriter(undefined)
+      useHomeworkWriter().adoptWriter(undefined)
+      useOutboxView().forgetJournal()
     },
   }
 }

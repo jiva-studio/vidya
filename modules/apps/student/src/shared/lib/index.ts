@@ -1,4 +1,8 @@
 export type { Clock, Scheduled } from './clock'
 export { manualClock, systemClock } from './clock'
+export type { AnswerBadge } from './describeAnswer'
+export { describeAnswer } from './describeAnswer'
 export type { PlaceBadge } from './describePlace'
 export { describePlace } from './describePlace'
+export type { SubmissionBadge } from './describeSubmission'
+export { describeSubmission } from './describeSubmission'
