@@ -4,15 +4,16 @@ editor-title = Lesson editor
 editor-title-label = Lesson title
 editor-title-placeholder = Untitled lesson
 editor-publish = Publish
-editor-new-revision = New version
+editor-save = Save
+editor-version = Version { $version }
 editor-retry = Try again
 
 version-title = Lesson version
-version-subtitle = A published version cannot be edited.
+version-subtitle = This is how students read that version.
 version-back = Back
 
 editor-state-draft = Draft
-editor-state-published = Published
+editor-state-published = Published. An edit starts the next version
 
 editor-no-versions = This lesson has no versions to open.
 editor-load-failed = The lesson content could not be loaded.
@@ -187,7 +188,7 @@ editor-save-retry = Try saving again
 # Unfinished blocks
 
 editor-faults-title = This version cannot be published yet
-editor-fault-block = Section { $section }, block { $position } is unfinished.
+editor-fault-block = Section { $section }, block { $position }: finish it and try again.
 
 editor-media-add-image = Add an image
 editor-media-add-video = Add a video

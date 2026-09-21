@@ -34,6 +34,20 @@ page-dashboard-no-access-title = Nothing is allowed to you in this school yet
 page-dashboard-no-access-body = The school owner assigns roles. Ask them for access and the sections will appear in the menu on the left.
 page-dashboard-empty = Nothing to show yet. Requests and homework are in the menu on the left.
 
+page-dashboard-nothing-title = Nothing waiting
+
+dashboard-count-unreadable = The count could not be read
+dashboard-enrollments-title = Requests awaiting a decision
+dashboard-enrollments-action = Answer requests
+dashboard-homework-title = Homework awaiting review
+dashboard-homework-action = Review homework
+dashboard-courses-title = Courses and lessons
+dashboard-courses-action = Open courses
+dashboard-groups-title = Groups
+dashboard-groups-action = Open groups
+dashboard-users-title = People
+dashboard-users-action = Open people
+
 page-forbidden-title = No access
 page-forbidden-body = This screen is not part of your role. Ask a school administrator for access.
 page-forbidden-back = Back to the dashboard

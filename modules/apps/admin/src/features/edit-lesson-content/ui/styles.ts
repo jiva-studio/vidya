@@ -35,6 +35,14 @@ export const blockFrameClasses = [
   'hover:bg-[var(--color-surface-hover)]',
 ]
 
+// What stopped the last publish, marked where the fixing happens. A ring and
+// not a fill: the block is still being written in, and a coloured background
+// would fight the fields inside it.
+export const blockFaultClasses = [
+  'ring-1 ring-[var(--color-warning-border)] bg-[var(--color-warning-surface)]',
+  'scroll-mt-[var(--space-8)]',
+]
+
 // The gutter lives inside the block's own padding rather than beside it: the
 // strip it sits in is part of the block, so reaching for the handle from the
 // margin brings it out instead of crossing dead space where it is still hidden.

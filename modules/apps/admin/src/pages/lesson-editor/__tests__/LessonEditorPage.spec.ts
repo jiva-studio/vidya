@@ -7,9 +7,9 @@ import { refusal } from '@/shared/testing'
 
 import { messages } from '../i18n'
 import {
+  accessibleName,
   addSection,
   AWAY_PATH,
-  clickText,
   EDITOR_PATH,
   labels,
   LESSON_PATH,
@@ -183,18 +183,53 @@ describe('saving', () => {
 })
 
 describe('versions', () => {
-  it('opens a published version read-only', async () => {
+  it('opens a published version editable, and says an edit starts the next one', async () => {
     const { wrapper } = await openEditor({
       [`GET ${VERSIONS}`]: { items: [summary('v1', 1, 'published')] },
       [`GET ${VERSIONS}/v1`]: details('v1', 1, 'published'),
     })
 
-    expect(statuses(wrapper)).toContain('Published')
-    expect(labels(wrapper)).not.toContain('Add section')
-    expect(labels(wrapper)).toContain('New version')
+    const names = [...wrapper.element.querySelectorAll('button')].map(accessibleName)
+
+    expect(plain(wrapper.text())).toContain('An edit starts the next version')
+    expect(names).toContain('Add section')
+    expect(labels(wrapper)).not.toContain('New version')
   })
 
-  it('walks into the draft that is already open when a revision is refused', async () => {
+  it('says which version is on screen', async () => {
+    const { wrapper } = await openEditor({
+      [`GET ${VERSIONS}`]: { items: [summary('v1', 1, 'published')] },
+      [`GET ${VERSIONS}/v1`]: details('v1', 1, 'published'),
+    })
+
+    expect(plain(wrapper.text())).toContain('Version 1')
+  })
+
+  it('starts the next version on the first edit to a published one', async () => {
+    let opened = false
+
+    const { wrapper, http } = await openEditor({
+      [`GET ${VERSIONS}`]: () => ({
+        items: opened
+          ? [summary('v1', 1, 'published'), summary('v2', 2, 'draft')]
+          : [summary('v1', 1, 'published')],
+      }),
+      [`GET ${VERSIONS}/v1`]: details('v1', 1, 'published'),
+      [`GET ${VERSIONS}/v2`]: details('v2', 2, 'draft'),
+      [`POST ${VERSIONS}`]: () => {
+        opened = true
+        return { id: 'v2', lessonId: 'l1', version: 2, status: 'draft' }
+      },
+    })
+
+    await addSection(wrapper)
+
+    expect(http.calls.map((call) => `${call.method} ${call.path}`)).toContain(`POST ${VERSIONS}`)
+    expect(http.calls.map((call) => `${call.method} ${call.path}`)).toContain(`GET ${VERSIONS}/v2`)
+    expect(statuses(wrapper)).toContain('Draft')
+  })
+
+  it('walks into the draft that is already open when the fork is refused', async () => {
     let opened = false
 
     const { wrapper, http } = await openEditor({
@@ -211,7 +246,7 @@ describe('versions', () => {
       },
     })
 
-    await clickText(wrapper, 'New version')
+    await addSection(wrapper)
 
     expect(http.calls.map((call) => `${call.method} ${call.path}`)).toContain(`GET ${VERSIONS}/v2`)
     expect(statuses(wrapper)).toContain('Draft')

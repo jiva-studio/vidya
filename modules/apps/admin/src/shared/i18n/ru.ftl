@@ -33,6 +33,20 @@ page-dashboard-no-access-title = В этой школе вам пока ниче
 page-dashboard-no-access-body = Роль назначает владелец школы. Попросите его выдать доступ — после этого разделы появятся в меню слева.
 page-dashboard-empty = Показывать пока нечего. Заявки и домашние работы — в меню слева.
 
+page-dashboard-nothing-title = Пока нечего разбирать
+
+dashboard-count-unreadable = Не удалось посчитать
+dashboard-enrollments-title = Заявки ждут решения
+dashboard-enrollments-action = Разобрать заявки
+dashboard-homework-title = Домашние работы на проверке
+dashboard-homework-action = Проверить работы
+dashboard-courses-title = Курсы и уроки
+dashboard-courses-action = Открыть курсы
+dashboard-groups-title = Группы
+dashboard-groups-action = Открыть группы
+dashboard-users-title = Люди
+dashboard-users-action = Открыть людей
+
 page-forbidden-title = Нет доступа
 page-forbidden-body = Этот экран не входит в вашу роль. Попросите доступ у администратора школы.
 page-forbidden-back = На главную

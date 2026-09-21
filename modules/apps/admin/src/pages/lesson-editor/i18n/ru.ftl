@@ -4,15 +4,16 @@ editor-title = Редактор урока
 editor-title-label = Название урока
 editor-title-placeholder = Урок без названия
 editor-publish = Опубликовать
-editor-new-revision = Новая версия
+editor-save = Сохранить
+editor-version = Версия { $version }
 editor-retry = Повторить
 
 version-title = Версия урока
-version-subtitle = Опубликованную версию изменить нельзя.
+version-subtitle = Так эту версию читали студенты.
 version-back = Назад
 
 editor-state-draft = Черновик
-editor-state-published = Опубликовано
+editor-state-published = Опубликовано. Правка начнёт новую версию
 
 editor-no-versions = У этого урока нет ни одной версии.
 editor-load-failed = Не удалось загрузить содержимое урока.
@@ -187,7 +188,7 @@ editor-save-retry = Сохранить ещё раз
 # Незаполненные блоки
 
 editor-faults-title = Эту версию пока нельзя опубликовать
-editor-fault-block = Раздел { $section }, блок { $position } не заполнен.
+editor-fault-block = Раздел { $section }, блок { $position }: заполните и попробуйте снова.
 
 editor-media-add-image = Добавить изображение
 editor-media-add-video = Добавить видео

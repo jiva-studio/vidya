@@ -116,10 +116,11 @@ export const openEditor = async (
 }
 
 /**
- * Saves the draft the way the screen does.
+ * Saves the draft through the shortcut.
  *
- * There is no save button any more: autosave carries the document, and the
- * shortcut is what an author reaches for when they will not wait for it.
+ * Autosave carries the document and the toolbar's button sends it now; the
+ * shortcut is the third way in, and the one a test can reach without knowing
+ * which of the two the author pressed.
  */
 export const saveDraft = async (): Promise<void> => {
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true }))

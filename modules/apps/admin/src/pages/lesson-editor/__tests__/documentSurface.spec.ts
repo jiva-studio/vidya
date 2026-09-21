@@ -209,17 +209,19 @@ describe('typing a slash in an empty block', () => {
   })
 })
 
-describe('a version nobody can change', () => {
-  it('shows the document with no way to edit it', async () => {
+describe('a version students already read', () => {
+  // It is a frozen snapshot on the server, not a mode the author is put in:
+  // the first edit forks the next draft, so the document opens writable.
+  it('shows the document ready to be written in', async () => {
     const { wrapper } = await open('published')
 
     await hover(wrapper, 'b1')
 
-    expect(controlsOn(wrapper, 'b1')).toEqual([])
+    expect(controlsOn(wrapper, 'b1')).not.toEqual([])
     const fields = wrapper.element.querySelectorAll(
       '[data-block-id] textarea, [data-block-id] input, [data-block-id] [contenteditable]',
     )
-    expect(fields).toHaveLength(0)
+    expect(fields.length).toBeGreaterThan(0)
     expect(wrapper.text()).toContain('First words')
   })
 })
