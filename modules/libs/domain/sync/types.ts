@@ -179,7 +179,7 @@ export const ServerRejectionReasons = [
   'alreadyAccepted',
 
   /**
-   * The block has been answered once and marked, and one answer is all there is.
+   * The block has been answered once and graded, and one answer is all there is.
    *
    * Separate from `alreadyAccepted` because a student reads them differently:
    * that one says a person has finished with the work, this one says the
@@ -187,7 +187,7 @@ export const ServerRejectionReasons = [
    * resends after a broken connection, and a resend is the answer already
    * given, not a second one.
    */
-  'alreadyMarked',
+  'alreadyGraded',
 
   /** The row, or the batch carrying it, is over the size ceiling. */
   'payloadTooLarge',

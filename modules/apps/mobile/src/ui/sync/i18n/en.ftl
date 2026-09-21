@@ -19,7 +19,7 @@ sync-rejection-unknownLessonVersion = The school does not know the lesson versio
 sync-rejection-alreadyAccepted = An answer has already been accepted, so this one cannot replace it.
 sync-rejection-underReview = A teacher has this work open, so it cannot be changed until they answer.
 sync-rejection-courseNotOffered = The school is not taking students onto this course yet.
-sync-rejection-alreadyMarked = This question has been answered and marked; the answer stands.
+sync-rejection-alreadyGraded = This question has been answered and graded; the answer stands.
 sync-rejection-payloadTooLarge = The answer is too long to be sent.
 sync-rejection-malformed = The school could not read this answer.
 

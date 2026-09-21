@@ -109,7 +109,7 @@ export const blockStatesApplier: PushApplier = {
 
     if (!existing?.verdict) return null
 
-    return reject('alreadyMarked', 'the question has been answered and marked')
+    return reject('alreadyGraded', 'the question has been answered and marked')
   },
 
   async apply(

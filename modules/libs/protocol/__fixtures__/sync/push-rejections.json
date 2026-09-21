@@ -192,7 +192,7 @@
         "collection": "block_states",
         "docId": "9e4b2d76-1c38-4f50-b9a2-5d7e8c0f3a15",
         "status": "rejected",
-        "reason": "alreadyMarked",
+        "reason": "alreadyGraded",
         "detail": "the question has been answered and marked"
       },
       {
