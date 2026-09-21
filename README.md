@@ -121,12 +121,7 @@ make mutate-full PKG=@vidya/api   # the whole package — hours; run it locally
 Both run incrementally against the baseline committed in `.stryker/incremental/`,
 so a branch is scored against what main produced rather than from zero.
 
-Mind what this costs: each mutant re-runs the package's suite, so on a machine
-shared with other worktrees the run stops converging — suites start timing out
-at 60 seconds and the report reads like a wall of defects that are nothing but
-load. Score the diff once, when the branch is otherwise green and the machine is
-quiet, rather than per change, and never from inside parallel work, where the
-runs contend with each other and with the very suites they are measuring.
+Mind what this costs: each mutant re-runs the package's suite, so on a machine shared with other worktrees the run stops converging — suites start timing out at 60 seconds and the report reads like a wall of defects that are nothing but load. Score the diff once, when the branch is otherwise green and the machine is quiet, rather than per change, and never from inside parallel work, where the runs contend with each other and with the very suites they are measuring.
 
 ### Service and database
 

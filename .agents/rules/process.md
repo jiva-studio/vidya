@@ -91,40 +91,21 @@ Once it is in:
 
 Not "I believe it works". Evidence, in the handover:
 
-1. **Its own suites are green**, with the command and its output shown, run
-   narrowly: the agent's `--testPathPattern`, and `--runInBand`. The full gate
-   is not the agent's to run — see below.
-2. **Every new test is mutation-checked by hand.** For each one: break the
-   property the test defends, confirm the test goes red, revert. A test that
-   still passes with the behaviour removed defends nothing, and it is cheaper to
-   find that out now than after it has guarded a regression for a month.
-3. **What it could not prove, named plainly.** A test that is green by
-   construction, a property only a real provider can answer, a rollback pg-mem
-   cannot model: say so, so a reviewer does not read it as coverage.
+1. **Its own suites are green**, with the command and its output shown, run narrowly: the agent's `--testPathPattern`, and `--runInBand`. The full gate is not the agent's to run — see below.
+2. **Every new test is mutation-checked by hand.** For each one: break the property the test defends, confirm the test goes red, revert. A test that still passes with the behaviour removed defends nothing, and it is cheaper to find that out now than after it has guarded a regression for a month.
+3. **What it could not prove, named plainly.** A test that is green by construction, a property only a real provider can answer, a rollback pg-mem cannot model: say so, so a reviewer does not read it as coverage.
 
-An agent that cannot produce these says so and names what is missing. Reporting
-a band as complete when it is not is the one failure that costs more than the
-defect.
+An agent that cannot produce these says so and names what is missing. Reporting a band as complete when it is not is the one failure that costs more than the defect.
 
 ### The gate and the mutation score belong to whoever owns the band
 
-One person runs `make check` and `make mutate-diff` for the branch, once, when
-the bands are green and the machine is quiet. Not every agent, not per change.
+One person runs `make check` and `make mutate-diff` for the branch, once, when the bands are green and the machine is quiet. Not every agent, not per change.
 
-Two reasons, both learned the expensive way. Each mutant re-runs the whole
-package suite, so on a machine shared with other worktrees the run stops
-converging: suites time out at 60 seconds, and the report reads like a wall of
-defects that are nothing but load. And a directive to stop only reaches an
-agent when its current tool call returns — an agent half an hour into a
-mutation run cannot be told to stop, it has to be killed. Two agents whose code
-was already green spent three and a half hours this way.
+Two reasons, both learned the expensive way. Each mutant re-runs the whole package suite, so on a machine shared with other worktrees the run stops converging: suites time out at 60 seconds, and the report reads like a wall of defects that are nothing but load. And a directive to stop only reaches an agent when its current tool call returns — an agent half an hour into a mutation run cannot be told to stop, it has to be killed. Two agents whose code was already green spent three and a half hours this way.
 
-The same goes for the full gate while a branch has several bands in flight: it
-runs the red suites of everyone else's unfinished work, so it tells an agent
-nothing about its own.
+The same goes for the full gate while a branch has several bands in flight: it runs the red suites of everyone else's unfinished work, so it tells an agent nothing about its own.
 
-An agent that finds itself needing a mutation score, or a gate wider than its
-own suites, asks the band owner for it instead of running it.
+An agent that finds itself needing a mutation score, or a gate wider than its own suites, asks the band owner for it instead of running it.
 
 ---
 
