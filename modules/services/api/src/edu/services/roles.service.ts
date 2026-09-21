@@ -8,7 +8,6 @@ import { Role, UserRole } from '@vidya/entities'
 import { DeepPartial, EntityManager, FindOptionsWhere, In, Repository } from 'typeorm'
 
 import { assertPermissionsGrantable } from '../validations/permission-grant.validation'
-
 import { EnrollmentsService } from './enrollments.service'
 import { Scope, ScopedEntitiesService } from './entities.service'
 
