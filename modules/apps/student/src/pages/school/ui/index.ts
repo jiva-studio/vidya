@@ -1,3 +1,6 @@
+export { default as CourseCard } from './CourseCard.vue'
 export { default as CoursePage } from './CoursePage.vue'
+export { default as CoursePlace } from './CoursePlace.vue'
 export { default as LessonPage } from './LessonPage.vue'
+export { default as LessonRow } from './LessonRow.vue'
 export { default as SchoolPage } from './SchoolPage.vue'

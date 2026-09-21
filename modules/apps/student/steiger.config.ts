@@ -12,6 +12,12 @@ import { defineConfig } from 'steiger'
 export default defineConfig([
   ...fsd.configs.recommended,
   {
+    // Tests are not part of the slice graph. A fixture is written once and read
+    // by the tests of several slices, and a slice's public face is what the
+    // application is built from — putting the fixture there would ship it.
+    ignores: ['./src/**/__tests__/**'],
+  },
+  {
     // `types.ts` beside a slice is required by the project's own frontend
     // rules, so the segment-naming rule is switched off for that one name and
     // nowhere else.

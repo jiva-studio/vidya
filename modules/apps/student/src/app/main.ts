@@ -6,14 +6,14 @@ import { createApp } from 'vue'
 
 import { httpClientKey } from '@/shared/api'
 import { useConnection } from '@/shared/connection'
-import { schoolRepositoryKey } from '@/shared/data'
+import { educationKey, schoolRepositoryKey } from '@/shared/data'
 import { browserNetwork } from '@/shared/platform'
 import { useSiteStatus } from '@/shared/status'
 
 import App from './App.vue'
 import { createSiteClient } from './connection'
 import { createI18n } from './i18n'
-import { schoolsOf } from './localData'
+import { educationOf, schoolsOf } from './localData'
 import { requestPersistentStorage } from './persistentStorage'
 import { createAppRouter } from './router'
 import { saveOnExit } from './saveOnExit'
@@ -42,6 +42,7 @@ async function mountSite(db: IDatabase, http: HttpClient): Promise<void> {
 
   app.provide(httpClientKey, http)
   app.provide(schoolRepositoryKey, schoolsOf(db))
+  app.provide(educationKey, educationOf(db))
 
   await router.isReady()
   app.mount(ROOT)

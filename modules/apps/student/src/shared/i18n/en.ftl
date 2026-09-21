@@ -6,17 +6,39 @@ nav-homework = My homework
 nav-settings = Settings
 
 learning-title = My learning
-learning-empty = Nothing here yet.
 learning-uninvited-title = Nobody has invited you anywhere yet
 learning-uninvited-text = A school sends a link, and that link is where you join it. Ask your school for one.
+learning-no-courses-title = You are not on a course yet
+learning-no-courses-text = Open your school and ask for a place on a course it teaches.
+learning-course-unnamed = A course that has not arrived yet
+learning-school-unnamed = A school that has not arrived yet
+
+place-pending = Waiting for an answer
+place-accepted = Studying
+place-declined = Not taken on
+place-revoked = Place taken back
+place-withdrawn = You left this course
 
 homework-title = My homework
 homework-empty = Nothing here yet.
 
 school-title = School { $code }
 school-empty = Nothing here yet.
+school-absent-title = This school is not on this device
+school-absent-text = You see a school once you have joined it and its data has arrived. Open the link the school gave you.
+school-nothing-title = This school shows no courses
+school-nothing-text = Nothing is published here yet. Look again once the school has opened a course.
+
 course-title = Course
+course-absent-title = This course is not on this device
+course-absent-text = Open it from the catalogue of the school that teaches it.
+course-no-lessons = This course has no lessons yet.
+course-ask = Ask for a place
+course-ask-elsewhere = Asking for a place is not on this site yet. Use the app on your phone.
+
 lesson-title = Lesson
+lesson-done = { $done } of { $blocks } done
+lesson-not-here = Not on this device yet
 
 backfill-title = Your courses are on their way
 backfill-running = Getting your courses…

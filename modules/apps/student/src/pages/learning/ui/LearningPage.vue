@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { EmptyState } from '@vidya/ui'
+import { EmptyState, Skeleton } from '@vidya/ui'
 import { computed } from 'vue'
 
 import { useSiteStatus } from '@/shared/status'
-import { BackfillProgress, mutedClasses, pageClasses, titleClasses } from '@/shared/ui'
+import { BackfillProgress, pageClasses, titleClasses } from '@/shared/ui'
 
-import { pickLearningView, useJoinedSchools } from '../model'
+import { pickLearningView, useLearningCards } from '../model'
+import LearningCard from './LearningCard.vue'
+import { listClasses } from './styles'
 
 /* --------------------------------- State ---------------------------------- */
 
 const status = useSiteStatus()
-const { schools } = useJoinedSchools()
+const { schools, cards, reading } = useLearningCards()
 
 const view = computed(() =>
   pickLearningView({
@@ -19,14 +21,18 @@ const view = computed(() =>
     joined: status.joined.value,
   }),
 )
+
+const studying = computed(() => cards.value.length > 0)
 </script>
 
 <template>
   <section :class="pageClasses">
     <h1 :class="titleClasses">{{ $t('learning-title') }}</h1>
 
+    <Skeleton v-if="reading" :lines="3" />
+
     <BackfillProgress
-      v-if="view === 'arriving'"
+      v-else-if="view === 'arriving'"
       :rows="status.done.value"
       :running="status.syncing.value"
     />
@@ -37,6 +43,14 @@ const view = computed(() =>
       :description="$t('learning-uninvited-text')"
     />
 
-    <p v-else :class="mutedClasses">{{ $t('learning-empty') }}</p>
+    <div v-else-if="studying" :class="listClasses">
+      <LearningCard v-for="card in cards" :key="card.id" :card="card" />
+    </div>
+
+    <EmptyState
+      v-else
+      :title="$t('learning-no-courses-title')"
+      :description="$t('learning-no-courses-text')"
+    />
   </section>
 </template>
