@@ -1,17 +1,21 @@
 import { MediaRefusal, MediaRefusals } from '@vidya/protocol'
 
 /**
- * The ways an upload is turned down, kept apart because the uploader does
- * something different about each: free some room, pick a smaller file, pick
- * another format, or wait for the bytes to actually land.
+ * The ways a file is turned down, kept apart because the caller does something
+ * different about each: free some room, pick a smaller file, pick another
+ * format, wait for the bytes to actually land, take the file out of the lessons
+ * that show it, or stop naming a file this school does not have.
  */
-export type MediaRefusalKind = 'quota-exceeded' | 'too-large' | 'type-not-allowed' | 'not-ready'
+export type MediaRefusalKind =
+  'quota-exceeded' | 'too-large' | 'type-not-allowed' | 'not-ready' | 'in-use' | 'unknown-media'
 
 const MESSAGES: Readonly<Record<MediaRefusalKind, MediaRefusal>> = Object.freeze({
   'quota-exceeded': MediaRefusals.quotaExceeded,
   'too-large': MediaRefusals.tooLarge,
   'type-not-allowed': MediaRefusals.typeNotAllowed,
   'not-ready': MediaRefusals.notReady,
+  'in-use': MediaRefusals.inUse,
+  'unknown-media': MediaRefusals.unknownMedia,
 })
 
 /**
@@ -22,7 +26,14 @@ const MESSAGES: Readonly<Record<MediaRefusalKind, MediaRefusal>> = Object.freeze
  * language and say something the bundle cannot override.
  */
 export class MediaRefusedError extends Error {
-  constructor(readonly kind: MediaRefusalKind) {
+  /**
+   * `details` are merged into the answered body, for a refusal that is not
+   * actionable without them: "in use" has to name where.
+   */
+  constructor(
+    readonly kind: MediaRefusalKind,
+    readonly details: Readonly<Record<string, unknown>> = {},
+  ) {
     super(MESSAGES[kind])
   }
 

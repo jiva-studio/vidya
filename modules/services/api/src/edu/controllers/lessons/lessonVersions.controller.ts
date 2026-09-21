@@ -6,6 +6,7 @@ import {
   NotFoundException,
   Param,
   ParseUUIDPipe,
+  UseFilters,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
@@ -14,6 +15,7 @@ import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
 import { EnrollmentsService, LessonsService, LessonVersionsService } from '@vidya/api/edu/services'
+import { MediaRefusalFilter } from '@vidya/api/media/controllers'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
 import * as domain from '@vidya/domain'
 import * as entities from '@vidya/entities'
@@ -38,6 +40,9 @@ const Crud = CrudDecorators({
 @ApiTags('🎓 Education :: Lesson Versions')
 @ApiBearerAuth()
 @UseGuards(AuthenticatedUserGuard)
+// Content naming a file the school does not have is refused by the save, and
+// that refusal is the media context's to phrase.
+@UseFilters(MediaRefusalFilter)
 export class LessonVersionsController {
   constructor(
     private readonly lessons: LessonsService,

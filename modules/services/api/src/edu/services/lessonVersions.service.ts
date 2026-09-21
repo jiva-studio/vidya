@@ -1,12 +1,14 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { MediaUsageIndexService } from '@vidya/api/media/services'
 import * as domain from '@vidya/domain'
 import { emptyLessonContent } from '@vidya/domain'
-import { LessonVersion } from '@vidya/entities'
+import { Lesson, LessonVersion } from '@vidya/entities'
 import { LessonContent } from '@vidya/protocol'
-import { Repository } from 'typeorm'
+import { EntityManager, Repository } from 'typeorm'
 
 import { EntitiesService } from './entities.service'
+import { mediaIdsIn } from './mediaInContent'
 
 /**
  * The lifecycle of a lesson's content.
@@ -19,10 +21,19 @@ import { EntitiesService } from './entities.service'
  * Versions are reached through their lesson, which is what carries the school,
  * so this service does not scope by itself — the caller proves access to the
  * lesson first.
+ *
+ * Every write of content also recounts the files it uses, in the write's own
+ * transaction: the index is what refuses the deletion of a file a lesson shows,
+ * so a save that stored content without its usage — or refused a file after
+ * storing the content — would leave the two disagreeing with nothing able to
+ * say which is right.
  */
 @Injectable()
 export class LessonVersionsService extends EntitiesService<LessonVersion> {
-  constructor(@InjectRepository(LessonVersion) repository: Repository<LessonVersion>) {
+  constructor(
+    @InjectRepository(LessonVersion) repository: Repository<LessonVersion>,
+    private readonly usages: MediaUsageIndexService,
+  ) {
     super(repository)
   }
 
@@ -83,12 +94,13 @@ export class LessonVersionsService extends EntitiesService<LessonVersion> {
       .filter((v) => v.status === 'published')
       .sort((a, b) => b.version - a.version)[0]
 
-    return this.create({
-      lessonId,
-      version: Math.max(0, ...existing.map((v) => v.version)) + 1,
-      status: 'draft',
-      content: (latestPublished?.content as LessonContent) ?? emptyLessonContent(),
-    })
+    const content = (latestPublished?.content as LessonContent) ?? emptyLessonContent()
+    const version = Math.max(0, ...existing.map((v) => v.version)) + 1
+
+    return this.writeNewVersion(
+      this.repository.create({ lessonId, version, status: 'draft', content }),
+      content,
+    )
   }
 
   /** Published content is what submitted homework points at, so only drafts change. */
@@ -105,7 +117,52 @@ export class LessonVersionsService extends EntitiesService<LessonVersion> {
       )
     }
 
-    return this.updateOneBy({ id: versionId }, { content })
+    return this.rewriteContent(version, content)
+  }
+
+  /**
+   * Stores new content and the files it names together, or neither.
+   *
+   * The recount goes first because it is what refuses a file the school does
+   * not have: content written ahead of the refusal would survive on a database
+   * that does not undo the statements a failing one followed.
+   */
+  private async rewriteContent(
+    version: LessonVersion,
+    content: LessonContent,
+  ): Promise<LessonVersion> {
+    return this.repository.manager.transaction(async (manager) => {
+      await this.recordUsage(manager, version, content)
+
+      return manager.getRepository(LessonVersion).save(this.repository.merge(version, { content }))
+    })
+  }
+
+  /** A version has to be stored before a usage row is allowed to name it. */
+  private async writeNewVersion(
+    version: LessonVersion,
+    content: LessonContent,
+  ): Promise<LessonVersion> {
+    return this.repository.manager.transaction(async (manager) => {
+      const saved = await manager.getRepository(LessonVersion).save(version)
+      await this.recordUsage(manager, saved, content)
+
+      return saved
+    })
+  }
+
+  private async recordUsage(
+    manager: EntityManager,
+    version: LessonVersion,
+    content: LessonContent,
+  ): Promise<void> {
+    const lesson = await manager.getRepository(Lesson).findOneByOrFail({ id: version.lessonId })
+
+    await this.usages.recordVersionUsage(manager, {
+      lessonVersionId: version.id,
+      schoolId: lesson.schoolId,
+      mediaIds: mediaIdsIn(content),
+    })
   }
 
   /** Freezes the version. From here it is a stable target for homework. */

@@ -88,6 +88,24 @@ export class MediaRowsService {
     await this.rows().delete({ id: mediaId })
   }
 
+  /**
+   * Drops a row and gives its bytes back to the profile that holds them.
+   *
+   * `manager` is the caller's transaction, so the row and the count move
+   * together. Only a ready row was ever charged — a pending one's size was a
+   * reservation that disappears with the row, and releasing it again would take
+   * the profile below what its bucket actually holds.
+   */
+  async deleteChargedRow(manager: EntityManager, media: Media): Promise<void> {
+    await manager.getRepository(Media).delete({ id: media.id })
+
+    if (media.status !== 'ready') return
+
+    await manager
+      .getRepository(StorageProfile)
+      .decrement({ id: media.profileId }, 'usedBytes', Number(media.sizeBytes))
+  }
+
   /** The pending rows whose uploader has had long enough and is not coming back. */
   async findAbandoned(before: Date): Promise<Media[]> {
     return this.rows().find({

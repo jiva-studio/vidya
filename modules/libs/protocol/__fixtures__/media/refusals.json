@@ -9,7 +9,9 @@
       "response": {
         "error": "Payload Too Large",
         "statusCode": 413,
-        "message": ["media-quota-exceeded"]
+        "message": [
+          "media-quota-exceeded"
+        ]
       }
     },
     {
@@ -18,7 +20,9 @@
       "response": {
         "error": "Payload Too Large",
         "statusCode": 413,
-        "message": ["media-too-large"]
+        "message": [
+          "media-too-large"
+        ]
       }
     },
     {
@@ -27,7 +31,9 @@
       "response": {
         "error": "Unsupported Media Type",
         "statusCode": 415,
-        "message": ["media-type-not-allowed"]
+        "message": [
+          "media-type-not-allowed"
+        ]
       }
     },
     {
@@ -36,7 +42,9 @@
       "response": {
         "error": "Conflict",
         "statusCode": 409,
-        "message": ["media-not-ready"]
+        "message": [
+          "media-not-ready"
+        ]
       }
     },
     {
@@ -45,7 +53,9 @@
       "response": {
         "error": "Conflict",
         "statusCode": 409,
-        "message": ["media-in-use"],
+        "message": [
+          "media-in-use"
+        ],
         "lessons": [
           {
             "lessonId": "f6071829-3a4b-4c56-de7f-809102132435",
@@ -60,7 +70,9 @@
       "response": {
         "error": "Unprocessable Entity",
         "statusCode": 422,
-        "message": ["storage-endpoint-rejected"]
+        "message": [
+          "storage-endpoint-rejected"
+        ]
       }
     },
     {
@@ -69,7 +81,9 @@
       "response": {
         "error": "Unprocessable Entity",
         "statusCode": 422,
-        "message": ["storage-credentials-rejected"]
+        "message": [
+          "storage-credentials-rejected"
+        ]
       }
     },
     {
@@ -78,7 +92,9 @@
       "response": {
         "error": "Conflict",
         "statusCode": 409,
-        "message": ["storage-secret-unreadable"]
+        "message": [
+          "storage-secret-unreadable"
+        ]
       }
     },
     {
@@ -87,7 +103,9 @@
       "response": {
         "error": "Conflict",
         "statusCode": 409,
-        "message": ["storage-not-configured"]
+        "message": [
+          "storage-not-configured"
+        ]
       }
     },
     {
@@ -96,7 +114,20 @@
       "response": {
         "error": "Bad Gateway",
         "statusCode": 502,
-        "message": ["storage-unreachable"]
+        "message": [
+          "storage-unreachable"
+        ]
+      }
+    },
+    {
+      "endpoint": "PUT /edu/lessons/:lessonId/versions/:versionId",
+      "status": 422,
+      "response": {
+        "error": "Unprocessable Entity",
+        "statusCode": 422,
+        "message": [
+          "media-unknown"
+        ]
       }
     }
   ]
