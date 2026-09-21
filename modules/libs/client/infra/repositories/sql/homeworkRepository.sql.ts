@@ -34,8 +34,8 @@ import { readSyncRow, readSyncRows, writeSyncRow } from './rowWriter'
  * `open` or `returned`, so the refusal happens where the student is, instantly,
  * and without a round trip.
  *
- * The device writes `text` and `submittedAt`; `status`, `grade`, `reviewedById`,
- * `reviewedAt` and `answeredSupersededVersion` are the server's
+ * The device writes `text` and `submittedAt`; `status`, `grade`, `comment`,
+ * `reviewedById`, `reviewedAt` and `answeredSupersededVersion` are the server's
  * (`FIELD_OWNER.homework`). `submit` is the one place the device touches
  * `status`, and only to request `pending` — the transition the server also
  * allows (`HomeworkTransitions`).
@@ -146,6 +146,7 @@ function blankAnswer(input: SaveHomeworkAnswer, at: IsoDateTime): SyncPayload {
     status: 'open',
     text: '',
     grade: null,
+    comment: null,
     answeredSupersededVersion: false,
     reviewedById: null,
     submittedAt: null,
@@ -168,6 +169,7 @@ function toHomework(payload: SyncPayload): LocalHomework {
     status: payload.status as HomeworkStatus,
     text: (payload.text as string) ?? '',
     grade: payload.grade === null || payload.grade === undefined ? null : Number(payload.grade),
+    comment: (payload.comment as string | null) ?? null,
     answeredSupersededVersion: payload.answeredSupersededVersion === true,
     reviewedById: (payload.reviewedById as UserId | null) ?? null,
     submittedAt: (payload.submittedAt as IsoDateTime | null) ?? null,

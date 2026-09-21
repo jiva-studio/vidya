@@ -15,6 +15,7 @@ import type {
   LessonVersionId,
   LessonVersionStatus,
   PreferredTimes,
+  QuizVerdict,
   SchoolId,
   SectionId,
   UserId,
@@ -141,6 +142,14 @@ export interface LocalEnrollment {
   readonly archivedByStudentAt: IsoDateTime | null
 }
 
+/**
+ * One answer written against one section of one lesson version.
+ *
+ * `grade` is a percentage, 0 to 100, on the same scale whether a person or the
+ * server marked the work, and `comment` is what the reviewer wrote back.
+ * `createdAt` is when the server recorded the answer, and the student's list of
+ * answers is ordered by it.
+ */
 export interface LocalHomework {
   readonly id: HomeworkId
   readonly schoolId: SchoolId
@@ -150,24 +159,29 @@ export interface LocalHomework {
   readonly status: HomeworkStatus
   readonly text: string
   readonly grade: number | null
+  readonly comment: string | null
   readonly answeredSupersededVersion: boolean
   readonly reviewedById: UserId | null
   readonly submittedAt: IsoDateTime | null
   readonly reviewedAt: IsoDateTime | null
-
-  /** When the server recorded the answer. The list of answers is ordered by it. */
   readonly createdAt: IsoDateTime
 }
 
+/**
+ * How far the student got through one block.
+ *
+ * `state` is whatever the block type stores — a watched position, a quiz
+ * answer. `verdict` is the server's answer to a quiz and is null until the
+ * answer has been marked; no device ever writes it.
+ */
 export interface LocalBlockState {
   readonly id: string
   readonly schoolId: SchoolId
   readonly enrollmentId: EnrollmentId
   readonly lessonVersionId: LessonVersionId
   readonly blockId: BlockId
-
-  /** Whatever the block type stores — a watched position, a quiz answer. */
   readonly state: Record<string, unknown>
+  readonly verdict: QuizVerdict | null
   readonly updatedAt: IsoDateTime
 }
 

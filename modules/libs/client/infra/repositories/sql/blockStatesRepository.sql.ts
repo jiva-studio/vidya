@@ -3,6 +3,7 @@ import type {
   EnrollmentId,
   IsoDateTime,
   LessonVersionId,
+  QuizVerdict,
   SchoolId,
   SyncPayload,
 } from '@vidya/domain'
@@ -21,11 +22,9 @@ import { readSyncRows, writeSyncRow } from './rowWriter'
  * Local reads and writes over `block_states` — where the student is inside a
  * lesson: a video's watched position, a quiz answer, a checkbox.
  *
- * Upward-only (`SYNC_DIRECTION.block_states === 'up'`): the device owns the
- * whole row and the server stores it. That is also why the merge never has to
- * reconcile anything here — with every field the client's, an incoming version
- * of a document this device still has unsent work for is simply the echo of an
- * older push (`mergeIncoming` keeps the local one).
+ * Two-way (`SYNC_DIRECTION.block_states === 'both'`): the device writes the
+ * answer, the server writes the verdict on it, and neither writes the other's
+ * field (`FIELD_OWNER.block_states`).
  *
  * `state` is stored whole as JSON and never inspected. A block type this build
  * has never seen still round-trips, which is the same rule `lesson_versions`
@@ -80,6 +79,11 @@ export function createSqlBlockStateRepository(
      * lesson screen depend on the network it is meant to survive without.
      */
     async save(input: SaveBlockState): Promise<LocalBlockState> {
+      // The row is written whole, so a verdict already on it would be erased by
+      // a write that does not name it — and the server, which owns the field,
+      // has no reason to send it a second time.
+      const marked = await readSyncRows(db, ownerId(), 'block_states', 'id = ?', [input.id])
+
       const payload: SyncPayload = {
         id: input.id,
         schoolId: input.schoolId,
@@ -87,6 +91,7 @@ export function createSqlBlockStateRepository(
         lessonVersionId: input.lessonVersionId,
         blockId: input.blockId,
         state: input.state,
+        verdict: marked[0]?.verdict ?? null,
         updatedAt: now(),
       }
 
@@ -109,6 +114,7 @@ function toBlockState(payload: SyncPayload): LocalBlockState {
     lessonVersionId: payload.lessonVersionId as LessonVersionId,
     blockId: payload.blockId as BlockId,
     state: (payload.state ?? {}) as Record<string, unknown>,
+    verdict: (payload.verdict as QuizVerdict | null) ?? null,
     updatedAt: (payload.updatedAt as IsoDateTime) ?? ('' as IsoDateTime),
   }
 }
