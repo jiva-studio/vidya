@@ -1,4 +1,4 @@
-import type { CourseLearningType } from '@vidya/domain'
+import type { CourseLearningType, CourseStatus } from '@vidya/domain'
 
 /**
  * What the course form holds and sends.
@@ -11,4 +11,5 @@ export interface CourseFormValues {
   name: string
   description: string
   learningType: CourseLearningType
+  status: CourseStatus
 }

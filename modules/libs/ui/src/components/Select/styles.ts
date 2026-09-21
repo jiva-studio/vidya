@@ -3,7 +3,7 @@ import { cva } from 'class-variance-authority'
 export const triggerVariants = cva(
   [
     'w-full inline-flex items-center justify-between gap-[var(--space-2)]',
-    'h-[var(--control-lg)] px-[var(--space-3)]',
+    'h-[var(--control-lg)] px-[var(--space-3)] overflow-hidden',
     'bg-[var(--color-surface)] text-[var(--color-text)] text-left',
     'border border-[var(--color-border-strong)] rounded-[var(--radius-md)]',
     'text-[length:var(--text-base)] leading-[var(--leading-normal)]',
@@ -36,3 +36,7 @@ export const optionClasses = [
 
 export const iconClasses = ['size-[var(--space-4)] text-[var(--color-text-muted)] shrink-0']
 export const markClasses = ['size-[var(--space-3)] text-[var(--color-primary)] shrink-0']
+
+// The trigger is one line high, so the value has to be one line: a long course
+// name wrapped inside a fixed height and pushed the control out of its row.
+export const valueClasses = ['min-w-0 flex-1 truncate text-left']

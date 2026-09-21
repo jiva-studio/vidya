@@ -27,6 +27,29 @@ export type GetItemsListResponse<TItemType> = {
 }
 
 /**
+ * A page of a list, with how many there are in all.
+ *
+ * `total` counts what the filter matched, not what this page holds: without it
+ * a client cannot draw the last page, and cannot tell a short page from the end
+ * of the list.
+ */
+export type GetPagedItemsListResponse<TItemType> = GetItemsListResponse<TItemType> & {
+  total: number
+}
+
+/**
+ * What a list takes to return one page of itself.
+ *
+ * Absent `limit` means the whole list: these endpoints feed pickers and name
+ * lookups as well as screens. `limit` above the server's maximum is refused,
+ * not clamped.
+ */
+export type PageQuery = {
+  limit?: number
+  offset?: number
+}
+
+/**
  * Generic response for retrieving a single item of
  * a certain type.
  */

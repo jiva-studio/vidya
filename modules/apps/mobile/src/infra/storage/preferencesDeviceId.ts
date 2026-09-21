@@ -1,7 +1,6 @@
 import { Preferences } from '@capacitor/preferences'
+import type { DeviceId, IDeviceId } from '@vidya/client'
 import { asId } from '@vidya/domain'
-
-import type { DeviceId, IDeviceId } from '@/ports'
 
 const KEY = 'device-id'
 

@@ -1,5 +1,5 @@
-import type { IDatabase } from '@/ports'
-import type { SyncEngine } from '@/usecases/sync'
+import type { IDatabase } from '@vidya/client'
+import type { SyncEngine } from '@vidya/client'
 
 import { connectionStore, useConnections } from './connections'
 import { useOutboxView } from './outboxView'

@@ -22,6 +22,10 @@ export interface GroupFormValues {
 export type GroupMember = {
   enrollmentId: string
   studentId?: UserId
+
+  /** The course the place is on: what the "move to another group" dialog needs. */
+  courseId: CourseId
+
   name?: string
   status: EnrollmentStatus
   enrolledAt: IsoDateTime

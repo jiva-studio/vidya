@@ -23,7 +23,12 @@ import type { GroupFormValues } from '../types'
  * grants either way.
  */
 export const getGroups = (http: HttpClient, query: GetGroupsQuery): Promise<GetGroupsResponse> =>
-  http.get<GetGroupsResponse>(Routes().edu.groups.find(), { courseId: query.courseId })
+  http.get<GetGroupsResponse>(Routes().edu.groups.find(), {
+    courseId: query.courseId,
+    limit: query.limit,
+    offset: query.offset,
+    query: query.query,
+  })
 
 export const getGroup = (http: HttpClient, id: GroupId): Promise<GetGroupResponse> =>
   http.get<GetGroupResponse>(Routes().edu.groups.get(id))

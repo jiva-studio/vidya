@@ -1,7 +1,7 @@
 import type { LessonContent } from '@vidya/domain'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 
 import { messages } from '../i18n'
 import { contentOf, draftOf, sectionOf, textBlock } from './documents'
@@ -33,7 +33,7 @@ describe('a blank block the save drops', () => {
   it('is not sent to the server', async () => {
     const { wrapper, http } = await openEditor(draftOf(lesson()))
 
-    await insertBlank(wrapper, 'Image')
+    await insertBlank(wrapper, translate('editor-block-image'))
     await saveDraft()
 
     expect(savedContent(http).sections[0].blocks).toHaveLength(1)
@@ -42,7 +42,7 @@ describe('a blank block the save drops', () => {
   it('stays on screen, because the caret is standing in it', async () => {
     const { wrapper } = await openEditor(draftOf(lesson()))
 
-    await insertBlank(wrapper, 'Image')
+    await insertBlank(wrapper, translate('editor-block-image'))
     await saveDraft()
 
     expect(blocksOn(wrapper)).toHaveLength(2)
@@ -62,7 +62,7 @@ describe('a blank block the save drops', () => {
       },
     })
 
-    await insertBlank(wrapper, 'Image')
+    await insertBlank(wrapper, translate('editor-block-image'))
     await saveDraft()
 
     expect(blocksOn(wrapper).map((node) => node.getAttribute('data-block-id'))[0]).toBe('b1')

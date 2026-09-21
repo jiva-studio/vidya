@@ -40,11 +40,8 @@ export const createTestingApp = async (
       set: jest.fn(),
       exists: jest.fn(),
       del: jest.fn(),
-      // The global throttler guard now calls `incr` on every request. A
-      // constant 1 never accumulates, so it never throttles a suite that has
-      // not opted into a real, counting fake — that is `context.ts`'s job for
-      // the suites that actually exercise rate limiting.
       incr: jest.fn().mockResolvedValue(1),
+      ping: jest.fn().mockResolvedValue('PONG'),
     })
 
   for (const { provide, useValue } of overrides) {

@@ -1,8 +1,8 @@
+import { describeDatabaseConformance } from '@vidya/client/testing'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createCapacitorSqlDatabase } from '../capacitor/capacitorSqlDatabase'
 import { openSqlJsDatabase, wrapAsCapacitorConnection } from './capacitorConnectionDouble'
-import { describeDatabaseConformance } from './databaseConformance'
 
 /**
  * The port's promises, checked against the adapter that ships.

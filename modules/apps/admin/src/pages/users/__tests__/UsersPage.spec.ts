@@ -3,9 +3,10 @@ import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
+import { PAGE_SIZE } from '@/entities/user'
 import { setAppRouter, useCurrentSchool } from '@/shared/access'
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers, RecordedCall } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, pending, refusal } from '@/shared/testing'
@@ -47,6 +48,16 @@ const mountPage = async (answers: FakeAnswers, settle = true) => {
   return { transport, page, router }
 }
 
+/** Types into the search box and lets its debounce run out. */
+const search = async (
+  page: { find: (s: string) => { setValue: (v: string) => Promise<unknown> } },
+  term: string,
+) => {
+  await page.find('input[type="search"]').setValue(term)
+  await new Promise((resolve) => setTimeout(resolve, 300))
+  await flushPromises()
+}
+
 describe('UsersPage', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -70,7 +81,7 @@ describe('UsersPage', () => {
     expect(transport.calls[0]).toEqual({
       method: 'GET',
       path: USERS,
-      query: { schoolId: 'school-1' },
+      query: { schoolId: 'school-1', limit: PAGE_SIZE, offset: 0, query: undefined },
     })
     expect(page.text()).toContain('Ann')
   })
@@ -98,42 +109,115 @@ describe('UsersPage', () => {
   it('says what to do next when nobody is listed', async () => {
     const { page } = await mountPage({ [USERS]: { items: [] } })
 
-    expect(page.text()).toContain('Здесь пока никого нет')
+    expect(page.text()).toContain(translate('users-empty-title'))
   })
 
   it('shows the reason the server gave and offers another attempt', async () => {
     const { transport, page } = await mountPage({ [USERS]: refusal(500, 'People are unreadable') })
 
     expect(page.find('[role="alert"]').text()).not.toContain('People are unreadable')
-    expect(page.find('[role="alert"]').text()).toContain('Не получилось. Попробуйте ещё раз.')
+    expect(page.find('[role="alert"]').text()).toContain(translate('state-error'))
 
-    const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
+    const retry = page
+      .findAll('button')
+      .find((button) => button.text() === translate('action-retry'))
     await retry?.trigger('click')
     await flushPromises()
 
     expect(transport.calls).toHaveLength(2)
   })
 
-  it('filters users by search term when list is large', async () => {
+  // The school may hold hundreds, so the term goes to the server rather than
+  // the whole list coming back to be sifted here.
+  it('hands the search to the server and shows what it answers', async () => {
+    const { transport, page } = await mountPage({
+      [USERS]: (call: RecordedCall) =>
+        call.query?.query === 'Smith'
+          ? { items: [{ id: 'user-0', name: 'Ann Smith' }], total: 1 }
+          : {
+              items: [
+                { id: 'user-0', name: 'Ann Smith' },
+                { id: 'user-1', name: 'Bob Jones' },
+              ],
+              total: 2,
+            },
+    })
+
+    expect(page.text()).toContain('Bob Jones')
+
+    await search(page, 'Smith')
+
+    expect(transport.calls.at(-1)?.query).toMatchObject({ query: 'Smith', offset: 0 })
+    expect(page.text()).toContain('Ann Smith')
+    expect(page.text()).not.toContain('Bob Jones')
+  })
+
+  it('asks for the next page from the offset, and returns to the first on a new search', async () => {
+    const { transport, page } = await mountPage({
+      [USERS]: {
+        items: Array.from({ length: PAGE_SIZE }, (_, i) => ({ id: `u${i}`, name: `User ${i}` })),
+        total: PAGE_SIZE * 3,
+      },
+    })
+
+    const next = page.findAll('button').find((node) => node.text() === '2')
+    await next?.trigger('click')
+    await flushPromises()
+
+    expect(transport.calls.at(-1)?.query).toMatchObject({ offset: PAGE_SIZE })
+
+    await search(page, 'Ann')
+
+    expect(transport.calls.at(-1)?.query).toMatchObject({ offset: 0 })
+  })
+  it('says the search matched nobody rather than that the school is empty', async () => {
+    const { page } = await mountPage({
+      [USERS]: (call: RecordedCall) =>
+        call.query?.query
+          ? { items: [], total: 0 }
+          : {
+              items: Array.from({ length: 12 }, (_, i) => ({ id: `user-${i}`, name: `User ${i}` })),
+              total: 12,
+            },
+    })
+
+    await search(page, 'Nobody by that name')
+
+    expect(page.text()).toContain(translate('users-no-matches-title'))
+    expect(page.text()).not.toContain(translate('users-empty-title'))
+  })
+
+  it('lets the list use the full width rather than a form column', async () => {
+    const { page } = await mountPage({ [USERS]: { items: [{ id: 'user-1', name: 'Ann' }] } })
+
+    expect(page.find('section').classes()).not.toContain('max-w-[var(--form-max)]')
+  })
+  // `users.name` is nullable in the schema and the wire omits it, so a person
+  // with none reaches the table. Reading it eagerly took the whole page down.
+  it('lists a person the schema let through without a name', async () => {
     const { page } = await mountPage({
       [USERS]: {
-        items: Array.from({ length: 12 }, (_, i) => ({
-          id: `user-${i}`,
-          name: { 0: 'Ann Smith', 1: 'Bob Jones' }[i] ?? `User ${i}`,
-        })),
+        items: [
+          { id: 'user-1', name: 'Ann Smith' },
+          { id: 'user-2' },
+          { id: 'user-3', name: null },
+        ],
       },
     })
 
     expect(page.text()).toContain('Ann Smith')
-    expect(page.text()).toContain('Bob Jones')
+    expect(page.text()).toContain(translate('users-unnamed'))
+    expect(page.findAll('tbody tr')).toHaveLength(3)
+  })
 
-    const input = page.find('input[type="search"]')
-    expect(input.exists()).toBe(true)
-    await input.setValue('Smith')
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    await flushPromises()
+  it('keeps searching usable with a nameless person in the answer', async () => {
+    const { page } = await mountPage({
+      [USERS]: { items: [{ id: 'user-0', name: 'User 0' }, { id: 'nameless' }], total: 2 },
+    })
 
-    expect(page.text()).toContain('Ann Smith')
-    expect(page.text()).not.toContain('Bob Jones')
+    await search(page, 'User')
+
+    expect(page.text()).toContain('User 0')
+    expect(page.text()).toContain(translate('users-unnamed'))
   })
 })

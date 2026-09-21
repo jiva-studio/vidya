@@ -1,4 +1,4 @@
-import { type HttpClient, type HttpQuery, isUnauthorized } from '@/ports'
+import { type HttpClient, type HttpQuery, isUnauthorized } from '@vidya/client'
 
 /**
  * Acts the moment a server stops accepting the token it was given.

@@ -13,6 +13,10 @@ export const Routes = (baseUrl: string = '') => ({
   otp: {
     root: () => `${baseUrl}/auth/otp`,
   },
+  /** Resolving a joining link. Public: the card is shown before anyone signs in. */
+  join: {
+    resolve: (code: string) => `${baseUrl}/j/${code}`,
+  },
   sync: {
     pull: () => `${baseUrl}/sync/pull`,
     push: () => `${baseUrl}/sync/push`,
@@ -46,7 +50,7 @@ export const Routes = (baseUrl: string = '') => ({
       schools: {
         all: () => `${baseUrl}/edu/users/${userId}/schools`,
         create: () => `${baseUrl}/edu/users/${userId}/schools`,
-        delete: (roleId: string) => `${baseUrl}/edu/users/${userId}/schools/${roleId}`,
+        delete: (schoolId: string) => `${baseUrl}/edu/users/${userId}/schools/${schoolId}`,
       },
     }),
     courses: {
@@ -66,7 +70,6 @@ export const Routes = (baseUrl: string = '') => ({
         all: (lessonId: string) => `${baseUrl}/edu/lessons/${lessonId}/versions`,
         get: (lessonId: string, versionId: string) =>
           `${baseUrl}/edu/lessons/${lessonId}/versions/${versionId}`,
-        published: (lessonId: string) => `${baseUrl}/edu/lessons/${lessonId}/versions/published`,
         create: (lessonId: string) => `${baseUrl}/edu/lessons/${lessonId}/versions`,
         update: (lessonId: string, versionId: string) =>
           `${baseUrl}/edu/lessons/${lessonId}/versions/${versionId}`,
@@ -83,9 +86,7 @@ export const Routes = (baseUrl: string = '') => ({
     },
     enrollments: {
       find: () => `${baseUrl}/edu/enrollments`,
-      my: () => `${baseUrl}/edu/enrollments/my`,
       get: (id: string) => `${baseUrl}/edu/enrollments/${id}`,
-      create: () => `${baseUrl}/edu/enrollments`,
       moderate: (id: string) => `${baseUrl}/edu/enrollments/${id}/moderation`,
       archive: (id: string) => `${baseUrl}/edu/enrollments/${id}/archive`,
       group: (id: string) => `${baseUrl}/edu/enrollments/${id}/group`,
@@ -94,12 +95,7 @@ export const Routes = (baseUrl: string = '') => ({
     homework: {
       find: () => `${baseUrl}/edu/homework`,
       get: (id: string) => `${baseUrl}/edu/homework/${id}`,
-      submit: () => `${baseUrl}/edu/homework`,
       review: (id: string) => `${baseUrl}/edu/homework/${id}/review`,
-    },
-    progress: {
-      find: () => `${baseUrl}/edu/progress`,
-      save: () => `${baseUrl}/edu/progress`,
     },
     schools: {
       storage: {
@@ -113,6 +109,7 @@ export const Routes = (baseUrl: string = '') => ({
         getAll: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/configs`,
         update: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/configs`,
       },
+      code: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/code`,
       find: () => `${baseUrl}/edu/schools`,
       get: (id: string) => `${baseUrl}/edu/schools/${id}`,
       create: () => `${baseUrl}/edu/schools`,

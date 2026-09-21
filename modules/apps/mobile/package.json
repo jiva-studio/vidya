@@ -23,7 +23,9 @@
     "@fluent/bundle": "^0.18.0",
     "@ionic/vue": "^8.8.19",
     "@ionic/vue-router": "^8.8.19",
+    "@sentry/vue": "^10.75.0",
     "@ts-stack/markdown": "^1.5.0",
+    "@vidya/client": "^0.0.0",
     "@vidya/domain": "^0.0.0",
     "@vidya/protocol": "^0.0.0",
     "@vidya/usecases": "^0.0.0",
@@ -38,6 +40,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.2",
+    "@sentry/vite-plugin": "^5.4.0",
     "@types/canvas-confetti": "^1.6.4",
     "@types/sql.js": "^1.4.11",
     "@vitejs/plugin-legacy": "^8.2.3",

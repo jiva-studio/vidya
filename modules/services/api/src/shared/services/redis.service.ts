@@ -1,10 +1,10 @@
-import { Inject, Injectable, Logger } from '@nestjs/common'
+import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { RedisConfig } from '@vidya/api/configs'
 import Redis from 'ioredis'
 
 @Injectable()
-export class RedisService {
+export class RedisService implements OnModuleDestroy {
   private readonly redis: Redis
   private readonly logger = new Logger(RedisService.name)
 
@@ -16,7 +16,15 @@ export class RedisService {
     this.redis = new Redis({
       host: config.host,
       port: config.port,
+      lazyConnect: true,
+      enableOfflineQueue: false,
+      maxRetriesPerRequest: 1,
+      retryStrategy: () => null,
     })
+  }
+
+  async ping(): Promise<string> {
+    return await this.redis.ping()
   }
 
   async get(key: string): Promise<string | null> {
@@ -50,5 +58,15 @@ export class RedisService {
       await this.redis.expire(key, seconds)
     }
     return value
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    try {
+      if (this.redis.status === 'ready' || this.redis.status === 'connecting') {
+        await this.redis.quit()
+      }
+    } catch {
+      this.redis.disconnect()
+    }
   }
 }

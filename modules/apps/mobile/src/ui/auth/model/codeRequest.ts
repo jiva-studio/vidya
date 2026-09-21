@@ -1,4 +1,4 @@
-import { HttpError } from '@/ports'
+import { HttpError } from '@vidya/client'
 
 /** What the screen says, and does, when a request for a code comes back. */
 export interface CodeRequestOutcome {

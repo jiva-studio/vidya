@@ -1,7 +1,7 @@
 import type { HomeworkSummary } from '@vidya/protocol'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import { reasonOf } from '@/shared/lib'
+import { PAGE_SIZE, reasonOf } from '@/shared/lib'
 
 import { useHomeworkApi } from '../api'
 import type { HomeworkFilters } from './types'
@@ -22,9 +22,16 @@ export const useHomeworkQueue = () => {
   const api = useHomeworkApi()
 
   const items = ref<HomeworkSummary[]>([])
+  const total = ref(0)
+  const page = ref(1)
   const filters = ref<HomeworkFilters>({ status: 'pending' })
   const loading = ref(false)
   const error = ref<string | undefined>(undefined)
+
+  const pages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)))
+
+  // Drawn only when there is a second page.
+  const paged = computed(() => pages.value > 1)
 
   const load = async (): Promise<void> => {
     loading.value = true
@@ -32,8 +39,13 @@ export const useHomeworkQueue = () => {
     items.value = []
 
     try {
-      const response = await api.list({ status: filters.value.status })
+      const response = await api.list({
+        status: filters.value.status,
+        limit: PAGE_SIZE,
+        offset: (page.value - 1) * PAGE_SIZE,
+      })
       items.value = response.items
+      total.value = response.total
     } catch (failure) {
       error.value = reasonOf(failure)
     } finally {
@@ -41,5 +53,16 @@ export const useHomeworkQueue = () => {
     }
   }
 
-  return { items, filters, loading, error, load }
+  const goTo = (next: number): void => {
+    page.value = next
+    void load()
+  }
+
+  /** A new filter is a new queue, so it starts at its own first page. */
+  const restart = (): void => {
+    page.value = 1
+    void load()
+  }
+
+  return { items, total, page, pages, paged, filters, loading, error, load, goTo, restart }
 }

@@ -22,7 +22,7 @@ import { EmailInput, HelpMessage } from '@/ui/auth'
 import { useAuthToast } from '@/ui/auth/composables/useAuthToast'
 import type { CodeRequestOutcome } from '@/ui/auth/model/codeRequest'
 import { outcomeOfCodeRequest } from '@/ui/auth/model/codeRequest'
-import { auth } from '@/usecases'
+import { auth } from '@vidya/client'
 
 import type { WizardGetSignInCodeByEmailEmits } from './types'
 

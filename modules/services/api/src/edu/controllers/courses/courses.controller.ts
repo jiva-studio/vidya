@@ -66,18 +66,22 @@ export class CoursesController {
 
   @Crud.GetMany(Routes().edu.courses.find())
   async getMany(
-    @Query() query: dto.GetCoursesQuery,
+    @Query() filters: dto.GetCoursesQuery,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.GetCoursesResponse> {
     if (!auth.permissions.has(['courses:read'])) {
       throw new ForbiddenException('User does not have permission')
     }
 
-    const courses = await this.courses
+    const [courses, total] = await this.courses
       .scopedBy({ permissions: auth.permissions })
-      .findAll({ where: { schoolId: query.schoolId } })
+      .findAndCount({
+        where: { ...dto.matchingName(filters.query), schoolId: filters.schoolId },
+        order: { name: 'ASC', id: 'ASC' },
+        ...dto.pageOf(filters),
+      })
 
-    return { items: toCourseSummaries(courses) }
+    return { items: toCourseSummaries(courses), total }
   }
 
   /* -------------------------------------------------------------------------- */
@@ -114,16 +118,16 @@ export class CoursesController {
     @Body() request: dto.UpdateCourseRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.UpdateCourseResponse> {
-    if (!auth.permissions.has(['courses:update'])) {
-      throw new ForbiddenException('User does not have permission')
-    }
-
     const course = await this.courses
       .scopedBy({ permissions: auth.permissions })
       .findOne({ where: { id } })
 
     if (!course) {
       throw new NotFoundException(`Course with id ${id} not found`)
+    }
+
+    if (!auth.permissions.has(['courses:update'], { schoolId: course.schoolId })) {
+      throw new ForbiddenException('User does not have permission')
     }
 
     const updated = await this.courses.updateOneBy({ id }, request)
@@ -139,16 +143,16 @@ export class CoursesController {
     @Param('id', new ParseUUIDPipe()) id: domain.CourseId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.DeleteCourseResponse> {
-    if (!auth.permissions.has(['courses:delete'])) {
-      throw new ForbiddenException('User does not have permission')
-    }
-
     const course = await this.courses
       .scopedBy({ permissions: auth.permissions })
       .findOne({ where: { id } })
 
     if (!course) {
       throw new NotFoundException(`Course with id ${id} not found`)
+    }
+
+    if (!auth.permissions.has(['courses:delete'], { schoolId: course.schoolId })) {
+      throw new ForbiddenException('User does not have permission')
     }
 
     await this.courses.deleteOneBy({ id })

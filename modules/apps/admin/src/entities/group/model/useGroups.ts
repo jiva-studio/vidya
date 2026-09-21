@@ -3,55 +3,36 @@ import { onMounted, ref, watch } from 'vue'
 
 import { useCurrentSchool } from '@/shared/access'
 import { useHttp } from '@/shared/api'
-import { reasonOf } from '@/shared/lib'
+import { usePagedList } from '@/shared/lib'
 
 import { getGroups } from '../api'
 
 /**
- * The groups the operator may see, optionally narrowed to one course.
+ * The groups the operator may see, a page at a time, optionally narrowed to
+ * one course.
  *
- * The rows go before the request does, so a school change never leaves the
- * previous school's groups on screen. The request carries no school:
- * `GetGroupsQuery` has no field for one and the server scopes by the grants in
- * the token.
+ * The request carries no school: `GetGroupsQuery` has no field for one and the
+ * server scopes by the grants in the token. Narrowing by course starts the
+ * list again, because page two of every group is not page two of one course's.
  */
 export const useGroups = () => {
   const http = useHttp()
   const { generation } = useCurrentSchool()
 
-  const items = ref<GroupSummary[]>([])
   const courseId = ref<string>('')
-  const loading = ref(false)
-  const error = ref<string | undefined>(undefined)
 
-  let ticket = 0
-
-  const load = async (): Promise<void> => {
-    const mine = ++ticket
-
-    items.value = []
-    loading.value = true
-    error.value = undefined
-
-    try {
-      const response = await getGroups(http, { courseId: courseId.value || undefined })
-      if (mine !== ticket) return
-      items.value = response.items
-    } catch (caught) {
-      if (mine !== ticket) return
-      error.value = reasonOf(caught, 'groups-load-failed')
-    } finally {
-      if (mine === ticket) loading.value = false
-    }
-  }
+  const list = usePagedList<GroupSummary>({
+    read: (page) => getGroups(http, { courseId: courseId.value || undefined, ...page }),
+    fallback: 'groups-load-failed',
+  })
 
   watch([generation, courseId], () => {
-    void load()
+    list.restart()
   })
 
   onMounted(() => {
-    void load()
+    void list.load()
   })
 
-  return { items, courseId, loading, error, reload: load }
+  return { ...list, items: list.rows, courseId, reload: list.load }
 }

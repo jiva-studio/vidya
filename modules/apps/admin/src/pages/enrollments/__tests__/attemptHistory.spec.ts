@@ -51,8 +51,8 @@ const person = (id: string, name: string) => ({ id, name, email: `${id}@example.
 // Anna asked twice, two years apart, and Boris once in between. The server
 // answers in its own order, which is not the order a history is read in.
 const world = (): FakeAnswers => ({
-  [COURSES]: { items: [{ id: 'c1', name: 'Основы' }] },
-  [GROUPS]: { items: [{ id: 'g1', name: 'Утренняя', status: 'pending' }] },
+  [COURSES]: { items: [{ id: 'c1', name: 'Foundations' }] },
+  [GROUPS]: { items: [{ id: 'g1', name: 'Morning', status: 'pending' }] },
   [ENROLLMENTS]: {
     items: [
       summary('anna-first', '2024-02-01T10:00:00.000Z'),
@@ -66,8 +66,8 @@ const world = (): FakeAnswers => ({
     status: 'pending',
     createdAt: '2026-03-01T10:00:00.000Z',
   }),
-  '/edu/users/u1': person('u1', 'Аня Иванова'),
-  '/edu/users/u2': person('u2', 'Борис Петров'),
+  '/edu/users/u1': person('u1', 'Ann Ivanova'),
+  '/edu/users/u2': person('u2', 'Boris Petrov'),
 })
 
 const mountPage = async (answers: FakeAnswers) => {
@@ -109,10 +109,10 @@ describe('several attempts of one student on one course', () => {
     const rows = page.findAll('tbody tr').map((row) => row.text())
 
     expect(rows).toHaveLength(3)
-    expect(rows[0]).toContain('Аня Иванова')
+    expect(rows[0]).toContain('Ann Ivanova')
     expect(rows[0]).toContain('2026')
-    expect(rows[1]).toContain('Аня Иванова')
+    expect(rows[1]).toContain('Ann Ivanova')
     expect(rows[1]).toContain('2024')
-    expect(rows[2]).toContain('Борис Петров')
+    expect(rows[2]).toContain('Boris Petrov')
   })
 })

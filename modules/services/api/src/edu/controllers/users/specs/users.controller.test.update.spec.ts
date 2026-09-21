@@ -39,6 +39,36 @@ describe('UsersController', () => {
       )
     })
 
+    it('allows a user without permissions to update their own name', async () => {
+      const res = await ctr.updateOne(
+        new dto.UpdateUserRequest({ name: 'Self Renamed' }),
+        ctx.misc.users.empty.id,
+        await ctx.authenticate(ctx.misc.users.empty),
+      )
+
+      expect(res.name).toBe('Self Renamed')
+    })
+
+    it('refuses to let a user without permissions update their own email', async () => {
+      await expect(async () => {
+        await ctr.updateOne(
+          new dto.UpdateUserRequest({ email: 'newemail@example.com' }),
+          ctx.misc.users.empty.id,
+          await ctx.authenticate(ctx.misc.users.empty),
+        )
+      }).rejects.toThrow(`User does not have permission`)
+    })
+
+    it('refuses to let a user without permissions update their own phone', async () => {
+      await expect(async () => {
+        await ctr.updateOne(
+          new dto.UpdateUserRequest({ phone: '+123456789' }),
+          ctx.misc.users.empty.id,
+          await ctx.authenticate(ctx.misc.users.empty),
+        )
+      }).rejects.toThrow(`User does not have permission`)
+    })
+
     it('throws if user do not have permission', async () => {
       await expect(async () => {
         await ctr.updateOne(

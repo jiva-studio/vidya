@@ -2,7 +2,7 @@ import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, refusal } from '@/shared/testing'
 
@@ -13,18 +13,18 @@ const GROUPS = '/edu/groups'
 // This suite's own copy, so the screen owns its wording and the test owns only
 // the keys it reads a line by.
 const copy = `
-enrollments-review-title = Заявка
-enrollments-review-decision = Группа
-enrollments-review-accept = Принять в группу
-enrollments-review-times = Когда удобно
-enrollments-review-zone = Время в поясе { $zone }
-enrollments-review-groups-none = На курсе пока нет групп
-enrollments-review-groups-unreadable = Список групп не загрузился
-enrollments-group-queue = В очереди
-action-close = Закрыть
-action-cancel = Отмена
-weekday-mon = пн
-weekday-sat = сб
+enrollments-review-title = The request
+enrollments-review-decision = Group
+enrollments-review-accept = Accept into the group
+enrollments-review-times = When it suits
+enrollments-review-zone = Hours in { $zone }
+enrollments-review-groups-none = This course has no groups yet
+enrollments-review-groups-unreadable = The list of groups did not load
+enrollments-group-queue = In the queue
+action-close = Close
+action-cancel = Cancel
+weekday-mon = Mon
+weekday-sat = Sat
 `
 
 const ACROSS_MIDNIGHT = {
@@ -62,7 +62,7 @@ const shown = () => document.body.textContent ?? ''
 
 const acceptButton = () =>
   [...document.body.querySelectorAll('button')].find(
-    (candidate) => candidate.textContent?.trim() === 'Принять в группу',
+    (candidate) => candidate.textContent?.trim() === translate('enrollments-review-accept'),
   )
 
 /**
@@ -82,20 +82,20 @@ describe('the request under review', () => {
   it('tells a course with no groups apart from a list that did not arrive', async () => {
     await open({ [GROUPS]: { items: [] } })
 
-    expect(shown()).toContain('На курсе пока нет групп')
-    expect(shown()).not.toContain('не загрузился')
+    expect(shown()).toContain(translate('enrollments-review-groups-none'))
+    expect(shown()).not.toContain(translate('enrollments-review-groups-unreadable'))
   })
 
   it('says the list did not arrive, and does not take a decision over it', async () => {
     await open({ [GROUPS]: refusal(500, 'boom') })
 
-    expect(shown()).toContain('Список групп не загрузился')
-    expect(shown()).not.toContain('На курсе пока нет групп')
+    expect(shown()).toContain(translate('enrollments-review-groups-unreadable'))
+    expect(shown()).not.toContain(translate('enrollments-review-groups-none'))
     expect(acceptButton()).toBeUndefined()
   })
 
   it('still offers the decision when the list arrived', async () => {
-    await open({ [GROUPS]: { items: [{ id: 'g1', name: 'Утренняя', status: 'pending' }] } })
+    await open({ [GROUPS]: { items: [{ id: 'g1', name: 'Morning', status: 'pending' }] } })
 
     expect(acceptButton()).toBeDefined()
   })

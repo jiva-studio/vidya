@@ -7,7 +7,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { HomeworkStatusBadge } from '@/entities/homework'
 import { GradePicker, ReviewActions } from '@/features/grade-homework'
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, pending, refusal } from '@/shared/testing'
@@ -44,14 +44,14 @@ const work = (id: string, over: Record<string, unknown> = {}) => ({
   sectionId: 's1',
   schoolId: 'school-1',
   status: 'pending',
-  text: `Ответ ${id}`,
+  text: `Answer ${id}`,
   submittedAt: '2026-09-10T08:00:00.000Z',
   ...over,
 })
 
 const world = (over: FakeAnswers = {}): FakeAnswers => ({
-  '/edu/courses': { items: [{ id: 'c1', name: 'Основы' }] },
-  '/edu/groups': { items: [{ id: 'g1', name: 'Утренняя' }] },
+  '/edu/courses': { items: [{ id: 'c1', name: 'Foundations' }] },
+  '/edu/groups': { items: [{ id: 'g1', name: 'Morning' }] },
   [HOMEWORK]: { items: [summary('h1'), summary('h2')] },
   [`${HOMEWORK}/h1`]: work('h1'),
   [`${HOMEWORK}/h2`]: work('h2'),
@@ -64,11 +64,11 @@ const world = (over: FakeAnswers = {}): FakeAnswers => ({
     status: 'accepted',
     createdAt: '2026-09-01T10:00:00.000Z',
   },
-  '/edu/users/u1': { id: 'u1', name: 'Аня Иванова', email: 'a@example.com', roles: [] },
+  '/edu/users/u1': { id: 'u1', name: 'Ann Ivanova', email: 'a@example.com', roles: [] },
 
   // A version is read through its lesson, so the lesson holding it is found
   // among the course's lessons before the screen can name it or link to it.
-  '/edu/lessons': { items: [{ id: 'l1', lessonNumber: 1, title: 'Алфавит' }] },
+  '/edu/lessons': { items: [{ id: 'l1', lessonNumber: 1, title: 'Alphabet' }] },
   '/edu/lessons/l1/versions': {
     items: [{ id: 'v7', lessonId: 'l1', version: 1, status: 'published' }],
   },
@@ -157,20 +157,22 @@ describe('HomeworkReviewPage', () => {
   it('shows the work with who handed it in, for what, and when', async () => {
     const { page } = await mountPage(world())
 
-    expect(page.text()).toContain('Ответ h1')
-    expect(page.text()).toContain('Аня Иванова')
-    expect(page.text()).toContain('Основы')
-    expect(page.text()).toContain('Утренняя')
-    expect(page.text()).toContain('Алфавит')
+    expect(page.text()).toContain('Answer h1')
+    expect(page.text()).toContain('Ann Ivanova')
+    expect(page.text()).toContain('Foundations')
+    expect(page.text()).toContain('Morning')
+    expect(page.text()).toContain('Alphabet')
   })
 
   it('shows that it is loading, and our own words when it will not load', async () => {
     const { page } = await mountPage(world({ [`${HOMEWORK}/h1`]: pending() }), false)
     expect(page.find('[role="status"]').exists()).toBe(true)
 
-    const failed = await mountPage(world({ [`${HOMEWORK}/h1`]: refusal(503, 'Работа недоступна') }))
+    const failed = await mountPage(
+      world({ [`${HOMEWORK}/h1`]: refusal(503, 'The answer is unavailable') }),
+    )
     const alert = failed.page.find('[role="alert"]')
-    expect(alert.text()).not.toContain('Работа недоступна')
+    expect(alert.text()).not.toContain('The answer is unavailable')
     expect(alert.text().length).toBeGreaterThan(0)
   })
 
@@ -252,7 +254,7 @@ describe('HomeworkReviewPage', () => {
       world({ [`${HOMEWORK}/h1`]: work('h1', { answeredSupersededVersion: true }) }),
     )
 
-    expect(page.text()).toContain('больше не опубликована')
+    expect(page.text()).toContain(translate('homework-superseded'))
     expect(page.find('a').attributes('href')).toBe('/lessons/l1/versions/v7')
   })
 
@@ -265,7 +267,7 @@ describe('HomeworkReviewPage', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.params.id).toBe('h2')
-    expect(page.text()).toContain('Ответ h2')
+    expect(page.text()).toContain('Answer h2')
     expect(remaining(page)).toBe(0)
   })
 
@@ -294,7 +296,7 @@ describe('HomeworkReviewPage', () => {
     await acceptButton(page).trigger('click')
     await flushPromises()
 
-    expect(page.text()).toContain('Ответ h1')
+    expect(page.text()).toContain('Answer h1')
     expect(page.findComponent(HomeworkStatusBadge).props('status')).toBe('accepted')
     expect(remaining(page)).toBe(0)
   })
@@ -309,6 +311,6 @@ describe('HomeworkReviewPage', () => {
     await flushPromises()
 
     expect(patched(transport)).toBeUndefined()
-    expect(page.text()).toContain('Ответ h1')
+    expect(page.text()).toContain('Answer h1')
   })
 })

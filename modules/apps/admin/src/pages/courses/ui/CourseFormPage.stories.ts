@@ -11,7 +11,8 @@ import CourseFormPage from './CourseFormPage.vue'
  * The course form, in the states the screen itself can be in.
  *
  * "No permission" is absent on purpose: the form is behind `courses:update`, and a
- * reader who may not have it never reaches the screen.
+ * reader who may not have it never reaches the screen. The default course is a
+ * draft, because that is what a course is until somebody publishes it.
  */
 const COURSE = '/edu/courses/c1'
 
@@ -22,6 +23,7 @@ const course = {
   name: 'Sanskrit from scratch',
   description: 'Alphabet, cases and sandhi',
   learningType: 'group',
+  status: 'draft',
 }
 
 const edit = { route: { name: 'course-edit', params: { courseId: 'c1' } } }
@@ -45,6 +47,11 @@ export default meta
 type Story = StoryObj<typeof CourseFormPage>
 
 export const Default: Story = { parameters: edit, render: over({ [COURSE]: course }) }
+
+export const Published: Story = {
+  parameters: edit,
+  render: over({ [COURSE]: { ...course, status: 'published' } }),
+}
 
 export const Loading: Story = { parameters: edit, render: over({ [COURSE]: pending() }) }
 

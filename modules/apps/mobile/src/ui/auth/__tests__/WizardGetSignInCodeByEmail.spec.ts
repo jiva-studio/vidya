@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { toastController } from '@ionic/vue'
+import { HttpError } from '@vidya/client'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-import { HttpError } from '@/ports'
 
 const refusal = vi.hoisted(() => ({ thrown: null as unknown }))
 

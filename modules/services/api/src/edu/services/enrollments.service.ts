@@ -1,22 +1,15 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { EnrollmentStatus, isLive, LiveEnrollmentStatuses } from '@vidya/domain'
 import * as domain from '@vidya/domain'
-import { Course, Enrollment } from '@vidya/entities'
+import { Enrollment } from '@vidya/entities'
 import { EntityManager, In, Repository } from 'typeorm'
 
 import { Scope, ScopedEntitiesService } from './entities.service'
 import { GroupsService } from './groups.service'
-import { LessonsService } from './lessons.service'
-import { LessonVersionsService } from './lessonVersions.service'
 import { scopedBySchool } from './scoped-by-school'
 
-export type ModerationStatus = Extract<EnrollmentStatus, 'accepted' | 'declined'>
+export type ModerationStatus = Extract<EnrollmentStatus, 'accepted' | 'declined' | 'revoked'>
 
 export type ModerationDecision = {
   status: ModerationStatus
@@ -32,6 +25,10 @@ export type ModerationDecision = {
  * were rather than made to start again with nothing they had. There is no open
  * request there to refuse, hence no way back to `declined`.
  *
+ * `accepted` goes to `revoked` and nowhere else: a place given can be taken
+ * back, but not turned into a refusal, there being no request left to refuse.
+ * `revoked` reopens to `accepted`, so the pair is reversible.
+ *
  * `declined` is empty and stays empty. A refusal on the merits is an answer,
  * not a pause; reversing it is a new request, not a second answer to the old.
  *
@@ -41,7 +38,7 @@ export type ModerationDecision = {
  */
 const MODERATION: Readonly<Record<EnrollmentStatus, readonly ModerationStatus[]>> = Object.freeze({
   pending: ['accepted', 'declined'],
-  accepted: [],
+  accepted: ['revoked'],
   declined: [],
   revoked: ['accepted'],
   withdrawn: ['accepted'],
@@ -62,13 +59,6 @@ const CLEARED_BY_A_NEW_DECISION = Object.freeze({
   archivedBySchoolById: null,
 })
 
-/** What a student may ask for beside the course itself. */
-export type EnrollmentWishes = {
-  preferredGroupId?: domain.GroupId
-  preferredTimes?: domain.PreferredTimes
-  comment?: string
-}
-
 /** Postgres reports a broken UNIQUE constraint as SQLSTATE 23505. */
 const isUniqueViolation = (error: unknown): boolean =>
   (error as { code?: string })?.code === '23505'
@@ -85,8 +75,6 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
   constructor(
     @InjectRepository(Enrollment) repository: Repository<Enrollment>,
     private readonly groups: GroupsService,
-    private readonly lessons: LessonsService,
-    private readonly versions: LessonVersionsService,
   ) {
     super(repository, scopedBySchool<Enrollment>('enrollments:read'))
   }
@@ -101,95 +89,9 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
     return enrollment
   }
 
-  /**
-   * The student's accepted place on the course a lesson version belongs to.
-   *
-   * Resolved from the caller and the content rather than taken from the
-   * request: the chain is version -> lesson -> course -> enrolment, and every
-   * link of it is what proves the student may be writing here at all. Both the
-   * homework and the progress endpoints need it, which is why it is not a
-   * private helper on either of them.
-   *
-   * One row comes back because a student holds at most one live place on a
-   * course, and an accepted place is live. Earlier attempts on the same course
-   * are finished rows and cannot be accepted.
-   */
-  async forLessonVersion(
-    lessonVersionId: domain.LessonVersionId,
-    studentId: domain.UserId,
-  ): Promise<Enrollment> {
-    const version = await this.versions.findOneBy({ id: lessonVersionId })
-
-    if (!version) {
-      throw new NotFoundException(`Lesson version ${lessonVersionId} not found`)
-    }
-
-    const lesson = await this.lessons.findOneBy({ id: version.lessonId })
-
-    if (!lesson) {
-      throw new NotFoundException(`Lesson with id ${version.lessonId} not found`)
-    }
-
-    const enrollment = await this.findOneBy({
-      studentId,
-      courseId: lesson.courseId,
-      status: 'accepted',
-    })
-
-    // Access comes from being enrolled; a pending or declined request is not a place.
-    if (!enrollment) {
-      throw new ForbiddenException('Not enrolled on the course this lesson belongs to')
-    }
-
-    return enrollment
-  }
-
   /** Whether this enrolment is the caller's own. */
   isOwnedBy(enrollment: Enrollment | null, userId: domain.UserId): boolean {
     return enrollment?.studentId === userId
-  }
-
-  /**
-   * A student asks to join. The school decides later.
-   *
-   * Only a live place stands in the way: a course taken and left is history,
-   * and asking again writes a second row beside it rather than reopening the
-   * first. The check and the insert are two statements, so two requests
-   * arriving together can both pass the check. The partial index over live rows
-   * is what actually decides it; the check is only here to give the ordinary
-   * case a readable error rather than a constraint name. Both paths end in the
-   * same 409.
-   */
-  async request(
-    course: Course,
-    studentId: domain.UserId,
-    wishes: EnrollmentWishes = {},
-  ): Promise<Enrollment> {
-    const live = await this.findLivePlace(course.id, studentId)
-
-    if (live) {
-      throw new ConflictException('Already enrolled on this course')
-    }
-
-    if (wishes.preferredGroupId) {
-      await this.assertGroupBelongsToCourse(wishes.preferredGroupId, course.id)
-    }
-
-    try {
-      return await this.create({
-        courseId: course.id,
-        studentId,
-        schoolId: course.schoolId,
-        status: 'pending',
-        preferredGroupId: wishes.preferredGroupId ?? null,
-        preferredTimes: wishes.preferredTimes ?? null,
-        comment: wishes.comment ?? null,
-      })
-    } catch (error) {
-      if (!isUniqueViolation(error)) throw error
-
-      throw new ConflictException('Already enrolled on this course')
-    }
   }
 
   /**
@@ -201,13 +103,15 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
    * entity subscriber, so a bulk `UPDATE` would move the table and reach no
    * device: the scope cursor would walk past a change that was never written
    * down. `manager` is the caller's transaction, so the places and whatever
-   * ended the membership commit or roll back together.
+   * ended the membership commit or roll back together, and the count they
+   * answer with is what was actually taken back rather than what was there to
+   * take before the transaction opened.
    */
   async revokePlacesIn(
     studentId: domain.UserId,
     schoolId: domain.SchoolId,
     manager: EntityManager,
-  ): Promise<void> {
+  ): Promise<number> {
     const places = await manager.findBy(Enrollment, {
       studentId,
       schoolId,
@@ -223,6 +127,8 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
 
       await manager.save(place)
     }
+
+    return places.length
   }
 
   /**
@@ -238,6 +144,12 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
       throw new ConflictException(
         `Enrollment ${enrollment.id} cannot go from ${enrollment.status} to ${decision.status}`,
       )
+    }
+
+    // `CLEARED_BY_A_NEW_DECISION` nulls the column and the write below puts
+    // the decision's own value back, so an ended place could keep a group.
+    if (decision.groupId && decision.status !== 'accepted') {
+      throw new ConflictException(`A ${decision.status} place is not put in a group`)
     }
 
     if (decision.groupId) {

@@ -3,6 +3,8 @@ import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import { IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator'
 
+import { PagedQuery } from './paging.dto'
+
 export class GroupDetails implements protocol.GroupDetails {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   id: domain.GroupId
@@ -21,6 +23,9 @@ export class GroupDetails implements protocol.GroupDetails {
 export class GroupSummary implements protocol.GroupSummary {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   id: domain.GroupId
+
+  @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  courseId: domain.CourseId
 
   @ApiProperty({ example: 'Morning group' })
   name: string
@@ -52,16 +57,25 @@ export class CreateGroupResponse implements protocol.CreateGroupResponse {
   id: domain.GroupId
 }
 
-export class GetGroupsQuery implements protocol.GetGroupsQuery {
+export class GetGroupsQuery extends PagedQuery implements protocol.GetGroupsQuery {
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   @IsOptional()
   @IsUUID()
   courseId?: domain.CourseId
+
+  @ApiPropertyOptional({ example: 'morning' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  query?: string
 }
 
 export class GetGroupsResponse implements protocol.GetGroupsResponse {
   @ApiProperty({ type: [GroupSummary] })
   items: GroupSummary[]
+
+  @ApiProperty({ example: 137 })
+  total: number
 }
 
 export class GetGroupResponse extends GroupDetails {}

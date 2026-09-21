@@ -1,4 +1,4 @@
-import type { UuidSource } from '@/ports'
+import type { UuidSource } from '@vidya/client'
 
 /**
  * The platform's own v4 UUIDs.

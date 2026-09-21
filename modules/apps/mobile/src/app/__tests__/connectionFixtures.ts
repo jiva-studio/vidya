@@ -1,8 +1,7 @@
+import type { Connection, IConnectionStore } from '@vidya/client'
+import { normaliseBaseUrl } from '@vidya/client'
 import type { UserId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
-
-import type { Connection, IConnectionStore } from '@/ports'
-import { normaliseBaseUrl } from '@/ports'
 
 import type { ServerStub } from './fakeSyncNetwork'
 
