@@ -5,6 +5,7 @@ import { ConfigType } from '@nestjs/config'
 import { MediaConfig } from '@vidya/api/configs'
 import {
   deliveryFor,
+  isLentProfile,
   secretTailOf,
   toStorageProfileView,
   videoProviderOf,
@@ -102,6 +103,11 @@ export class StorageSetupService {
 
   async verifyProfile(schoolId: SchoolId): Promise<protocol.StorageProfileView> {
     const profile = await this.requireProfile(schoolId)
+
+    // Nothing here is the school's to prove: the keys are the installation's,
+    // and dialling them in the school's name would say otherwise.
+    if (isLentProfile(profile)) throw new StorageFailedError('not-configured')
+
     const secret = await this.openSecretOrRecord(profile)
 
     try {

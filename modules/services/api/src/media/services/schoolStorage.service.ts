@@ -4,6 +4,7 @@ import { StorageProfile } from '@vidya/entities'
 
 import { MEDIA_STORAGE, MediaStorageFactory, StorageCredentials } from '../infra/ports'
 import { StorageFailedError } from '../storageFailure'
+import { InstallationStorageService } from './installationStorage.service'
 import { SecretSealingService } from './secretSealing.service'
 import { StorageProfilesService } from './storageProfiles.service'
 
@@ -19,18 +20,23 @@ export type SchoolStorage = {
  * A file is always reached through the profile that wrote it rather than the
  * school's current one: a school that changes bucket keeps everything it has
  * already published readable, and only new uploads follow the new keys.
+ *
+ * A school that has handed over no credentials is not refused: it is given the
+ * storage of the installation, under a prefix of its own.
  */
 @Injectable()
 export class SchoolStorageService {
   constructor(
     @Inject(MEDIA_STORAGE) private readonly storages: MediaStorageFactory,
+    private readonly installation: InstallationStorageService,
     private readonly profiles: StorageProfilesService,
     private readonly sealing: SecretSealingService,
   ) {}
 
   async openCurrent(schoolId: SchoolId): Promise<SchoolStorage> {
-    const profile = await this.profiles.findCurrentFor(schoolId)
-    if (!profile) throw new StorageFailedError('not-configured')
+    const profile =
+      (await this.profiles.findCurrentFor(schoolId)) ??
+      (await this.installation.provisionProfileFor(schoolId))
 
     return this.openProfile(profile)
   }

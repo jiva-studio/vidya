@@ -23,6 +23,7 @@ import {
 } from './infra'
 import {
   EndpointGuardService,
+  InstallationStorageService,
   MediaCatalogService,
   MediaMasterKeyService,
   MediaRowsService,
@@ -91,6 +92,7 @@ const storageProviders: Provider[] = [
     ...storageProviders,
 
     EndpointGuardService,
+    InstallationStorageService,
     MediaCatalogService,
     MediaRowsService,
     MediaSweepSchedule,

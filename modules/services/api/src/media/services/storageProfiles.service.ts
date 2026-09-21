@@ -27,7 +27,7 @@ export type StorageProfileDraft = {
   video: VideoProvider
   quotaBytes: number | null
   sealed: SealedProfile
-  verifiedAt: Date
+  verifiedAt: Date | null
 }
 
 /**
@@ -63,6 +63,39 @@ export class StorageProfilesService {
         .update({ id: draft.schoolId }, { currentStorageProfileId: saved.id })
 
       return saved
+    })
+  }
+
+  /**
+   * Writes a profile unless the school already has a live one.
+   *
+   * Which of two callers wins is the unique index's decision and not a read's:
+   * both insert, the conflicting insert writes nothing, and who the live
+   * profile belongs to is asked afterwards rather than before. Nothing is
+   * inferred from the driver's answer to the insert, because a row carrying
+   * its own id is reported as written whether it landed or not.
+   */
+  async insertIfAbsent(draft: StorageProfileDraft): Promise<StorageProfile | null> {
+    return this.dataSource.transaction(async (manager) => {
+      await manager
+        .getRepository(StorageProfile)
+        .createQueryBuilder()
+        .insert()
+        .values(rowFrom(draft))
+        .orIgnore()
+        .execute()
+
+      const live = await manager
+        .getRepository(StorageProfile)
+        .findOne({ where: { schoolId: draft.schoolId, retiredAt: IsNull() } })
+
+      if (live?.id !== draft.id) return null
+
+      await manager
+        .getRepository(School)
+        .update({ id: draft.schoolId }, { currentStorageProfileId: draft.id })
+
+      return live
     })
   }
 

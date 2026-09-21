@@ -1,5 +1,6 @@
 export * from './addressRanges'
 export * from './endpointGuard.service'
+export * from './installationStorage.service'
 export * from './mediaCatalog.service'
 export * from './mediaLimits'
 export * from './mediaMasterKey.service'

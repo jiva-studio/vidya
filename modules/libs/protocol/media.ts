@@ -148,6 +148,18 @@ export type StorageProfileView = {
   id: domain.StorageProfileId
   schoolId: domain.SchoolId
   kind: domain.StorageProfileKind
+
+  /**
+   * Whether this school is writing into the installation's storage rather than
+   * its own.
+   *
+   * A lent profile answers with no `endpoint`, `bucket`, `accessKeyId` or
+   * `secretTail`: those name the installation's bucket and the key that opens
+   * it, and a school's technician has no business reading either. What is left
+   * is what they can act on — how much room they have, how much they have
+   * used, and that bringing their own credentials is still an option.
+   */
+  lent: boolean
   endpoint: string
   region: string
   bucket: string

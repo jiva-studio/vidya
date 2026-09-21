@@ -3,8 +3,8 @@ import { connect } from 'node:net'
 import { S3Client } from '@aws-sdk/client-s3'
 import { MediaStoragePort, UploadGrant } from '@vidya/domain'
 
-import { S3StorageFactory } from '../s3Storage'
 import { StorageCredentials } from '../ports'
+import { S3StorageFactory } from '../s3Storage'
 
 /**
  * The stand's MinIO, with the same defaults the runner probes before it starts
@@ -66,7 +66,10 @@ export const readRange = async (url: string, first: number, last: number): Promi
 
 const answerOf = (raw: Buffer): Answer => {
   const split = raw.indexOf('\r\n\r\n')
-  const head = raw.subarray(0, split < 0 ? raw.length : split).toString('latin1').split('\r\n')
+  const head = raw
+    .subarray(0, split < 0 ? raw.length : split)
+    .toString('latin1')
+    .split('\r\n')
   const status = Number(head[0]?.split(' ')[1] ?? 0)
 
   const headers = Object.fromEntries(
@@ -80,20 +83,23 @@ const answerOf = (raw: Buffer): Answer => {
 }
 
 /**
- * Sends a request whose declared `Content-Length` and actual body disagree.
+ * Writes bytes over a socket, declaring by default the length actually sent.
  *
- * Spoken over a socket because neither `fetch` nor `node:http` will carry the
- * lie: both derive the header from the body they are given, and the question
- * being asked is what storage does when a client does not.
+ * Spoken over a socket rather than through `fetch`, which refuses to send a
+ * body whose length disagrees with the header. The default is what a browser
+ * does — `Content-Length` is derived from the body, and a body of the wrong
+ * size therefore arrives under a header the signature does not cover. Passing
+ * `Content-Length` in `override` sends the other half of the question: a client
+ * that claims one length and sends another.
  */
-export const writeLyingAboutLength = async (
+export const writeRawByGrant = async (
   grant: UploadGrant,
-  declaredLength: number,
   body: Buffer,
+  override: Record<string, string> = {},
 ): Promise<Answer> =>
   new Promise<Answer>((resolve, reject) => {
     const url = new URL(grant.url)
-    const headers = { ...grant.headers, 'Content-Length': String(declaredLength) }
+    const headers = { ...grant.headers, 'Content-Length': String(body.length), ...override }
     const lines = Object.entries(headers).map(([name, value]) => `${name}: ${value}`)
 
     const socket = connect({ host: url.hostname, port: Number(url.port || 80) }, () => {
@@ -107,11 +113,12 @@ export const writeLyingAboutLength = async (
 
     const chunks: Buffer[] = []
 
-    socket.setTimeout(10_000, () => {
+    socket.setTimeout(15_000, () => {
       socket.destroy()
-      // A body shorter than the declaration leaves storage waiting for the rest
-      // rather than answering, and an answer that never comes is the finding.
-      reject(new Error('storage never answered a request that lied about its length'))
+      // A body shorter than a declared length leaves storage waiting for the
+      // rest rather than answering, and the silence is an answer a caller has
+      // to be able to assert on.
+      reject(new Error('storage never answered the request'))
     })
 
     socket.on('data', (chunk: Buffer) => {
@@ -125,10 +132,7 @@ export const writeLyingAboutLength = async (
     socket.on('error', reject)
   })
 
-export const removeAllUnder = async (
-  storage: MediaStoragePort,
-  prefix: string,
-): Promise<void> => {
+export const removeAllUnder = async (storage: MediaStoragePort, prefix: string): Promise<void> => {
   for await (const found of storage.listPrefix(prefix)) await storage.remove(found.key)
   for await (const session of storage.listUnfinished(prefix)) {
     await storage.abortUnfinished(session.key, session.uploadId)
