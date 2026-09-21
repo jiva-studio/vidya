@@ -112,7 +112,6 @@ jobs:
           flavor: |
             latest=auto
           tags: |
-            type=edge,branch=main
             type=ref,event=branch
             type=ref,event=pr,prefix=pr-
             type=sha,format=short,prefix=sha-
