@@ -52,6 +52,7 @@ export const aSchool = (overrides: Partial<LocalSchool> = {}): LocalSchool => ({
   name: 'School of Devotion',
   logoUrl: 'https://cdn.example.org/logos/devotion.png',
   description: 'Scripture, kirtan and practice.',
+  code: 'AB3K7Q',
   ...overrides,
 })
 

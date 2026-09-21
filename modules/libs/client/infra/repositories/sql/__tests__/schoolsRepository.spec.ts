@@ -16,6 +16,7 @@ const school = (id: SchoolId, name: string, extra: SyncPayload = {}): SyncPayloa
   name,
   logoUrl: null,
   description: null,
+  code: null,
   ...extra,
 })
 
@@ -67,6 +68,7 @@ describe('schools on the device', () => {
       name: 'School of Devotion',
       logoUrl: 'https://cdn.example.org/logos/devotion.png',
       description: 'Scripture, kirtan and practice.',
+      code: null,
     })
   })
 
@@ -78,7 +80,27 @@ describe('schools on the device', () => {
       name: 'Bhakti School',
       logoUrl: null,
       description: null,
+      code: null,
     })
+  })
+
+  it('finds a school by the code its link carries', async () => {
+    await arrive(school(DEVOTION, 'School of Devotion', { code: 'AB3K7Q' }))
+
+    expect((await schools.getByCode('AB3K7Q'))?.id).toEqual(DEVOTION)
+  })
+
+  it('answers with nothing for a code no school on this device holds', async () => {
+    await arrive(school(DEVOTION, 'School of Devotion', { code: 'AB3K7Q' }))
+
+    expect(await schools.getByCode('ZZ9ZZ9')).toBeNull()
+  })
+
+  it('keeps one identity’s code out of another’s reach', async () => {
+    await arrive(school(DEVOTION, 'School of Devotion', { code: 'AB3K7Q' }))
+    const other = createSqlSchoolRepository({ db, ownerId: () => 'owner-2' })
+
+    expect(await other.getByCode('AB3K7Q')).toBeNull()
   })
 
   it('lists every school this identity holds', async () => {

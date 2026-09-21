@@ -73,6 +73,7 @@ const schools: CollectionProjection<School> = {
     name: school.name,
     logoUrl: school.logoUrl ?? null,
     description: school.description ?? null,
+    code: school.code ?? null,
   }),
 }
 

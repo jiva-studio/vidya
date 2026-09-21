@@ -48,14 +48,17 @@ import type {
 /*                                  Entities                                  */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * `logoUrl` is an external link — the bytes are never stored, so offline a card
+ * shows the initial. `code` is the public code a link carries, and is null for
+ * a school that has never asked for one.
+ */
 export interface LocalSchool {
   readonly id: SchoolId
   readonly name: string
-
-  /** External link; the bytes are never stored, so offline a card shows the initial. */
   readonly logoUrl: string | null
-
   readonly description: string | null
+  readonly code: string | null
 }
 
 /** `status` decides whether a catalogue draws the course; drafts arrive too. */
@@ -189,6 +192,9 @@ export interface BlockStateKey {
 export interface ISchoolRepository {
   list(): Promise<readonly LocalSchool[]>
   getById(id: SchoolId): Promise<LocalSchool | null>
+
+  /** The school a link names, or null when no school on this device holds the code. */
+  getByCode(code: string): Promise<LocalSchool | null>
 }
 
 export interface ICourseRepository {

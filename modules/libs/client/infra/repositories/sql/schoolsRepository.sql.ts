@@ -30,6 +30,11 @@ export function createSqlSchoolRepository(deps: SqlSchoolRepositoryDeps): ISchoo
       const row = await readSyncRow(db, { owner: ownerId(), collection: 'schools', docId: id })
       return row === null ? null : toSchool(rowToPayload('schools', row))
     },
+
+    async getByCode(code: string): Promise<LocalSchool | null> {
+      const payloads = await readSyncRows(db, ownerId(), 'schools', 'code = ?', [code], 'name ASC')
+      return payloads.length === 0 ? null : toSchool(payloads[0])
+    },
   }
 }
 
@@ -39,5 +44,6 @@ function toSchool(payload: SyncPayload): LocalSchool {
     name: (payload.name as string) ?? '',
     logoUrl: (payload.logoUrl as string | null) ?? null,
     description: (payload.description as string | null) ?? null,
+    code: (payload.code as string | null) ?? null,
   }
 }

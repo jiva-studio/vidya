@@ -29,7 +29,7 @@ import type { SchoolDetails } from './schools'
 export const SYNC_WIRE_FIELDS: Readonly<Record<domain.SyncCollection, readonly string[]>> =
   Object.freeze({
     // The row is its own school, so the envelope's `schoolId` restates `id`.
-    schools: ['id', 'name', 'logoUrl', 'description'] satisfies readonly (keyof SchoolDetails)[],
+    schools: ['id', 'name', 'logoUrl', 'description', 'code'] satisfies readonly (keyof SchoolDetails)[],
 
     courses: [
       'id',
