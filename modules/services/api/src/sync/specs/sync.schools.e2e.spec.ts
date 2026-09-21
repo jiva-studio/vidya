@@ -246,7 +246,7 @@ describe('the school scope', () => {
   /* ------------------------------- ------------------------------- */
 
   describe('the school itself on the wire', () => {
-    it('travels as a row of its own scope, carrying its name, logo and description', async () => {
+    it('travels as a row of its own scope, carrying its name, logo, description and joining code', async () => {
       await grantRole(member.id, ctx.schoolId)
 
       const schools = ds.getRepository(School)
@@ -266,6 +266,7 @@ describe('the school scope', () => {
         name: school.name,
         logoUrl: LOGO_URL,
         description: SCHOOL_DESCRIPTION,
+        code: null,
       })
     })
   })
