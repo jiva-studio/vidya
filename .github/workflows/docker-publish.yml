@@ -109,13 +109,16 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.name }}
+          flavor: |
+            latest=auto
           tags: |
+            type=edge,branch=main
             type=ref,event=branch
             type=ref,event=pr,prefix=pr-
+            type=sha,format=short,prefix=sha-
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=sha,format=short,prefix=sha-
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=semver,pattern={{major}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
