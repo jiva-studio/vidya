@@ -3,6 +3,7 @@ import { openTestDatabase } from '@vidya/client/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useConnection } from '@/shared/connection'
+import { useBlockStateWriter } from '@/shared/data'
 import type { INetworkStatus } from '@/shared/platform'
 import { useSiteStatus } from '@/shared/status'
 import { useSyncRuns } from '@/shared/sync'
@@ -153,6 +154,29 @@ describe('the engine of the writing tab', () => {
     expect(useSyncRuns().requestRun()).toBe(true)
 
     await vi.waitFor(() => expect(http.calls.length).toBeGreaterThan(before))
+  })
+
+  it('hands the screens the journaled way of recording what a student does', async () => {
+    const http = fakeHttpClient()
+
+    stop = syncWithConnection({ db, http: http.client, network: network() })
+    signIn()
+    await vi.waitFor(() => expect(http.calls).toContain(PULL))
+
+    expect(useBlockStateWriter().writable.value).toBe(true)
+  })
+
+  it('takes the writer back when the engine stops, so nothing is recorded unjournaled', async () => {
+    const http = fakeHttpClient()
+
+    stop = syncWithConnection({ db, http: http.client, network: network() })
+    signIn()
+    await vi.waitFor(() => expect(http.calls).toContain(PULL))
+
+    useConnection().signOut()
+    await settle()
+
+    expect(useBlockStateWriter().writable.value).toBe(false)
   })
 
   it('takes the run back when the engine stops, rather than leaving a dead one', async () => {
