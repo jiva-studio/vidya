@@ -10,8 +10,8 @@ export type SchoolDetails = {
   id: domain.SchoolId
   name: string
 
-  /** Null until the school asks for a link; see {@link SchoolJoinCode}. */
-  code: string | null
+  /** Absent until the school asks for a link, and never sent by a caller. */
+  code?: string | null
 
   /** External link; the bytes are never stored, so offline a device shows the initial. */
   logoUrl: string | null

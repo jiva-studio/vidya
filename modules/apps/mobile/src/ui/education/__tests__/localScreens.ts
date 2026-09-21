@@ -286,6 +286,7 @@ function buildRepositories(): LocalRepositories {
       // would let a row pushed later appear inside an answer already given.
       list: async () => seed.schools.slice(),
       getById: async (id) => seed.schools.find((item) => item.id === id) ?? null,
+      getByCode: async (code) => seed.schools.find((item) => item.code === code) ?? null,
     },
 
     courses: {
