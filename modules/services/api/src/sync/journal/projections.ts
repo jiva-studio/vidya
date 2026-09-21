@@ -220,6 +220,7 @@ const homework: CollectionProjection<Homework> = {
     status: item.status,
     text: item.text,
     grade: item.grade ?? null,
+    comment: item.comment ?? null,
     reviewedById: item.reviewedById ?? null,
     answeredSupersededVersion: item.answeredSupersededVersion,
     submittedAt: item.submittedAt ?? null,
@@ -239,6 +240,7 @@ const blockStates: CollectionProjection<BlockState> = {
     blockId: state.blockId,
     schoolId: state.schoolId,
     state: state.state,
+    verdict: state.verdict ?? null,
     updatedAt: state.updatedAt ?? null,
   }),
 }

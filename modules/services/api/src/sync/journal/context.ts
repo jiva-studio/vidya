@@ -30,5 +30,17 @@ const storage = new AsyncLocalStorage<SyncWriteContext>()
 export const withSyncWriteContext = <T>(context: SyncWriteContext, work: () => T): T =>
   storage.run(context, work)
 
+/**
+ * Runs `work` as a server write, even while a push is being applied.
+ *
+ * A pull hands a device every row but its own: a row journalled under the
+ * pushing device is that device's echo and is filtered out. What the server
+ * decides about a push — the verdict on an answer, the work a section marked
+ * itself — is owed to the device that asked for it above all others, so it is
+ * written without the push's identity and stamped by the server like any REST
+ * write.
+ */
+export const withoutSyncWriteContext = <T>(work: () => T): T => storage.exit(work)
+
 /** The push's identity, or `undefined` when the write came in over REST. */
 export const currentSyncWriteContext = (): SyncWriteContext | undefined => storage.getStore()
