@@ -12,9 +12,11 @@ set -euo pipefail
 #                    run, not in the gate.
 #
 # Both modes read the package's stryker.config.json and both run incrementally:
-# results carry over in .stryker/incremental/, which is committed, so a branch
-# is scored against the baseline main produced rather than starting from zero.
-# A file whose mutants are all restored from the baseline is not re-run.
+# results carry over in .stryker/incremental/, which is local and untracked, so
+# a second run on the same checkout re-measures only what changed since the
+# first. A file whose mutants are all restored is not re-run — which is what
+# makes `full` bearable and does nothing for `diff`, whose whole input is the
+# files the branch changed.
 #
 # Coverage tells you a line executed. This tells you the suite would have
 # complained if the line were wrong, which is the thing coverage never proves.
