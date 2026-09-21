@@ -3,8 +3,8 @@ import { ConfigModule, ConfigType } from '@nestjs/config'
 
 import SentryConfig from '../../configs/sentry.config'
 import { LoggingModule } from '../logging/logging.module'
-import { SentryExceptionFilter } from './sentry-exception.filter'
 import { SentryService } from './sentry.service'
+import { SentryExceptionFilter } from './sentry-exception.filter'
 
 @Global()
 @Module({

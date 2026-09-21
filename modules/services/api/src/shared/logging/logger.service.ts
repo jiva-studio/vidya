@@ -15,6 +15,112 @@ export interface LoggerOptions {
   format?: LogFormat
 }
 
+const safeStringify = (obj: unknown): string => {
+  const seen = new WeakSet()
+  try {
+    return JSON.stringify(obj, (_key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          return '[Circular]'
+        }
+        seen.add(value)
+      }
+      return value
+    })
+  } catch {
+    return String(obj)
+  }
+}
+
+interface ParsedLogParams {
+  level: LogLevel
+  message: string
+  context?: string
+  stack?: string
+  extra: Record<string, unknown>
+}
+
+const parseSingleParam = (
+  param: unknown,
+  state: { context?: string; stack?: string; extra: Record<string, unknown> },
+) => {
+  if (typeof param === 'string') {
+    if (!state.stack && (param.includes('\n') || param.includes('Error:'))) {
+      state.stack = param
+    } else {
+      state.context = param
+    }
+  } else if (param instanceof Error) {
+    state.stack = param.stack
+  } else if (typeof param === 'object' && param !== null) {
+    state.extra = { ...state.extra, ...(param as Record<string, unknown>) }
+  }
+}
+
+const parseParams = (
+  level: LogLevel,
+  rawMessage: unknown,
+  optionalParams: unknown[],
+  defaultContext?: string,
+): ParsedLogParams => {
+  let message = typeof rawMessage === 'string' ? rawMessage : safeStringify(rawMessage)
+  let stack: string | undefined
+
+  if (rawMessage instanceof Error) {
+    message = rawMessage.message
+    stack = rawMessage.stack
+  }
+
+  const state = { context: defaultContext, stack, extra: {} }
+  for (const param of optionalParams) {
+    parseSingleParam(param, state)
+  }
+
+  return {
+    level,
+    message,
+    context: state.context,
+    stack: state.stack,
+    extra: state.extra,
+  }
+}
+
+const formatJsonLine = (params: ParsedLogParams, defaultContext?: string): string => {
+  const activeSpan = Sentry.getActiveSpan?.()
+  const spanContext = activeSpan?.spanContext?.()
+  const traceId = spanContext?.traceId
+  const spanId = spanContext?.spanId
+
+  const payload: Record<string, unknown> = {
+    timestamp: new Date().toISOString(),
+    level: params.level,
+    context: params.context || defaultContext || 'Application',
+    message: params.message,
+    ...(traceId ? { trace_id: traceId, span_id: spanId } : {}),
+    ...(params.stack ? { stack: params.stack } : {}),
+    ...params.extra,
+  }
+  return safeStringify(payload) + '\n'
+}
+
+const formatPrettyLine = (params: ParsedLogParams, defaultContext?: string): string => {
+  const timestamp = new Date().toISOString()
+  const ctx = params.context || defaultContext
+  const ctxStr = ctx ? `[${ctx}] ` : ''
+  const stackStr = params.stack ? `\n${params.stack}` : ''
+  const extraKeys = Object.keys(params.extra)
+  const extraStr = extraKeys.length > 0 ? ` ${JSON.stringify(params.extra)}` : ''
+  return `[${timestamp}] [${params.level.toUpperCase()}] ${ctxStr}${params.message}${extraStr}${stackStr}\n`
+}
+
+const emitLog = (level: LogLevel, line: string): void => {
+  if (level === 'error') {
+    process.stderr.write(line)
+  } else {
+    process.stdout.write(line)
+  }
+}
+
 @Injectable({ scope: Scope.TRANSIENT })
 export class LoggerService implements NestLoggerService {
   private context?: string
@@ -56,84 +162,12 @@ export class LoggerService implements NestLoggerService {
       return
     }
 
-    const { message, context, stack, extra } = this.parseParams(rawMessage, optionalParams)
-    const timestamp = new Date().toISOString()
-    const activeSpan = Sentry.getActiveSpan?.()
-    const spanContext = activeSpan?.spanContext?.()
-    const traceId = spanContext?.traceId
-    const spanId = spanContext?.spanId
+    const params = parseParams(level, rawMessage, optionalParams, this.context)
+    const line =
+      this.format === 'json'
+        ? formatJsonLine(params, this.context)
+        : formatPrettyLine(params, this.context)
 
-    if (this.format === 'json') {
-      const payload: Record<string, unknown> = {
-        timestamp,
-        level,
-        context: context || this.context || 'Application',
-        message,
-        ...(traceId ? { trace_id: traceId, span_id: spanId } : {}),
-        ...(stack ? { stack } : {}),
-        ...extra,
-      }
-      const line = this.safeStringify(payload) + '\n'
-      if (level === 'error') {
-        process.stderr.write(line)
-      } else {
-        process.stdout.write(line)
-      }
-    } else {
-      const ctxStr = context || this.context ? `[${context || this.context}] ` : ''
-      const stackStr = stack ? `\n${stack}` : ''
-      const extraStr = Object.keys(extra).length > 0 ? ` ${JSON.stringify(extra)}` : ''
-      const line = `[${timestamp}] [${level.toUpperCase()}] ${ctxStr}${message}${extraStr}${stackStr}\n`
-      if (level === 'error') {
-        process.stderr.write(line)
-      } else {
-        process.stdout.write(line)
-      }
-    }
-  }
-
-  private parseParams(rawMessage: unknown, optionalParams: unknown[]) {
-    let message = typeof rawMessage === 'string' ? rawMessage : this.safeStringify(rawMessage)
-    let context = this.context
-    let stack: string | undefined
-    let extra: Record<string, unknown> = {}
-
-    if (rawMessage instanceof Error) {
-      message = rawMessage.message
-      stack = rawMessage.stack
-    }
-
-    for (const param of optionalParams) {
-      if (typeof param === 'string') {
-        if (!stack && (param.includes('\n') || param.includes('Error:'))) {
-          stack = param
-        } else {
-          context = param
-        }
-      } else if (param instanceof Error) {
-        stack = param.stack
-      } else if (typeof param === 'object' && param !== null) {
-        extra = { ...extra, ...(param as Record<string, unknown>) }
-      }
-    }
-
-    return { message, context, stack, extra }
-  }
-
-  private safeStringify(obj: unknown): string {
-    const seen = new WeakSet()
-    try {
-      return JSON.stringify(obj, (_key, value) => {
-        if (typeof value === 'object' && value !== null) {
-          if (seen.has(value)) {
-            return '[Circular]'
-          }
-          seen.add(value)
-        }
-        return value
-      })
-    } catch {
-      return String(obj)
-    }
+    emitLog(level, line)
   }
 }

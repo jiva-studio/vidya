@@ -36,54 +36,58 @@ export class SentryExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>()
     const request = ctx.getRequest<RequestWithUser>()
 
-    const isHttpException = exception instanceof HttpException
-    const status = isHttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR
+    const isHttp = exception instanceof HttpException
+    const status = isHttp ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR
 
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      this.handleServerError(exception, request, response, status)
+      return
+    }
+
+    this.handleClientError(exception, isHttp, status, response)
+  }
+
+  private handleServerError(
+    exception: unknown,
+    request: RequestWithUser,
+    response: Response,
+    status: number,
+  ): void {
     const method = request.method || 'UNKNOWN'
     const url = request.url || '/'
     const requestId = request.id
 
-    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
-      // Capture 5xx in Sentry
-      this.sentryService.captureException(exception, {
-        tags: {
-          method,
-          route: url,
-          statusCode: String(status),
-        },
-        extra: {
-          requestId,
-          ip: request.ip,
-          userAgent: request.headers?.['user-agent'],
-        },
-        user: request.user
-          ? {
-              id: request.user.id,
-              email: request.user.email,
-              schoolId: request.user.schoolId,
-            }
-          : undefined,
-      })
+    this.sentryService.captureException(exception, {
+      tags: { method, route: url, statusCode: String(status) },
+      extra: { requestId, ip: request.ip, userAgent: request.headers?.['user-agent'] },
+      user: request.user
+        ? { id: request.user.id, email: request.user.email, schoolId: request.user.schoolId }
+        : undefined,
+    })
 
-      const message = exception instanceof Error ? exception.message : 'Unknown internal error'
-      const stack = exception instanceof Error ? exception.stack : undefined
+    const message = exception instanceof Error ? exception.message : 'Unknown internal error'
+    const stack = exception instanceof Error ? exception.stack : undefined
 
-      this.logger.error(`Unhandled error [${method} ${url}]: ${message}`, stack, 'Exceptions', {
-        requestId,
-        status,
-      })
+    this.logger.error(`Unhandled error [${method} ${url}]: ${message}`, stack, 'Exceptions', {
+      requestId,
+      status,
+    })
 
-      response.status(status).json({
-        statusCode: 500,
-        message: 'Internal server error',
-        error: 'Internal Server Error',
-      })
-      return
-    }
+    response.status(status).json({
+      statusCode: 500,
+      message: 'Internal server error',
+      error: 'Internal Server Error',
+    })
+  }
 
-    // Client errors (4xx)
-    const errorResponse = isHttpException
-      ? exception.getResponse()
+  private handleClientError(
+    exception: unknown,
+    isHttp: boolean,
+    status: number,
+    response: Response,
+  ): void {
+    const errorResponse = isHttp
+      ? (exception as HttpException).getResponse()
       : { statusCode: status, message: 'Request failed' }
 
     if (typeof errorResponse === 'object' && errorResponse !== null) {

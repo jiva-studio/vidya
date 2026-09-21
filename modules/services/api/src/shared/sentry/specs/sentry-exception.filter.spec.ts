@@ -2,8 +2,8 @@ import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common'
 import type { Request, Response } from 'express'
 
 import { LoggerService } from '../../logging/logger.service'
-import { SentryExceptionFilter } from '../sentry-exception.filter'
 import { SentryService } from '../sentry.service'
+import { SentryExceptionFilter } from '../sentry-exception.filter'
 
 describe('SentryExceptionFilter', () => {
   let filter: SentryExceptionFilter

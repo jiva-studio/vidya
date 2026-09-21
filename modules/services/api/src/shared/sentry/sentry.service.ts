@@ -15,23 +15,34 @@ export interface SentryCaptureContext {
   user?: Sentry.User
 }
 
+const getTracesSampleRate = (): number => {
+  if (process.env.VIDYA_SENTRY_TRACES_SAMPLE_RATE) {
+    return Number.parseFloat(process.env.VIDYA_SENTRY_TRACES_SAMPLE_RATE)
+  }
+  return process.env.NODE_ENV === 'production' ? 0.1 : 1.0
+}
+
+const getDefaultSentryOptions = (): SentryOptions => {
+  const dsn = process.env.VIDYA_SENTRY_DSN || process.env.SENTRY_DSN
+  const environment = process.env.VIDYA_SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development'
+  const release = process.env.VIDYA_SENTRY_RELEASE || process.env.npm_package_version || '0.0.1'
+
+  return {
+    dsn,
+    environment,
+    release,
+    tracesSampleRate: getTracesSampleRate(),
+    enabled: Boolean(dsn),
+  }
+}
+
 @Injectable()
 export class SentryService implements OnModuleInit {
   private readonly enabled: boolean
   private readonly options: SentryOptions
 
   constructor(@Optional() options?: SentryOptions) {
-    this.options = options ?? {
-      dsn: process.env.VIDYA_SENTRY_DSN || process.env.SENTRY_DSN,
-      environment: process.env.VIDYA_SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development',
-      release: process.env.VIDYA_SENTRY_RELEASE || process.env.npm_package_version || '0.0.1',
-      tracesSampleRate: process.env.VIDYA_SENTRY_TRACES_SAMPLE_RATE
-        ? parseFloat(process.env.VIDYA_SENTRY_TRACES_SAMPLE_RATE)
-        : process.env.NODE_ENV === 'production'
-          ? 0.1
-          : 1.0,
-      enabled: Boolean(process.env.VIDYA_SENTRY_DSN || process.env.SENTRY_DSN),
-    }
+    this.options = options ?? getDefaultSentryOptions()
     this.enabled = Boolean(this.options.dsn && this.options.enabled !== false)
   }
 

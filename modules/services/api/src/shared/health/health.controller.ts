@@ -13,10 +13,26 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs = 3000): Promise<T>
     timer = setTimeout(() => reject(new Error('Healthcheck operation timed out')), timeoutMs)
     timer.unref?.()
   })
+  const cleanup = () => clearTimeout(timer)
+  return Promise.race([promise, timeoutPromise]).finally(cleanup)
+}
+
+const checkDatabase = async (dataSource: DataSource): Promise<'up' | 'down'> => {
   try {
-    return await Promise.race([promise, timeoutPromise])
-  } finally {
-    if (timer) clearTimeout(timer)
+    await withTimeout(dataSource.query('SELECT 1'))
+    return 'up'
+  } catch {
+    return 'down'
+  }
+}
+
+const checkRedis = async (redisService?: RedisService): Promise<'up' | 'down'> => {
+  if (!redisService) return 'up'
+  try {
+    await withTimeout(redisService.ping())
+    return 'up'
+  } catch {
+    return 'down'
   }
 }
 
@@ -44,41 +60,15 @@ export class HealthController {
   @Get('ready')
   @ApiOperation({ summary: 'Readiness probe' })
   async getReadiness(@Res() res: Response): Promise<void> {
-    const checks: Record<string, 'up' | 'down'> = {
-      database: 'down',
-      redis: 'down',
-    }
+    const database = await checkDatabase(this.dataSource)
+    const redis = await checkRedis(this.redisService)
 
-    let isDbHealthy = false
-    let isRedisHealthy = false
-
-    try {
-      await withTimeout(this.dataSource.query('SELECT 1'))
-      checks.database = 'up'
-      isDbHealthy = true
-    } catch {
-      checks.database = 'down'
-    }
-
-    if (this.redisService) {
-      try {
-        await withTimeout(this.redisService.ping())
-        checks.redis = 'up'
-        isRedisHealthy = true
-      } catch {
-        checks.redis = 'down'
-      }
-    } else {
-      checks.redis = 'up'
-      isRedisHealthy = true
-    }
-
-    const allHealthy = isDbHealthy && isRedisHealthy
+    const allHealthy = database === 'up' && redis === 'up'
     const statusCode = allHealthy ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE
 
     res.status(statusCode).json({
       status: allHealthy ? 'ok' : 'down',
-      checks,
+      checks: { database, redis },
       timestamp: new Date().toISOString(),
     })
   }

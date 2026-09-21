@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express'
+import type { Response } from 'express'
 
 import { LoggerService } from '../logger.service'
 import { RequestLoggingMiddleware, RequestWithId } from '../request-logging.middleware'
