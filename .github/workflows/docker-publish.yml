@@ -70,7 +70,7 @@ jobs:
           fi
 
           if [ "$FORCE_ALL" = "true" ] || [ "${{ steps.filter.outputs.gateway }}" = "true" ]; then
-            SERVICES=$(echo "$SERVICES" | jq -c '. + [{"name": "vidya-gateway", "file": "modules/services/gateway/Dockerfile", "context": "modules/services/gateway"}]')
+            SERVICES=$(echo "$SERVICES" | jq -c '. + [{"name": "vidya-gateway", "file": "modules/services/gateway/Dockerfile", "context": "."}]')
           fi
 
           COUNT=$(echo "$SERVICES" | jq 'length')
