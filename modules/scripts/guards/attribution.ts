@@ -86,7 +86,32 @@ const checkMessages = (base: string): string[] =>
     .split('\n--\n')
     .flatMap((message) => signsIn(message, `commit ${message.trim().slice(0, 12)}`))
 
+/**
+ * The commit this branch grew from, or nothing when it cannot be named.
+ *
+ * CI clones shallowly and without local branches, so `main` is often not a ref
+ * there at all. The commits and the diff are then out of reach, and the check
+ * reads the working tree alone rather than failing the build over a ref.
+ */
+const branchPoint = (): string | null => {
+  for (const ref of ['main', 'origin/main']) {
+    try {
+      return execFileSync('git', ['merge-base', ref, 'HEAD'], {
+        cwd: ROOT,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim()
+    } catch {
+      continue
+    }
+  }
+
+  return null
+}
+
 export const checkAttribution = (): string[] => {
-  const base = git(['merge-base', 'main', 'HEAD']).trim()
+  const base = branchPoint()
+  if (base === null) return checkWorkingTree()
+
   return [...checkWorkingTree(), ...checkDiff(base), ...checkMessages(base)]
 }
