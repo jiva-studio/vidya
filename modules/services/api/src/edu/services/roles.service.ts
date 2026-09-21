@@ -2,11 +2,12 @@ import { ForbiddenException, Inject, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { AuthenticatedUserPermissions } from '@vidya/api/auth/utils'
 import { PERMISSIONS_CACHE_EVICTION, PermissionsCacheEviction } from '@vidya/api/edu/ports'
-import { assertPermissionsGrantable } from '@vidya/api/edu/validations'
 import { AuditLogService } from '@vidya/api/shared/services'
 import * as domain from '@vidya/domain'
 import { Role, UserRole } from '@vidya/entities'
 import { DeepPartial, EntityManager, FindOptionsWhere, In, Repository } from 'typeorm'
+
+import { assertPermissionsGrantable } from '../validations/permission-grant.validation'
 
 import { EnrollmentsService } from './enrollments.service'
 import { Scope, ScopedEntitiesService } from './entities.service'
