@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { renderInlineMarkdown, renderMarkdown } from '..'
+import { renderInlineMarkdown, renderMarkdown } from './markdown'
 
 const parse = (html: string): HTMLElement => {
   const host = document.createElement('div')
@@ -14,6 +14,10 @@ describe('rendering lesson text', () => {
 
     expect(parse(html).querySelector('h1')?.textContent).toBe('Title')
     expect(parse(html).querySelector('strong')?.textContent).toBe('bold')
+  })
+
+  it('breaks a line where the author pressed return, not where prose typesetting would', () => {
+    expect(parse(renderMarkdown('one\ntwo')).querySelectorAll('br')).toHaveLength(1)
   })
 
   it('lets no script written into a lesson survive into the page', () => {

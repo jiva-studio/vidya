@@ -16,9 +16,12 @@
     "typecheck": "vue-tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@ts-stack/markdown": "^1.5.0",
+    "@vidya/domain": "^0.0.0",
     "@vueuse/core": "^10.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dompurify": "^3.4.15",
     "lucide-vue-next": "^0.469.0",
     "reka-ui": "^2.5.0",
     "tailwind-merge": "^2.6.0",

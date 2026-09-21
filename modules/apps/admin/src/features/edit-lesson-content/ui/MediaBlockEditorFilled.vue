@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { Button, FormField, Input } from '@vidya/ui'
+import { Button, embedSrc, FormField, Input } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
 
-import { embedSrc } from '../model/urls'
 import {
   mediaFrameClasses,
   mediaMutedClasses,

@@ -2,11 +2,10 @@
 import type { AudioBlock, QuizBlock, TextBlock, VideoBlock } from '@vidya/domain'
 import { computed } from 'vue'
 
-import { MarkdownText } from '@/features/edit-lesson-content'
-
-import MediaPreview from './MediaPreview.vue'
-import QuizPreview from './QuizPreview.vue'
-import { mutedClasses, previewBlockClasses } from './styles'
+import MarkdownText from '../MarkdownText'
+import MediaPreview from '../MediaPreview'
+import QuizPreview from '../QuizPreview'
+import { previewBlockClasses, unknownClasses } from './styles'
 import type { BlockPreviewProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -23,15 +22,16 @@ const media = computed(() =>
 )
 const quiz = computed(() => (props.block.type === 'quiz' ? (props.block as QuizBlock) : undefined))
 const unknown = computed(() => !text.value && !media.value && !quiz.value)
+const unknownLabel = computed(() => props.labels.describeUnknownBlock(props.block.type))
 </script>
 
 <template>
   <div :class="previewBlockClasses">
     <MarkdownText v-if="text" :markdown="text.content" />
-    <MediaPreview v-else-if="media" :block="media" />
-    <QuizPreview v-else-if="quiz" :block="quiz" />
-    <p v-if="unknown" :class="mutedClasses">
-      {{ $t('editor-preview-unknown', { type: props.block.type }) }}
+    <MediaPreview v-else-if="media" :block="media" :labels="props.labels" />
+    <QuizPreview v-else-if="quiz" :block="quiz" :labels="props.labels" />
+    <p v-if="unknown" :class="unknownClasses">
+      {{ unknownLabel }}
     </p>
   </div>
 </template>

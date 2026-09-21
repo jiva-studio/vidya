@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { MarkdownText } from '@vidya/ui'
 import { computed, ref } from 'vue'
 
 import { stepToNeighbourField } from '../lib'
 import type { MoveDirection } from '../types'
-import MarkdownText from './MarkdownText.vue'
 import { placeholderClasses, sourceClasses, textStackClasses } from './styles'
 import type { TextBlockEditorEmits, TextBlockEditorProps } from './types'
 import { useMarkdownEditor } from './useMarkdownEditor'

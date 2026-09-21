@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkBlockUrl, embedSrc, isEmbedSource, mediaSrc } from '../model'
+import { checkBlockUrl, embedSrc, isEmbedSource, mediaSrc } from './blockUrls'
 
 describe('checkBlockUrl', () => {
   it('accepts http and https', () => {

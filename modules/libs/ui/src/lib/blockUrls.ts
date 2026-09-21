@@ -1,11 +1,12 @@
 import type { BlockSource } from '@vidya/domain'
 
-import type { UrlProblem } from '../types'
+/** Why a media link may not be stored, as a message key rather than a sentence. */
+export type UrlProblem = 'url-required' | 'url-malformed' | 'url-scheme' | 'url-host'
 
 /**
  * Hosts an embed may come from.
  *
- * An embed runs in a frame on the operator's own origin's neighbourhood, so the
+ * An embed runs in a frame on the reader's own origin's neighbourhood, so the
  * host is part of the contract rather than a detail of the link: anything else
  * is either a mistake or someone using a lesson to frame a page of their own.
  */
@@ -50,8 +51,8 @@ const isSameOriginPath = (url: string): boolean => {
  * Whether a media link may be stored, and why not when it may not.
  *
  * `javascript:` and `data:` parse as perfectly good URLs, which is exactly why
- * the scheme is checked rather than assumed: they are refused here, in the
- * model, so no screen can be the one that forgot.
+ * the scheme is checked rather than assumed: they are refused here, in one
+ * place, so no screen can be the one that forgot.
  */
 export const checkBlockUrl = (source: BlockSource, url: string): UrlProblem | undefined => {
   const trimmed = url.trim()

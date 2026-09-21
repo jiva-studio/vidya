@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { renderInlineMarkdown, renderMarkdown } from '@/shared/lib'
-
+import { renderInlineMarkdown, renderMarkdown } from '../../lib/markdown'
 import { markdownClasses } from './styles'
 import type { MarkdownTextProps } from './types'
 
@@ -12,8 +11,8 @@ const props = withDefaults(defineProps<MarkdownTextProps>(), { inline: false })
 
 /* --------------------------------- State ---------------------------------- */
 
-// The only `v-html` in the admin, and it is fed by the only two functions that
-// sanitise. Keeping them in one file is what makes that claim checkable.
+// The only `v-html` in the library, and it is fed by the only two functions
+// that sanitise. Keeping them in one file is what makes that claim checkable.
 const html = computed(() =>
   props.inline ? renderInlineMarkdown(props.markdown) : renderMarkdown(props.markdown),
 )

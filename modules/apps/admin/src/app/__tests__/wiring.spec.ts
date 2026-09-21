@@ -101,12 +101,14 @@ describe('the application as one thing', () => {
     expect(declarations(/export const reasonOf\b/)).toHaveLength(1)
   })
 
-  it('writes raw html in exactly one place, beside the call that sanitises it', () => {
+  // Lesson text is drawn by @vidya/ui, which keeps its own `v-html` beside the
+  // call that sanitises it. Nothing here may open a second door to the same
+  // markup and reach it without that call.
+  it('writes no raw html of its own', () => {
     const withHtml = readAll().filter(
       (file) => file.path.endsWith('.vue') && file.text.includes('v-html'),
     )
 
-    expect(withHtml).toHaveLength(1)
-    expect(withHtml[0].text).toContain('renderMarkdown')
+    expect(withHtml).toEqual([])
   })
 })

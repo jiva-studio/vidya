@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BlockPreview from './BlockPreview.vue'
+import BlockPreview from '../BlockPreview'
 import { previewSectionClasses, previewTitleClasses } from './styles'
 import type { SectionPreviewProps } from './types'
 
@@ -11,8 +11,13 @@ const props = defineProps<SectionPreviewProps>()
 <template>
   <article :class="previewSectionClasses">
     <h3 :class="previewTitleClasses">
-      {{ props.section.title || $t('editor-section-untitled') }}
+      {{ props.section.title || props.labels.untitledSection }}
     </h3>
-    <BlockPreview v-for="block in props.section.blocks" :key="block.id" :block="block" />
+    <BlockPreview
+      v-for="block in props.section.blocks"
+      :key="block.id"
+      :block="block"
+      :labels="props.labels"
+    />
   </article>
 </template>

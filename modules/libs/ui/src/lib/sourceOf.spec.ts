@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkBlockUrl, detectSource } from '../model'
+import { checkBlockUrl, detectSource } from './blockUrls'
 
 describe('working out where a pasted link comes from', () => {
   it('recognises a YouTube watch link', () => {

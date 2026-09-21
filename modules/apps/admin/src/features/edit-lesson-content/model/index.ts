@@ -34,5 +34,4 @@ export {
 } from './quiz'
 export type { BlockFault } from './saving'
 export { findBlockFaults, findInvalidBlocks, pruneForSave } from './saving'
-export { checkBlockUrl, detectSource, EmbedHosts, embedSrc, isEmbedSource, mediaSrc } from './urls'
 export { useLessonContentEditor } from './useLessonContentEditor'

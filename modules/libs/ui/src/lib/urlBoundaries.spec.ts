@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkBlockUrl, detectSource } from '../model/urls'
+import { checkBlockUrl, detectSource } from './blockUrls'
 
 /** Where a stored relative path would actually point once a browser resolves it. */
 const resolved = (path: string): string => new URL(path, 'https://school.example').origin
