@@ -8,7 +8,9 @@ set -euo pipefail
 #
 # The turn is a `flock` where one is available: the kernel releases it when the
 # holder dies, so a run killed outright — which is how a stuck one ends — leaves
-# nothing to clean up and nobody waiting on a turn that will never end. Systems
+# nothing to clean up and nobody waiting on a turn that will never end. The
+# descriptor is closed for the command itself, or the orphan of a killed script
+# would keep the claim alive. Systems
 # without `flock(1)` fall back to a lock directory whose holder pid is checked
 # for liveness, which reclaims the same case a beat later.
 #
@@ -178,4 +180,7 @@ if [ "${CI:-}" != "true" ]; then
   done
 fi
 
-"$@"
+# The turn is closed in the child: an inherited descriptor keeps the lock held
+# for as long as the command runs, so a script killed outright would leave the
+# machine claimed by its own orphan until that orphan finished.
+"$@" 9>&-
