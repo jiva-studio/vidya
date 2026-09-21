@@ -19,6 +19,7 @@ import {
   toIsoDateTime,
   UploadGrant,
   UploadLimits,
+  windowExpiry,
 } from '@vidya/domain'
 
 import { MediaStorageFactory, StorageCredentials } from './ports'
@@ -93,14 +94,27 @@ class S3Storage implements MediaStoragePort {
     return { method: 'put', url, headers, fields: {}, expiresAt: expiryIn(UPLOAD_WINDOW_SECONDS) }
   }
 
+  /**
+   * Signed from the start of the window rather than from now, so that every
+   * reader inside it is handed the same bytes of address.
+   *
+   * `X-Amz-Date` and `X-Amz-Expires` are both in the query string, so signing
+   * at "now, for an hour" mints a different address every second and a CDN and
+   * a browser hold a separate copy per view. Taking the window's own start as
+   * the signing instant makes the whole address a function of the window, and
+   * the signature still stops working at exactly the boundary it names.
+   */
   async signRead(key: string, kind: MediaKind): Promise<SignedUrl> {
     const seconds = ReadWindowSeconds[kind]
+    const expiresAtMs = windowExpiry(Date.now(), seconds)
     const command = new GetObjectCommand({ Bucket: this.credentials.bucket, Key: key })
 
-    return {
-      url: await getSignedUrl(this.client, command, { expiresIn: seconds }),
-      expiresAt: expiryIn(seconds),
-    }
+    const url = await getSignedUrl(this.client, command, {
+      expiresIn: seconds,
+      signingDate: new Date(expiresAtMs - seconds * 1000),
+    })
+
+    return { url, expiresAt: toIsoDateTime(new Date(expiresAtMs)) }
   }
 
   /**

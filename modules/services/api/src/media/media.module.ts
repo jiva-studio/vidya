@@ -9,6 +9,7 @@ import { Media, Role, School, StorageProfile, User, UserRole } from '@vidya/enti
 import {
   MediaCatalogController,
   MediaUploadsController,
+  MediaUrlsController,
   StorageProfilesController,
 } from './controllers'
 import {
@@ -23,8 +24,10 @@ import {
 } from './infra'
 import {
   EndpointGuardService,
+  MediaAddressesService,
   MediaCatalogService,
   MediaMasterKeyService,
+  MediaReadAccessService,
   MediaRowsService,
   MediaSweepSchedule,
   MediaSweepService,
@@ -80,7 +83,12 @@ const storageProviders: Provider[] = [
  */
 @Module({
   imports: [TypeOrmModule.forFeature([Media, StorageProfile, School, User, Role, UserRole])],
-  controllers: [StorageProfilesController, MediaUploadsController, MediaCatalogController],
+  controllers: [
+    StorageProfilesController,
+    MediaUploadsController,
+    MediaCatalogController,
+    MediaUrlsController,
+  ],
   providers: [
     // What the authentication guard needs to read a token; `AuthModule`
     // exports nothing, so every context that guards a route provides them.
@@ -91,7 +99,9 @@ const storageProviders: Provider[] = [
     ...storageProviders,
 
     EndpointGuardService,
+    MediaAddressesService,
     MediaCatalogService,
+    MediaReadAccessService,
     MediaRowsService,
     MediaSweepSchedule,
     MediaSweepService,

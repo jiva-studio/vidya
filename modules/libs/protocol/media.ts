@@ -128,7 +128,15 @@ export type ResolveMediaRequest = {
 }
 
 export type ResolveMediaResponse = {
-  /** Keyed by media id. An id the caller may not read is absent, not null. */
+  /**
+   * Keyed by media id, holding what this caller may read and nothing else.
+   *
+   * An id they may not read is absent rather than refused: a screen asking for
+   * twelve files must still draw the eleven it is entitled to, and one stale
+   * reference in old content cannot be allowed to blank a lesson. Absence also
+   * says less than a refusal would — it does not disclose whether the file
+   * exists at all, only that this caller gets no address for it.
+   */
   urls: Record<string, domain.SignedUrl>
 }
 

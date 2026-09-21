@@ -2,9 +2,9 @@ import './styles/index.css'
 
 import { createApp } from 'vue'
 
-import { FakeMediaGateway, mediaGatewayKey } from '@/entities/media'
-import { onFailure } from '@/shared/api'
-import { createToasts, systemClock, toastsKey } from '@/shared/lib'
+import { HttpMediaGateway, mediaGatewayKey } from '@/entities/media'
+import { onFailure, useApi } from '@/shared/api'
+import { createToasts, toastsKey } from '@/shared/lib'
 
 import App from './App.vue'
 import { announceFailure } from './failures'
@@ -21,9 +21,9 @@ const start = async () => {
   const router = createAppRouter()
   const app = createApp(App).use(router).use(createI18n())
 
-  // Nothing stores a file yet, so the editor is wired to the fake from here and
-  // from nowhere else: swapping in the real gateway is this one line.
-  app.provide(mediaGatewayKey, new FakeMediaGateway({ clock: systemClock }))
+  // One gateway for the whole application, so the addresses one screen primed
+  // are the ones the next screen draws with.
+  app.provide(mediaGatewayKey, new HttpMediaGateway(useApi()))
 
   // One stack for the whole application, and one route to it: every request
   // that fails is announced here, whichever screen made it.

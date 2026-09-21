@@ -8,6 +8,7 @@ import {
   toIsoDateTime,
   UploadGrant,
   UploadLimits,
+  windowExpiry,
 } from '@vidya/domain'
 
 import { StorageFailedError } from '../storageFailure'
@@ -31,6 +32,17 @@ const addressOf = (credentials: StorageCredentials, key: string): string => {
 }
 
 const expiryIn = (seconds: number) => toIsoDateTime(new Date(Date.now() + seconds * 1000))
+
+/**
+ * A read address, carrying the instant it stops working the way a real one
+ * does.
+ *
+ * The expiry is part of the address rather than only of the answer beside it,
+ * because that is what makes two readers inside one window share a cache entry
+ * — or fail to, if the rounding is ever dropped.
+ */
+const readAddressOf = (credentials: StorageCredentials, key: string, expiresAtMs: number): string =>
+  `${addressOf(credentials, key)}&expires=${Math.floor(expiresAtMs / 1000)}`
 
 /**
  * Storage without a bucket behind it, for the suites that test what the API
@@ -137,19 +149,23 @@ class InMemoryStorageDriver implements MediaStoragePort {
   async signRead(key: string, kind: MediaKind): Promise<SignedUrl> {
     this.store.record('signRead', key, this.credentials.accessKeyId)
 
+    const expiresAtMs = windowExpiry(Date.now(), ReadWindowSeconds[kind])
+
     return {
-      url: addressOf(this.credentials, key),
-      expiresAt: expiryIn(ReadWindowSeconds[kind]),
+      url: readAddressOf(this.credentials, key, expiresAtMs),
+      expiresAt: toIsoDateTime(new Date(expiresAtMs)),
     }
   }
 
-  async signStream(prefix: string, kind: MediaKind): Promise<SignedUrl> {
+  /**
+   * Refused for the same reason the real driver refuses it: this profile signs
+   * one object at a time, and a signature covering the manifest alone fails on
+   * the first segment the player asks for.
+   */
+  async signStream(prefix: string): Promise<SignedUrl> {
     this.store.record('signStream', prefix, this.credentials.accessKeyId)
 
-    return {
-      url: addressOf(this.credentials, prefix),
-      expiresAt: expiryIn(ReadWindowSeconds[kind]),
-    }
+    throw new Error('This storage profile signs files, not prefixes.')
   }
 
   async head(key: string): Promise<StoredObject | undefined> {
