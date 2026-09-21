@@ -59,7 +59,7 @@ describe('my homework, across every school', () => {
     const returned = anAnswer({ status: 'returned', grade: 40, comment: 'Try the second verse.' })
     const { screen } = await render({ ...learning, homework: [returned] })
 
-    expect(textOf(screen)).toContain('Returned to you')
+    expect(textOf(screen)).toContain(translate('answer-returned'))
     expect(textOf(screen)).toContain('40')
     expect(textOf(screen)).toContain('Try the second verse.')
   })
