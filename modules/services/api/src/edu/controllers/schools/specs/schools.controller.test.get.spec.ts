@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common'
 import { SchoolsController } from '@vidya/api/edu/controllers'
+import * as dto from '@vidya/api/edu/dto'
 import { toSchoolDetails } from '@vidya/api/edu/mappers/org.mapper'
 import { createTestingApp } from '@vidya/api/edu/shared'
 
@@ -49,14 +50,23 @@ describe('SchoolsController', () => {
 
   describe('getMany', () => {
     it('returns all schools in permitted roles', async () => {
-      const res = await ctr.getMany(await ctx.authenticate(ctx.one.users.owner))
+      const res = await ctr.getMany(
+        new dto.GetSchoolsQuery(),
+        await ctx.authenticate(ctx.one.users.owner),
+      )
       expect(res.items).toHaveLength(1)
     })
 
     it('returns all schools in multiple permitted roles', async () => {
-      const res = await ctr.getMany(await ctx.authenticate(ctx.misc.users.adminOfOneAndTwo))
+      const res = await ctr.getMany(
+        new dto.GetSchoolsQuery(),
+        await ctx.authenticate(ctx.misc.users.adminOfOneAndTwo),
+      )
       expect(res.items).toHaveLength(2)
-      expect(res.items.map((x) => x.id)).toEqual([ctx.one.school, ctx.two.school].map((x) => x.id))
+      expect(res.items.map((x) => x.id).sort()).toEqual(
+        [ctx.one.school, ctx.two.school].map((x) => x.id).sort(),
+      )
+      expect(res.items.map((x) => x.name)).toEqual([...res.items.map((x) => x.name)].sort())
     })
   })
 })

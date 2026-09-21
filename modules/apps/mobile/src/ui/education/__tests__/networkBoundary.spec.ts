@@ -4,14 +4,15 @@ import { describe, expect, it } from 'vitest'
  * The places allowed to reach the network, named as paths under `src`.
  *
  * Sign-in has to happen before there is anything on the device, and the sync
- * engine is what puts it there. `infra/http/` is the transport itself — a thing
- * the places above construct, not a caller that goes anywhere on its own.
+ * engine is what puts it there. The transport itself lives in `@vidya/client`
+ * — a thing the places above construct, not a caller that goes anywhere on its
+ * own — so this tree names no place that builds one.
  *
  * There is no entry for a shared client, and that absence is the rule: a client
  * is built per connection and closes over that connection's address, so a token
  * held for one school has nowhere to travel but that school's server.
  */
-const ALLOWED = ['app/sync.ts', 'infra/http/', 'infra/sync/', 'ui/auth/', 'usecases/auth/']
+const ALLOWED = ['app/sync.ts', 'ui/auth/']
 
 /**
  * One way out of the app and onto the network.
@@ -62,8 +63,9 @@ const ESCAPES: readonly Escape[] = [
   },
   {
     name: 'FetchHttpClient',
+    // The client itself is built in `@vidya/client`; this tree only asks for one.
     pattern: /\bFetchHttpClient\b/,
-    builtHere: true,
+    builtHere: false,
     specimens: ['new FetchHttpClient({ baseUrl })'],
   },
   {
@@ -72,7 +74,7 @@ const ESCAPES: readonly Escape[] = [
     // an object of this app's own with a `fetch` method would be a transport
     // wearing a hat.
     pattern: /(?<![\w$])fetch\s*\(/,
-    builtHere: true,
+    builtHere: false,
     specimens: [
       "await fetch('/auth/profile')",
       "await globalThis.fetch('https://elsewhere.test')",

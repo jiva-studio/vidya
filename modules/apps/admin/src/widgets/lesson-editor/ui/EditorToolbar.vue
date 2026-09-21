@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Breadcrumbs, Button, Input, PageHeader } from '@vidya/ui'
+import { Button, Input, PageHeader } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
 
-import { titleClasses, toolbarErrorClasses, toolbarStatusClasses } from './styles'
+import { titleClasses, toolbarErrorClasses, toolbarVersionClasses } from './styles'
 import type { EditorToolbarEmits, EditorToolbarProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -29,70 +29,70 @@ const emit = defineEmits<EditorToolbarEmits>()
 const { $t } = useFluent()
 
 const failed = computed(() => props.status === 'failed')
+const saving = computed(() => props.status === 'saving')
 
-// One word, where three coloured pills used to be: what is happening to the
-// draft, or — while nothing is — which version is open.
-const state = computed(() =>
-  props.status === 'idle'
-    ? $t(props.frozen ? 'editor-state-published' : 'editor-state-draft')
-    : $t(`editor-status-${props.status}`),
-)
+// The button is the status. A word beside it saying the same thing is a second
+// place to read, and the two disagreed as often as they agreed.
+const saveLabel = computed(() => {
+  if (saving.value) return $t('editor-status-saving')
+  if (failed.value) return $t('editor-save-retry')
+  return $t(props.dirty ? 'editor-save' : 'editor-status-saved')
+})
 
-// The path to the lesson. Its name is the heading below, not a crumb as well.
-const breadcrumbs = computed(() => [
-  { key: 'courses', label: $t('nav-courses') },
-  { key: 'lessons', label: $t('lessons-title') },
-])
+// Saving a published version writes the next number, so the number is shown,
+// and whether what is open is the one students read.
+const versionLabel = computed(() => {
+  if (props.version === undefined) return undefined
+  const key = props.frozen ? 'editor-version-published' : 'editor-version'
+  return $t(key, { version: props.version })
+})
+
+// `blocked` is content this build cannot author, so the save is refused and
+// the button must not offer it. A frozen version is not blocked: saving forks.
+const savable = computed(() => !props.blocked && (props.dirty || failed.value))
+
+// Nothing to publish until an edit has forked the next draft.
+const canPublish = computed(() => props.publishable && !props.frozen)
 
 /* -------------------------------- Handlers -------------------------------- */
-
-function onBreadcrumb() {
-  emit('back')
-}
 
 function onTitle(title: string) {
   emit('rename', title)
 }
 
-function onRetry() {
-  emit('retry')
+function onSave() {
+  if (failed.value) return emit('retry')
+  emit('save')
 }
 
 function onPublish() {
   emit('publish')
 }
-
-function onRevision() {
-  emit('revision')
-}
 </script>
 
 <template>
   <PageHeader :title="props.title ?? $t('editor-title')">
-    <template #breadcrumbs>
-      <Breadcrumbs :items="breadcrumbs" @select="onBreadcrumb" />
-    </template>
     <template #title>
       <Input
         :class="titleClasses"
         :model-value="props.title ?? ''"
-        :readonly="props.frozen"
         :placeholder="$t('editor-title-placeholder')"
         :aria-label="$t('editor-title-label')"
         @update:model-value="onTitle"
       />
     </template>
     <template #actions>
-      <span :class="toolbarStatusClasses">{{ state }}</span>
-      <Button v-if="failed" variant="ghost" @click="onRetry">{{ $t('editor-save-retry') }}</Button>
-      <Button v-if="props.frozen" :busy="props.busy" @click="onRevision">
-        {{ $t('editor-new-revision') }}
-      </Button>
+      <span v-if="versionLabel" :class="toolbarVersionClasses">{{ versionLabel }}</span>
       <Button
-        v-if="!props.frozen && props.publishable"
-        :disabled="props.blocked"
-        @click="onPublish"
+        variant="secondary"
+        :disabled="!savable"
+        :busy="saving"
+        :busy-label="saveLabel"
+        @click="onSave"
       >
+        {{ saveLabel }}
+      </Button>
+      <Button v-if="canPublish" :disabled="props.blocked" @click="onPublish">
         {{ $t('editor-publish') }}
       </Button>
       <span v-if="props.error" :class="toolbarErrorClasses" role="alert">{{ props.error }}</span>

@@ -13,6 +13,13 @@ import { useCurrentSchool } from '@/shared/access'
 import type { HttpClient } from '@/shared/api'
 import { useHttp } from '@/shared/api'
 
+/** One page of the roles list, as a screen asks for it. */
+export interface RolePageQuery {
+  limit?: number
+  offset?: number
+  query?: string
+}
+
 /**
  * Every request the admin makes about a role.
  *
@@ -20,8 +27,8 @@ import { useHttp } from '@/shared/api'
  * school travels in the query rather than in a closure — see `useRoleApi`.
  */
 export const roleApi = (http: HttpClient) => ({
-  list: (schoolId: SchoolId | undefined) =>
-    http.get<GetRolesResponse>(Routes().edu.roles.find(), { schoolId }),
+  list: (schoolId: SchoolId | undefined, page: RolePageQuery = {}) =>
+    http.get<GetRolesResponse>(Routes().edu.roles.find(), { schoolId, ...page }),
 
   get: (id: RoleId) => http.get<GetRoleResponse>(Routes().edu.roles.get(id)),
 
@@ -45,5 +52,5 @@ export const useRoleApi = () => {
   const api = roleApi(useHttp())
   const { schoolId } = useCurrentSchool()
 
-  return { ...api, list: () => api.list(schoolId.value), schoolId }
+  return { ...api, list: (page?: RolePageQuery) => api.list(schoolId.value, page), schoolId }
 }

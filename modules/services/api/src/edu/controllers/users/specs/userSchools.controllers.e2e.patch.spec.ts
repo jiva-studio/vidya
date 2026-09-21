@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { INestApplication } from '@nestjs/common'
+import { RolesService, SchoolsService, UserSchoolsService } from '@vidya/api/edu/services'
 import { createTestingApp } from '@vidya/api/edu/shared'
 import { Routes } from '@vidya/protocol'
 import * as request from 'supertest'
@@ -45,5 +46,73 @@ describe('/edu/users/:id/schools', () => {
         error: 'Forbidden',
         statusCode: 403,
       })
+  })
+
+  /* -------------------------------------------------------------------------- */
+  /*                              Joining a school                              */
+  /* -------------------------------------------------------------------------- */
+
+  const join = (userId: string, schoolId: string, token: string) =>
+    request(app.getHttpServer())
+      .patch(Routes().edu.user(userId).schools.create())
+      .set('Authorization', token)
+      .send({ schoolId })
+
+  it('refuses to join a school whose settings name no role for a new student', async () => {
+    const joiner = ctx.misc.users.empty
+    const token = await ctx.getAuthTokenFor(joiner)
+
+    const response = await join(joiner.id, ctx.one.school.id, token).expect(409)
+
+    expect(String(response.body.message)).toMatch(/student/i)
+    expect(await app.get(UserSchoolsService).getUserSchools(joiner.id)).not.toContain(
+      ctx.one.school.id,
+    )
+  })
+
+  it('refuses to join a school whose configured student role has since been deleted', async () => {
+    const joiner = ctx.misc.users.empty
+    const token = await ctx.getAuthTokenFor(joiner)
+
+    const roles = app.get(RolesService)
+    const studentRole = await roles.create({
+      name: 'Student',
+      description: 'Student role for school one',
+      schoolId: ctx.one.school.id,
+      permissions: [],
+    })
+    await app
+      .get(SchoolsService)
+      .updateOneBy({ id: ctx.one.school.id }, { config: { defaultStudentRoleId: studentRole.id } })
+    await roles.deleteOneBy({ id: studentRole.id })
+
+    const response = await join(joiner.id, ctx.one.school.id, token).expect(409)
+
+    expect(String(response.body.message)).toMatch(/student/i)
+    expect(await app.get(UserSchoolsService).getUserSchools(joiner.id)).not.toContain(
+      ctx.one.school.id,
+    )
+  })
+
+  it('joins a properly configured school with the role its settings name', async () => {
+    const joiner = ctx.misc.users.empty
+    const token = await ctx.getAuthTokenFor(joiner)
+
+    const studentRole = await app.get(RolesService).create({
+      name: 'Student',
+      description: 'Student role for school one',
+      schoolId: ctx.one.school.id,
+      permissions: [],
+    })
+    await app
+      .get(SchoolsService)
+      .updateOneBy({ id: ctx.one.school.id }, { config: { defaultStudentRoleId: studentRole.id } })
+
+    await join(joiner.id, ctx.one.school.id, token).expect(200)
+
+    expect(await app.get(UserSchoolsService).getUserSchools(joiner.id)).toContain(ctx.one.school.id)
+    expect(await app.get(RolesService).getRolesOfUser(joiner.id)).toContainEqual(
+      expect.objectContaining({ id: studentRole.id }),
+    )
   })
 })

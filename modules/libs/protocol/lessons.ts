@@ -70,10 +70,6 @@ export type StudentLessonContent = Omit<domain.LessonContent, 'sections'> & {
   sections: StudentLessonSection[]
 }
 
-export type StudentLessonVersionDetails = Omit<LessonVersionDetails, 'content'> & {
-  content: StudentLessonContent
-}
-
 /* -------------------------------------------------------------------------- */
 /*                                   Create                                   */
 /* -------------------------------------------------------------------------- */
@@ -90,9 +86,6 @@ export type GetLessonsResponse = crud.GetItemsListResponse<LessonSummary>
 export type GetLessonResponse = crud.GetItemResponse<LessonDetails>
 export type GetLessonVersionsResponse = crud.GetItemsListResponse<LessonVersionSummary>
 export type GetLessonVersionResponse = crud.GetItemResponse<LessonVersionDetails>
-
-/** The version a student works against, with the quiz keys withheld. */
-export type GetPublishedLessonVersionResponse = crud.GetItemResponse<StudentLessonVersionDetails>
 
 /* -------------------------------------------------------------------------- */
 /*                                   Update                                   */

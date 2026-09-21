@@ -1,6 +1,5 @@
 import type { SQLiteDBConnection } from '@capacitor-community/sqlite'
-
-import { DatabaseSuspendedError, type IDatabase, type QueryParams } from '@/ports'
+import { DatabaseSuspendedError, type IDatabase, type QueryParams } from '@vidya/client'
 
 /**
  * The part of the plugin's connection this adapter uses.

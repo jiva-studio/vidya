@@ -3,21 +3,21 @@ import '../../../../../../libs/ui/vitest.setup'
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { mountWithApp } from '@/shared/testing'
 
 import ModerationActions from '../ui/ModerationActions.vue'
 
 const copy = `
-enrollments-accept = Принять
-enrollments-decline = Отклонить
-enrollments-decline-title = Отклонить заявку?
-enrollments-decline-consequence = Решение не изменить.
-enrollments-restore = Вернуть на курс
-enrollments-restore-title = Вернуть студента на курс?
-enrollments-restore-consequence = Место вернётся вместе с доступом к курсу.
-enrollments-assign-group = Группа
-action-cancel = Отмена
+enrollments-accept = Accept
+enrollments-decline = Decline
+enrollments-decline-title = Decline this request?
+enrollments-decline-consequence = A decision cannot be undone. The student would have to ask again.
+enrollments-restore = Give the place back
+enrollments-restore-title = Give this student their place back?
+enrollments-restore-consequence = The student can study the course again.
+enrollments-assign-group = Group
+action-cancel = Cancel
 `
 
 const row = (status: string) => ({
@@ -57,9 +57,9 @@ describe('giving back a place the school took away', () => {
   it('offers the way back on a revoked place, and no way to refuse it', () => {
     const shown = labels(mount('revoked'))
 
-    expect(shown).toContain('Вернуть на курс')
-    expect(shown).not.toContain('Отклонить')
-    expect(shown).not.toContain('Принять')
+    expect(shown).toContain(translate('enrollments-restore'))
+    expect(shown).not.toContain(translate('enrollments-decline'))
+    expect(shown).not.toContain(translate('enrollments-accept'))
   })
 
   it('offers it to nobody without the permission to moderate', () => {
@@ -69,32 +69,34 @@ describe('giving back a place the school took away', () => {
   it('offers the same way back to a student who left of their own accord', () => {
     const shown = labels(mount('withdrawn'))
 
-    expect(shown).toContain('Вернуть на курс')
-    expect(shown).not.toContain('Отклонить')
-    expect(shown).not.toContain('Принять')
+    expect(shown).toContain(translate('enrollments-restore'))
+    expect(shown).not.toContain(translate('enrollments-decline'))
+    expect(shown).not.toContain(translate('enrollments-accept'))
   })
 
   it('offers nothing of the kind on a place that was refused on its merits', () => {
-    expect(labels(mount('declined'))).not.toContain('Вернуть на курс')
+    expect(labels(mount('declined'))).not.toContain(translate('enrollments-restore'))
   })
 
   it('leaves a request that is still open to be accepted or refused', () => {
     const shown = labels(mount('pending'))
 
-    expect(shown).toEqual(expect.arrayContaining(['Принять', 'Отклонить']))
-    expect(shown).not.toContain('Вернуть на курс')
+    expect(shown).toEqual(
+      expect.arrayContaining([translate('enrollments-accept'), translate('enrollments-decline')]),
+    )
+    expect(shown).not.toContain(translate('enrollments-restore'))
   })
 
   it('asks before giving the place back, and only then decides', async () => {
     const page = mount('revoked')
 
-    await clickLabelled(page, 'Вернуть на курс')
+    await clickLabelled(page, translate('enrollments-restore'))
 
     expect(page.emitted('accept')).toBeUndefined()
-    expect(document.body.textContent).toContain('Место вернётся')
+    expect(document.body.textContent).toContain(translate('enrollments-restore-consequence'))
 
     const confirm = [...document.body.querySelectorAll('button')].find(
-      (button) => button.textContent?.trim() === 'Вернуть на курс',
+      (button) => button.textContent?.trim() === translate('enrollments-restore'),
     )
     confirm?.click()
     await flushPromises()

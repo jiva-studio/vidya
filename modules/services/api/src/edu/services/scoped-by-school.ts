@@ -22,10 +22,14 @@ export const scopedBySchool =
       .filter((s) => !requested || s.schoolId === requested)
 
     if (scopes.length === 0) {
-      return { where: { schoolId: In([]) } } as FindManyOptions<TEntity>
+      return { ...query, where: { schoolId: In([]) } } as FindManyOptions<TEntity>
     }
 
+    // Everything but `where` is carried over: rebuilding the query from
+    // nothing drops the paging, the ordering and the relations the caller
+    // asked for, and a list that cannot be paged ships a whole school.
     return {
+      ...query,
       where: scopes.map((s) => ({ ...query?.where, schoolId: s.schoolId })),
     } as FindManyOptions<TEntity>
   }

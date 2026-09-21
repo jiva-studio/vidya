@@ -20,7 +20,7 @@ const duration = (value: string | undefined, fallback: StringValue): StringValue
  * ends in a sign-out with no way back.
  */
 export default registerAs('jwt', () => {
-  const accessTokenExpiresIn = duration(process.env.VIDYA_JWT_ACCESS_TOKEN_EXPIRES_IN, '1h')
+  const accessTokenExpiresIn = duration(process.env.VIDYA_JWT_ACCESS_TOKEN_EXPIRES_IN, '15m')
   const refreshTokenExpiresIn = duration(process.env.VIDYA_JWT_REFRESH_TOKEN_EXPIRES_IN, '90d')
 
   if (ms(refreshTokenExpiresIn) <= ms(accessTokenExpiresIn)) {

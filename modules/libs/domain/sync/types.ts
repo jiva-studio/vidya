@@ -176,6 +176,17 @@ export const ServerRejectionReasons = [
   /** The row, or the batch carrying it, is over the size ceiling. */
   'payloadTooLarge',
 
+  /**
+   * A person has the work open, so its text is not the student's to change.
+   *
+   * Separate from `alreadyAccepted`: that one says the work is finished with,
+   * this one says somebody is reading it right now and will answer.
+   */
+  'underReview',
+
+  /** The course exists but its school does not offer it yet. */
+  'courseNotOffered',
+
   /** The body does not satisfy the contract for its collection. */
   'malformed',
 ] as const

@@ -21,6 +21,7 @@ export {
   setSectionAssessment,
   updateBlock,
 } from './edits'
+export { provideFaultedBlocks, useIsFaulted } from './faultedBlocks'
 export {
   addAnswer,
   insertAnswer,

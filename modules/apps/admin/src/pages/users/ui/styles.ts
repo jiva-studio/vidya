@@ -11,3 +11,5 @@ export const factClasses = ['flex', 'gap-[var(--space-3)]', 'text-[length:var(--
 export const factLabelClasses = ['w-[8rem]', 'shrink-0', 'text-[var(--color-text-muted)]']
 
 export const badgesClasses = ['flex', 'flex-wrap', 'gap-[var(--space-2)]']
+
+export const rolesClasses = ['flex', 'flex-wrap', 'items-center', 'gap-[var(--space-1)]']

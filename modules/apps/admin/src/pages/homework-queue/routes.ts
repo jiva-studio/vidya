@@ -11,6 +11,6 @@ export const routes: RouteRecordRaw[] = [
     path: '/s/:schoolId/homework',
     name: 'homework-queue',
     component: () => import('./ui/HomeworkQueuePage.vue'),
-    meta: { permission: 'homework:read', breadcrumbs: ['nav-homework-queue'] },
+    meta: { permission: 'homework:read' },
   },
 ]

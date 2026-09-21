@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, pending, refusal } from '@/shared/testing'
@@ -86,7 +86,7 @@ describe('SchoolSettingsPage', () => {
     await page.find('[role="checkbox"]').trigger('click')
     await flushPromises()
 
-    const save = page.findAll('button').find((button) => button.text() === 'Сохранить')
+    const save = page.findAll('button').find((button) => button.text() === translate('action-save'))
     await save?.trigger('click')
     await flushPromises()
 
@@ -100,7 +100,7 @@ describe('SchoolSettingsPage', () => {
   it('points at creating a role when the school has none', async () => {
     const { page } = await mountPage({ [CONFIGS]: { studentRoleIds: [] }, [ROLES]: { items: [] } })
 
-    expect(page.text()).toContain('В этой школе ещё нет ролей')
+    expect(page.text()).toContain(translate('schools-settings-empty-title'))
   })
 
   it('shows the reason the server gave and offers another attempt', async () => {
@@ -110,9 +110,11 @@ describe('SchoolSettingsPage', () => {
     })
 
     expect(page.find('[role="alert"]').text()).not.toContain('Settings are unreadable')
-    expect(page.find('[role="alert"]').text()).toContain('Не получилось. Попробуйте ещё раз.')
+    expect(page.find('[role="alert"]').text()).toContain(translate('state-error'))
 
-    const retry = page.findAll('button').find((button) => button.text() === 'Повторить')
+    const retry = page
+      .findAll('button')
+      .find((button) => button.text() === translate('action-retry'))
     await retry?.trigger('click')
     await flushPromises()
 

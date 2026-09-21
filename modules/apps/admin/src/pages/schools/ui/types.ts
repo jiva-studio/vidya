@@ -22,6 +22,10 @@ export interface SchoolSettingsPageProps {
   id: SchoolId
 }
 
+export interface SchoolJoiningLinkProps {
+  id: SchoolId
+}
+
 export interface SchoolNameFieldProps {
   modelValue: string
   error?: string

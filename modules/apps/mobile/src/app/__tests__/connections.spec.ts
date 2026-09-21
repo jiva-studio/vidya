@@ -1,14 +1,13 @@
-import type { EnrollmentId, HomeworkId, LessonVersionId, SchoolId, SectionId } from '@vidya/domain'
-import { asId } from '@vidya/domain'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
 import {
   ENROLLMENT_ID,
   HOMEWORK_ID,
   LESSON_VERSION_ID,
   SCHOOL_ID,
   SECTION_ID,
-} from '@/usecases/sync/__tests__/fakeSyncServer'
+} from '@vidya/client/testing'
+import type { EnrollmentId, HomeworkId, LessonVersionId, SchoolId, SectionId } from '@vidya/domain'
+import { asId } from '@vidya/domain'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { inMemoryConnectionStore } from './connectionFixtures'
 import { fakeSyncNetwork } from './fakeSyncNetwork'
@@ -183,8 +182,8 @@ describe('the connection registry', () => {
     // Imported here rather than at the top of the file: a relaunch is staged
     // by resetting the module registry, and a class held from before the reset
     // is a different class from the one the reopened database throws.
-    const { openTestDatabase } = await import('@/infra/persistence/testing')
-    const { DatabaseSuspendedError } = await import('@/ports')
+    const { openTestDatabase } = await import('@vidya/client/testing')
+    const { DatabaseSuspendedError } = await import('@vidya/client')
     const { startSync } = await import('../sync')
     const { db } = await openTestDatabase()
 

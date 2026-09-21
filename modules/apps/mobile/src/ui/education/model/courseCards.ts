@@ -1,4 +1,4 @@
-import type { LocalCourse, LocalSchool } from '@/ports'
+import type { LocalCourse, LocalSchool } from '@vidya/client'
 
 import type { CourseCardViewModel } from '../components/Courses'
 

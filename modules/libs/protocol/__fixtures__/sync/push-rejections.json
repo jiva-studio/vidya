@@ -90,6 +90,28 @@
         },
         "hlc": "001789682400000:00006:device-8f2a6c14",
         "baseHlc": null
+      },
+      {
+        "outboxId": 108,
+        "collection": "homework",
+        "docId": "c4a71e92-3f85-4d60-b1a8-7e2c9f0d5346",
+        "op": "upsert",
+        "data": {
+          "text": "..."
+        },
+        "hlc": "001789682400000:00008:device-8f2a6c14",
+        "baseHlc": null
+      },
+      {
+        "outboxId": 109,
+        "collection": "enrollments",
+        "docId": "9f3b2d71-6c48-4a05-8e93-1d7a5c0f4b82",
+        "op": "upsert",
+        "data": {
+          "status": "pending"
+        },
+        "hlc": "001789682400000:00009:device-8f2a6c14",
+        "baseHlc": null
       }
     ]
   },
@@ -150,6 +172,22 @@
         "status": "rejected",
         "reason": "malformed",
         "detail": "state is not a known block state"
+      },
+      {
+        "outboxId": 108,
+        "collection": "homework",
+        "docId": "c4a71e92-3f85-4d60-b1a8-7e2c9f0d5346",
+        "status": "rejected",
+        "reason": "underReview",
+        "detail": "a reviewer has the work open"
+      },
+      {
+        "outboxId": 109,
+        "collection": "enrollments",
+        "docId": "9f3b2d71-6c48-4a05-8e93-1d7a5c0f4b82",
+        "status": "rejected",
+        "reason": "courseNotOffered",
+        "detail": "the course is not published"
       }
     ],
     "journaledOutboxId": 0

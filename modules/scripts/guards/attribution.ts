@@ -81,8 +81,16 @@ const checkDiff = (base: string): string[] =>
       ),
     )
 
-const checkMessages = (base: string): string[] =>
-  git(['log', `${base}..HEAD`, '--format=%H%n%B%n--'])
+/**
+ * The commits this branch added, and no others.
+ *
+ * Everything reachable from an upstream ref is excluded by name rather than by
+ * a single merge base: a branch that merged `main` back into itself carries
+ * upstream commits in its history, and their messages are not its to answer
+ * for.
+ */
+const checkMessages = (upstream: string[]): string[] =>
+  git(['log', 'HEAD', '--not', ...upstream, '--no-merges', '--format=%H%n%B%n--'])
     .split('\n--\n')
     .flatMap((message) => signsIn(message, `commit ${message.trim().slice(0, 12)}`))
 
@@ -93,8 +101,21 @@ const checkMessages = (base: string): string[] =>
  * there at all. The commits and the diff are then out of reach, and the check
  * reads the working tree alone rather than failing the build over a ref.
  */
-const branchPoint = (): string | null => {
-  for (const ref of ['main', 'origin/main']) {
+const upstreamRefs = (): string[] =>
+  ['origin/main', 'main'].filter((ref) => {
+    try {
+      execFileSync('git', ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`], {
+        cwd: ROOT,
+        stdio: 'ignore',
+      })
+      return true
+    } catch {
+      return false
+    }
+  })
+
+const branchPoint = (refs: string[]): string | null => {
+  for (const ref of refs) {
     try {
       return execFileSync('git', ['merge-base', ref, 'HEAD'], {
         cwd: ROOT,
@@ -110,8 +131,9 @@ const branchPoint = (): string | null => {
 }
 
 export const checkAttribution = (): string[] => {
-  const base = branchPoint()
+  const upstream = upstreamRefs()
+  const base = branchPoint(upstream)
   if (base === null) return checkWorkingTree()
 
-  return [...checkWorkingTree(), ...checkDiff(base), ...checkMessages(base)]
+  return [...checkWorkingTree(), ...checkDiff(base), ...checkMessages(upstream)]
 }

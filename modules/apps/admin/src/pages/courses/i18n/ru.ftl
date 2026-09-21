@@ -14,6 +14,7 @@ courses-empty-title = Курсов пока нет
 courses-empty-body = Создайте курс, а затем добавьте в него уроки.
 courses-empty-action = Создать курс
 courses-load-failed = Не удалось загрузить курсы.
+courses-draft = Черновик
 courses-no-description = —
 
 course-form-create-title = Новый курс
@@ -28,6 +29,9 @@ course-form-type-individual = Индивидуальный
 course-form-type-individual-hint = Группы не нужны: студент идёт по курсу один
 course-form-type-group = Групповой
 course-form-type-group-hint = Студентов придётся распределять по группам
+course-form-publish-label = Показывать студентам
+course-form-publish-on = Студенты видят этот курс в школе.
+course-form-publish-off = Черновик: студенты пока не видят курс. Опубликуйте его, когда он будет готов.
 course-form-submit = Сохранить
 course-form-cancel = Отмена
 course-load-failed = Не удалось загрузить курс.

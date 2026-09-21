@@ -17,6 +17,8 @@ sync-rejection-enrollmentRevoked = Вы больше не записаны на 
 sync-rejection-scopeRevoked = Школа сняла с вас доступ, поэтому ответ не был отправлен.
 sync-rejection-unknownLessonVersion = Школа не знает версию урока, по которой написан ответ.
 sync-rejection-alreadyAccepted = Ответ уже принят, заменить его новым нельзя.
+sync-rejection-underReview = Работу сейчас смотрит преподаватель — изменить её можно будет после ответа.
+sync-rejection-courseNotOffered = Школа пока не набирает на этот курс.
 sync-rejection-payloadTooLarge = Ответ слишком длинный, чтобы его отправить.
 sync-rejection-malformed = Школа не смогла прочитать этот ответ.
 

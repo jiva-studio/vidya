@@ -33,7 +33,10 @@ export interface LessonEditorViewEmits {
 export interface EditorToolbarProps {
   title?: string
   version?: number
+
+  /** The open version is the published one; the next edit forks a draft. */
   frozen?: boolean
+
   dirty?: boolean
   status?: AutosaveStatus
   busy?: boolean
@@ -48,7 +51,6 @@ export interface EditorToolbarEmits {
   save: []
   retry: []
   publish: []
-  revision: []
 }
 
 export interface LessonOutlineProps {
@@ -57,6 +59,14 @@ export interface LessonOutlineProps {
 
 export interface LessonDocumentProps {
   content: LessonContent
+
+  /**
+   * Renders the document without the means to change it.
+   *
+   * The editor no longer sets it: a published version opens writable and the
+   * first edit forks the next draft. Kept for a surface that genuinely reads
+   * and cannot write — the reviewer's screens use {@link LessonPreviewProps}.
+   */
   frozen?: boolean
 }
 
@@ -128,6 +138,10 @@ export interface SectionBoundaryEmits {
 export interface ContentProblemsNoticeProps {
   problems?: readonly ContentProblem[]
   faults?: readonly BlockFault[]
+}
+
+export interface ContentProblemsNoticeEmits {
+  reveal: [blockId: BlockId]
 }
 
 export interface LessonPreviewProps {
