@@ -63,6 +63,16 @@ const SIGN_IN = 'features/auth-otp/'
  */
 const JOIN = 'features/join-school/'
 
+/**
+ * The way back out, and why it is a request rather than a write.
+ *
+ * Membership is a role, and a role is not a synchronised collection: there is
+ * no local row to journal and nothing a run could carry. Everything the
+ * departure costs comes back the other way — the next run finds the scope
+ * revoked and takes the school off this machine.
+ */
+const LEAVE = 'features/leave-school/'
+
 const ESCAPES: readonly Escape[] = [
   {
     name: 'httpClientFor',
@@ -76,7 +86,7 @@ const ESCAPES: readonly Escape[] = [
     // Not a transport but the way to one: everything that is not signing in
     // reads and writes the local database, and synchronisation carries it.
     pattern: /\buseHttp\b/,
-    allowedIn: [SIGN_IN, JOIN, 'shared/api/'],
+    allowedIn: [SIGN_IN, JOIN, LEAVE, 'shared/api/'],
     builtHere: true,
     specimens: ['const http = useHttp()'],
   },
@@ -208,6 +218,10 @@ describe('nothing but signing in talks to the network', () => {
 
   it('gives joining two requests and no more', () => {
     expect(routesNamedIn(JOIN)).toEqual(['edu.user', 'join.resolve'])
+  })
+
+  it('gives leaving one request and no more', () => {
+    expect(routesNamedIn(LEAVE)).toEqual(['edu.user'])
   })
 
   it('reads the files it claims to read, so an empty answer means something', () => {

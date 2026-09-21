@@ -124,6 +124,8 @@ place-rejected-scopeRevoked = The school took your access away, so this was neve
 place-rejected-kept = Nothing has been lost: what you wrote is still on this device.
 
 settings-title = Settings
+settings-schools-title = My schools
+settings-schools-none = You are not in any school yet.
 settings-sync-title = Synchronisation
 
 sync-running = Getting your courses…
