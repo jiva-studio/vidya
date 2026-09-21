@@ -137,6 +137,8 @@ export class SyncPullService {
       )
       .join(', ')
 
+    const limitIndex = positions.length * 3 + 1
+
     return this.dataSource.query(
       `WITH asked AS (
          SELECT * FROM (VALUES ${values}) AS v(scope_kind, scope_id, cursor)
@@ -147,12 +149,15 @@ export class SyncPullService {
          JOIN asked a ON a.scope_kind = j.scope_kind AND a.scope_id = j.scope_id
         WHERE j.global_seq > a.cursor
         ORDER BY j.global_seq
-        LIMIT ${limit + 1}`,
-      positions.flatMap((position) => [
-        position.scope.kind,
-        position.scope.id,
-        String(position.cursor),
-      ]),
+        LIMIT $${limitIndex}`,
+      [
+        ...positions.flatMap((position) => [
+          position.scope.kind,
+          position.scope.id,
+          String(position.cursor),
+        ]),
+        limit + 1,
+      ],
     )
   }
 }
