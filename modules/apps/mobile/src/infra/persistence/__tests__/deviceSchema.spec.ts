@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import type { IDatabase } from '@/ports'
 
-import { deviceMigrations } from '../migrations'
-import { listTables, openTestDatabase } from '../testing'
+import { deviceMigrations, runMigrations } from '../migrations'
+import { fixedClock, listTables, openTestDatabase } from '../testing'
 
 /**
  * The tables the device holds after every migration in the set has run.
@@ -104,6 +104,87 @@ describe('the device schema the migration set builds', () => {
       // hold a fallback and mislead whoever read it.
       expect(names).not.toContain('archived_by_school_at')
       expect(names).not.toContain('archived_by_school_by_id')
+    })
+  })
+
+  /**
+   * The scope columns are only worth having if every row carries them.
+   *
+   * A row that arrived before the columns existed answers to no scope, so
+   * taking a withdrawn scope off the device would walk past it and leave
+   * course material behind that the student is no longer allowed to read. The
+   * migration therefore empties what it cannot stamp and drops the read
+   * positions, so the same rows come back with the pair written on them.
+   */
+  describe('005_row_scope', () => {
+    /** A database migrated up to, but not including, the scope columns. */
+    const openBeforeScopes = async () => {
+      const upToScopes = deviceMigrations.slice(0, deviceMigrations.length - 1)
+      const { db } = await openTestDatabase({ migrations: upToScopes })
+
+      return db
+    }
+
+    const countOf = async (db: IDatabase, table: string): Promise<number> => {
+      const [row] = await db.query<{ total: number }>(`SELECT COUNT(*) AS total FROM "${table}"`)
+
+      return row?.total ?? 0
+    }
+
+    const seedUnstampedRows = async (db: IDatabase): Promise<void> => {
+      await db.execute(
+        `INSERT INTO courses (id, owner_id, school_id, name, learning_type)
+         VALUES ('course-1', 'owner-a', 'school-1', 'Sanskrit', 'self_paced')`,
+      )
+      await db.execute(
+        `INSERT INTO schools (id, owner_id, school_id, name)
+         VALUES ('school-1', 'owner-a', 'school-1', 'The school')`,
+      )
+      await db.execute(
+        `INSERT INTO sync_scopes (owner_id, kind, id, cursor, checksum)
+         VALUES ('owner-a', 'school', 'school-1', 42, 'abc')`,
+      )
+      await db.execute(
+        `INSERT INTO sync_doc_hlc (owner_id, collection, doc_id, server_hlc)
+         VALUES ('owner-a', 'courses', 'course-1', '7')`,
+      )
+      await db.execute(
+        `INSERT INTO sync_state (device_id, owner_id, acked_seq, pushed_outbox_id)
+         VALUES ('device-1', 'owner-a', 99, 5)`,
+      )
+    }
+
+    it('leaves no row behind that answers to no scope', async () => {
+      const db = await openBeforeScopes()
+      await seedUnstampedRows(db)
+
+      await runMigrations(db, deviceMigrations, fixedClock)
+
+      expect([await countOf(db, 'courses'), await countOf(db, 'schools')]).toEqual([0, 0])
+    })
+
+    it('drops the read positions, so the rows are pulled down again', async () => {
+      const db = await openBeforeScopes()
+      await seedUnstampedRows(db)
+
+      await runMigrations(db, deviceMigrations, fixedClock)
+
+      expect(await countOf(db, 'sync_scopes')).toBe(0)
+      expect(await countOf(db, 'sync_doc_hlc')).toBe(0)
+      const [state] = await db.query<{ acked_seq: number }>('SELECT acked_seq FROM sync_state')
+      expect(state?.acked_seq).toBe(0)
+    })
+
+    it("keeps the student's own unsent work, which no pull will bring back", async () => {
+      const db = await openBeforeScopes()
+      await db.execute(
+        `INSERT INTO outbox (collection, doc_id, op, data, hlc, owner_id, status, created_at)
+         VALUES ('enrollments', 'doc-1', 'upsert', '{}', '1', 'owner-a', 'pending', '2026-09-18T00:00:00.000Z')`,
+      )
+
+      await runMigrations(db, deviceMigrations, fixedClock)
+
+      expect(await countOf(db, 'outbox')).toBe(1)
     })
   })
 })

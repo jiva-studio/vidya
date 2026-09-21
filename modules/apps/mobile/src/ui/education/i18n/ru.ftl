@@ -89,6 +89,7 @@ enrollment-group-deleted = Группы, которую вы выбрали, б�
 # Чего школа не приняла
 enrollment-rejection-retry = Ваш ответ остался на устройстве — отправьте его ещё раз.
 enrollment-rejection-settled = Школа уже приняла и оценила эту работу, ваша правка до школы не дойдёт.
+enrollment-rejection-access-lost = Доступ к курсу снят, поэтому отправлять уже нечего.
 
 # Урок
 lesson-title = Урок

@@ -63,6 +63,29 @@ describe('refused work as a screen asks about it', () => {
     expect(view.reason('enrollments', ENROLLMENT_DOC)).toBe('notYourEnrollment')
   })
 
+  it('lets work written after a refusal answer for the document', async () => {
+    // The student cancelled again after the first attempt was refused. The
+    // refused row stays in the journal for ever, and the screen that reads it
+    // instead of the retry tells them their new request was refused too.
+    const view = useOutboxView()
+    const retry = entry({ id: 2, status: 'pending', reason: null })
+    view.track('owner-a', journalOf([retry], [entry()]))
+    await settle()
+
+    expect(view.state('enrollments', ENROLLMENT_DOC)).toBe('notSent')
+    expect(view.reason('enrollments', ENROLLMENT_DOC)).toBeUndefined()
+  })
+
+  it('keeps the refusal while it is the last thing written', async () => {
+    const view = useOutboxView()
+    const older = entry({ id: 1, status: 'pending', reason: null })
+    view.track('owner-a', journalOf([older], [entry({ id: 2 })]))
+    await settle()
+
+    expect(view.state('enrollments', ENROLLMENT_DOC)).toBe('rejected')
+    expect(view.reason('enrollments', ENROLLMENT_DOC)).toBe('notYourEnrollment')
+  })
+
   it('still calls a document with nothing behind it accepted', async () => {
     const view = useOutboxView()
     view.track('owner-a', journalOf([], []))

@@ -27,8 +27,24 @@ import {
   resetLocalScreens,
   seed,
   settle,
+  syncStatus,
 } from './localScreens'
 import { type StagedOverlays, stageOverlays } from './overlayDoubles'
+
+const LOCALES = ['en', 'ru'] as const
+
+const bundleFor = (locale: (typeof LOCALES)[number]): FluentBundle => {
+  const bundle = new FluentBundle(locale, { useIsolating: false })
+  resources[locale].forEach((resource) => bundle.addResource(resource))
+
+  return bundle
+}
+
+const textOf = (bundle: FluentBundle, key: string): string => {
+  const message = bundle.getMessage(key)
+
+  return message?.value ? bundle.formatPattern(message.value) : ''
+}
 
 const CANCEL_THE_REQUEST = 'Cancel the request'
 const LEAVE_THE_COURSE = 'Leave the course'
@@ -162,6 +178,18 @@ describe('a request still waiting for its answer', () => {
     expect(wrapper.text()).not.toMatch(/no longer taking students/i)
   })
 
+  it('says nothing about a missing group until a full run has finished', async () => {
+    // Scope positions advance on their own, so the request can be here while
+    // the group it names is still on its way. Calling that a deleted group
+    // sends the student to the school about something the next page will fix.
+    syncStatus.firstRunCompleted.value = false
+    seed.enrollments.push(anEnrollment({ status: 'pending', preferredGroupId: GROUP_ID }))
+
+    const wrapper = await openEnrollment()
+
+    expect(wrapper.text()).not.toMatch(/does not exist any more/i)
+  })
+
   it('says nothing about a group when the request asked for none', async () => {
     seed.enrollments.push(anEnrollment({ status: 'pending', preferredGroupId: null }))
 
@@ -192,20 +220,6 @@ describe('a request still waiting for its answer', () => {
  */
 describe('the words for a group that is no longer an option', () => {
   const KEYS = ['enrollment-group-closed', 'enrollment-group-deleted'] as const
-  const LOCALES = ['en', 'ru'] as const
-
-  const bundleFor = (locale: (typeof LOCALES)[number]): FluentBundle => {
-    const bundle = new FluentBundle(locale, { useIsolating: false })
-    resources[locale].forEach((resource) => bundle.addResource(resource))
-
-    return bundle
-  }
-
-  const textOf = (bundle: FluentBundle, key: string): string => {
-    const message = bundle.getMessage(key)
-
-    return message?.value ? bundle.formatPattern(message.value) : ''
-  }
 
   it('has both of them in every language', () => {
     for (const locale of LOCALES) {
@@ -376,5 +390,31 @@ describe('a cancellation the school did not take', () => {
 
     expect(wrapper.text()).not.toMatch(/send it again/i)
     expect(wrapper.text()).toMatch(/will not reach the school/i)
+  })
+
+  it('says all three things in every language', () => {
+    const KEYS = [
+      'enrollment-rejection-retry',
+      'enrollment-rejection-settled',
+      'enrollment-rejection-access-lost',
+    ] as const
+
+    for (const locale of LOCALES) {
+      const bundle = bundleFor(locale)
+      const texts = KEYS.map((key) => textOf(bundle, key))
+
+      expect([locale, texts.filter((text) => text === '')]).toEqual([locale, []])
+      expect([locale, new Set(texts).size]).toEqual([locale, KEYS.length])
+    }
+  })
+
+  it('does not ask for a resend the device itself ruled out', async () => {
+    // The device settled this one: the access the row needed was taken away
+    // before it was sent, so no push carries it however many times it is asked
+    // for.
+    const wrapper = await refusedWith('scopeRevoked')
+
+    expect(wrapper.text()).not.toMatch(/send it again/i)
+    expect(wrapper.text()).toMatch(/nothing left to send/i)
   })
 })

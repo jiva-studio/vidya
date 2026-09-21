@@ -36,7 +36,7 @@ import { asId, isRecruiting } from '@vidya/domain'
 import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
 
-import { useOutboxView, useRepositories } from '@/app'
+import { useOutboxView, useRepositories, useSyncStatus } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
 import type { LocalGroup } from '@/ports'
 import { useLocalData } from '@/shared'
@@ -60,6 +60,7 @@ const props = defineProps<MyEnrollmentPageProps>()
 
 const repositories = useRepositories()
 const outbox = useOutboxView()
+const syncStatus = useSyncStatus()
 const fluent = useFluent()
 const router = useIonRouter()
 
@@ -138,8 +139,13 @@ const groupClosed = computed(() => {
 // The row the student asked for has left the collection: the school deleted
 // the group, which is different news from a group that merely stopped taking
 // students.
+//
+// Scope positions advance independently, so a missing group is only news once
+// a full run has finished; before that it is a row still on its way, and
+// saying the group is gone is a guess the screen has no business making.
 const groupDeleted = computed(
   () =>
+    syncStatus.firstRunCompleted.value &&
     enrollment.value?.status === 'pending' &&
     enrollment.value.preferredGroupId !== null &&
     data.value.preferredGroup === null,

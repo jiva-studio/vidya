@@ -89,6 +89,7 @@ enrollment-group-deleted = The group you asked for does not exist any more. The 
 # What the school would not take
 enrollment-rejection-retry = Your answer is still on this device — send it again.
 enrollment-rejection-settled = The school has already accepted and marked this work, so your change will not reach the school.
+enrollment-rejection-access-lost = Your access to this course is gone, so there is nothing left to send.
 
 # Lesson
 lesson-title = Lesson

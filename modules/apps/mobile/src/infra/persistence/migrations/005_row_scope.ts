@@ -10,6 +10,15 @@ import type { Migration } from './types'
  * the device is one delete per table and no collection needs a branch of its
  * own.
  *
+ * The columns are useless on a row that arrived before them, and a row with no
+ * scope written down is a row no revocation can find — so the synced tables are
+ * emptied and the read positions dropped in the same step. A scope with no
+ * cursor starts at zero and is pulled down whole, stamped this time, which
+ * makes the invariant hold for every device rather than only for a fresh one.
+ *
+ * The outbox is left alone: it holds work of the student's own that no server
+ * has taken yet, and no pull will bring it back.
+ *
  * The tables are named here rather than read from the collection list, because
  * an applied migration is frozen: a device that has already run this one will
  * never run it again, whatever the list says later.
@@ -24,7 +33,12 @@ export const migration_005_row_scope: Migration = {
         `CREATE INDEX IF NOT EXISTS idx_${table}_scope
            ON "${table}" (owner_id, scope_kind, scope_id)`,
       )
+      await db.execute(`DELETE FROM "${table}"`)
     }
+
+    await db.execute('DELETE FROM sync_doc_hlc')
+    await db.execute('DELETE FROM sync_scopes')
+    await db.execute('UPDATE sync_state SET acked_seq = 0')
   },
 }
 

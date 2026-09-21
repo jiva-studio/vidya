@@ -21,7 +21,9 @@ import { useSyncStatus } from './syncStatus'
  *
  * Two readings are held: the rows still waiting to be sent, and the refused
  * ones, which no later push will carry. A document with neither was taken by
- * the server, and only then is it accepted.
+ * the server, and only then is it accepted. Where both readings name one
+ * document, the later row answers for it: a refusal is the last word only
+ * until the student writes again.
  */
 export interface OutboxView {
   state(collection: SyncCollection, docId: string): SubmissionState
@@ -36,6 +38,15 @@ export interface OutboxView {
 
 const keyOf = (collection: SyncCollection, docId: string) => `${collection}:${docId}`
 
+// Rows are journaled in local order, so the highest `id` is the last thing the
+// student did to the document. A refused row lives for ever, and merging by
+// list would let it bury the retry that was written after it.
+const keepLatest = (snapshot: Map<string, OutboxEntry>, row: OutboxEntry): void => {
+  const key = keyOf(row.collection, row.docId)
+  const held = snapshot.get(key)
+  if (held === undefined || held.id < row.id) snapshot.set(key, row)
+}
+
 export const useOutboxView = createGlobalState((): OutboxView => {
   const status = useSyncStatus()
   const journals = new Map<string, IOutboxRepository>()
@@ -46,10 +57,10 @@ export const useOutboxView = createGlobalState((): OutboxView => {
 
     for (const [ownerId, outbox] of journals) {
       const unsettled = await outbox.listUnsettled({ ownerId })
-      for (const row of unsettled) snapshot.set(keyOf(row.collection, row.docId), row)
+      for (const row of unsettled) keepLatest(snapshot, row)
 
       const dead = await outbox.listDead({ ownerId })
-      for (const row of dead) snapshot.set(keyOf(row.collection, row.docId), row)
+      for (const row of dead) keepLatest(snapshot, row)
     }
 
     rows.value = snapshot

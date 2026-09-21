@@ -82,7 +82,12 @@ describe('the schools table on the device', () => {
     )
     await older.db.close()
 
-    const upgraded = await openTestDatabase({ images })
+    // Stopped short of the scope stamp, which empties the synced tables on
+    // purpose so every row comes back carrying the scope it arrived on.
+    const upgraded = await openTestDatabase({
+      images,
+      migrations: deviceMigrations.slice(0, deviceMigrations.length - 1),
+    })
 
     expect(await listTables(upgraded.db)).toContain('schools')
     expect(await upgraded.db.query('SELECT id FROM courses')).toHaveLength(1)
