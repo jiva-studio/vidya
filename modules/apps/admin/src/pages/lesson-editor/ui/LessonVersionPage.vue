@@ -4,7 +4,7 @@ import { asId } from '@vidya/domain'
 import type { LessonPreviewLabels } from '@vidya/ui'
 import { Button, Card, FailureState, LessonPreview, PageHeader, Skeleton } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useLessonVersionDocument } from '@/widgets/lesson-editor'
