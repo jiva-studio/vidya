@@ -1,6 +1,7 @@
 import type { $Fetch, FetchError, FetchOptions } from 'ofetch'
 import { ofetch } from 'ofetch'
 
+import { addAdminBreadcrumb } from '../sentry'
 import { HttpError, OfflineError } from './errors'
 import { backoffMs, retryAfterMs } from './retryTiming'
 import type { FetchHttpClientOptions, HttpClient, HttpQuery } from './types'
@@ -38,6 +39,38 @@ export class FetchHttpClient implements HttpClient {
       onRequest: ({ options: request }) => {
         const token = this.options.accessToken()
         if (token) request.headers.set('authorization', `Bearer ${token}`)
+        const requestId =
+          typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : undefined
+        if (requestId && !request.headers.get('x-request-id')) {
+          request.headers.set('x-request-id', requestId)
+        }
+      },
+      onResponse: ({ request, response }) => {
+        if (!response.ok) {
+          addAdminBreadcrumb({
+            category: 'http',
+            message: `HTTP ${response.status} ${request.toString()}`,
+            level: response.status >= 500 ? 'error' : 'warning',
+            data: {
+              status: response.status,
+              url: request.toString(),
+            },
+          })
+        }
+      },
+      onResponseError: ({ request, response, error }) => {
+        addAdminBreadcrumb({
+          category: 'http',
+          message: `HTTP failure: ${request.toString()} (${response?.status ?? 'network/timeout'})`,
+          level: 'error',
+          data: {
+            status: response?.status,
+            url: request.toString(),
+            error: error?.message,
+          },
+        })
       },
     })
   }

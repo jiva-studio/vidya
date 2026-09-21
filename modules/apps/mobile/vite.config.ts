@@ -1,10 +1,32 @@
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  plugins: [vue({ script: { defineModel: true } }), legacy()],
+  plugins: [
+    vue({ script: { defineModel: true } }),
+    legacy(),
+    ...(process.env.SENTRY_AUTH_TOKEN
+      ? [
+          sentryVitePlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT || 'vidya-mobile',
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            release: {
+              name: process.env.VITE_APP_VERSION,
+            },
+            sourcemaps: {
+              filesToDeleteAfterUpload: ['./dist/**/*.map'],
+            },
+          }),
+        ]
+      : []),
+  ],
+  build: {
+    sourcemap: process.env.SENTRY_AUTH_TOKEN ? 'hidden' : false,
+  },
   define: { global: 'window' },
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, './src') },

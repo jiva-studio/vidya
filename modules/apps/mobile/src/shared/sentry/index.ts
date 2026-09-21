@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/vue'
 import type { App } from 'vue'
 import type { Router } from 'vue-router'
 
-export interface SentryUserContext {
+export interface SentryMobileUserContext {
   id?: string
   email?: string
   schoolId?: string
@@ -50,12 +50,12 @@ export const initSentry = (app: App, router?: Router): boolean => {
 
 export const isSentryEnabled = (): boolean => isSentryInitialized
 
-export const setSentryUser = (user: SentryUserContext | null): void => {
+export const setSentryUser = (user: SentryMobileUserContext | null): void => {
   if (!isSentryInitialized) return
   Sentry.setUser(user ? { id: user.id, email: user.email, schoolId: user.schoolId } : null)
 }
 
-export const captureAdminException = (
+export const captureMobileException = (
   error: unknown,
   context?: Record<string, unknown>,
 ): string | undefined => {
@@ -65,7 +65,7 @@ export const captureAdminException = (
   })
 }
 
-export const addAdminBreadcrumb = (breadcrumb: Sentry.Breadcrumb): void => {
+export const addMobileBreadcrumb = (breadcrumb: Sentry.Breadcrumb): void => {
   if (!isSentryInitialized) return
   Sentry.addBreadcrumb(breadcrumb)
 }

@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest'
 import type { App } from 'vue'
 
 import {
-  addAdminBreadcrumb,
-  captureAdminException,
+  addMobileBreadcrumb,
+  captureMobileException,
   initSentry,
   isSentryEnabled,
   setSentryUser,
@@ -13,13 +13,13 @@ import {
 vi.mock('@sentry/vue', () => ({
   init: vi.fn(),
   setUser: vi.fn(),
-  captureException: vi.fn(() => 'event-123'),
+  captureException: vi.fn(() => 'event-mobile-123'),
   addBreadcrumb: vi.fn(),
   browserTracingIntegration: vi.fn(() => ({})),
   replayIntegration: vi.fn(() => ({})),
 }))
 
-describe('admin sentry integration', () => {
+describe('mobile sentry integration', () => {
   it('does not initialize when VITE_SENTRY_DSN is absent', () => {
     const mockApp = {} as App
     const initialized = initSentry(mockApp)
@@ -30,7 +30,7 @@ describe('admin sentry integration', () => {
   })
 
   it('initializes and configures Sentry when VITE_SENTRY_DSN is present', () => {
-    vi.stubEnv('VITE_SENTRY_DSN', 'https://mock@sentry.io/456')
+    vi.stubEnv('VITE_SENTRY_DSN', 'https://mock@sentry.io/789')
     const mockApp = {} as App
     const initialized = initSentry(mockApp)
 
@@ -39,35 +39,35 @@ describe('admin sentry integration', () => {
     expect(Sentry.init).toHaveBeenCalledWith(
       expect.objectContaining({
         app: mockApp,
-        dsn: 'https://mock@sentry.io/456',
+        dsn: 'https://mock@sentry.io/789',
       }),
     )
   })
 
   it('forwards user context to Sentry', () => {
-    setSentryUser({ id: 'user-1', email: 'admin@vidya.com' })
+    setSentryUser({ id: 'student-1', email: 'student@vidya.com', schoolId: 'school-1' })
     expect(Sentry.setUser).toHaveBeenCalledWith({
-      id: 'user-1',
-      email: 'admin@vidya.com',
-      schoolId: undefined,
+      id: 'student-1',
+      email: 'student@vidya.com',
+      schoolId: 'school-1',
     })
   })
 
   it('captures exceptions to Sentry', () => {
-    const err = new Error('Component crashed')
-    const eventId = captureAdminException(err, { component: 'CourseEditor' })
+    const err = new Error('Device sync crashed')
+    const eventId = captureMobileException(err, { component: 'DeviceSync' })
 
     expect(Sentry.captureException).toHaveBeenCalledWith(err, {
-      extra: { component: 'CourseEditor' },
+      extra: { component: 'DeviceSync' },
     })
-    expect(eventId).toBe('event-123')
+    expect(eventId).toBe('event-mobile-123')
   })
 
   it('adds breadcrumbs to Sentry', () => {
-    addAdminBreadcrumb({ message: 'Navigation to /schools', category: 'navigation' })
+    addMobileBreadcrumb({ message: 'Sync started', category: 'sync' })
     expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
-      message: 'Navigation to /schools',
-      category: 'navigation',
+      message: 'Sync started',
+      category: 'sync',
     })
   })
 })

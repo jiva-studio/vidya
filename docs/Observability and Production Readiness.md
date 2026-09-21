@@ -79,7 +79,24 @@ Sentry provides error monitoring, exception reporting, and distributed tracing. 
 ### Admin Panel (`@vidya/admin`)
 - Captures Vue 3 component render errors and unhandled promise rejections.
 - Traces client-side page transitions via Vue Router.
+- **Sentry Session Replay on Error**: Replays user sessions during errors (`replaysOnErrorSampleRate: 1.0`, `maskAllText: true`, `blockAllMedia: true`) with strict PII masking.
 - Attaches signed-in operator ID and school ID to the Sentry scope; clears context upon sign-out.
+- Records HTTP request/response breadcrumbs and forwards `x-request-id` header for distributed tracing.
+
+### Mobile App (`@vidya/mobile`)
+- Captures runtime and network failures on mobile devices.
+- Replays session actions upon errors (`replaysOnErrorSampleRate: 1.0`).
+- Generates and attaches `x-request-id` on every API sync request for distributed tracing across mobile and backend logs.
+
+### Sourcemaps Upload & Build Plugin
+Both `@vidya/admin` and `@vidya/mobile` include `@sentry/vite-plugin`. When `SENTRY_AUTH_TOKEN` is set in CI/CD, source maps are built as `hidden` and uploaded to Sentry, then purged from static build artifacts.
+
+```bash
+# Sentry Build & Release Variables (Admin / Mobile CI)
+SENTRY_AUTH_TOKEN=sntrys_...
+SENTRY_ORG=jiva-studio
+SENTRY_PROJECT=vidya-admin # or vidya-mobile
+```
 
 ### Sentry Configuration
 ```bash
@@ -89,11 +106,13 @@ VIDYA_SENTRY_ENVIRONMENT=production
 VIDYA_SENTRY_RELEASE=v1.0.0
 VIDYA_SENTRY_TRACES_SAMPLE_RATE=0.1
 
-# Frontend Admin (@vidya/admin - passed during build / container start)
+# Frontend Admin & Mobile (@vidya/admin, @vidya/mobile)
 VITE_SENTRY_DSN=https://<key>@o<org>.ingest.sentry.io/<project-admin>
 VITE_ENVIRONMENT=production
 VITE_APP_VERSION=v1.0.0
 VITE_SENTRY_TRACES_SAMPLE_RATE=0.1
+VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE=1.0
+VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE=0.0
 ```
 
 > **Note**: If `VIDYA_SENTRY_DSN` or `VITE_SENTRY_DSN` is left empty (e.g. in local development), Sentry operates in safe no-op mode.
@@ -141,8 +160,10 @@ VIDYA_DB_SSL_REJECT_UNAUTHORIZED=true # Verify server certificate
 | `VIDYA_SENTRY_ENVIRONMENT` | API | `development` / `NODE_ENV` | Environment tag in Sentry |
 | `VIDYA_SENTRY_RELEASE` | API | `0.0.1` / package version | Release tag in Sentry |
 | `VIDYA_SENTRY_TRACES_SAMPLE_RATE` | API | `0.1` (prod) / `1.0` (dev) | Performance tracing sample rate |
-| `VITE_SENTRY_DSN` | Admin | *(empty)* | Sentry DSN for admin panel |
-| `VITE_ENVIRONMENT` | Admin | `production` | Environment tag for admin errors |
+| `VITE_SENTRY_DSN` | Admin / Mobile | *(empty)* | Sentry DSN for client apps |
+| `VITE_ENVIRONMENT` | Admin / Mobile | `production` | Environment tag for client errors |
+| `VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE` | Admin / Mobile | `1.0` | Sentry Replay sample rate on error |
+| `SENTRY_AUTH_TOKEN` | Admin / Mobile Build | *(empty)* | Token for uploading sourcemaps to Sentry |
 | `VIDYA_DB_POOL_MAX` | API | `20` | Max database connections in pool |
 | `VIDYA_DB_POOL_MIN` | API | `2` | Min database connections in pool |
 | `VIDYA_DB_SSL` | API | `false` | Enable SSL for PostgreSQL |
