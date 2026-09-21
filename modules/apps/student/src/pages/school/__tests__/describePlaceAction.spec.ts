@@ -53,4 +53,14 @@ describe('what a request offers to do with itself', () => {
   it.each(EnrollmentStatuses)('names the button of a %s request in the bundles', (status) => {
     expect(describePlaceAction(standing(status)).label).toMatch(/^place-/)
   })
+
+  it('assigns the danger variant to withdraw actions and secondary to archive/unarchive actions', () => {
+    expect(describePlaceAction(standing('pending')).variant).toBe('danger')
+    expect(describePlaceAction(standing('accepted')).variant).toBe('danger')
+    expect(describePlaceAction(standing('declined')).variant).toBe('secondary')
+    expect(describePlaceAction(standing('revoked')).variant).toBe('secondary')
+    expect(describePlaceAction(standing('withdrawn')).variant).toBe('secondary')
+    expect(describePlaceAction(standing('accepted', true)).variant).toBe('secondary')
+    expect(describePlaceAction(standing('pending', true)).variant).toBe('secondary')
+  })
 })

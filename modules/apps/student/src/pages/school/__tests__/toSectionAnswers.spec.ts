@@ -34,4 +34,13 @@ describe('toSectionAnswers', () => {
   it('answers with nothing for a lesson nobody has written on', () => {
     expect(toSectionAnswers([])).toEqual({})
   })
+
+  it('keeps the later answer when multiple answers have the same timestamp', () => {
+    const rows = [
+      on('section-1', 'homework-first', '2026-01-01T00:00:00.000Z'),
+      on('section-1', 'homework-second', '2026-01-01T00:00:00.000Z'),
+    ]
+
+    expect(toSectionAnswers(rows)['section-1' as SectionId]?.id).toBe('homework-second')
+  })
 })

@@ -50,4 +50,13 @@ describe('the courses a student can join', () => {
     expect(cards[0]?.schoolName).toBeNull()
     expect(cards[0]?.schoolCode).toBeNull()
   })
+
+  it('falls back to the first place when no live place exists on the course', () => {
+    const past = anEnrollment({ id: asId<EnrollmentId>('enrollment-past'), status: 'withdrawn' })
+    const rejected = anEnrollment({ id: asId<EnrollmentId>('enrollment-rej'), status: 'declined' })
+
+    const cards = toCourseCards([aCourse()], [aSchool()], [past, rejected])
+
+    expect(cards[0]?.status).toBe('withdrawn')
+  })
 })

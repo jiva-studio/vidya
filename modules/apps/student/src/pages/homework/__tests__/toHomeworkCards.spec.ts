@@ -48,4 +48,10 @@ describe('toHomeworkCards', () => {
 
     expect(cards.map((card) => card.answer.id)).toEqual(['homework-new', 'homework-old'])
   })
+
+  it('leaves schoolCode as null when the school has not arrived', () => {
+    const cards = toHomeworkCards({ ...held, schools: [], answers: [anAnswer()] })
+
+    expect(cards[0]?.schoolCode).toBeNull()
+  })
 })

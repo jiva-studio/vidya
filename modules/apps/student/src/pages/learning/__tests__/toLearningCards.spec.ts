@@ -56,4 +56,11 @@ describe('the courses a student holds a place on', () => {
 
     expect(cards.map((card) => card.schoolName)).toEqual(['Gita School', 'Bhakti School'])
   })
+
+  it('leaves schoolName and schoolCode as null when the school has not arrived', () => {
+    const cards = toLearningCards([anEnrollment()], [aCourse()], [])
+
+    expect(cards[0]?.schoolName).toBeNull()
+    expect(cards[0]?.schoolCode).toBeNull()
+  })
 })
