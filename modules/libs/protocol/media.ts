@@ -147,7 +147,7 @@ export type ResolveMediaResponse = {
 export type StorageProfileView = {
   id: domain.StorageProfileId
   schoolId: domain.SchoolId
-  kind: domain.StorageProfileKind
+  provider: domain.StorageProvider
 
   /**
    * Whether this school is writing into the installation's storage rather than
@@ -160,7 +160,10 @@ export type StorageProfileView = {
    * used, and that bringing their own credentials is still an option.
    */
   lent: boolean
+
+  /** The host the files are served from, and blank while the storage is lent. */
   endpoint: string
+
   region: string
   bucket: string
   prefix: string
@@ -168,7 +171,6 @@ export type StorageProfileView = {
   secretTail: string
   delivery: domain.StorageDelivery
   publicBaseUrl: string | null
-  video: domain.VideoProvider
   quotaBytes: number | null
   usedBytes: number
   verifiedAt: domain.IsoDateTime | null
@@ -186,16 +188,22 @@ export type StorageProfileView = {
  * would otherwise break every file the school has published.
  */
 export type UpsertStorageProfileRequest = {
-  kind: domain.StorageProfileKind
-  endpoint: string
+  provider: domain.StorageProvider
+
+  /** Required for `s3-compatible`, refused for the rest: theirs is derived. */
+  endpoint?: string
+
   region: string
+
+  /** R2 addresses by account rather than by region, and has no regions. */
+  r2AccountId?: string
+
   bucket: string
   prefix?: string
   accessKeyId: string
   secret: string
   publicBaseUrl?: string
   tokenSecret?: string
-  video?: domain.VideoProvider
   quotaBytes?: number
 }
 

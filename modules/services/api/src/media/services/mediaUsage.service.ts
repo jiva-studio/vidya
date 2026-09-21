@@ -33,6 +33,21 @@ export class MediaUsageService {
     }
   }
 
+  /**
+   * The bytes a school is charged for, summed rather than counted.
+   *
+   * There is no running total anywhere: the profile that holds the keys is
+   * replaced on every rotation, so a counter kept beside them would start
+   * again from zero the moment a school changed a credential.
+   */
+  async usedBytesOf(schoolId: SchoolId): Promise<number> {
+    const rows = await this.dataSource
+      .getRepository(Media)
+      .find({ where: { schoolId, status: 'ready' }, select: ['sizeBytes'] })
+
+    return rows.reduce((total, row) => total + Number(row.sizeBytes), 0)
+  }
+
   async reservedBytesOf(schoolId: SchoolId): Promise<number> {
     const rows = await this.dataSource
       .getRepository(Media)

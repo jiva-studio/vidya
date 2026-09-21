@@ -18,9 +18,10 @@ type DefaultStorage = ConfigType<typeof MediaConfig>['defaultStorage']
  * The storage of the installation, given to a school that brought none.
  *
  * Deployment configuration cannot serve as a profile on its own: every file
- * names the profile it was written through, and the quota is counted on the
- * profile row. A school on the installation's bucket therefore gets a row of
- * its own, under `school/<schoolId>`, carrying the installation's quota.
+ * names the profile it was written through, so a school on the installation's
+ * bucket gets a row of its own, under `school/<schoolId>`. The room it may
+ * take is not on that row — a school nobody decided a ceiling for stores under
+ * the installation's default, which stays the deployment's to change.
  *
  * The row is written when the school first needs it rather than by a
  * migration, so the credentials come from the environment the deployment is
@@ -59,17 +60,20 @@ export class InstallationStorageService {
     return {
       id: profileId,
       schoolId,
-      kind: 's3',
+
+      // The address is deployment's to name, so the lent row is the one shape
+      // that carries an endpoint of its own rather than a composed host.
+      provider: 's3-compatible',
       endpoint: storage.endpoint,
+
       region: storage.region,
+      r2AccountId: null,
       bucket: storage.bucket,
       prefix: defaultPrefixOf(schoolId),
       accessKeyId: storage.accessKeyId,
       delivery: deliveryFor(storage.publicBaseUrl, null),
       publicBaseUrl: storage.publicBaseUrl,
-      video: { kind: 'none' },
-      quotaBytes: this.config.defaultQuotaBytes,
-      sealed: this.sealing.sealProfile({ secret: storage.secret }, { schoolId, profileId }),
+      secrets: this.sealing.sealProfile({ secret: storage.secret }, { schoolId, profileId }),
 
       // Nothing probed these credentials, and no school could act on their
       // being wrong: they are the installation's to prove, not the school's.

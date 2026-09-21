@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { MediaConfig } from '@vidya/api/configs'
-import { toMediaRecord } from '@vidya/api/media/mappers'
+import { hasOwnCredentials, toMediaRecord } from '@vidya/api/media/mappers'
 import { MediaId, StoredObject, UserId } from '@vidya/domain'
 import { Media, StorageProfile } from '@vidya/entities'
 import * as protocol from '@vidya/protocol'
@@ -13,6 +13,7 @@ import { defaultPrefixOf, isAllowedMimeType, maxBytesOf, storageKeyOf } from './
 import { MediaRowsService } from './mediaRows.service'
 import { MediaUsageService } from './mediaUsage.service'
 import { SchoolStorage, SchoolStorageService } from './schoolStorage.service'
+import { quotaBytesFor, StorageQuotasService } from './storageQuotas.service'
 
 /**
  * Signing one upload and believing storage about what landed.
@@ -27,6 +28,7 @@ import { SchoolStorage, SchoolStorageService } from './schoolStorage.service'
 export class MediaUploadsService {
   constructor(
     @Inject(MediaConfig.KEY) private readonly config: ConfigType<typeof MediaConfig>,
+    private readonly quotas: StorageQuotasService,
     private readonly rows: MediaRowsService,
     private readonly storages: SchoolStorageService,
     private readonly usage: MediaUsageService,
@@ -109,7 +111,8 @@ export class MediaUploadsService {
   }
 
   /**
-   * Room for this file, counting what outstanding grants already promised.
+   * Room for this file, counting what is stored and what outstanding grants
+   * already promised.
    *
    * Without the reservation ten parallel grants each pass on their own and
    * overfill the bucket together, and the school finds out from its provider
@@ -119,12 +122,18 @@ export class MediaUploadsService {
     request: protocol.CreateUploadRequest,
     profile: StorageProfile,
   ): Promise<void> {
-    if (profile.quotaBytes === null) return
+    const quotaBytes = quotaBytesFor(
+      await this.quotas.findQuotaBytes(request.schoolId),
+      hasOwnCredentials(profile),
+      this.config.defaultQuotaBytes,
+    )
 
+    if (quotaBytes === null) return
+
+    const stored = await this.usage.usedBytesOf(request.schoolId)
     const reserved = await this.usage.reservedBytesOf(request.schoolId)
-    const occupied = Number(profile.usedBytes) + reserved
 
-    if (occupied + request.sizeBytes > Number(profile.quotaBytes)) {
+    if (stored + reserved + request.sizeBytes > quotaBytes) {
       throw new MediaRefusedError('quota-exceeded')
     }
   }

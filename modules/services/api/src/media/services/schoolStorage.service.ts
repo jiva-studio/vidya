@@ -6,6 +6,7 @@ import { MEDIA_STORAGE, MediaStorageFactory, StorageCredentials } from '../infra
 import { StorageFailedError } from '../storageFailure'
 import { InstallationStorageService } from './installationStorage.service'
 import { SecretSealingService } from './secretSealing.service'
+import { storageEndpointFor } from './storageAddress'
 import { StorageProfilesService } from './storageProfiles.service'
 
 /** A bucket a school's files live in, together with the row that named it. */
@@ -55,13 +56,13 @@ export class SchoolStorageService {
 
   private credentialsOf(profile: StorageProfile): StorageCredentials {
     return {
-      endpoint: profile.endpoint,
+      endpoint: storageEndpointFor(profile.provider, profile),
       region: profile.region,
       bucket: profile.bucket,
       prefix: profile.prefix,
       accessKeyId: profile.accessKeyId,
-      secret: this.sealing.openSecret(profile, {
-        schoolId: profile.schoolId as SchoolId,
+      secret: this.sealing.openSecret(profile.secrets, {
+        schoolId: profile.schoolId,
         profileId: profile.id,
       }),
     }
