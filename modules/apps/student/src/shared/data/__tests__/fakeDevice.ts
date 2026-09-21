@@ -329,7 +329,8 @@ const blank = { template: '<div />' }
  * are held to these paths where they are declared.
  */
 const addresses: RouteRecordRaw[] = [
-  { path: '/', name: 'learning', component: blank },
+  { path: '/', name: 'courses', component: blank },
+  { path: '/learning', name: 'learning', component: blank },
   { path: '/s/:code', name: 'school', component: blank },
   { path: '/s/:code/c/:courseId', name: 'course', component: blank },
   { path: '/s/:code/c/:courseId/l/:lessonId', name: 'lesson', component: blank },

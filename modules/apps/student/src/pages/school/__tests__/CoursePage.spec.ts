@@ -16,6 +16,7 @@ import {
   siteStandsAt,
   textOf,
 } from '@/shared/data/__tests__/fakeDevice'
+import { translate } from '@/shared/i18n'
 import { useSiteStatus } from '@/shared/status'
 import { useOutboxView } from '@/shared/sync'
 
@@ -76,7 +77,7 @@ describe('one course', () => {
   it('says a lesson is not here rather than counting nothing out of nothing', async () => {
     const { screen } = await render({ ...taught, versions: [] })
 
-    expect(screen.text()).toContain('Not on this device yet')
+    expect(screen.text()).toContain(translate('lesson-not-here'))
   })
 
   it('offers a place to a student who holds none', async () => {
@@ -97,10 +98,10 @@ describe('one course', () => {
     expect(screen.find('a[href="/s/GITA/c/course-1/place"]').exists()).toBe(true)
   })
 
-  it('says the course is not on this device rather than that it does not exist', async () => {
+  it('says the course is not open to them rather than that it does not exist', async () => {
     const { screen } = await render({ schools: [aSchool()], courses: [] })
 
-    expect(screen.text()).toContain('not on this device')
+    expect(screen.text()).toContain(translate('course-absent-title'))
   })
 
   it('refuses a course of another school pasted under this code', async () => {
@@ -109,7 +110,7 @@ describe('one course', () => {
     const { screen } = await render({ schools: [aSchool()], courses: [theirs] })
 
     expect(screen.text()).not.toContain('Somebody else course')
-    expect(screen.text()).toContain('not on this device')
+    expect(screen.text()).toContain(translate('course-absent-title'))
   })
 
   it('promises the course is coming while no run has finished here', async () => {
@@ -118,7 +119,7 @@ describe('one course', () => {
     const { screen } = await render({ schools: [aSchool()], courses: [] })
 
     expect(screen.text()).toContain('Your courses are on their way')
-    expect(screen.text()).not.toContain('not on this device')
+    expect(screen.text()).not.toContain(translate('course-absent-title'))
   })
 
   it('tells a course with no lessons apart from one whose lessons are coming', async () => {
@@ -180,7 +181,7 @@ describe('the request for a place on this course', () => {
     useOutboxView().adoptJournal('student-1', journalOf([]))
     const { screen } = await render(asked)
 
-    expect(textOf(screen)).toContain('Accepted')
+    expect(textOf(screen)).toContain(translate('sync-state-accepted'))
   })
 
   it('says why the school refused it, beside the request itself', async () => {

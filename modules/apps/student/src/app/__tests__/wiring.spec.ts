@@ -38,9 +38,9 @@ const routeNames = new Set(
     .filter(Boolean),
 )
 
-// The three addresses the shell itself offers. Everything else is reached from
-// a screen, a guard or a link that was printed somewhere.
-const inTheShell = ['learning', 'homework', 'settings']
+// The sections the shell itself offers. Everything else is reached from a
+// screen, a guard or a link that was printed somewhere.
+const inTheShell = ['courses', 'learning', 'homework', 'settings']
 
 const reachedFromElsewhere: Record<string, string> = {
   login: 'the guard, when there is no session',
@@ -67,12 +67,11 @@ describe('the site as one thing', () => {
     expect(screens.length).toBeGreaterThan(0)
   })
 
-  it('points every link in the shell at a route that exists', () => {
+  it('offers every section of the shell at a route that exists', () => {
     const shell = readFileSync(join(root, 'app', 'App.vue'), 'utf8')
-    const addresses = [...shell.matchAll(/to="([^"]+)"/g)].map((match) => match[1])
+    const addresses = [...shell.matchAll(/to: '([^']+)'/g)].map((match) => match[1])
 
-    expect(addresses.length).toBe(inTheShell.length)
-    expect(addresses.filter((address) => router.resolve(address).name === 'not-found')).toEqual([])
+    expect(addresses.map((address) => String(router.resolve(address).name))).toEqual(inTheShell)
   })
 
   it('leaves no route without either a link in the shell or a screen that leads to it', () => {

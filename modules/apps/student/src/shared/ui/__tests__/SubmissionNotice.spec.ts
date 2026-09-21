@@ -3,7 +3,7 @@ import { HomeworkStatuses, SyncRejectionReasons } from '@vidya/domain'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
-import { enBundle, fluent, ruBundle } from '@/shared/i18n'
+import { enBundle, fluent, ruBundle, translate } from '@/shared/i18n'
 import { describeAnswer, describeSubmission } from '@/shared/lib'
 import { SubmissionNotice } from '@/shared/ui'
 
@@ -14,15 +14,15 @@ describe('where a record stands', () => {
   it('says the record is here and has not gone out', () => {
     const screen = draw({ state: 'notSent' })
 
-    expect(screen.text()).toContain('Not sent')
-    expect(screen.text()).toContain('as soon as there is a connection')
+    expect(screen.text()).toContain(translate('sync-state-notSent'))
+    expect(screen.text()).toContain(translate('sync-state-notSent-hint'))
   })
 
   it('names why the school refused it, beside the record itself', () => {
     const screen = draw({ state: 'rejected', reason: 'alreadyAccepted' })
 
-    expect(screen.get('[data-reason]').text()).toContain('already been accepted')
-    expect(screen.text()).toContain('Nothing has been lost')
+    expect(screen.get('[data-reason]').text()).toBe(translate('sync-rejection-alreadyAccepted'))
+    expect(screen.text()).toContain(translate('sync-rejection-kept-here'))
   })
 
   it('names no reason where there is none to name', () => {

@@ -10,6 +10,7 @@ import {
   mountAt,
   siteStandsAt,
 } from '@/shared/data/__tests__/fakeDevice'
+import { translate } from '@/shared/i18n'
 import { useSiteStatus } from '@/shared/status'
 
 import SchoolPage from '../ui/SchoolPage.vue'
@@ -48,7 +49,7 @@ describe("a school's catalogue", () => {
     })
 
     expect(screen.text()).not.toContain('Unfinished course')
-    expect(screen.text()).toContain('shows no courses')
+    expect(screen.text()).toContain(translate('school-nothing-title'))
   })
 
   it('shows no course of another school under this code', async () => {
@@ -63,10 +64,10 @@ describe("a school's catalogue", () => {
     expect(screen.text()).not.toContain('Somebody else course')
   })
 
-  it('says the school is not on this device rather than that it does not exist', async () => {
+  it('says the student is not in this school rather than that it does not exist', async () => {
     const { screen } = await render({ schools: [] })
 
-    expect(screen.text()).toContain('not on this device')
+    expect(screen.text()).toContain(translate('school-absent-title'))
   })
 
   it('promises the school is coming while no run has finished here', async () => {
@@ -74,8 +75,8 @@ describe("a school's catalogue", () => {
 
     const { screen } = await render({ schools: [] })
 
-    expect(screen.text()).toContain('Your courses are on their way')
-    expect(screen.text()).not.toContain('not on this device')
+    expect(screen.text()).toContain(translate('waiting-title'))
+    expect(screen.text()).not.toContain(translate('school-absent-title'))
   })
 
   it('tells an empty school apart from one whose courses have not arrived', async () => {

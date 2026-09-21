@@ -16,6 +16,7 @@ import {
   siteStandsAt,
   textOf,
 } from '@/shared/data/__tests__/fakeDevice'
+import { translate } from '@/shared/i18n'
 import { useOutboxView } from '@/shared/sync'
 
 import PlacePage from '../ui/PlacePage.vue'
@@ -139,7 +140,7 @@ describe('what became of a request', () => {
     const { screen } = await render()
     await journalHolds([aRow()])
 
-    expect(screen.text()).toContain('Saved here, not sent yet')
+    expect(screen.text()).toContain(translate('submission-notSent'))
   })
 
   it('says the school has it once the journal holds nothing about it', async () => {
@@ -154,7 +155,7 @@ describe('what became of a request', () => {
     await journalHolds([aRow({ status: 'rejected', reason: 'courseNotOffered' })])
 
     expect(screen.text()).toContain('not taking students onto this course yet')
-    expect(screen.text()).toContain('still on this device')
+    expect(screen.text()).toContain(translate('place-rejected-kept'))
   })
 
   it('asks before handing a waiting request back', async () => {
@@ -242,7 +243,7 @@ describe('what became of a request', () => {
   it('answers nothing from a tab that is not the one keeping the data', async () => {
     const { screen } = await render(held, false)
 
-    expect(screen.text()).toContain('Another tab')
+    expect(screen.text()).toContain(translate('place-elsewhere'))
     expect(screen.text()).not.toContain('Cancel the request')
   })
 

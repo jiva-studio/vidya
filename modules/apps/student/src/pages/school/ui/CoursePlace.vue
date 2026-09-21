@@ -4,10 +4,10 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { describePlace } from '@/shared/lib'
-import { SubmissionNotice } from '@/shared/ui'
+import { actionLinkClasses, quietLinkClasses, SubmissionNotice } from '@/shared/ui'
 
 import type { CoursePlaceProps } from '../types'
-import { actionLinkClasses, placeClasses, quietLinkClasses } from './styles'
+import { placeClasses } from './styles'
 
 /* --------------------------------- Props ---------------------------------- */
 

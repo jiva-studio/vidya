@@ -83,11 +83,7 @@ async function onAct(action: PlaceActionName) {
 
     <Skeleton v-if="view === 'reading'" :lines="3" />
 
-    <BackfillProgress
-      v-else-if="view === 'arriving'"
-      :rows="status.done.value"
-      :running="status.syncing.value"
-    />
+    <BackfillProgress v-else-if="view === 'arriving'" :running="status.syncing.value" />
 
     <EmptyState
       v-else-if="view === 'absent'"

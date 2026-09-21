@@ -3,6 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import { messages as authMessages } from '@/features/auth-otp'
 import { messages as joinMessages } from '@/features/join-school'
 import { messages as leaveMessages } from '@/features/leave-school'
+import * as courses from '@/pages/courses'
 import * as homework from '@/pages/homework'
 import * as join from '@/pages/join'
 import * as learning from '@/pages/learning'
@@ -24,7 +25,7 @@ interface Section {
  * gathered here — which is what keeps several people writing several sections
  * at once out of the same file.
  */
-const sections: Section[] = [learning, homework, settings, school, join, login]
+const sections: Section[] = [courses, learning, homework, settings, school, join, login]
 
 /** The catch-all comes after everything a section might own. */
 const fallbacks: Section[] = [notFound]

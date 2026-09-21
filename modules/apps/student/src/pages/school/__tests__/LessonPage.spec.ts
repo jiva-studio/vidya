@@ -23,6 +23,7 @@ import {
   mountAt,
   siteStandsAt,
 } from '@/shared/data/__tests__/fakeDevice'
+import { translate } from '@/shared/i18n'
 import { useSyncRuns } from '@/shared/sync'
 
 import LessonPage from '../ui/LessonPage.vue'
@@ -154,7 +155,7 @@ describe('one lesson', () => {
     const { screen } = await render()
 
     expect(screen.get('input[type="checkbox"]').attributes('disabled')).toBeDefined()
-    expect(screen.text()).toContain('Another tab')
+    expect(screen.text()).toContain(translate('lesson-read-only'))
   })
 
   it('records nothing for a student who holds no place on the course', async () => {
@@ -174,10 +175,10 @@ describe('one lesson', () => {
     expect(screen.get('button').text()).toContain('Reload')
   })
 
-  it('says the lesson is not on this machine rather than that it does not exist', async () => {
+  it('says the lesson is not open to them rather than that it does not exist', async () => {
     const { screen } = await render({ ...taught, versions: [] })
 
-    expect(screen.text()).toContain('not on this device')
+    expect(screen.text()).toContain(translate('lesson-absent-title'))
   })
 
   it('promises the lesson is coming while no run has finished here', async () => {
@@ -185,7 +186,7 @@ describe('one lesson', () => {
     const { screen } = await render({ ...taught, versions: [] })
 
     expect(screen.text()).toContain('Your courses are on their way')
-    expect(screen.text()).not.toContain('not on this device')
+    expect(screen.text()).not.toContain(translate('lesson-absent-title'))
   })
 
   it('refuses a lesson of another course pasted under this address', async () => {
@@ -194,7 +195,7 @@ describe('one lesson', () => {
     const { screen } = await render({ ...taught, lessons: [elsewhere] })
 
     expect(screen.text()).not.toContain('Another course')
-    expect(screen.text()).toContain('not on this device')
+    expect(screen.text()).toContain(translate('lesson-absent-title'))
   })
 
   it('reads the lesson back after recording, so the screen shows what was written', async () => {

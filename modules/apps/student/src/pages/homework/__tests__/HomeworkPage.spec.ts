@@ -14,6 +14,7 @@ import {
   siteStandsAt,
   textOf,
 } from '@/shared/data/__tests__/fakeDevice'
+import { translate } from '@/shared/i18n'
 import { useOutboxView } from '@/shared/sync'
 
 import HomeworkPage from '../ui/HomeworkPage.vue'
@@ -66,14 +67,22 @@ describe('my homework, across every school', () => {
   it('says there is nothing written yet rather than showing an empty list', async () => {
     const { screen } = await render(learning)
 
-    expect(textOf(screen)).toContain('not written any homework yet')
+    expect(textOf(screen)).toContain(translate('homework-empty-title'))
   })
 
-  it('promises the work is coming while no run has finished here', async () => {
+  it('offers the way to the courses homework is written on rather than a dead end', async () => {
+    const { screen } = await render(learning)
+
+    const out = screen.findAll('a').find((link) => link.text() === translate('homework-browse'))
+
+    expect(out?.attributes('href')).toBe('/learning')
+  })
+
+  it('promises the work is coming while nothing has arrived yet', async () => {
     siteStandsAt()
     const { screen } = await render(learning)
 
-    expect(textOf(screen)).toContain('on their way')
-    expect(textOf(screen)).not.toContain('not written any homework yet')
+    expect(textOf(screen)).toContain(translate('waiting-title'))
+    expect(textOf(screen)).not.toContain(translate('homework-empty-title'))
   })
 })

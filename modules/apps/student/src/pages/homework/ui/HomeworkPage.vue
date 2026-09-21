@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { EmptyState, Skeleton } from '@vidya/ui'
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import { useSiteStatus } from '@/shared/status'
-import { BackfillProgress, pageClasses, titleClasses } from '@/shared/ui'
+import { actionLinkClasses, BackfillProgress, pageClasses, titleClasses } from '@/shared/ui'
 
 import { pickHomeworkView, useHomeworkCards } from '../model'
 import HomeworkCard from './HomeworkCard.vue'
@@ -35,7 +36,11 @@ const view = computed(() =>
       v-else-if="view === 'empty'"
       :title="$t('homework-empty-title')"
       :description="$t('homework-empty-text')"
-    />
+    >
+      <RouterLink :class="actionLinkClasses" to="/learning">
+        {{ $t('homework-browse') }}
+      </RouterLink>
+    </EmptyState>
 
     <ol v-else :class="listClasses">
       <HomeworkCard v-for="card in cards" :key="card.answer.id" :card="card" />

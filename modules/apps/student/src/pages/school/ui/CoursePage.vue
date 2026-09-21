@@ -46,11 +46,7 @@ const lessonsView = computed(() =>
 
     <Skeleton v-if="view === 'reading'" :lines="3" />
 
-    <BackfillProgress
-      v-else-if="view === 'arriving'"
-      :rows="status.done.value"
-      :running="status.syncing.value"
-    />
+    <BackfillProgress v-else-if="view === 'arriving'" :running="status.syncing.value" />
 
     <EmptyState
       v-else-if="view === 'absent'"
@@ -79,11 +75,7 @@ const lessonsView = computed(() =>
         />
       </ol>
 
-      <BackfillProgress
-        v-else-if="lessonsView === 'arriving'"
-        :rows="status.done.value"
-        :running="status.syncing.value"
-      />
+      <BackfillProgress v-else-if="lessonsView === 'arriving'" :running="status.syncing.value" />
 
       <p v-else :class="mutedClasses">{{ $t('course-no-lessons') }}</p>
     </template>

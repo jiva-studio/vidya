@@ -1,5 +1,5 @@
 join-resolving = Looking up the school…
-join-invitation = Join this school and its courses will appear in your learning.
+join-invitation = Join this school and its courses appear among all courses.
 join-action = Join the school
 join-sign-in = Sign in to join
 join-joining = Joining…

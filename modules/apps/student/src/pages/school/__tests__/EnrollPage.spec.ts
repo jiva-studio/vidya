@@ -15,6 +15,7 @@ import {
   mountAt,
   siteStandsAt,
 } from '@/shared/data/__tests__/fakeDevice'
+import { translate } from '@/shared/i18n'
 
 import EnrollPage from '../ui/EnrollPage.vue'
 
@@ -156,10 +157,10 @@ describe('asking for a place', () => {
     expect(addressOf(screen)).toBe('place')
   })
 
-  it('says a course that is not on this device cannot be asked for', async () => {
+  it('says a course that is not open to them cannot be asked for', async () => {
     const { screen } = await render({ schools: [aSchool()], courses: [] })
 
-    expect(screen.text()).toContain('not on this device')
+    expect(screen.text()).toContain(translate('course-absent-title'))
     expect(screen.find('[data-test="ask"]').exists()).toBe(false)
   })
 
@@ -167,7 +168,7 @@ describe('asking for a place', () => {
     const { screen } = await render(taught, false)
 
     expect(screen.find('[data-test="ask"]').attributes('disabled')).toBeDefined()
-    expect(screen.text()).toContain('Another tab')
+    expect(screen.text()).toContain(translate('enroll-elsewhere'))
   })
 
   it('says the request could not be written rather than pretending it was', async () => {

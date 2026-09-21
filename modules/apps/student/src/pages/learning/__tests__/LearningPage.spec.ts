@@ -11,13 +11,14 @@ import {
   mountAt,
   siteStandsAt,
 } from '@/shared/data/__tests__/fakeDevice'
+import { translate } from '@/shared/i18n'
 import { useSiteStatus } from '@/shared/status'
 
 import LearningPage from '../ui/LearningPage.vue'
 
 const render = async (rows: DeviceRows = {}) => {
   const device = fakeDevice(rows)
-  const screen = await mountAt(LearningPage, '/', device.provide)
+  const screen = await mountAt(LearningPage, '/learning', device.provide)
 
   await flushPromises()
   return { screen, device }
@@ -25,7 +26,7 @@ const render = async (rows: DeviceRows = {}) => {
 
 const bhakti = aSchool({ id: asId<SchoolId>('school-2'), name: 'Bhakti School', code: 'BHAKTI' })
 
-describe('the learning screen', () => {
+describe('the courses a student holds a place on', () => {
   beforeEach(() => {
     siteStandsAt()
     vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -34,8 +35,8 @@ describe('the learning screen', () => {
   it('promises the courses are coming while the first run is still going', async () => {
     const { screen } = await render()
 
-    expect(screen.text()).toContain('Your courses are on their way')
-    expect(screen.text()).not.toContain('Nobody has invited you')
+    expect(screen.text()).toContain(translate('waiting-title'))
+    expect(screen.text()).not.toContain(translate('learning-uninvited-title'))
   })
 
   it('reads the schools again as synchronisation brings more', async () => {
@@ -44,7 +45,7 @@ describe('the learning screen', () => {
     useSiteStatus().runFinished(12, true)
     await flushPromises()
 
-    expect(screen.text()).not.toContain('Your courses are on their way')
+    expect(screen.text()).not.toContain(translate('waiting-title'))
     expect(device.schools.list).toHaveBeenCalledTimes(2)
   })
 
@@ -53,18 +54,18 @@ describe('the learning screen', () => {
 
     const { screen } = await render()
 
-    expect(screen.text()).toContain('Nobody has invited you anywhere')
-    expect(screen.text()).toContain('Ask your school')
+    expect(screen.text()).toContain(translate('learning-uninvited-title'))
+    expect(screen.text()).toContain(translate('learning-uninvited-text'))
   })
 
   it('survives a database whose schema another tab has not created yet', async () => {
     const device = fakeDevice()
     vi.mocked(device.schools.list).mockRejectedValue(new Error('no such table: sync_rows'))
 
-    const screen = await mountAt(LearningPage, '/', device.provide)
+    const screen = await mountAt(LearningPage, '/learning', device.provide)
     await flushPromises()
 
-    expect(screen.text()).toContain('My learning')
+    expect(screen.text()).toContain(translate('learning-title'))
   })
 
   it('lists the courses of every school at once, each carrying its school', async () => {
@@ -121,8 +122,8 @@ describe('the learning screen', () => {
       enrollments: [anEnrollment({ status: 'pending' })],
     })
 
-    expect(screen.text()).toContain('Waiting for an answer')
-    expect(screen.text()).not.toContain('Studying')
+    expect(screen.text()).toContain(translate('place-pending'))
+    expect(screen.text()).not.toContain(translate('place-accepted'))
   })
 
   it('names a school whose courses have not arrived rather than dropping the place', async () => {
@@ -134,7 +135,7 @@ describe('the learning screen', () => {
       enrollments: [anEnrollment()],
     })
 
-    expect(screen.text()).toContain('A course that has not arrived yet')
+    expect(screen.text()).toContain(translate('learning-course-unnamed'))
     expect(screen.text()).toContain('Gita School')
   })
 
@@ -143,7 +144,17 @@ describe('the learning screen', () => {
 
     const { screen } = await render({ schools: [aSchool()], courses: [aCourse()] })
 
-    expect(screen.text()).toContain('You are not on a course yet')
-    expect(screen.text()).not.toContain('Nobody has invited you')
+    expect(screen.text()).toContain(translate('learning-no-courses-title'))
+    expect(screen.text()).not.toContain(translate('learning-uninvited-title'))
+  })
+
+  it('offers the way to the courses on offer rather than a dead end', async () => {
+    siteStandsAt({ filled: true })
+
+    const { screen } = await render({ schools: [aSchool()], courses: [aCourse()] })
+
+    const out = screen.findAll('a').find((link) => link.text() === translate('learning-browse'))
+
+    expect(out?.attributes('href')).toBe('/')
   })
 })

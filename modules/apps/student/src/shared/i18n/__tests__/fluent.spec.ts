@@ -26,7 +26,7 @@ describe('fluent bundles', () => {
   })
 
   it('never leaks an English string into the Russian bundle', () => {
-    for (const key of ['nav-learning', 'nav-homework', 'sync-running', 'not-found-title']) {
+    for (const key of ['nav-courses', 'nav-homework', 'waiting-title', 'not-found-title']) {
       expect(message(ruBundle, key)).not.toBe(message(enBundle, key))
     }
   })

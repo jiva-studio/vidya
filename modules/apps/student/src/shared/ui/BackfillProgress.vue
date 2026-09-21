@@ -13,7 +13,7 @@ withDefaults(defineProps<BackfillProgressProps>(), { running: true })
 
 <template>
   <div :class="backfillClasses">
-    <p>{{ $t('backfill-title') }}</p>
-    <Spinner v-if="running" size="sm" :label="$t('backfill-running')" />
+    <p>{{ $t('waiting-title') }}</p>
+    <Spinner v-if="running" size="sm" :label="$t('waiting-running')" />
   </div>
 </template>

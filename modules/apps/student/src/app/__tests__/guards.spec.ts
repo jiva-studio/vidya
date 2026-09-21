@@ -67,7 +67,7 @@ describe('who is let where', () => {
 
     await router.push('/login')
 
-    expect(router.currentRoute.value.name).toBe('learning')
+    expect(router.currentRoute.value.name).toBe('courses')
   })
 
   it('refuses an identifier where a school code belongs', async () => {

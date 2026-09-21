@@ -19,6 +19,7 @@ import {
   siteStandsAt,
   textOf,
 } from '@/shared/data/__tests__/fakeDevice'
+import { translate } from '@/shared/i18n'
 import { useSyncRuns } from '@/shared/sync'
 
 import LessonPage from '../ui/LessonPage.vue'
@@ -165,7 +166,7 @@ describe('the homework a section asks for', () => {
     const { screen } = await render(taught())
 
     expect(screen.find('textarea').exists()).toBe(false)
-    expect(textOf(screen)).toContain('Another tab')
+    expect(textOf(screen)).toContain(translate('answer-read-only'))
   })
 })
 
@@ -292,6 +293,6 @@ describe("the school's verdict on a quiz", () => {
     const { screen } = await render(rows)
 
     expect(screen.find('[data-correct]').exists()).toBe(false)
-    expect(textOf(screen)).toContain('Your answer is recorded.')
+    expect(textOf(screen)).toContain(translate('lesson-answer-recorded'))
   })
 })

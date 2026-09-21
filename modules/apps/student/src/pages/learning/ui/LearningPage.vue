@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { EmptyState, Skeleton } from '@vidya/ui'
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import { useSiteStatus } from '@/shared/status'
-import { BackfillProgress, pageClasses, titleClasses } from '@/shared/ui'
+import { actionLinkClasses, BackfillProgress, pageClasses, titleClasses } from '@/shared/ui'
 
 import { pickLearningView, useLearningCards } from '../model'
 import LearningCard from './LearningCard.vue'
@@ -31,11 +32,7 @@ const studying = computed(() => cards.value.length > 0)
 
     <Skeleton v-if="reading" :lines="3" />
 
-    <BackfillProgress
-      v-else-if="view === 'arriving'"
-      :rows="status.done.value"
-      :running="status.syncing.value"
-    />
+    <BackfillProgress v-else-if="view === 'arriving'" :running="status.syncing.value" />
 
     <EmptyState
       v-else-if="view === 'uninvited'"
@@ -51,6 +48,8 @@ const studying = computed(() => cards.value.length > 0)
       v-else
       :title="$t('learning-no-courses-title')"
       :description="$t('learning-no-courses-text')"
-    />
+    >
+      <RouterLink :class="actionLinkClasses" to="/">{{ $t('learning-browse') }}</RouterLink>
+    </EmptyState>
   </section>
 </template>
