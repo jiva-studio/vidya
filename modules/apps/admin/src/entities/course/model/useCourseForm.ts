@@ -8,7 +8,13 @@ import { reasonOf } from '@/shared/lib'
 import { createCourse, getCourse, updateCourse } from '../api'
 import type { CourseFormValues } from '../types'
 
-const blank = (): CourseFormValues => ({ name: '', description: '', learningType: 'individual' })
+// A course is born out of sight: it is shown to students when someone says so.
+const blank = (): CourseFormValues => ({
+  name: '',
+  description: '',
+  learningType: 'individual',
+  status: 'draft',
+})
 
 /**
  * Creating and editing a course, which is one screen and one request shape.
@@ -38,6 +44,7 @@ export const useCourseForm = (courseId?: CourseId) => {
         name: course.name,
         description: course.description ?? '',
         learningType: course.learningType,
+        status: course.status,
       }
     } catch (caught) {
       error.value = reasonOf(caught, 'course-load-failed')

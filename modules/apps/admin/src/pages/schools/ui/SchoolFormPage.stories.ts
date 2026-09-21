@@ -8,6 +8,9 @@ import { fakeHttpClient, pending, refusal, signInAs } from '@/shared/testing'
 import SchoolFormPage from './SchoolFormPage.vue'
 
 const SCHOOL = '/edu/schools/school-1'
+const CODE = '/edu/schools/school-1/code'
+
+const school = { id: 'school-1', name: 'First school' }
 
 const FULL = ['schools:create', 'schools:update'] as PermissionKey[]
 
@@ -32,7 +35,15 @@ export default meta
 type Story = StoryObj<typeof SchoolFormPage>
 
 export const Default: Story = {
-  render: over({ [SCHOOL]: { id: 'school-1', name: 'First school' } }, { id: 'school-1' }),
+  render: over({ [SCHOOL]: school, [CODE]: { code: 'AB3K7Q' } }, { id: 'school-1' }),
+}
+
+/** The school takes no students yet, so pressing for a link is refused with a way out. */
+export const WithoutStudentRole: Story = {
+  render: over(
+    { [SCHOOL]: school, [CODE]: refusal(409, 'The school has no role to give a student') },
+    { id: 'school-1' },
+  ),
 }
 
 export const Loading: Story = { render: over({ [SCHOOL]: pending() }, { id: 'school-1' }) }

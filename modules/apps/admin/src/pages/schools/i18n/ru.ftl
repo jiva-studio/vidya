@@ -23,6 +23,14 @@ schools-form-logo-invalid = Нужна ссылка, начинающаяся с
 schools-form-description = Описание
 schools-form-description-hint = Коротко о школе — это увидят студенты в каталоге
 
+schools-join-title = Ссылка для вступления
+schools-join-hint = Раздайте эту ссылку: кто откроет её, попадёт в школу и увидит её курсы.
+schools-join-mint = Получить ссылку
+schools-join-copy = Скопировать
+schools-join-copied = Ссылка скопирована.
+schools-join-no-student-role = В школе ещё не выбрана роль для нового студента, поэтому и ссылки пока нет.
+schools-join-open-settings = Выбрать роль в настройках школы
+
 schools-settings-title = Настройки школы
 schools-settings-default-role = Роль нового студента
 schools-settings-default-role-hint = Её получит каждый, кого примут на курс

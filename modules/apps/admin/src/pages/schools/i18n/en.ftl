@@ -23,6 +23,14 @@ schools-form-logo-invalid = Needs a link beginning with http:// or https://
 schools-form-description = Description
 schools-form-description-hint = A line or two about the school — students see it in the catalogue
 
+schools-join-title = Joining link
+schools-join-hint = Hand this link out: whoever opens it joins the school and sees its courses.
+schools-join-mint = Get the link
+schools-join-copy = Copy
+schools-join-copied = The link is copied.
+schools-join-no-student-role = The school has no role for a new student yet, so there is no link to give out.
+schools-join-open-settings = Choose the role in the school settings
+
 schools-settings-title = School settings
 schools-settings-default-role = New student's role
 schools-settings-default-role-hint = Everyone accepted onto a course gets this role

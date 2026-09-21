@@ -73,6 +73,7 @@ function idFromRoute(): CourseId | undefined {
       v-else
       v-model="form.values.value"
       :busy="form.saving.value"
+      :publishable="editing"
       @submit="onSubmit"
       @cancel="onCancel"
     />

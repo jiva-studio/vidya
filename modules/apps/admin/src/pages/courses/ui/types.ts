@@ -32,6 +32,9 @@ export interface CourseFormProps {
   busy?: boolean
   error?: string
   submitLabel?: string
+
+  /** A course that does not exist yet cannot be shown to anyone, so it offers no switch. */
+  publishable?: boolean
 }
 
 export interface CourseFormEmits {
