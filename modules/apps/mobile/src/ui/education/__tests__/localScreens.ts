@@ -1,11 +1,4 @@
 import { FluentBundle } from '@fluent/bundle'
-import type { SyncCollection, SyncRejectionReason } from '@vidya/domain'
-import { isLive, isRecruiting } from '@vidya/domain'
-import { mount, type VueWrapper } from '@vue/test-utils'
-import { createFluentVue } from 'fluent-vue'
-import { type Component, ref } from 'vue'
-import { createMemoryHistory, createRouter, type RouteLocationRaw } from 'vue-router'
-
 import type {
   BlockStateKey,
   HomeworkAnswerKey,
@@ -25,12 +18,19 @@ import type {
   LocalLesson,
   LocalLessonVersion,
   LocalSchool,
-} from '@/ports'
+} from '@vidya/client'
+import { education } from '@vidya/client'
+import type { SyncCollection, SyncRejectionReason } from '@vidya/domain'
+import { isLive, isRecruiting } from '@vidya/domain'
+import { mount, type VueWrapper } from '@vue/test-utils'
+import { createFluentVue } from 'fluent-vue'
+import { type Component, ref } from 'vue'
+import { createMemoryHistory, createRouter, type RouteLocationRaw } from 'vue-router'
+
 import sharedResources from '@/shared/i18n'
 import educationResources from '@/ui/education/i18n'
 import type { SubmissionState } from '@/ui/sync'
 import syncResources from '@/ui/sync/i18n'
-import { education } from '@/usecases'
 
 import { routes } from '../routes'
 

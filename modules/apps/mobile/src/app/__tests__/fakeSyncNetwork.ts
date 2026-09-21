@@ -1,3 +1,4 @@
+import { FakeSyncServer } from '@vidya/client/testing'
 import type {
   AckCursorRequest,
   GetProfileResponse,
@@ -5,8 +6,6 @@ import type {
   PushRequest,
   RefreshTokensResponse,
 } from '@vidya/protocol'
-
-import { FakeSyncServer } from '@/usecases/sync/__tests__/fakeSyncServer'
 
 /**
  * Several servers behind one `fetch`, so a test can watch what leaves the app.

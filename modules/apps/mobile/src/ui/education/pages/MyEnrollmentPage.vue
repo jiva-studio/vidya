@@ -38,7 +38,7 @@ import { computed } from 'vue'
 
 import { useOutboxView, useRepositories, useSyncStatus } from '@/app'
 import { PageWithHeaderLayout } from '@/design'
-import type { LocalGroup } from '@/ports'
+import type { LocalGroup } from '@vidya/client'
 import { useLocalData } from '@/shared'
 import {
   actionFor,

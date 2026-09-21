@@ -1,8 +1,8 @@
 import { alertController } from '@ionic/vue'
+import type { IEnrollmentRepository } from '@vidya/client'
 import type { EnrollmentId } from '@vidya/domain'
 import { useFluent } from 'fluent-vue'
 
-import type { IEnrollmentRepository } from '@/ports'
 import { useToast } from '@/shared'
 
 import type { EnrollmentAction, EnrollmentActionView } from '../model/enrollmentActions'

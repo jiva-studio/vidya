@@ -19,17 +19,17 @@ import './misc.css'
 import './lottie.css'
 
 import { IonicVue } from '@ionic/vue'
+import type { IDatabase } from '@vidya/client'
+import { education, useHttpTrace } from '@vidya/client'
 import { createApp } from 'vue'
 
 import { openDevice, showStartupFailure, startDeviceSync, useConnections } from '@/app'
 import { cryptoUuids } from '@/infra'
-import type { IDatabase } from '@/ports'
-import { education } from '@/usecases'
 
 import App from './App.vue'
 import { fluent } from './i18n'
 import router from './router'
-import { initSentry } from './shared/sentry'
+import { addMobileBreadcrumb, initSentry } from './shared/sentry'
 
 const ROOT = '#app'
 
@@ -51,6 +51,10 @@ async function createAndRunApp(db: IDatabase) {
 
   const app = createApp(App).use(IonicVue).use(router).use(fluent)
   initSentry(app, router)
+
+  // The library has no reporter of its own, so a failed request is only
+  // recorded once this app hands one over.
+  useHttpTrace(addMobileBreadcrumb)
 
   await router.isReady()
   app.mount(ROOT)

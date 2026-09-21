@@ -1,4 +1,13 @@
 import type {
+  LocalCourse,
+  LocalEnrollment,
+  LocalGroup,
+  LocalHomework,
+  LocalLesson,
+  LocalLessonVersion,
+  LocalSchool,
+} from '@vidya/client'
+import type {
   BlockId,
   CourseId,
   EnrollmentId,
@@ -11,16 +20,6 @@ import type {
   UserId,
 } from '@vidya/domain'
 import { asId, parseIsoDateTime } from '@vidya/domain'
-
-import type {
-  LocalCourse,
-  LocalEnrollment,
-  LocalGroup,
-  LocalHomework,
-  LocalLesson,
-  LocalLessonVersion,
-  LocalSchool,
-} from '@/ports'
 
 /**
  * The rows a screen test seeds the device with, and the identities they use.

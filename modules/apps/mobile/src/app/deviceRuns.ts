@@ -1,6 +1,5 @@
+import type { IDatabase } from '@vidya/client'
 import type { SyncRunResult } from '@vidya/usecases'
-
-import type { IDatabase } from '@/ports'
 
 /**
  * One queue of sync runs per database, and the way the lock is given back.

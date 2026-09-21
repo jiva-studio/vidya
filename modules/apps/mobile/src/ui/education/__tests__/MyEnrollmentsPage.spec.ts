@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/app', async () => (await import('./localScreens')).appDouble)
 vi.mock('@capacitor/network', async () => (await import('./localScreens')).capacitorNetworkDouble)
 
-import { fixedClock, openTestDatabase } from '@/infra/persistence/testing'
+import type { IEnrollmentRepository } from '@vidya/client'
 import {
   createSqlBlockStateRepository,
   createSqlEnrollmentRepository,
@@ -21,11 +21,12 @@ import {
   createSqlOutboxRepository,
   createSqlSyncApplyRepository,
   withSyncJournaling,
-} from '@/infra/repositories'
-import type { IEnrollmentRepository } from '@/ports'
+} from '@vidya/client'
+import { fixedClock, openTestDatabase } from '@vidya/client/testing'
+import { FakeSyncServer, USER_SCOPE } from '@vidya/client/testing'
+import { openHarness } from '@vidya/client/testing'
+
 import { EnrollmentsListItem } from '@/ui/education'
-import { FakeSyncServer, USER_SCOPE } from '@/usecases/sync/__tests__/fakeSyncServer'
-import { openHarness } from '@/usecases/sync/__tests__/harness'
 
 import MyEnrollmentsPage from '../pages/MyEnrollmentsPage.vue'
 import {

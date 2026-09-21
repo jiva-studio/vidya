@@ -5,10 +5,10 @@ import { nextTick } from 'vue'
 vi.mock('@/app', async () => (await import('./localScreens')).appDouble)
 vi.mock('@capacitor/network', async () => (await import('./localScreens')).capacitorNetworkDouble)
 
+import type { LocalCourse } from '@vidya/client'
 import type { CourseId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
 
-import type { LocalCourse } from '@/ports'
 import { BackfillProgress, OfflineBanner } from '@/ui/sync'
 
 import CoursesListPage from '../pages/CoursesListPage.vue'
