@@ -17,6 +17,17 @@ export const numberClasses = ['text-[var(--color-text-muted)] tabular-nums']
 
 export const placeClasses = ['flex flex-col items-start gap-[var(--space-2)]']
 
+// A link that offers an action has to look like one: inside a card of plain
+// sentences an unstyled anchor reads as another sentence.
+export const actionLinkClasses = [
+  'inline-flex items-center rounded-[var(--radius-md)]',
+  'bg-[var(--color-primary)] px-[var(--space-4)] py-[var(--space-2)]',
+  'text-[var(--color-text-inverse)] no-underline hover:bg-[var(--color-primary-hover)]',
+  'focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]',
+]
+
+export const quietLinkClasses = ['underline hover:no-underline']
+
 export const noticeClasses = [
   'flex flex-col items-start gap-[var(--space-2)]',
   'rounded-[var(--radius-md)] border border-[var(--color-border)] p-[var(--space-4)]',

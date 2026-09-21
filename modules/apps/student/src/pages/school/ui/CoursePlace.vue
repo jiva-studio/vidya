@@ -7,7 +7,7 @@ import { describePlace } from '@/shared/lib'
 import { SubmissionNotice } from '@/shared/ui'
 
 import type { CoursePlaceProps } from '../types'
-import { placeClasses } from './styles'
+import { actionLinkClasses, placeClasses, quietLinkClasses } from './styles'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -32,11 +32,11 @@ const place = computed(() => ({
   <div :class="placeClasses">
     <template v-if="badge">
       <Badge :tone="badge.tone">{{ $t(badge.key) }}</Badge>
-      <RouterLink :to="place">{{ $t('course-place') }}</RouterLink>
+      <RouterLink :class="quietLinkClasses" :to="place">{{ $t('course-place') }}</RouterLink>
 
       <SubmissionNotice v-if="props.submission" :state="props.submission" :reason="props.reason" />
     </template>
 
-    <RouterLink v-else :to="enroll">{{ $t('course-ask') }}</RouterLink>
+    <RouterLink v-else :class="actionLinkClasses" :to="enroll">{{ $t('course-ask') }}</RouterLink>
   </div>
 </template>
