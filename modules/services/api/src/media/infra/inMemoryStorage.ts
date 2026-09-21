@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
+import { CLOCK, Clock, systemClock } from '@vidya/api/shared/clock'
 import {
   MediaKind,
   MediaStoragePort,
@@ -31,7 +32,7 @@ const addressOf = (credentials: StorageCredentials, key: string): string => {
   return `memory://${credentials.bucket}/${key}?${query.toString()}`
 }
 
-const expiryIn = (seconds: number) => toIsoDateTime(new Date(Date.now() + seconds * 1000))
+const expiryIn = (nowMs: number, seconds: number) => toIsoDateTime(new Date(nowMs + seconds * 1000))
 
 /**
  * A read address, carrying the instant it stops working the way a real one
@@ -61,8 +62,12 @@ export class InMemoryStorage implements MediaStorageFactory, SignedHttpPort {
 
   private readonly objects = new Map<string, StoredObject & { body: Buffer }>()
 
+  // Defaulted so a suite can open the port with `new InMemoryStorage()`; the
+  // application always has the clock the rest of it is stamped from.
+  constructor(@Inject(CLOCK) private readonly clock: Clock = systemClock) {}
+
   openStorage(credentials: StorageCredentials): MediaStoragePort {
-    return new InMemoryStorageDriver(this, credentials)
+    return new InMemoryStorageDriver(this, credentials, this.clock)
   }
 
   async writeByGrant(grant: UploadGrant, body: Buffer): Promise<void> {
@@ -129,6 +134,7 @@ class InMemoryStorageDriver implements MediaStoragePort {
   constructor(
     private readonly store: InMemoryStorage,
     private readonly credentials: StorageCredentials,
+    private readonly clock: Clock,
   ) {}
 
   async signUpload(key: string, limits: UploadLimits): Promise<UploadGrant> {
@@ -142,14 +148,14 @@ class InMemoryStorageDriver implements MediaStoragePort {
         'Content-Length': String(limits.sizeBytes),
       },
       fields: {},
-      expiresAt: expiryIn(UPLOAD_WINDOW_SECONDS),
+      expiresAt: expiryIn(this.clock.nowMs(), UPLOAD_WINDOW_SECONDS),
     }
   }
 
   async signRead(key: string, kind: MediaKind): Promise<SignedUrl> {
     this.store.record('signRead', key, this.credentials.accessKeyId)
 
-    const expiresAtMs = windowExpiry(Date.now(), ReadWindowSeconds[kind])
+    const expiresAtMs = windowExpiry(this.clock.nowMs(), ReadWindowSeconds[kind])
 
     return {
       url: readAddressOf(this.credentials, key, expiresAtMs),

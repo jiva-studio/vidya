@@ -3,6 +3,7 @@ import { ConfigType } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
 import { MediaConfig } from '@vidya/api/configs'
+import { CLOCK, systemClock } from '@vidya/api/shared/clock'
 import { RedisService } from '@vidya/api/shared/services'
 import { Media, Role, School, StorageProfile, User, UserRole } from '@vidya/entities'
 
@@ -51,6 +52,9 @@ const pickDriver = <TPort>(config: ConfigType<typeof MediaConfig>, fake: TPort, 
  * real driver says so through the environment instead of undoing an override.
  */
 const storageProviders: Provider[] = [
+  // The signature windows are rounded to wall-clock boundaries, so the instant
+  // a driver signs at has to be movable by a suite.
+  { provide: CLOCK, useValue: systemClock },
   InMemoryStorage,
   S3StorageFactory,
   FetchSignedHttp,

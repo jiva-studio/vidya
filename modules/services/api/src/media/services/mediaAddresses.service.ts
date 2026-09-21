@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
+import { CLOCK, Clock } from '@vidya/api/shared/clock'
 import { RedisService } from '@vidya/api/shared/services'
 import { MediaId, ReadWindowSeconds, SignedUrl, windowExpiry } from '@vidya/domain'
 import { Media } from '@vidya/entities'
@@ -34,6 +35,7 @@ export class MediaAddressesService {
   constructor(
     private readonly storages: SchoolStorageService,
     private readonly redis: RedisService,
+    @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
   async signAll(rows: Media[]): Promise<Record<string, SignedUrl>> {
@@ -46,7 +48,7 @@ export class MediaAddressesService {
 
   private async sign(media: Media): Promise<SignedUrl> {
     const windowSeconds = ReadWindowSeconds[media.kind]
-    const key = cacheKeyOf(media.id, windowExpiry(Date.now(), windowSeconds))
+    const key = cacheKeyOf(media.id, windowExpiry(this.clock.nowMs(), windowSeconds))
 
     const held = await this.readCached(key)
     if (held) return held

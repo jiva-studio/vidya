@@ -9,7 +9,8 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
+import { CLOCK, Clock, systemClock } from '@vidya/api/shared/clock'
 import {
   MediaKind,
   MediaStoragePort,
@@ -39,7 +40,7 @@ const clientFor = (credentials: StorageCredentials): S3Client =>
     forcePathStyle: true,
   })
 
-const expiryIn = (seconds: number) => toIsoDateTime(new Date(Date.now() + seconds * 1000))
+const expiryIn = (nowMs: number, seconds: number) => toIsoDateTime(new Date(nowMs + seconds * 1000))
 
 /** Whether the error means the object is absent rather than unreachable. */
 const isMissing = (error: unknown): boolean => {
@@ -52,15 +53,22 @@ const isMissing = (error: unknown): boolean => {
 /** Opens S3-compatible storage: AWS, Bunny, R2, Wasabi and MinIO are one driver. */
 @Injectable()
 export class S3StorageFactory implements MediaStorageFactory {
+  // Defaulted so a suite can open the port with `new S3StorageFactory()`; the
+  // application always has the clock the rest of it is stamped from.
+  constructor(@Inject(CLOCK) private readonly clock: Clock = systemClock) {}
+
   openStorage(credentials: StorageCredentials): MediaStoragePort {
-    return new S3Storage(credentials)
+    return new S3Storage(credentials, this.clock)
   }
 }
 
 class S3Storage implements MediaStoragePort {
   private readonly client: S3Client
 
-  constructor(private readonly credentials: StorageCredentials) {
+  constructor(
+    private readonly credentials: StorageCredentials,
+    private readonly clock: Clock,
+  ) {
     this.client = clientFor(credentials)
   }
 
@@ -91,7 +99,13 @@ class S3Storage implements MediaStoragePort {
       signableHeaders: new Set(Object.keys(headers).map((name) => name.toLowerCase())),
     })
 
-    return { method: 'put', url, headers, fields: {}, expiresAt: expiryIn(UPLOAD_WINDOW_SECONDS) }
+    return {
+      method: 'put',
+      url,
+      headers,
+      fields: {},
+      expiresAt: expiryIn(this.clock.nowMs(), UPLOAD_WINDOW_SECONDS),
+    }
   }
 
   /**
@@ -106,7 +120,7 @@ class S3Storage implements MediaStoragePort {
    */
   async signRead(key: string, kind: MediaKind): Promise<SignedUrl> {
     const seconds = ReadWindowSeconds[kind]
-    const expiresAtMs = windowExpiry(Date.now(), seconds)
+    const expiresAtMs = windowExpiry(this.clock.nowMs(), seconds)
     const command = new GetObjectCommand({ Bucket: this.credentials.bucket, Key: key })
 
     const url = await getSignedUrl(this.client, command, {

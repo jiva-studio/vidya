@@ -1,3 +1,4 @@
+import { Clock } from '@vidya/api/shared/clock'
 import { RedisService } from '@vidya/api/shared/services'
 import { MediaId, MediaKind, ReadWindowSeconds, SignedUrl, windowExpiry } from '@vidya/domain'
 import { Media } from '@vidya/entities'
@@ -20,8 +21,14 @@ class RecordingRedis {
   }
 }
 
+/**
+ * An instant well inside an hour, so the boundary the expiry is rounded to is
+ * an exact number a test can name rather than whatever the run happened at.
+ */
+const NOON = Date.UTC(2026, 8, 21, 12, 17, 43, 512)
+
 /** Storage that says what it was asked to sign, and signs an address per call. */
-const recordingStorage = () => {
+const recordingStorage = (clock: Clock) => {
   const signed: string[] = []
   let issued = 0
 
@@ -32,7 +39,7 @@ const recordingStorage = () => {
 
       return {
         url: `memory://bucket/${key}?sig=${issued}`,
-        expiresAt: new Date(windowExpiry(Date.now(), ReadWindowSeconds[kind])).toISOString(),
+        expiresAt: new Date(windowExpiry(clock.nowMs(), ReadWindowSeconds[kind])).toISOString(),
       } as SignedUrl
     },
   }
@@ -48,16 +55,23 @@ const rowOf = (kind: MediaKind, id: string): Media =>
     storageKey: `school/one/${kind}/${id}`,
   }) as Media
 
-const open = () => {
+const open = (from = NOON) => {
   const redis = new RecordingRedis()
-  const { signed, storages } = recordingStorage()
+  let nowMs = from
+  const clock: Clock = { nowMs: () => nowMs }
+  const { signed, storages } = recordingStorage(clock)
 
   const service = new MediaAddressesService(
     storages as unknown as SchoolStorageService,
     redis as unknown as RedisService,
+    clock,
   )
 
-  return { service, redis, signed }
+  const moveTo = (instant: number) => {
+    nowMs = instant
+  }
+
+  return { service, redis, signed, moveTo }
 }
 
 describe('handing out a playable address', () => {
@@ -84,15 +98,28 @@ describe('handing out a playable address', () => {
     ])
   })
 
-  it('names the window boundary in the key, so a rolled-over window is not answered from the last', async () => {
+  it('names the window the clock is in, to the millisecond, in the key', async () => {
     const { service, redis } = open()
     const row = rowOf('image', '44444444-4444-4444-8444-444444444444')
 
     await service.signAll([row])
 
-    const boundary = windowExpiry(Date.now(), ReadWindowSeconds.image)
-    expect(redis.writes[0].key).toContain(String(boundary))
-    expect(redis.writes[0].key).toContain(row.id)
+    expect(redis.writes[0].key).toBe(
+      `media:address:${row.id}:${Date.UTC(2026, 8, 21, 13, 0, 0, 0)}`,
+    )
+  })
+
+  it('signs afresh for the asker the clock has carried past the boundary', async () => {
+    const { service, signed, moveTo } = open()
+    const row = rowOf('image', '88888888-8888-4888-8888-888888888888')
+
+    const inside = await service.signAll([row])
+    moveTo(Date.UTC(2026, 8, 21, 13, 0, 0, 1))
+    const after = await service.signAll([row])
+
+    expect(signed).toHaveLength(2)
+    expect(after[row.id].url).not.toBe(inside[row.id].url)
+    expect(after[row.id].expiresAt).not.toBe(inside[row.id].expiresAt)
   })
 
   it('signs again rather than failing when what was cached cannot be read', async () => {
