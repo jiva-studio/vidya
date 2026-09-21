@@ -49,5 +49,11 @@ export const useModerateEnrollment = () => {
   const accept = (id: EnrollmentId, groupId?: GroupId) => decide(id, 'accepted', groupId)
   const decline = (id: EnrollmentId) => decide(id, 'declined')
 
-  return { accept, decline, deciding, error }
+  // A refusal belongs to the decision that earned it, and a screen that opens
+  // again is not the place the last one failed.
+  const forget = () => {
+    error.value = undefined
+  }
+
+  return { accept, decline, deciding, error, forget }
 }

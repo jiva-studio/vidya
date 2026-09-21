@@ -14,6 +14,8 @@ import type { EnrollmentReviewDialogEmits, EnrollmentReviewDialogProps } from '.
 import { bodyClasses, errorClasses, fieldClasses, labelClasses, noteClasses } from './styles'
 import { weekdayLabels } from './weekdayLabels'
 
+const MINUTES_IN_DAY = 1440
+
 /* --------------------------------- Props ---------------------------------- */
 
 const props = withDefaults(defineProps<EnrollmentReviewDialogProps>(), {
@@ -34,6 +36,7 @@ const { $t } = useFluent()
 
 const groups = ref<GroupSummary[]>([])
 const chosen = ref<string>('')
+const unreadable = ref(false)
 
 const options = computed<SelectOption[]>(() =>
   groups.value.map((group) => ({ value: group.id, label: group.name })),
@@ -62,7 +65,11 @@ const ranges = computed(() =>
   })),
 )
 
-const canAccept = computed(() => props.enrollment?.status === 'pending')
+const noGroups = computed(() => !unreadable.value && groups.value.length === 0)
+
+// A decision taken over a list that failed to arrive would read as "the course
+// has no groups" and put the student in the queue for no reason.
+const canAccept = computed(() => props.enrollment?.status === 'pending' && !unreadable.value)
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -86,22 +93,29 @@ function onAccept() {
 
 /* -------------------------------- Helpers --------------------------------- */
 
+// An interval may run past midnight, and 1440 is the far side of this day
+// rather than the start of the next; the device reads those hours the same way.
 function atMinute(minute: MinuteOfDay): string {
-  const hours = Math.floor(minute / 60)
-  return `${String(hours).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`
+  const hour = minute === MINUTES_IN_DAY ? 24 : Math.floor(minute / 60) % 24
+  return `${String(hour).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`
 }
 
 async function load() {
   chosen.value = props.enrollment?.preferredGroupId ?? ''
   groups.value = []
+  unreadable.value = false
 
   const courseId = props.enrollment?.courseId
   if (!courseId) return
 
-  // The groups of that course only: a student is placed in a group of the
-  // course they applied to, and the whole school's list would offer the rest.
-  const response = await getGroups(http, { courseId })
-  groups.value = response.items
+  try {
+    // The groups of that course only: a student is placed in a group of the
+    // course they applied to, and the whole school's list would offer the rest.
+    const response = await getGroups(http, { courseId })
+    groups.value = response.items
+  } catch {
+    unreadable.value = true
+  }
 }
 </script>
 
@@ -140,7 +154,11 @@ async function load() {
           :placeholder="$t('enrollments-group-queue')"
         />
       </FormField>
-      <p v-if="props.error" :class="errorClasses" role="alert">{{ props.error }}</p>
+      <p v-if="unreadable" :class="errorClasses" role="alert">
+        {{ $t('enrollments-review-groups-unreadable') }}
+      </p>
+      <p v-else-if="noGroups" :class="noteClasses">{{ $t('enrollments-review-groups-none') }}</p>
+      <p v-if="props.error" :class="errorClasses" role="alert">{{ $t(props.error) }}</p>
     </div>
     <template #footer>
       <DialogFooter>

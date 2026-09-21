@@ -4,6 +4,11 @@ import { ref } from 'vue'
 import { useEnrollmentApi } from '@/entities/enrollment'
 import { reasonOf } from '@/shared/lib'
 
+export interface ArchiveRefusal {
+  id: EnrollmentId
+  reason: string
+}
+
 /**
  * The school putting an answered request out of its own sight.
  *
@@ -17,7 +22,10 @@ export const useArchiveEnrollment = () => {
   const api = useEnrollmentApi()
 
   const archiving = ref<EnrollmentId | undefined>(undefined)
-  const error = ref<string | undefined>(undefined)
+
+  // The refusal names the row it belongs to: the list shows several at once,
+  // and a reason without a row is a reason about nothing.
+  const error = ref<ArchiveRefusal | undefined>(undefined)
 
   const archive = async (id: EnrollmentId): Promise<boolean> => {
     archiving.value = id
@@ -27,7 +35,7 @@ export const useArchiveEnrollment = () => {
       await api.archive(id)
       return true
     } catch (failure) {
-      error.value = reasonOf(failure)
+      error.value = { id, reason: reasonOf(failure) }
       return false
     } finally {
       archiving.value = undefined

@@ -85,6 +85,7 @@ async function onAssign(groupId: GroupId | null) {
 }
 
 function onReviewAsked(id: EnrollmentId) {
+  moderation.forget()
   reviewing.value = enrollments.rows.value.find((row) => row.id === id)
 }
 
@@ -96,8 +97,12 @@ async function onReviewAccepted(groupId: GroupId | undefined) {
   const enrollment = reviewing.value
   if (!enrollment) return
 
+  // The dialog is what carries the request: it stays open until the server has
+  // answered, so a refusal lands where the decision was made.
+  if (!(await moderation.accept(enrollment.id, groupId))) return
+
   reviewing.value = undefined
-  if (await moderation.accept(enrollment.id, groupId)) await enrollments.load()
+  await enrollments.load()
 }
 
 async function onArchive(id: EnrollmentId) {
@@ -116,6 +121,15 @@ function asEnrollment(row: TableRowData): EnrollmentRow {
 
 function isBusy(row: TableRowData): boolean {
   return moderation.deciding.value === asEnrollment(row).id
+}
+
+function isArchiving(row: TableRowData): boolean {
+  return archiving.archiving.value === asEnrollment(row).id
+}
+
+function refusalFor(row: TableRowData): string | undefined {
+  const refusal = archiving.error.value
+  return refusal?.id === asEnrollment(row).id ? refusal.reason : undefined
 }
 </script>
 
@@ -143,6 +157,8 @@ function isBusy(row: TableRowData): boolean {
           :enrollment="asEnrollment(row)"
           :can-moderate="canModerate"
           :busy="isBusy(row)"
+          :archiving="isArchiving(row)"
+          :archive-error="refusalFor(row)"
           @accept="onAccept"
           @decline="onDecline"
           @assign-group="onAssignAsked"

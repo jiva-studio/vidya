@@ -17,6 +17,12 @@ export interface EnrollmentsTableRowProps {
   enrollment: EnrollmentRow
   canModerate?: boolean
   busy?: boolean
+
+  /** The row's own tidying-away is in flight. */
+  archiving?: boolean
+
+  /** Why the server refused to tidy this row away. */
+  archiveError?: string
 }
 
 export interface EnrollmentsTableRowEmits {

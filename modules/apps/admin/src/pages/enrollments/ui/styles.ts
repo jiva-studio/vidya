@@ -13,3 +13,7 @@ export const primaryLineClasses = ['whitespace-nowrap']
 export const secondaryLineClasses = [
   'text-[length:var(--text-xs)] text-[var(--color-text-muted)] whitespace-nowrap',
 ]
+
+export const refusalLineClasses = [
+  'text-[length:var(--text-xs)] text-[var(--color-text-danger)] text-right',
+]
