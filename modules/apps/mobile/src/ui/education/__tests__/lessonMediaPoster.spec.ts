@@ -24,6 +24,7 @@ import {
   SECTION_ID,
   seed,
   settle,
+  signedAddress,
 } from './mediaLessons'
 
 const POSTER_ID = asId<MediaId>('e5f60718-2930-4a45-bc6d-7e8f90102132')
@@ -76,7 +77,7 @@ describe('the still frame of a video block', () => {
     const wrapper = await openLesson()
     await settle()
 
-    expect(wrapper.find('video').attributes('poster')).toBe(POSTER_ADDRESS)
+    expect(wrapper.find('video').attributes('poster')).toBe(signedAddress(POSTER_PATH))
   })
 
   it('never hands the player the stored path of a poster', async () => {

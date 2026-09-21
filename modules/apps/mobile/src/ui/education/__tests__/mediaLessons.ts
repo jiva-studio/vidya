@@ -72,9 +72,7 @@ export function mediaLesson(blocks: MediaLessonSeed = { video: {} }): void {
     aLessonVersion({
       content: {
         schemaVersion: 1,
-        sections: [
-          { id: SECTION_ID, title: 'Letters', assessment: 'none', blocks: sectionBlocks },
-        ],
+        sections: [{ id: SECTION_ID, title: 'Letters', assessment: 'none', blocks: sectionBlocks }],
       },
     }),
   )

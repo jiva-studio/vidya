@@ -22,6 +22,7 @@ import {
   seed,
   setOnline,
   settle,
+  signedAddress,
 } from './mediaLessons'
 
 const UNAVAILABLE = '[data-testid="media-unavailable"]'
@@ -127,7 +128,7 @@ describe('the connection coming back under an open lesson', () => {
     setOnline(true)
     await settle()
 
-    expect(wrapper.find('video').attributes('src')).toBe(LECTURE_ADDRESS)
+    expect(wrapper.find('video').attributes('src')).toBe(signedAddress(LECTURE_PATH))
     expect(wrapper.find(UNAVAILABLE).exists()).toBe(false)
   })
 })

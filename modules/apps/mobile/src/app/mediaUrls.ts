@@ -1,39 +1,63 @@
-import type { HttpClient, HttpQuery, MediaUrls } from '@vidya/client'
+import type { HttpClient, MediaUrls } from '@vidya/client'
 import { createMediaUrls } from '@vidya/client'
 
 import { NoConnectionError } from './repositories'
-import { runningSyncs } from './sync'
+import { runningSyncs, type StartedSync } from './sync'
 
 /**
  * Playable addresses for the school files a screen is about to draw.
  *
- * One resolver for the app rather than one per screen: the addresses it has
- * been given are good for hours, and a screen opened twice would otherwise ask
- * the school again for what the last one already holds.
- *
- * The transport is resolved per request instead of being captured, for the same
- * reason the repositories resolve theirs: which connection is running changes
- * at sign-in and at sign-out, and a resolver built at launch would hold a
- * client for a school the student has left.
+ * One resolver per connection, the way the repositories resolve their ports:
+ * a read signature lasts hours and needs no session to be used, so a resolver
+ * shared by the app would answer for a school the student has signed out of or
+ * switched away from. A screen holds this facade rather than the resolver
+ * behind it, so what a mounted screen reads follows the connection.
  */
-let shared: MediaUrls | undefined
-
 export function useMediaUrls(): MediaUrls {
-  shared ??= createMediaUrls({ http: connectionHttp, nowMs: () => Date.now() })
+  return {
+    prime: async (paths) => {
+      const started = runningSyncs()[0]
+      if (started === undefined) throw new NoConnectionError()
 
-  return shared
+      await resolverFor(started).prime(paths)
+    },
+
+    resolve: (path) => currentResolver().resolve(path),
+  }
 }
 
-const currentClient = (): HttpClient => {
+const perConnection = new WeakMap<StartedSync, MediaUrls>()
+
+const currentResolver = (): MediaUrls => {
   const started = runningSyncs()[0]
-  if (started === undefined) throw new NoConnectionError()
 
-  return started.http
+  return started === undefined ? unsigned : resolverFor(started)
 }
 
-const connectionHttp: HttpClient = {
-  get: <TResponse>(path: string, query?: HttpQuery) => currentClient().get<TResponse>(path, query),
-  post: <TResponse>(path: string, body?: unknown) => currentClient().post<TResponse>(path, body),
-  patch: <TResponse>(path: string, body?: unknown) => currentClient().patch<TResponse>(path, body),
-  delete: (path: string) => currentClient().delete(path),
+const resolverFor = (started: StartedSync): MediaUrls => {
+  const held = perConnection.get(started)
+  if (held !== undefined) return held
+
+  const created = createMediaUrls({ http: started.http, nowMs: () => Date.now() })
+  perConnection.set(started, created)
+
+  return created
 }
+
+const refuse = (): never => {
+  throw new NoConnectionError()
+}
+
+/**
+ * What can still be answered while the app holds no connection.
+ *
+ * Built from the same factory so the line between a stored path and a link that
+ * needs no signature is drawn in one place. Nothing ever primes it, so every
+ * `/media/` path is unanswered and no address outlives the connection that
+ * earned it — while a lesson pointing at someone else's server reads the same
+ * signed in and signed out.
+ */
+const unsigned = createMediaUrls({
+  http: { get: refuse, post: refuse, patch: refuse, delete: refuse } satisfies HttpClient,
+  nowMs: () => Date.now(),
+})

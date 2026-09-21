@@ -1,7 +1,7 @@
 import type { MediaId, SignedUrl } from '@vidya/domain'
-import { parseMediaPath } from '@vidya/domain'
+import { MediaPathPrefix, parseMediaPath } from '@vidya/domain'
 import type { ResolveMediaRequest, ResolveMediaResponse } from '@vidya/protocol'
-import { Routes } from '@vidya/protocol'
+import { MediaResolveLimit, Routes } from '@vidya/protocol'
 
 import type { HttpClient } from '../../ports'
 
@@ -27,24 +27,45 @@ export interface MediaUrlsOptions {
 export function createMediaUrls(options: MediaUrlsOptions): MediaUrls {
   const held = new Map<MediaId, SignedUrl>()
 
-  const prime = async (paths: readonly string[]): Promise<void> => {
-    const ids = [...new Set(paths.map((path) => parseMediaPath(path)).filter(isMediaId))]
-    if (ids.length === 0) return
+  // Which request last asked about an id. Two batches naming one file are in
+  // flight whenever a screen primes again, and the answers arrive in whatever
+  // order the network gives them: without this the older one writes last and
+  // erases the grant that replaced it.
+  const askedBy = new Map<MediaId, number>()
+  let requests = 0
+
+  const askFor = async (ids: readonly MediaId[]): Promise<void> => {
+    requests += 1
+    const request = requests
+    ids.forEach((id) => askedBy.set(id, request))
 
     const answered = await options.http.post<ResolveMediaResponse>(Routes().media.urls(), {
-      ids,
+      ids: [...ids],
     } satisfies ResolveMediaRequest)
+
+    const isCurrent = (id: MediaId): boolean => askedBy.get(id) === request
 
     // Forgotten rather than kept: an id asked for and not answered is one this
     // reader may no longer read, and an address held from the last batch would
     // outlive the permission that produced it.
-    ids.forEach((id) => held.delete(id))
-    Object.entries(answered.urls).forEach(([id, signed]) => held.set(id as MediaId, signed))
+    ids.filter(isCurrent).forEach((id) => held.delete(id))
+    Object.entries(answered.urls)
+      .filter(([id]) => isCurrent(id as MediaId))
+      .forEach(([id, signed]) => held.set(id as MediaId, signed))
+  }
+
+  const prime = async (paths: readonly string[]): Promise<void> => {
+    const ids = [...new Set(paths.map((path) => parseMediaPath(path)).filter(isMediaId))]
+    if (ids.length === 0) return
+
+    await Promise.all(splitIntoRequests(ids).map(askFor))
   }
 
   const resolve = (path: string): string | undefined => {
+    if (!path.startsWith(MediaPathPrefix)) return path
+
     const id = parseMediaPath(path)
-    if (id === undefined) return path
+    if (id === undefined) return undefined
 
     const signed = held.get(id)
     if (signed === undefined) return undefined
@@ -56,6 +77,12 @@ export function createMediaUrls(options: MediaUrlsOptions): MediaUrls {
 }
 
 const isMediaId = (id: MediaId | undefined): id is MediaId => id !== undefined
+
+/** The server refuses an oversized batch whole, so a long screen is split. */
+const splitIntoRequests = (ids: readonly MediaId[]): MediaId[][] =>
+  Array.from({ length: Math.ceil(ids.length / MediaResolveLimit) }, (_, at) =>
+    ids.slice(at * MediaResolveLimit, (at + 1) * MediaResolveLimit),
+  )
 
 /**
  * Whether the window has closed, counting the instant it names as still open.

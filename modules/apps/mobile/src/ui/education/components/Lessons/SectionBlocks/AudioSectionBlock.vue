@@ -11,7 +11,7 @@
     @loadedmetadata="onLoadedMetadata"
   />
 
-  <MediaUnavailableNotice v-else />
+  <MediaUnavailableNotice v-else :reason="unavailableReason" />
 </template>
 
 <script lang="ts" setup>
@@ -26,6 +26,7 @@ import type { AudioSectionBlockEmits, AudioSectionBlockProps } from './types'
 const props = withDefaults(defineProps<AudioSectionBlockProps>(), {
   state: undefined,
   src: undefined,
+  unavailableReason: 'needs-connection',
 })
 
 /* --------------------------------- Events --------------------------------- */

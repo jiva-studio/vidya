@@ -111,6 +111,15 @@ export const windowExpiry = (nowMs: number, windowSeconds: number): number => {
 /*                                   Limits                                   */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * How many files one batch of addresses may name.
+ *
+ * The server refuses a larger request whole, which would take down every file
+ * on a screen rather than the last one, so the client splits by the same number
+ * the server validates against.
+ */
+export const MediaResolveLimit = 100
+
 /** What an upload declares in advance, and what the signature is bound to. */
 export type UploadLimits = {
   contentType: string

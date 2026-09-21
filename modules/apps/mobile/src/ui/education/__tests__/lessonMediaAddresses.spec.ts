@@ -21,6 +21,7 @@ import {
   resetLocalScreens,
   seed,
   settle,
+  signedAddress,
 } from './mediaLessons'
 
 const openLesson = () => mountPage(LessonPage, { enrollmentId: ENROLLMENT_ID, lessonId: LESSON_ID })
@@ -47,7 +48,7 @@ describe('a lesson plays the school files it holds paths to', () => {
     const wrapper = await openLesson()
     await settle()
 
-    expect(wrapper.find('video').attributes('src')).toBe(LECTURE_ADDRESS)
+    expect(wrapper.find('video').attributes('src')).toBe(signedAddress(LECTURE_PATH))
   })
 
   it('plays the audio at the address the school issued', async () => {
@@ -57,7 +58,7 @@ describe('a lesson plays the school files it holds paths to', () => {
     const wrapper = await openLesson()
     await settle()
 
-    expect(wrapper.find('audio').attributes('src')).toBe(CHANT_ADDRESS)
+    expect(wrapper.find('audio').attributes('src')).toBe(signedAddress(CHANT_PATH))
   })
 
   it('never hands a player the stored path', async () => {

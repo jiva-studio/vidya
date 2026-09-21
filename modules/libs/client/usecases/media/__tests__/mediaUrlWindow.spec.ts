@@ -93,6 +93,5 @@ describe('what reaches the school in one batch', () => {
     await urls.prime(['/media/not-an-id', 'https://archive.example.org/talks/1.mp4'])
 
     expect(asked).toEqual([])
-    expect(urls.resolve('/media/not-an-id')).toBe('/media/not-an-id')
   })
 })

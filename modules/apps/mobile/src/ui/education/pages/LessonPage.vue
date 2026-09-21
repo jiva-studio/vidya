@@ -17,6 +17,7 @@
         :blocks="selectedSection.blocks"
         :states="blockStates"
         :addresses="addresses"
+        :unavailable-reason="mediaReason"
         @change="onBlockStateChanged"
       />
 
@@ -89,7 +90,7 @@ const sectionViews = computed(() =>
 
 // The page is where a screen's files are asked for: the section on screen is
 // one batch, and the blocks inside it read from what came back.
-const { addresses } = useSectionMedia({
+const { addresses, reason: mediaReason } = useSectionMedia({
   urls: useMediaUrls(),
   blocks: () => selectedSection.value?.blocks ?? [],
 })

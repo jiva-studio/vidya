@@ -20,7 +20,7 @@
     :title="$t('embedded-video')"
   />
 
-  <MediaUnavailableNotice v-else />
+  <MediaUnavailableNotice v-else :reason="unavailableReason" />
 </template>
 
 <script lang="ts" setup>
@@ -36,6 +36,7 @@ const props = withDefaults(defineProps<VideoSectionBlockProps>(), {
   state: undefined,
   src: undefined,
   posterSrc: undefined,
+  unavailableReason: 'needs-connection',
 })
 
 /* --------------------------------- Events --------------------------------- */

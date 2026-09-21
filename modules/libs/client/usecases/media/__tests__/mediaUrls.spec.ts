@@ -1,32 +1,11 @@
-import type { HttpClient, HttpQuery } from '@vidya/client'
 import type { MediaId, SignedUrl } from '@vidya/domain'
 import { asId, mediaPath, toIsoDateTime } from '@vidya/domain'
 import type { ResolveMediaRequest, ResolveMediaResponse } from '@vidya/protocol'
 import { Routes } from '@vidya/protocol'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-/**
- * The shape the resolver is expected to have, declared here because the port
- * does not exist yet: a screen draws before a promise can answer, so reading an
- * address is synchronous and only filling the cache is not.
- */
-interface MediaUrls {
-  prime(paths: readonly string[]): Promise<void>
-  resolve(path: string): string | undefined
-}
-
-type MediaUrlsFactory = (options: { http: HttpClient; nowMs: () => number }) => MediaUrls
-
-const loadMediaUrls = async (): Promise<MediaUrlsFactory> => {
-  const exports = (await import('@vidya/client')) as unknown as Record<string, unknown>
-  const factory = exports.createMediaUrls
-
-  if (typeof factory !== 'function') {
-    throw new Error('@vidya/client exports no createMediaUrls')
-  }
-
-  return factory as MediaUrlsFactory
-}
+import type { HttpClient, HttpQuery } from '../../../ports'
+import { createMediaUrls } from '../mediaUrls'
 
 /* -------------------------------------------------------------------------- */
 /*                                  The world                                 */
@@ -75,7 +54,7 @@ const http: HttpClient = {
   },
 }
 
-const mediaUrls = async (): Promise<MediaUrls> => (await loadMediaUrls())({ http, nowMs: () => now })
+const mediaUrls = () => createMediaUrls({ http, nowMs: () => now })
 
 beforeEach(() => {
   now = NOON
@@ -97,20 +76,20 @@ beforeEach(() => {
  */
 describe('resolving the address of a school file', () => {
   it('knows no address for a stored path before a screen has asked for one', async () => {
-    const urls = await mediaUrls()
+    const urls = mediaUrls()
 
     expect(urls.resolve(mediaPath(LECTURE))).toBeUndefined()
   })
 
   it('answers a primed path with the address the school signed', async () => {
-    const urls = await mediaUrls()
+    const urls = mediaUrls()
     await urls.prime([mediaPath(LECTURE)])
 
     expect(urls.resolve(mediaPath(LECTURE))).toBe(answers[LECTURE]!.url)
   })
 
   it('asks for a whole screen in one request', async () => {
-    const urls = await mediaUrls()
+    const urls = mediaUrls()
     await urls.prime([mediaPath(LECTURE), mediaPath(CHANT)])
 
     expect(asked).toHaveLength(1)
@@ -118,7 +97,7 @@ describe('resolving the address of a school file', () => {
   })
 
   it('leaves a path the school gave no address for unresolved, without failing', async () => {
-    const urls = await mediaUrls()
+    const urls = mediaUrls()
     await urls.prime([mediaPath(FORBIDDEN), mediaPath(LECTURE)])
 
     expect(urls.resolve(mediaPath(FORBIDDEN))).toBeUndefined()
@@ -126,13 +105,13 @@ describe('resolving the address of a school file', () => {
   })
 
   it('carries an external address through untouched', async () => {
-    const urls = await mediaUrls()
+    const urls = mediaUrls()
 
     expect(urls.resolve(EMBED)).toBe(EMBED)
   })
 
   it('needs neither a priming nor a request for an external address', async () => {
-    const urls = await mediaUrls()
+    const urls = mediaUrls()
     await urls.prime([EMBED])
 
     expect(urls.resolve(EMBED)).toBe(EMBED)
@@ -149,7 +128,7 @@ describe('resolving the address of a school file', () => {
  */
 describe('an address that has stopped working', () => {
   it('stops answering a path whose signature has expired', async () => {
-    const urls = await mediaUrls()
+    const urls = mediaUrls()
     await urls.prime([mediaPath(LECTURE)])
 
     now = NOON + SIX_HOURS + 1
@@ -158,7 +137,7 @@ describe('an address that has stopped working', () => {
   })
 
   it('answers with the fresh address after a second priming', async () => {
-    const urls = await mediaUrls()
+    const urls = mediaUrls()
     await urls.prime([mediaPath(LECTURE)])
 
     now = NOON + SIX_HOURS + 1
@@ -169,7 +148,7 @@ describe('an address that has stopped working', () => {
   })
 
   it('replaces the address it held rather than keeping the older one', async () => {
-    const urls = await mediaUrls()
+    const urls = mediaUrls()
     await urls.prime([mediaPath(LECTURE)])
 
     const first = answers[LECTURE]!.url

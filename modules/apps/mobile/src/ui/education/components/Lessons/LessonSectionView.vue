@@ -7,6 +7,7 @@
       :state="videoState(block.id)"
       :src="findAddress(block.url)"
       :poster-src="findAddress(block.posterUrl)"
+      :unavailable-reason="unavailableReason"
       @change="(state) => onBlockStateChanged(block.id, state)"
     />
     <AudioSectionBlock
@@ -14,6 +15,7 @@
       :block="block"
       :state="audioState(block.id)"
       :src="findAddress(block.url)"
+      :unavailable-reason="unavailableReason"
       @change="(state) => onBlockStateChanged(block.id, state)"
     />
     <QuizSectionBlock

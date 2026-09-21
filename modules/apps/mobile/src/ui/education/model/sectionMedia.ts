@@ -11,6 +11,15 @@ import type { LessonBlock } from '@vidya/protocol'
  */
 export type MediaAddresses = Readonly<Record<string, string | undefined>>
 
+/**
+ * Why a block has no address to play.
+ *
+ * The two read differently on the screen: a connection is worth waiting for, and
+ * a read the school has stopped opening is not — a student told to check the
+ * network checks it forever on a connection that works.
+ */
+export type MediaUnavailableReason = 'needs-connection' | 'not-permitted'
+
 /** Every source a section draws, deduplicated: one screen is one batch. */
 export const listMediaSources = (blocks: readonly LessonBlock[]): string[] => [
   ...new Set(blocks.flatMap(sourcesOf).filter(isPresent)),

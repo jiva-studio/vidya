@@ -20,6 +20,7 @@ import {
   resetLocalScreens,
   seed,
   settle,
+  signedAddress,
   syncStatus,
 } from './mediaLessons'
 
@@ -71,6 +72,6 @@ describe('a lesson read a second time', () => {
     await settle()
     await finishSyncRun()
 
-    expect(wrapper.find('video').attributes('src')).toBe(LECTURE_ADDRESS)
+    expect(wrapper.find('video').attributes('src')).toBe(signedAddress(LECTURE_PATH))
   })
 })
