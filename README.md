@@ -121,7 +121,7 @@ make mutate-full PKG=@vidya/api   # the whole package — hours; run it locally
 Both run incrementally against the baseline committed in `.stryker/incremental/`,
 so a branch is scored against what main produced rather than from zero.
 
-Score a branch once, when it is otherwise green, rather than per change: a run pays for a full-suite dry run before its first mutant, and `apps/admin` and `libs/ui` pay a whole suite per mutant on top. These targets and `make check` run through `scripts/vidya-run-alone`, which waits until no other such run holds the machine — in any worktree — and until the load average is below one and a half times the core count, above which the suites time out at 60 seconds and report contention as failing hooks. It says what it is waiting for, logs each turn to `vidya-run-alone.log` in the common git directory, gives up after `VIDYA_WAIT_SECONDS` (900 by default), and does neither under `VIDYA_RUN_ANYWAY=1`.
+Score a branch once, when it is otherwise green, rather than per change: a run pays for a full-suite dry run before its first mutant, and `apps/admin` and `libs/ui` pay a whole suite per mutant on top. These targets and `make check` run through `scripts/vidya-run-alone`, which waits until no other such run holds the machine — in any worktree — and until the load average is below one and a half times the core count, above which the suites time out at 60 seconds and report contention as failing hooks. It says what it is waiting for, logs each turn to `vidya-run-alone.log` in the common git directory, waits as long as it takes unless `VIDYA_WAIT_SECONDS` caps it, and does neither under `VIDYA_RUN_ANYWAY=1`.
 
 ### Service and database
 

@@ -27,8 +27,12 @@ set -euo pipefail
 # firing and contention is reported as failing hooks, so a busy machine is
 # waited out the same way.
 #
-# VIDYA_WAIT_SECONDS caps the wait (default 900), after which the run gives up
-# and says what it was waiting for. VIDYA_RUN_ANYWAY=1 skips turn and load both.
+# The wait is unbounded by default, because the alternative is worse: these runs
+# take tens of minutes, so any cap short enough to be useful is short enough to
+# kill a caller that was merely second in line, and it would fail at the moment
+# the machine was about to free up. A turn always ends — the holder finishes, or
+# dies and the kernel releases it. VIDYA_WAIT_SECONDS=<n> caps it where a caller
+# genuinely cannot wait; VIDYA_RUN_ANYWAY=1 skips turn and load both.
 
 usage() {
   echo "usage: $(basename "$0") <label> <command> [args...]" >&2
@@ -44,7 +48,8 @@ if [ "${VIDYA_RUN_ANYWAY:-}" = "1" ]; then
   exec "$@"
 fi
 
-WAIT_SECONDS="${VIDYA_WAIT_SECONDS:-900}"
+# 0 means no limit, and is the default.
+WAIT_SECONDS="${VIDYA_WAIT_SECONDS:-0}"
 POLL_SECONDS=5
 ANNOUNCE_EVERY=60
 
@@ -115,14 +120,24 @@ if command -v flock >/dev/null 2>&1; then
   exec 9>"$LOCK.flock"
 
   if ! flock -n 9; then
-    echo "Waiting for the machine: $(holder_line)." >&2
+    echo "Waiting for the machine: $(holder_line). This waits as long as it takes." >&2
     note "waiting" "behind $(holder_line)"
 
-    if ! flock -w "$WAIT_SECONDS" 9; then
-      echo "Gave up after ${WAIT_SECONDS}s: $(holder_line) still holds the machine." >&2
-      echo "Ask whoever owns that run, or set VIDYA_WAIT_SECONDS higher." >&2
-      exit 1
-    fi
+    # Announced while waiting, so a wait of tens of minutes is legible rather
+    # than looking like a hang; the kernel does the actual queueing.
+    while ! flock -n 9; do
+      if [ "$WAIT_SECONDS" -gt 0 ] && [ "$waited" -ge "$WAIT_SECONDS" ]; then
+        echo "Gave up after ${waited}s: $(holder_line) still holds the machine." >&2
+        exit 1
+      fi
+
+      sleep "$POLL_SECONDS"
+      waited=$((waited + POLL_SECONDS))
+
+      if [ $((waited % ANNOUNCE_EVERY)) -eq 0 ]; then
+        echo "Still waiting for $(holder_line). ${waited}s so far." >&2
+      fi
+    done
   fi
 
   rm -rf "$LOCK"
@@ -130,9 +145,8 @@ if command -v flock >/dev/null 2>&1; then
   printf '%s\n%s\n%s\n' "$$" "$LABEL" "$PWD" >"$LOCK/holder"
 else
   while ! take_turn; do
-    if [ "$waited" -ge "$WAIT_SECONDS" ]; then
+    if [ "$WAIT_SECONDS" -gt 0 ] && [ "$waited" -ge "$WAIT_SECONDS" ]; then
       echo "Gave up after ${waited}s: $(holder_line) still holds the machine." >&2
-      echo "Ask whoever owns that run, or set VIDYA_WAIT_SECONDS higher." >&2
       exit 1
     fi
 
@@ -164,7 +178,7 @@ if [ "${CI:-}" != "true" ]; then
   announced=-1
 
   while awk -v l="$(load_now)" -v ceiling="$CEILING" 'BEGIN { exit !(l > ceiling) }'; do
-    if [ "$waited" -ge "$WAIT_SECONDS" ]; then
+    if [ "$WAIT_SECONDS" -gt 0 ] && [ "$waited" -ge "$WAIT_SECONDS" ]; then
       echo "Gave up after ${waited}s: load average $(load_now) is still above ${CEILING}." >&2
       echo "Something outside this repository is busy; wait, or set VIDYA_RUN_ANYWAY=1." >&2
       exit 1
