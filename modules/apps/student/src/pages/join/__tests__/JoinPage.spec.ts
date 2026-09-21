@@ -74,10 +74,7 @@ describe('the joining address', () => {
 
     const router = createRouter({
       history: createMemoryHistory(),
-      routes: [
-        ...(routes as RouteRecordRaw[]),
-        { path: '/', name: 'courses', component: {} },
-      ],
+      routes: [...(routes as RouteRecordRaw[]), { path: '/', name: 'courses', component: {} }],
     })
     await router.push('/j/GITA42')
     await router.isReady()

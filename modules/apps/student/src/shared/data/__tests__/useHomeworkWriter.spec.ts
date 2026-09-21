@@ -1,26 +1,11 @@
-import type { LocalHomework, SaveHomeworkAnswer } from '@vidya/client'
+import type { SaveHomeworkAnswer } from '@vidya/client'
 import { asId, type HomeworkId, type IsoDateTime, toIsoDateTime } from '@vidya/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { anAnswer } from '@/shared/data/__tests__/fakeDevice'
 import { useSyncRuns } from '@/shared/sync'
 
 import { useHomeworkWriter } from '../useHomeworkWriter'
-
-const anAnswer = (over: Partial<LocalHomework> = {}): LocalHomework => ({
-  id: asId<HomeworkId>('homework-1'),
-  schoolId: asId('school-1'),
-  enrollmentId: asId('enrollment-1'),
-  lessonVersionId: asId('version-1'),
-  sectionId: asId('section-1'),
-  status: 'open',
-  text: 'answer text',
-  grade: null,
-  comment: null,
-  createdAt: toIsoDateTime(new Date('2026-01-01T00:00:00.000Z')),
-  submittedAt: null,
-  updatedAt: toIsoDateTime(new Date('2026-01-01T00:00:00.000Z')),
-  ...over,
-})
 
 describe('useHomeworkWriter', () => {
   beforeEach(() => {

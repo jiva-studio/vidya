@@ -42,7 +42,11 @@ describe('the settings page', () => {
 
     const signOutBtn = screen
       .findAll('button')
-      .find((btn) => btn.text().toLowerCase().includes('sign out') || btn.text().toLowerCase().includes('выйти'))
+      .find(
+        (btn) =>
+          btn.text().toLowerCase().includes('sign out') ||
+          btn.text().toLowerCase().includes('выйти'),
+      )
 
     expect(signOutBtn).toBeDefined()
     await signOutBtn!.trigger('click')
