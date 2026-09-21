@@ -1,4 +1,10 @@
-import type { CourseId, CourseLearningType, CourseStatus, SchoolId, SyncPayload } from '@vidya/domain'
+import type {
+  CourseId,
+  CourseLearningType,
+  CourseStatus,
+  SchoolId,
+  SyncPayload,
+} from '@vidya/domain'
 
 import type { ICourseRepository, IDatabase, LocalCourse } from '@/ports'
 
