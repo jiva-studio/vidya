@@ -10,7 +10,7 @@ import { LessonPreview } from '@/widgets/lesson-editor'
 import { useLessonVersionDocument } from '@/widgets/lesson-editor'
 
 import { pageClasses } from './styles'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- State ---------------------------------- */
 

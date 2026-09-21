@@ -10,7 +10,7 @@ import { useCourseForm } from '@/entities/course'
 
 import CourseForm from './CourseForm.vue'
 import { formLoadingClasses, pageClasses } from './styles'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 import { useToasts } from '@/shared/lib'
 
 /* --------------------------------- State ---------------------------------- */

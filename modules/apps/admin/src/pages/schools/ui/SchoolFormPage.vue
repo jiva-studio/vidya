@@ -12,7 +12,7 @@ import SchoolLogoField from './SchoolLogoField.vue'
 import SchoolNameField from './SchoolNameField.vue'
 import type { SchoolFormPageProps } from './types'
 import { formClasses, pageClasses } from './styles'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- Props ---------------------------------- */
 

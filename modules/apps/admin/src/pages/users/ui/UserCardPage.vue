@@ -15,7 +15,7 @@ import { pageClasses, sectionClasses } from './styles'
 import type { UserCardPageProps } from './types'
 import UserDetailsForm from './UserDetailsForm.vue'
 import UserFacts from './UserFacts.vue'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- Props ---------------------------------- */
 

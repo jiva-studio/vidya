@@ -12,7 +12,7 @@ import { useCan, useCurrentSchool } from '@/shared/access'
 import RoleFormFields from './RoleFormFields.vue'
 import { formClasses, pageClasses } from './styles'
 import type { RoleFormPageProps } from './types'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- Props ---------------------------------- */
 

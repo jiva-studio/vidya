@@ -14,7 +14,7 @@ import { useCan } from '@/shared/access'
 
 import GroupMembers from './GroupMembers.vue'
 import { pageClasses, refusalClasses } from './styles'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- State ---------------------------------- */
 

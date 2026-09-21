@@ -2,7 +2,7 @@
 import { Button, PageHeader, Pagination } from '@vidya/ui'
 
 import { PAGE_SIZE } from '@/shared/lib'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 
 import type { ListPageEmits, ListPageProps } from '../types'
 import { pageClasses } from './styles'

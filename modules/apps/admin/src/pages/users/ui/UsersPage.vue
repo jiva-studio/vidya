@@ -11,7 +11,7 @@ import { PAGE_SIZE, useUsers } from '@/entities/user'
 
 import { pageClasses } from './styles'
 import UsersTableRow from './UsersTableRow.vue'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- State ---------------------------------- */
 

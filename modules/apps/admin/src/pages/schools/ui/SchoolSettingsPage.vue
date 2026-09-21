@@ -25,7 +25,7 @@ import DefaultRoleField from './DefaultRoleField.vue'
 import StudentRolesList from './StudentRolesList.vue'
 import type { SchoolSettingsPageProps } from './types'
 import { formClasses, pageClasses } from './styles'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- Props ---------------------------------- */
 

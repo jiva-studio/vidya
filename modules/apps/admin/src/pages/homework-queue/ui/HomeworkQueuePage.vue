@@ -12,7 +12,7 @@ import { useHomeworkRows } from '../model'
 import HomeworkQueueFilters from './HomeworkQueueFilters.vue'
 import HomeworkQueueRow from './HomeworkQueueRow.vue'
 import { sectionClasses } from './styles'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 import { PAGE_SIZE } from '@/shared/lib'
 
 /* --------------------------------- State ---------------------------------- */

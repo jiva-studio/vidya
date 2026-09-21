@@ -15,7 +15,7 @@ import HomeworkWork from './HomeworkWork.vue'
 import ReviewQueueNav from './ReviewQueueNav.vue'
 import { sectionClasses } from './styles'
 import type { HomeworkReviewPageProps } from './types'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- Props ---------------------------------- */
 

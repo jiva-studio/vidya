@@ -12,7 +12,7 @@ import { useCan } from '@/shared/access'
 import AddLessonDialog from './AddLessonDialog.vue'
 import LessonsTable from './LessonsTable.vue'
 import { pageClasses } from './styles'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- State ---------------------------------- */
 

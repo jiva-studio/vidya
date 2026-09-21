@@ -11,7 +11,7 @@ import { useGroupForm } from '@/entities/group'
 
 import GroupForm from './GroupForm.vue'
 import { formLoadingClasses, pageClasses } from './styles'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 import { useToasts } from '@/shared/lib'
 
 /* --------------------------------- State ---------------------------------- */

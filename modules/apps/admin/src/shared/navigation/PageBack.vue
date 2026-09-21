@@ -5,9 +5,9 @@ import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import { useCurrentSchool } from '@/shared/access'
-import type { NavPlacement } from '@/shared/navigation'
+import type { NavPlacement } from './types'
 
-import { backClasses, backIconClasses } from './styles'
+import { backClasses, backIconClasses } from './pageBack.styles'
 
 /* --------------------------------- State ---------------------------------- */
 

@@ -19,7 +19,7 @@ import { PAGE_SIZE } from '@/shared/lib'
 import EnrollmentsFilters from './EnrollmentsFilters.vue'
 import EnrollmentsTableRow from './EnrollmentsTableRow.vue'
 import { refusalClasses, sectionClasses } from './styles'
-import { PageBack } from '@/widgets/page-back'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- State ---------------------------------- */
 
