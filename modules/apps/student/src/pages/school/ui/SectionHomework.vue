@@ -36,14 +36,17 @@ const open = computed(() => props.answer === null || isHomeworkEditable(props.an
 const editable = computed(() => props.writable && open.value)
 
 const draft = ref(props.answer?.text ?? '')
+let lastAnswerId = props.answer?.id
 
-// A pull can bring back an answer written on another machine while this one is
-// open. The draft follows the stored text only when the student has not begun
-// one of their own, because overwriting what they are typing loses it.
+// A pull or initial query can populate the answer after mount. The draft
+// follows when switching answers or when the record is first loaded.
 watch(
-  () => props.answer?.text ?? '',
-  (stored) => {
-    if (draft.value === '') draft.value = stored
+  () => props.answer?.id,
+  (newId) => {
+    if (newId !== lastAnswerId) {
+      lastAnswerId = newId
+      draft.value = props.answer?.text ?? ''
+    }
   },
 )
 

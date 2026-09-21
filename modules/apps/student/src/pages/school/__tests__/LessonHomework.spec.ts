@@ -194,6 +194,20 @@ describe('an answer the school already holds', () => {
     expect((screen.get('textarea').element as HTMLTextAreaElement).value).toBe('My first go.')
   })
 
+  it('allows clearing the draft without reverting back to the stored text', async () => {
+    writesHere()
+    const rows = {
+      ...taught(),
+      homework: [answered({ status: 'returned', text: 'My first go.' })],
+    }
+    const { screen } = await render(rows)
+
+    await screen.get('textarea').setValue('')
+    await flushPromises()
+
+    expect((screen.get('textarea').element as HTMLTextAreaElement).value).toBe('')
+  })
+
   it('shows the grade the school put on it', async () => {
     writesHere()
     const rows = { ...taught(), homework: [answered({ status: 'accepted', grade: 80 })] }
