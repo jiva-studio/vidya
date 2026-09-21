@@ -11,6 +11,7 @@ import {
   getGroupEnrollments,
   getGroups,
   getSchoolUserNames,
+  getUserName,
   updateGroup,
 } from '../api'
 
@@ -119,6 +120,18 @@ describe('group requests', () => {
     expect(fake.calls[0]).toMatchObject({ method: 'GET', path: USERS, query: { schoolId: SCHOOL } })
     expect(names.names.get(asId('u1'))).toBe('Anna')
     expect(names.refused).toBe(false)
+  })
+
+  it('leaves one student unnamed rather than failing when their read is refused', async () => {
+    const fake = fakeHttpClient({ [`${USERS}/u1`]: new Error('forbidden') })
+
+    await expect(getUserName(fake.client, asId('u1'))).resolves.toBeUndefined()
+  })
+
+  it('reads the name of a student the school list left out', async () => {
+    const fake = fakeHttpClient({ [`${USERS}/u1`]: { id: 'u1', name: 'Anna' } })
+
+    await expect(getUserName(fake.client, asId('u1'))).resolves.toBe('Anna')
   })
 
   it('leaves the roster nameless rather than failing when names may not be read', async () => {
