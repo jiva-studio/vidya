@@ -9,7 +9,7 @@ import { toStudentContent } from './studentContent'
 /*                                   Fields                                   */
 /* -------------------------------------------------------------------------- */
 
-const COURSE = ['id', 'schoolId', 'name', 'description', 'learningType'] as const
+const COURSE = ['id', 'schoolId', 'name', 'description', 'learningType', 'status'] as const
 const COURSE_SUMMARY = ['id', 'name', 'description'] as const
 
 const GROUP = ['id', 'courseId', 'name', 'description'] as const

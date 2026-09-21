@@ -192,6 +192,15 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
     }
   }
 
+  /** How many live places a student holds in one school — what leaving it costs. */
+  async countLivePlacesIn(studentId: domain.UserId, schoolId: domain.SchoolId): Promise<number> {
+    return this.repository.countBy({
+      studentId,
+      schoolId,
+      status: In([...LiveEnrollmentStatuses]),
+    })
+  }
+
   /**
    * Takes back every place this student holds in the school, decided or still
    * asked for. A place is what belonging to the school bought, so it does not

@@ -39,6 +39,7 @@ import {
   EnrollmentsController,
   GroupsController,
   HomeworkController,
+  JoinController,
   LessonsController,
   LessonVersionsController,
   ProgressController,
@@ -77,6 +78,7 @@ import {
     PermissionsCacheEvictionModule,
   ],
   controllers: [
+    JoinController,
     RolesController,
     UserRolesController,
     UsersController,

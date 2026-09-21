@@ -1,9 +1,15 @@
-import { Injectable } from '@nestjs/common'
+import { ConflictException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { SCHOOL_CODE_LENGTH, schoolCodeAlphabet } from '@vidya/domain'
 import { Role, School, User } from '@vidya/entities'
+import { randomInt } from 'crypto'
 import { In, Repository } from 'typeorm'
 
 import { Scope, ScopedEntitiesService } from './entities.service'
+
+// Six characters out of thirty-two collide often enough for a retry to be an
+// ordinary outcome; past this many the alphabet, not the draw, is the problem.
+const MINT_ATTEMPTS = 8
 
 @Injectable()
 export class SchoolsService extends ScopedEntitiesService<School, Scope> {
@@ -32,5 +38,38 @@ export class SchoolsService extends ScopedEntitiesService<School, Scope> {
           }
         : { where: { id: In([]) } }
     })
+  }
+
+  /**
+   * The code a school hands out, minted once and then kept.
+   *
+   * Drawn and retried rather than derived from the name: a derived code would
+   * leak a rename into every poster already printed.
+   */
+  async mintCode(school: School): Promise<string> {
+    if (school.code) return school.code
+
+    // Joining assigns the school's default student role. Without one the first
+    // visitor to the link would be met by a failure, so no link is handed out.
+    if (!school.config?.defaultStudentRoleId) {
+      throw new ConflictException('School has no default student role and takes no students yet')
+    }
+
+    for (let attempt = 0; attempt < MINT_ATTEMPTS; attempt++) {
+      const code = this.generateCode()
+      if (await this.repository.existsBy({ code })) continue
+
+      await this.repository.update({ id: school.id }, { code })
+      return code
+    }
+
+    throw new Error(`Could not mint a free code for school ${school.id}`)
+  }
+
+  private generateCode(): string {
+    const alphabet = schoolCodeAlphabet()
+    let code = ''
+    for (let i = 0; i < SCHOOL_CODE_LENGTH; i++) code += alphabet[randomInt(alphabet.length)]
+    return code
   }
 }
