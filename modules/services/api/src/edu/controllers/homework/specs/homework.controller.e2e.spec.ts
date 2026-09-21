@@ -57,6 +57,30 @@ describe('/edu/homework', () => {
     expect(response.body.grade).toBe(5)
   })
 
+  it('keeps the words the reviewer sent back with the work', async () => {
+    const created = await answer()
+
+    const response = await review(
+      created.id,
+      { status: 'returned', comment: 'Name the chapter your quotation comes from.' },
+      ctx.tokens.teacher,
+    ).expect(200)
+
+    expect(response.body.comment).toBe('Name the chapter your quotation comes from.')
+  })
+
+  it('refuses a grade above a hundred percent', async () => {
+    const created = await answer()
+
+    await review(created.id, { status: 'accepted', grade: 101 }, ctx.tokens.teacher).expect(400)
+  })
+
+  it('refuses a grade below zero', async () => {
+    const created = await answer()
+
+    await review(created.id, { status: 'accepted', grade: -1 }, ctx.tokens.teacher).expect(400)
+  })
+
   it('refuses a transition the lifecycle does not allow', async () => {
     const created = await answer()
     await review(created.id, { status: 'accepted', grade: 5 }, ctx.tokens.teacher).expect(200)
