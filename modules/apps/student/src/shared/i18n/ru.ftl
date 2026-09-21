@@ -64,6 +64,8 @@ waiting-running = Ждём ответа школы…
 settings-title = Настройки
 settings-schools-title = Мои школы
 settings-schools-none = Вы пока не состоите ни в одной школе.
+settings-account-title = Аккаунт
+settings-sign-out = Выйти
 
 not-found-title = Такой страницы нет
 not-found-text = Проверьте адрес или начните со всех курсов.

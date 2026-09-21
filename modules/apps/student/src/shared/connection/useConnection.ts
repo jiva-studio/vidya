@@ -69,6 +69,13 @@ export const useConnection = createGlobalState(() => {
     clearStored()
     connection.value = undefined
     offered.value = undefined
+    if (typeof indexedDB !== 'undefined' && typeof indexedDB.deleteDatabase === 'function') {
+      try {
+        indexedDB.deleteDatabase('vidya')
+      } catch {
+        // Ignored if indexedDB deletion is unsupported or blocked
+      }
+    }
   }
 
   return {

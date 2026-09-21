@@ -64,6 +64,8 @@ waiting-running = Waiting for your school…
 settings-title = Settings
 settings-schools-title = My schools
 settings-schools-none = You are not in any school yet.
+settings-account-title = Account
+settings-sign-out = Sign out
 
 not-found-title = No such page
 not-found-text = Check the address, or start from all courses.
