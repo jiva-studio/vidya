@@ -1,6 +1,8 @@
 import { createGlobalState } from '@vueuse/core'
 import { computed, ref, shallowRef } from 'vue'
 
+import { setSentryUser } from '@/shared/sentry'
+
 import { hasExpired, readAccessToken, schoolsOf } from './accessToken'
 import { clearRefreshToken, readRefreshToken, writeRefreshToken } from './tokenStore'
 import type { SessionTokens } from './types'
@@ -32,18 +34,27 @@ export const useSession = createGlobalState(() => {
     refreshToken.value = tokens.refreshToken
     accessToken.value = tokens.accessToken
     nowSeconds.value = Math.floor(Date.now() / 1000)
+
+    if (claims.value) {
+      setSentryUser({
+        id: claims.value.sub,
+        schoolId: schoolIds.value[0],
+      })
+    }
   }
 
   const end = () => {
     clearRefreshToken()
     refreshToken.value = undefined
     accessToken.value = undefined
+    setSentryUser(null)
   }
 
   /** Drops the in-memory half only: another tab has already cleared storage. */
   const forget = () => {
     refreshToken.value = undefined
     accessToken.value = undefined
+    setSentryUser(null)
   }
 
   return {
