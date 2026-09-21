@@ -84,6 +84,7 @@ beforeEach(() => {
   siteStandsAt({ filled: true })
   education.useUuidSource(() => 'homework-new')
   useHomeworkWriter().adoptWriter(undefined)
+  useHomeworkWriter().adoptClock(undefined)
   useBlockStateWriter().adoptWriter(undefined)
   useSyncRuns().adoptRunner(undefined)
   vi.spyOn(console, 'warn').mockImplementation(() => {})

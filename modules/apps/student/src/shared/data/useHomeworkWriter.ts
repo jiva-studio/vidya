@@ -1,6 +1,6 @@
 import type { IHomeworkRepository, LocalHomework, SaveHomeworkAnswer } from '@vidya/client'
 import { HomeworkFrozenError } from '@vidya/client'
-import type { HomeworkId, IsoDateTime } from '@vidya/domain'
+import { type HomeworkId, type IsoDateTime, toIsoDateTime } from '@vidya/domain'
 import { createGlobalState } from '@vueuse/core'
 import { computed, ref } from 'vue'
 
@@ -28,6 +28,7 @@ export type HomeworkWriteOutcome = 'written' | 'frozen' | 'unwritable'
 
 export const useHomeworkWriter = createGlobalState(() => {
   const writer = ref<HomeworkWriter | undefined>(undefined)
+  let clock: () => IsoDateTime = () => toIsoDateTime(new Date())
 
   const write = async (
     perform: (writing: HomeworkWriter) => Promise<LocalHomework>,
@@ -55,10 +56,15 @@ export const useHomeworkWriter = createGlobalState(() => {
       writer.value = writing
     },
 
+    /** Injected clock for deterministic timestamps. */
+    adoptClock: (customClock: (() => IsoDateTime) | undefined): void => {
+      clock = customClock ?? (() => toIsoDateTime(new Date()))
+    },
+
     saveAnswer: (input: SaveHomeworkAnswer): Promise<HomeworkWriteOutcome> =>
       write((writing) => writing.saveAnswer(input)),
 
-    submitAnswer: (id: HomeworkId, at: IsoDateTime): Promise<HomeworkWriteOutcome> =>
-      write((writing) => writing.submit(id, at)),
+    submitAnswer: (id: HomeworkId, at?: IsoDateTime): Promise<HomeworkWriteOutcome> =>
+      write((writing) => writing.submit(id, at ?? clock())),
   }
 })

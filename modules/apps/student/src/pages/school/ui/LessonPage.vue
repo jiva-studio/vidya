@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { education } from '@vidya/client'
 import type { BlockId, LessonBlockState, LessonSection, SectionId } from '@vidya/domain'
-import { toIsoDateTime } from '@vidya/domain'
 import type { LessonPreviewLabels, LessonProgress } from '@vidya/ui'
 import { EmptyState, Skeleton } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
@@ -137,7 +136,7 @@ async function onHandAnswer(section: LessonSection) {
   const answer = answerFor(section)
   if (answer === null) return
 
-  await answers.submitAnswer(answer.id, toIsoDateTime(new Date()))
+  await answers.submitAnswer(answer.id)
 
   outbox.refresh()
   await reload()
