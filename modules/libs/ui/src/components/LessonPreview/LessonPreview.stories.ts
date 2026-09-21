@@ -46,4 +46,26 @@ export const AsTheStudentReadsIt = {
   args: { content, labels: { ...labels, rightAnswer: undefined } },
 }
 
+const progressLabels = { markRead: 'Mark as read', answerRecorded: 'Your answer is in.' }
+
+export const AsTheStudentAnswersIt = {
+  args: {
+    content,
+    labels: { ...labels, rightAnswer: undefined },
+    progress: { states: {}, editable: true, labels: progressLabels },
+  },
+}
+
+export const AsTheStudentLeftIt = {
+  args: {
+    content,
+    labels: { ...labels, rightAnswer: undefined },
+    progress: {
+      states: { b1: { type: 'text', read: true }, b3: { type: 'quiz', answer: 1 } },
+      editable: true,
+      labels: progressLabels,
+    },
+  },
+}
+
 export const Empty = { args: { content: { schemaVersion: 1, sections: [] }, labels } }

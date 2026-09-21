@@ -1,11 +1,23 @@
 <script setup lang="ts">
+import type { BlockId, LessonBlockState } from '@vidya/domain'
+
 import BlockPreview from '../BlockPreview'
 import { previewSectionClasses, previewTitleClasses } from './styles'
-import type { SectionPreviewProps } from './types'
+import type { SectionPreviewEmits, SectionPreviewProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<SectionPreviewProps>()
+const props = withDefaults(defineProps<SectionPreviewProps>(), { progress: undefined })
+
+/* --------------------------------- Events --------------------------------- */
+
+const emit = defineEmits<SectionPreviewEmits>()
+
+/* -------------------------------- Handlers -------------------------------- */
+
+function onChange(blockId: BlockId, state: LessonBlockState) {
+  emit('change', blockId, state)
+}
 </script>
 
 <template>
@@ -18,6 +30,8 @@ const props = defineProps<SectionPreviewProps>()
       :key="block.id"
       :block="block"
       :labels="props.labels"
+      :progress="props.progress"
+      @change="onChange"
     />
   </article>
 </template>

@@ -4,7 +4,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 import LessonPreview from './LessonPreview.vue'
-import type { LessonPreviewLabels } from './types'
+import type { LessonPreviewLabels, LessonProgress } from './types'
 
 const labels: LessonPreviewLabels = {
   untitledSection: 'Untitled section',
@@ -71,5 +71,47 @@ describe('LessonPreview', () => {
 
   it('draws nothing at all for a lesson without sections', () => {
     expect(draw(lesson([])).findAll('article')).toEqual([])
+  })
+})
+
+const quiz = (id: string) => ({
+  id: asId<BlockId>(id),
+  type: 'quiz',
+  question: 'Which letter opens the alphabet?',
+  answers: ['The first one', 'The last one'],
+  rightAnswer: 0,
+})
+
+const studying = (over: Partial<LessonProgress> = {}): LessonProgress => ({
+  states: {},
+  editable: true,
+  labels: { markRead: 'Mark as read', answerRecorded: 'Your answer is in.' },
+  ...over,
+})
+
+const study = (content: LessonContent, progress: LessonProgress) =>
+  mount(LessonPreview, { props: { content, labels, progress } })
+
+describe('LessonPreview as the student reads it', () => {
+  it('carries what the student has done down to the block that shows it', () => {
+    const content = lesson([section('s1', 'The alphabet', [quiz('b1')])])
+    const answered = studying({ states: { [asId<BlockId>('b1')]: { type: 'quiz', answer: 0 } } })
+
+    expect(study(content, answered).text()).toContain('Your answer is in.')
+  })
+
+  it('carries a change back up under the name of the block it happened on', async () => {
+    const content = lesson([section('s1', 'The alphabet', [text('b1', 'First'), quiz('b2')])])
+    const page = study(content, studying())
+
+    await page.findAll('input[type="radio"]')[1].setValue(true)
+
+    expect(page.emitted('change')).toEqual([['b2', { type: 'quiz', answer: 1 }]])
+  })
+
+  it('draws the author their own lesson, with nothing on it to answer', () => {
+    const content = lesson([section('s1', 'The alphabet', [quiz('b1')])])
+
+    expect(draw(content).findAll('input')).toEqual([])
   })
 })

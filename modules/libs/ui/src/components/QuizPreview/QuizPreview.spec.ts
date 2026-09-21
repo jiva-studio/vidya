@@ -3,7 +3,7 @@ import { asId } from '@vidya/domain'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
-import type { LessonPreviewLabels } from '../LessonPreview/types'
+import type { LessonPreviewLabels, LessonProgress } from '../LessonPreview/types'
 import QuizPreview from './QuizPreview.vue'
 
 const labels: LessonPreviewLabels = {
@@ -61,5 +61,63 @@ describe('QuizPreview', () => {
 
   it('says a question is still missing rather than showing an empty line', () => {
     expect(draw({ question: '' }).text()).toContain('No question yet.')
+  })
+})
+
+const answering = (over: Partial<LessonProgress> = {}): LessonProgress => ({
+  states: {},
+  editable: true,
+  labels: { markRead: 'Mark as read', answerRecorded: 'Your answer is in.' },
+  ...over,
+})
+
+const ask = (progress: LessonProgress, over: Partial<QuizBlock> = {}) =>
+  mount(QuizPreview, { props: { block: block(over), labels, progress } })
+
+describe('QuizPreview as the student answers it', () => {
+  it('offers every answer to choose from', () => {
+    const page = ask(answering())
+
+    expect(page.findAll('input[type="radio"]')).toHaveLength(2)
+  })
+
+  it('reports the answer chosen rather than judging it here', async () => {
+    const page = ask(answering())
+
+    await page.findAll('input[type="radio"]')[1].setValue(true)
+
+    expect(page.emitted('change')).toEqual([[{ type: 'quiz', answer: 1 }]])
+  })
+
+  it('names no key on the copy the student answers, whatever the screen offers', () => {
+    const page = ask(answering(), { rightAnswer: 1 })
+
+    expect(page.text()).not.toContain('right answer')
+  })
+
+  it('takes one answer and no second one', async () => {
+    const answered = answering({ states: { [block().id]: { type: 'quiz', answer: 0 } } })
+    const page = ask(answered)
+
+    const options = page.findAll('input[type="radio"]')
+
+    expect(options[0].attributes('disabled')).toBeDefined()
+    expect(options[1].attributes('disabled')).toBeDefined()
+    expect(page.text()).toContain('Your answer is in.')
+  })
+
+  it('shows which answer was given, so the student reads their own back', () => {
+    const answered = answering({ states: { [block().id]: { type: 'quiz', answer: 1 } } })
+
+    const options = ask(answered).findAll('input[type="radio"]')
+
+    expect((options[0].element as HTMLInputElement).checked).toBe(false)
+    expect((options[1].element as HTMLInputElement).checked).toBe(true)
+  })
+
+  it('takes no answer in a tab that may not write', () => {
+    const page = ask(answering({ editable: false }))
+
+    expect(page.find('input[type="radio"]').attributes('disabled')).toBeDefined()
   })
 })
