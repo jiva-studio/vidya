@@ -12,6 +12,9 @@ export type CourseDetails = {
   name: string
   description?: string
   learningType: domain.CourseLearningType
+
+  /** Only a published course is drawn in the catalogue; see {@link domain.CourseStatuses}. */
+  status: domain.CourseStatus
 }
 
 export type CourseSummary = Pick<CourseDetails, 'id' | 'name' | 'description'>
@@ -20,7 +23,8 @@ export type CourseSummary = Pick<CourseDetails, 'id' | 'name' | 'description'>
 /*                                   Create                                   */
 /* -------------------------------------------------------------------------- */
 
-export type CreateCourseRequest = crud.CreateItemRequest<Omit<CourseDetails, 'id'>>
+/** A course is created out of sight: publication is a separate, later decision. */
+export type CreateCourseRequest = crud.CreateItemRequest<Omit<CourseDetails, 'id' | 'status'>>
 export type CreateCourseResponse = crud.CreateItemResponse<CourseDetails['id']>
 
 /* -------------------------------------------------------------------------- */

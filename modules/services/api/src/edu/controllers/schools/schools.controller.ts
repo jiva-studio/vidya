@@ -5,9 +5,10 @@ import {
   NotFoundException,
   Param,
   ParseUUIDPipe,
+  Post,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
@@ -146,6 +147,33 @@ export class SchoolsController {
 
     // Return updated school response
     return toSchoolDetails(school)
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                        POST /edu/schools/:id/code                          */
+  /* -------------------------------------------------------------------------- */
+
+  /**
+   * Mints the school's joining code, or returns the one it already holds.
+   *
+   * Asked for rather than handed out at creation: until a school wants a link,
+   * no link to it exists anywhere, and that is the only state in which nobody
+   * can be holding one. Minting twice is the same as minting once.
+   */
+  @Post(Routes().edu.schools.code(':id'))
+  @ApiOperation({ summary: "Mint the school's joining code", operationId: 'School::mintCode' })
+  @ApiOkResponse({ type: dto.MintSchoolCodeResponse, description: 'The code, new or existing' })
+  async mintCode(
+    @Param('id', new ParseUUIDPipe(), SchoolExistsPipe) id: domain.SchoolId,
+    @Authentication() auth: UserAuthentication,
+  ): Promise<dto.MintSchoolCodeResponse> {
+    if (!auth.permissions.has(['schools:update'], { schoolId: id })) {
+      throw new ForbiddenException('User does not have permission')
+    }
+
+    const school = await this.schoolsService.getOrFail(id)
+
+    return { code: await this.schoolsService.mintCode(school) }
   }
 
   /* -------------------------------------------------------------------------- */

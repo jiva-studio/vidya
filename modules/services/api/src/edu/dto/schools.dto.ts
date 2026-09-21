@@ -142,3 +142,23 @@ export class DeleteSchoolResponse implements protocol.DeleteSchoolResponse {
   @ApiProperty({ example: true })
   success: boolean
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                    Join                                    */
+/* -------------------------------------------------------------------------- */
+
+export class ResolveSchoolResponse implements protocol.SchoolCard {
+  @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  id: domain.SchoolId
+
+  @ApiProperty({ example: 'School of Devotion' })
+  name: string
+
+  @ApiProperty({ example: 'https://cdn.example.org/logo.png', nullable: true })
+  logoUrl: string | null
+}
+
+export class MintSchoolCodeResponse implements protocol.SchoolJoinCode {
+  @ApiProperty({ example: 'AB3K7Q' })
+  code: string
+}

@@ -29,6 +29,9 @@ export class Course {
   })
   learningType: domain.CourseLearningType
 
+  @Column({ nullable: false, default: 'draft' })
+  status: domain.CourseStatus
+
   @Column({ nullable: false })
   schoolId: SchoolId
 

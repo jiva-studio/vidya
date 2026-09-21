@@ -25,6 +25,14 @@ export class School {
   @Column({ nullable: true, type: 'character varying' })
   description: string | null
 
+  /**
+   * The public code a joining link carries, minted when a school first asks
+   * for one. Null until then: a school with no code has no link in the world,
+   * which is the only way to be sure nobody is holding one.
+   */
+  @Column({ nullable: true, type: 'character varying', length: 6 })
+  code: string | null
+
   @Column({ nullable: false, type: 'json', default: {} })
   config: SchoolConfig
 }

@@ -13,6 +13,10 @@ export const Routes = (baseUrl: string = '') => ({
   otp: {
     root: () => `${baseUrl}/auth/otp`,
   },
+  /** Resolving a joining link. Public: the card is shown before anyone signs in. */
+  join: {
+    resolve: (code: string) => `${baseUrl}/j/${code}`,
+  },
   sync: {
     pull: () => `${baseUrl}/sync/pull`,
     push: () => `${baseUrl}/sync/push`,
@@ -39,7 +43,7 @@ export const Routes = (baseUrl: string = '') => ({
       schools: {
         all: () => `${baseUrl}/edu/users/${userId}/schools`,
         create: () => `${baseUrl}/edu/users/${userId}/schools`,
-        delete: (roleId: string) => `${baseUrl}/edu/users/${userId}/schools/${roleId}`,
+        delete: (schoolId: string) => `${baseUrl}/edu/users/${userId}/schools/${schoolId}`,
       },
     }),
     courses: {
@@ -99,6 +103,7 @@ export const Routes = (baseUrl: string = '') => ({
         getAll: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/configs`,
         update: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/configs`,
       },
+      code: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/code`,
       find: () => `${baseUrl}/edu/schools`,
       get: (id: string) => `${baseUrl}/edu/schools/${id}`,
       create: () => `${baseUrl}/edu/schools`,

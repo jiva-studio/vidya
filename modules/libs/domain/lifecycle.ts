@@ -35,6 +35,16 @@ export const LiveEnrollmentStatuses = ['pending', 'accepted'] as const
 export const isLive = (status: EnrollmentStatus): boolean =>
   (LiveEnrollmentStatuses as readonly string[]).includes(status)
 
+/**
+ * A course is prepared out of sight and then shown.
+ *
+ * Only a published course is drawn in a school's catalogue. Unpublishing does
+ * not take a place away: the content a student already holds arrives through
+ * the course scope, which an accepted place grants, not through publication.
+ */
+export const CourseStatuses = ['draft', 'published'] as const
+export type CourseStatus = (typeof CourseStatuses)[number]
+
 /** A group is created before it runs, runs, and then stops taking anyone new. */
 export const GroupStatuses = ['pending', 'active', 'inactive'] as const
 export type GroupStatus = (typeof GroupStatuses)[number]

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { SCHOOL_CODE_LENGTH, schoolCodeAlphabet } from '@vidya/domain'
 import { Role, School, User } from '@vidya/entities'
+import { randomInt } from 'crypto'
 import { In, Repository } from 'typeorm'
 
 import { Scope, ScopedEntitiesService } from './entities.service'
@@ -32,5 +34,34 @@ export class SchoolsService extends ScopedEntitiesService<School, Scope> {
           }
         : { where: { id: In([]) } }
     })
+  }
+
+  /**
+   * The code a school hands out, minted once and then kept.
+   *
+   * Retried rather than computed from the name: the alphabet is small enough
+   * that a collision is ordinary, and a code derived from the name would leak
+   * a rename into every poster already printed.
+   */
+  async mintCode(school: School): Promise<string> {
+    if (school.code) return school.code
+
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const code = this.generateCode()
+      const taken = await this.repository.findOneBy({ code })
+      if (taken) continue
+
+      await this.repository.update({ id: school.id }, { code })
+      return code
+    }
+
+    throw new Error(`could not mint a free code for school ${school.id}`)
+  }
+
+  private generateCode(): string {
+    const alphabet = schoolCodeAlphabet()
+    let code = ''
+    for (let i = 0; i < SCHOOL_CODE_LENGTH; i++) code += alphabet[randomInt(alphabet.length)]
+    return code
   }
 }
