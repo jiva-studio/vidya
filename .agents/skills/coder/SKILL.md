@@ -124,6 +124,10 @@ the rest of the workspace green.
 new code on purpose and checks that something fails. If a mutant survives, the
 suite is passing for a reason unrelated to the behaviour you added.
 
+If it prints `SKIPPED`, that package cannot be scored today and the runner says
+why. Report the gap and move on. Never wait out a mutation run that has gone
+past its budget: the runner abandons it, and so should you.
+
 If any check fails, fix the violation and re-run until the gate exits 0. Report
 the result honestly: if something is still failing, say which and why, rather
 than describing the task as done.

@@ -105,6 +105,8 @@ Mid-branch a full gate executes the red suites of every band still in flight, so
 
 Both targets go through `scripts/vidya-run-alone`, which waits for its turn rather than failing: the turn is taken in the common git directory, which every worktree resolves to the same path whatever branch it is on, and each turn is appended to `vidya-run-alone.log` beside it — who ran what, where, and for how long, readable from any checkout. Waiting is unbounded and announced on stderr every minute: these runs take tens of minutes, so any cap short enough to be useful would kill a caller for being second in line. A turn always ends — the holder finishes, or dies and the kernel releases it. `VIDYA_WAIT_SECONDS=<n>` caps the wait where a caller genuinely cannot afford one.
 
+Some packages cannot answer at all: their mutants time out faster than they are killed. The runner knows which, refuses them in a second and prints `SKIPPED`, and every run is time-boxed by `VIDYA_MUTATION_BUDGET`. A skipped or abandoned run is a gap to report in the handover, never something to wait out — the hand mutations stand in its place.
+
 An agent that needs a mutation score, or a gate wider than its own suites, asks the band owner for it.
 
 ---
