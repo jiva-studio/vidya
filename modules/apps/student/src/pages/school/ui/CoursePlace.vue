@@ -34,11 +34,7 @@ const place = computed(() => ({
       <Badge :tone="badge.tone">{{ $t(badge.key) }}</Badge>
       <RouterLink :to="place">{{ $t('course-place') }}</RouterLink>
 
-      <SubmissionNotice
-        v-if="props.submission"
-        :state="props.submission"
-        :reason="props.reason"
-      />
+      <SubmissionNotice v-if="props.submission" :state="props.submission" :reason="props.reason" />
     </template>
 
     <RouterLink v-else :to="enroll">{{ $t('course-ask') }}</RouterLink>
