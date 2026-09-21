@@ -104,6 +104,7 @@ export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionP
         text('name', 'name', EMPTY),
         text('description', 'description'),
         text('learning_type', 'learningType', { fallback: 'individual' }),
+        text('status', 'status', { fallback: 'published' }),
       ],
     },
 
