@@ -1,7 +1,14 @@
-import type { LocalCourse, LocalHomework, SubmissionState } from '@vidya/client'
+import type {
+  LocalCourse,
+  LocalEnrollment,
+  LocalGroup,
+  LocalHomework,
+  SubmissionState,
+} from '@vidya/client'
 import type {
   BlockId,
   EnrollmentStatus,
+  GroupId,
   LessonBlockState,
   LessonContent,
   LessonId,
@@ -10,8 +17,6 @@ import type {
   SyncRejectionReason,
 } from '@vidya/domain'
 import type { LessonPreviewLabels, LessonProgress } from '@vidya/ui'
-import type { LocalCourse, LocalEnrollment, LocalGroup } from '@vidya/client'
-import type { EnrollmentStatus, GroupId, LessonId } from '@vidya/domain'
 
 import type { OfferedHours } from './model/toOfferedHours'
 
@@ -48,6 +53,10 @@ export interface LessonRowProps {
 export interface CoursePlaceProps {
   /** The place the student holds on this course, or null when they hold none. */
   status: EnrollmentStatus | null
+
+  /** The school and the course the links carry, which is what the address needs. */
+  code: string
+  courseId: string
 
   /** How far the request got towards the school; absent while none was written here. */
   submission?: SubmissionState

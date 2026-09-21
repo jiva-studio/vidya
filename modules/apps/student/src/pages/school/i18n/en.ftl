@@ -56,6 +56,7 @@ place-rejected-notYourEnrollment = The request was addressed to a place that is 
 place-rejected-enrollmentRevoked = You are no longer on this course, so there was nothing left to send.
 place-rejected-unknownLessonVersion = The school does not know the lesson this was written against.
 place-rejected-alreadyAccepted = The school has already answered, so this could not replace its answer.
+place-rejected-alreadyGraded = The question has been answered and graded, so the answer stands.
 place-rejected-payloadTooLarge = What you wrote is too long to be sent.
 place-rejected-underReview = Someone at the school has this open, so it cannot be changed until they answer.
 place-rejected-courseNotOffered = The school is not taking students onto this course yet.

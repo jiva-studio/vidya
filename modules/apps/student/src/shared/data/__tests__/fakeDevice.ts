@@ -178,21 +178,14 @@ export const anAnswer = (overrides: Partial<LocalHomework> = {}): LocalHomework 
 const LIVE = ['pending', 'accepted']
 
 export const fakeDevice = (rows: DeviceRows = {}) => {
-  const schools = rows.schools ?? []
-  const courses = rows.courses ?? []
-  const lessons = rows.lessons ?? []
-  const versions = rows.versions ?? []
-  const enrollments = rows.enrollments ?? []
-  const homework = rows.homework ?? []
-  const blockStates = rows.blockStates ?? []
-  const groups = rows.groups ?? []
-  // Copied rather than held: the writes below amend this list, and a fixture
+  // Copied rather than held: the writes below amend these lists, and a fixture
   // shared between tests would carry one test's withdrawal into the next.
   const schools = [...(rows.schools ?? [])]
   const courses = [...(rows.courses ?? [])]
   const lessons = [...(rows.lessons ?? [])]
   const versions = [...(rows.versions ?? [])]
   const enrollments = [...(rows.enrollments ?? [])]
+  const homework = [...(rows.homework ?? [])]
   const blockStates = [...(rows.blockStates ?? [])]
   const groups = [...(rows.groups ?? [])]
 

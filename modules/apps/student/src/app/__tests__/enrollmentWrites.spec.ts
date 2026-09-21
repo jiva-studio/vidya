@@ -29,7 +29,7 @@ describe('a write the student has just made', () => {
     useSyncRuns().adoptRunner(() => {
       runs += 1
     })
-    useOutboxView().forget()
+    useOutboxView().forgetJournal()
   })
 
   it('answers with the row that was stored', async () => {

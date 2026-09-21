@@ -57,7 +57,7 @@ const journalHolds = async (rows: OutboxEntry[]): Promise<void> => {
   const unsettled = rows.filter((row) => row.status !== 'rejected')
   const dead = rows.filter((row) => row.status === 'rejected')
 
-  useOutboxView().track(() => 'student-1', {
+  useOutboxView().adoptJournal('student-1', {
     listUnsettled: async () => unsettled,
     listDead: async () => dead,
   } as unknown as IOutboxRepository)
@@ -84,7 +84,7 @@ describe('what became of a request', () => {
   beforeEach(() => {
     siteStandsAt({ filled: true })
     letTheTabWrite(undefined)
-    useOutboxView().forget()
+    useOutboxView().forgetJournal()
     vi.spyOn(console, 'warn').mockImplementation(() => {})
   })
 

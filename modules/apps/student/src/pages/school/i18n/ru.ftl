@@ -56,6 +56,7 @@ place-rejected-notYourEnrollment = Заявка была адресована ч
 place-rejected-enrollmentRevoked = Вас больше нет на этом курсе, отправлять было нечего.
 place-rejected-unknownLessonVersion = Школа не знает урока, к которому это написано.
 place-rejected-alreadyAccepted = Школа уже ответила, и заменить её ответ не вышло.
+place-rejected-alreadyGraded = На вопрос уже отвечено, ответ проверен и остаётся прежним.
 place-rejected-payloadTooLarge = Написанное слишком длинное, чтобы его отправить.
 place-rejected-underReview = Кто-то в школе сейчас смотрит эту запись, до её ответа изменить нельзя.
 place-rejected-courseNotOffered = Школа пока не набирает на этот курс.

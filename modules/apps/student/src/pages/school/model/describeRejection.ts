@@ -14,6 +14,7 @@ const NOTICES: Readonly<Record<SyncRejectionReason, string>> = Object.freeze({
   enrollmentRevoked: 'place-rejected-enrollmentRevoked',
   unknownLessonVersion: 'place-rejected-unknownLessonVersion',
   alreadyAccepted: 'place-rejected-alreadyAccepted',
+  alreadyGraded: 'place-rejected-alreadyGraded',
   payloadTooLarge: 'place-rejected-payloadTooLarge',
   underReview: 'place-rejected-underReview',
   courseNotOffered: 'place-rejected-courseNotOffered',
