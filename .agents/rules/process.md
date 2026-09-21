@@ -99,7 +99,9 @@ An agent that cannot produce these says so and names what is missing. Reporting 
 
 ### The gate and the mutation score
 
-`make check` and `make mutate-diff` are run once per branch, by whoever owns it, after the bands are green. An agent runs neither. Mid-branch a full gate executes the red suites of every band still in flight, so it says nothing about the one asking; and two heavy runs on one machine make each other time out, which reports as failing hooks rather than as contention.
+`make check` and `make mutate-diff` are run once per branch, by whoever owns it, after the bands are green. An agent runs neither.
+
+Mid-branch a full gate executes the red suites of every band still in flight, so it says nothing about the one asking. A mutation run costs more than it looks: before the first mutant it runs the package's whole suite once as a dry run (15 minutes is where `@vidya/api` gives up), then one covering-test run per mutant — and in the packages driven by the command runner, `apps/admin` and `libs/ui`, a whole suite per mutant. It also writes `.stryker/incremental/`, which is committed, so two branches scoring themselves at once leave each other a dirty file to resolve.
 
 Both targets go through `scripts/vidya-run-alone`, which waits for its turn rather than failing: the turn is taken in the common git directory, which every worktree resolves to the same path whatever branch it is on, and each turn is appended to `vidya-run-alone.log` beside it — who ran what, where, and for how long, readable from any checkout. Waiting is announced on stderr every minute, and `VIDYA_WAIT_SECONDS` (default 900) caps it.
 
