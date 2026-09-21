@@ -307,6 +307,72 @@ describe('POST /sync/push', () => {
 
   /* --------------------------- --------------------------- */
 
+  it('accepted work stays frozen against an answer arriving under a name of its own', async () => {
+    const homework = app.get(HomeworkService)
+    const submitted = await homework.create({
+      enrollmentId: ctx.enrollment.id,
+      lessonVersionId: ctx.mine.published.id,
+      sectionId: SECTION_ID,
+      schoolId: ctx.enrollment.schoolId,
+      status: 'pending',
+      text: 'The answer as handed in',
+    })
+
+    await homework.review(submitted, { status: 'accepted', grade: 5, reviewerId: ctx.student.id })
+
+    // The student's second device wrote the same section offline, so it names
+    // the answer with an id the server has never seen. The natural key
+    // `(enrolment, version, section)` still points at the accepted row, and the
+    // freeze has to hold on the row that would be written, not on the name sent.
+    const change = answer({ data: bodyOf(ctx, 'Second thoughts') })
+
+    const body = (await push(ctx.tokens.student, [change]).expect(200))
+      .body as protocol.PushResponse
+
+    expect((body.results[0] as protocol.PushRejected).reason).toBe('alreadyAccepted')
+
+    const stored = await storedAnswer(submitted.id)
+
+    expect(stored.text).toBe('The answer as handed in')
+    expect(stored.status).toBe('accepted')
+    expect(stored.grade).toBe(5)
+  })
+
+  /* --------------------------- --------------------------- */
+
+  it('work a reviewer has taken up is refused, not pulled back to pending', async () => {
+    const homework = app.get(HomeworkService)
+    const submitted = await homework.create({
+      enrollmentId: ctx.enrollment.id,
+      lessonVersionId: ctx.mine.published.id,
+      sectionId: SECTION_ID,
+      schoolId: ctx.enrollment.schoolId,
+      status: 'pending',
+      text: 'The answer as handed in',
+    })
+
+    const underReview = await homework.review(submitted, {
+      status: 'in_review',
+      reviewerId: ctx.student.id,
+    })
+
+    const change = answer({ docId: submitted.id, data: { text: 'Second thoughts' } })
+
+    const body = (await push(ctx.tokens.student, [change]).expect(200))
+      .body as protocol.PushResponse
+
+    expect(body.results[0].status).toBe('rejected')
+
+    const stored = await storedAnswer(submitted.id)
+
+    expect(stored.status).toBe('in_review')
+    expect(stored.text).toBe('The answer as handed in')
+    expect(stored.reviewedById).toBe(ctx.student.id)
+    expect(stored.reviewedAt).toEqual(underReview.reviewedAt)
+  })
+
+  /* --------------------------- --------------------------- */
+
   it('an answer written offline against a superseded version is flagged, not refused', async () => {
     // Published while the device was away; publishing does not unpublish v1.
     await app.get(LessonVersionsService).publish(ctx.mine.lesson.id, ctx.mine.draft.id)

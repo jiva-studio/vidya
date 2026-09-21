@@ -68,6 +68,27 @@ describe('POST /edu/schools/:id/code', () => {
     )
   })
 
+  it('hands two callers asking at once one code, and it is the code the school holds', async () => {
+    const token = await ctx.getAuthTokenFor(ctx.one.users.owner)
+
+    // Two curators pressing the button together. Both read a school without a
+    // code, so both draw one; only one of the two draws can be the school's,
+    // and a caller handed the other one is handed a link that opens nothing.
+    const [first, second] = await Promise.all([
+      askForCode(ctx.one.school.id, token),
+      askForCode(ctx.one.school.id, token),
+    ])
+
+    expect([first.status, second.status]).toEqual([200, 200])
+
+    const one = (first.body as protocol.CreateSchoolCodeResponse).code
+    const two = (second.body as protocol.CreateSchoolCodeResponse).code
+
+    expect(two).toBe(one)
+
+    await request(app.getHttpServer()).get(protocol.Routes().join.resolve(one)).expect(200)
+  })
+
   it('never hands two schools the same code', async () => {
     await app
       .get(SchoolsService)
