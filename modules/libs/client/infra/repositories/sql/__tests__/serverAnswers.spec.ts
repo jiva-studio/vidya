@@ -6,8 +6,8 @@ import type {
   LessonVersionId,
   SchoolId,
   SectionId,
-  SyncPayload,
   SyncCollection,
+  SyncPayload,
 } from '@vidya/domain'
 import { asId, parseIsoDateTime } from '@vidya/domain'
 import { beforeEach, describe, expect, it } from 'vitest'
