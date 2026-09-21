@@ -13,7 +13,7 @@ const CDN = 'https://cdn.installation.example'
 const ENDPOINT = 'https://de-s3.storage.bunnycdn.com'
 const QUOTA = 40_000
 
-type ProfileRow = { id: string; bucket: string; prefix: string; quotaBytes: string | number }
+type ProfileRow = { id: string; bucket: string; prefix: string; provider: string }
 
 /**
  * The environment a deployment with storage of its own runs with. The
@@ -127,7 +127,22 @@ describe('uploading for a school that brought no bucket of its own', () => {
 
       expect(profile.bucket).toBe(BUCKET)
       expect(profile.prefix).toBe(`school/${schoolId()}`)
-      expect(Number(profile.quotaBytes)).toBe(QUOTA)
+    })
+
+    // The row carries no ceiling of its own, and nobody decided one for this
+    // school: what limits it is the default the installation runs with.
+    it('limits it to the quota of the installation, which is not on the row', async () => {
+      await ask(2048)
+
+      const decided = await app
+        .get(DataSource)
+        .query('SELECT "quotaBytes" FROM "school_storage_quotas" WHERE "schoolId" = $1', [
+          schoolId(),
+        ])
+      const usage = await flow.usageOf(schoolId(), flow.ctx.one.users.owner)
+
+      expect(decided).toHaveLength(0)
+      expect(usage.body.quotaBytes).toBe(QUOTA)
     })
 
     it('charges what it stored against the quota of the installation', async () => {

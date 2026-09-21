@@ -6,22 +6,27 @@ const row = (overrides: Partial<StorageProfile> = {}): StorageProfile =>
   ({
     id: 'e5f60718-293a-4b45-cd6e-7f8091021324',
     schoolId: '6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f',
-    kind: 's3',
+    provider: 's3-compatible',
     endpoint: 'https://de-s3.storage.bunnycdn.com',
+    r2AccountId: null,
     region: 'de',
     bucket: 'vidya-installation',
     prefix: 'school/6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f',
     accessKeyId: 'installation-key',
     delivery: 'public',
     publicBaseUrl: 'https://cdn.installation.example',
-    video: { kind: 'none' },
-    quotaBytes: '5368709120',
-    usedBytes: '2048',
     verifiedAt: null,
     verifyError: null,
     retiredAt: null,
     ...overrides,
   }) as unknown as StorageProfile
+
+/**
+ * What the school occupies and may occupy, which the mapper is handed rather
+ * than reading: the ceiling is the school's policy row and the bytes are the
+ * sum of its files.
+ */
+const occupancy = { usedBytes: 2048, quotaBytes: 5_368_709_120 }
 
 describe('telling a lent profile from one the school brought', () => {
   it('reads a row that has never been probed as lent', () => {
@@ -40,7 +45,7 @@ describe('telling a lent profile from one the school brought', () => {
 })
 
 describe('reading back a profile on the storage of the installation', () => {
-  const view = toStorageProfileView(row(), '427e')
+  const view = toStorageProfileView(row(), '427e', occupancy)
 
   it('says it is lent', () => {
     expect(view.lent).toBe(true)
@@ -75,6 +80,7 @@ describe('reading back a profile the school brought itself', () => {
   const view = toStorageProfileView(
     row({ bucket: 'vidya-demo', verifiedAt: new Date('2026-09-21T12:00:00.000Z') }),
     '427e',
+    occupancy,
   )
 
   it('says it is not lent, and hides none of it', () => {

@@ -6,10 +6,13 @@ import { School, StorageProfile } from '@vidya/entities'
 import { randomUUID } from 'crypto'
 import { DataSource } from 'typeorm'
 
+import { hasOwnCredentials } from '../../mappers'
 import { StorageFailedError } from '../../storageFailure'
 import { InstallationStorageService } from '../installationStorage.service'
+import { MediaUsageService } from '../mediaUsage.service'
 import { SecretSealingService } from '../secretSealing.service'
 import { StorageProfileDraft, StorageProfilesService } from '../storageProfiles.service'
+import { quotaBytesFor, StorageQuotasService } from '../storageQuotas.service'
 
 type Config = ConfigType<typeof MediaConfig>
 
@@ -41,17 +44,16 @@ const ownDraftFor = (schoolId: SchoolId, sealing: SecretSealingService): Storage
   return {
     id,
     schoolId,
-    kind: 's3',
+    provider: 's3-compatible',
     endpoint: 'https://de-s3.storage.bunnycdn.com',
     region: 'de',
+    r2AccountId: null,
     bucket: 'school-own-bucket',
     prefix: `school/${schoolId}`,
     accessKeyId: 'school-key',
     delivery: 'presigned',
     publicBaseUrl: null,
-    video: { kind: 'none' },
-    quotaBytes: null,
-    sealed: sealing.sealProfile({ secret: 'school-secret' }, { schoolId, profileId: id }),
+    secrets: sealing.sealProfile({ secret: 'school-secret' }, { schoolId, profileId: id }),
     verifiedAt: new Date('2026-09-21T12:00:00.000Z'),
   }
 }
@@ -96,11 +98,16 @@ describe('a school that handed over no storage credentials', () => {
     await expect(profiles.findCurrentFor(schoolId)).resolves.toMatchObject({ id: profile.id })
   })
 
+  // Neither number is on the row any more: the ceiling is the installation's
+  // default until someone decides otherwise, and the occupied bytes are summed
+  // from the school's files.
   it('limits it to the quota the installation set, with nothing occupied yet', async () => {
     const profile = await installation.provisionProfileFor(schoolId)
 
-    expect(Number(profile.quotaBytes)).toBe(QUOTA)
-    expect(Number(profile.usedBytes)).toBe(0)
+    const decided = await new StorageQuotasService(ds).findQuotaBytes(schoolId)
+
+    expect(quotaBytesFor(decided, hasOwnCredentials(profile), QUOTA)).toBe(QUOTA)
+    expect(await new MediaUsageService(ds).usedBytesOf(schoolId)).toBe(0)
   })
 
   it('serves the bytes through the CDN the installation named, when it named one', async () => {
@@ -118,10 +125,13 @@ describe('a school that handed over no storage credentials', () => {
   it('keeps the secret of the installation sealed, and opens it for that row alone', async () => {
     const profile = await installation.provisionProfileFor(schoolId)
 
-    expect(profile.secretCiphertext?.toString('latin1')).not.toContain(SECRET)
-    expect(sealing.openSecret(profile, { schoolId, profileId: profile.id })).toBe(SECRET)
+    expect(JSON.stringify(profile.secrets)).not.toContain(SECRET)
+    expect(sealing.openSecret(profile.secrets, { schoolId, profileId: profile.id })).toBe(SECRET)
     expect(() =>
-      sealing.openSecret(profile, { schoolId, profileId: randomUUID() as StorageProfileId }),
+      sealing.openSecret(profile.secrets, {
+        schoolId,
+        profileId: randomUUID() as StorageProfileId,
+      }),
     ).toThrow(StorageFailedError)
   })
 
@@ -170,6 +180,6 @@ describe('a school that handed over no storage credentials', () => {
 
     expect(retired?.retiredAt).not.toBeNull()
     expect(retired?.bucket).toBe('vidya-installation')
-    expect(sealing.openSecret(retired!, { schoolId, profileId: lent.id })).toBe(SECRET)
+    expect(sealing.openSecret(retired!.secrets, { schoolId, profileId: lent.id })).toBe(SECRET)
   })
 })
