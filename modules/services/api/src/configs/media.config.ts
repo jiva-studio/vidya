@@ -9,6 +9,18 @@ const BUILTIN_ENDPOINT_SUFFIXES = [
 
 const MASTER_KEY_BYTES = 32
 
+/**
+ * How long an upload is given before the sweep presumes it abandoned.
+ *
+ * A day rather than an hour because an upload is a person on a hotel wifi with
+ * a two-gigabyte lecture, and a sweep that collects a running upload deletes
+ * the object out from under it.
+ */
+export const DefaultAbandonedAfterMs = 24 * 60 * 60 * 1000
+
+/** How often the sweep runs: the rows it collects are a day old, so the hour is slack. */
+export const DefaultSweepEveryMs = 60 * 60 * 1000
+
 const positive = (value: string | undefined, fallback: number): number => {
   const parsed = Number(value)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
@@ -80,6 +92,9 @@ export default registerAs('media', () => ({
   maxAudioBytes: positive(process.env.VIDYA_MEDIA_MAX_AUDIO_BYTES, 209_715_200),
   maxVideoBytes: positive(process.env.VIDYA_MEDIA_MAX_VIDEO_BYTES, 2_147_483_648),
   hashLimitBytes: positive(process.env.VIDYA_MEDIA_HASH_LIMIT_BYTES, 268_435_456),
+
+  abandonedAfterMs: positive(process.env.VIDYA_MEDIA_ABANDONED_AFTER_MS, DefaultAbandonedAfterMs),
+  sweepEveryMs: positive(process.env.VIDYA_MEDIA_SWEEP_EVERY_MS, DefaultSweepEveryMs),
 
   // Only the storage of the installation carries a quota by default: a school
   // paying for its own bucket is limited by its provider, not by us.

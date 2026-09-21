@@ -9,6 +9,7 @@ import {
   IsPositive,
   IsString,
   IsUrl,
+  Matches,
   MaxLength,
 } from 'class-validator'
 
@@ -22,7 +23,9 @@ const HTTPS_ONLY = { protocols: ['https'], require_protocol: true, require_tld: 
  * profile cannot perform. `endpoint` is optional here and refused further in
  * for every provider whose host we compose ourselves, which no field decorator
  * can express. `secret` and `tokenSecret` are write-only — nothing reads them
- * back, here or anywhere else.
+ * back, here or anywhere else. An absent `prefix` means the default one, and a
+ * blank one means nothing at all: it would name every object in the bucket,
+ * another school's included, so it is refused rather than read as absent.
  */
 export class UpsertStorageProfileRequest implements protocol.UpsertStorageProfileRequest {
   @ApiProperty({ example: 's3-compatible' })
@@ -56,6 +59,7 @@ export class UpsertStorageProfileRequest implements protocol.UpsertStorageProfil
   @ApiPropertyOptional({ example: 'school/6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f' })
   @IsOptional()
   @IsString()
+  @Matches(/\S/, { message: 'prefix must name a folder, not the whole bucket' })
   @MaxLength(255)
   prefix?: string
 

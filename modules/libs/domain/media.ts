@@ -67,7 +67,9 @@ export type VideoProvider =
  */
 export const MediaPathPrefix = '/media/'
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+// Lower case only: `mediaPath` emits nothing else, and accepting an upper-case
+// id would let two strings name one row everywhere a path is compared.
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 export const mediaPath = (id: MediaId): string => `${MediaPathPrefix}${id}`
 

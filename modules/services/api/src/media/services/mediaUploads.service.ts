@@ -9,8 +9,8 @@ import { Media, StorageProfile } from '@vidya/entities'
 import * as protocol from '@vidya/protocol'
 
 import { MediaRefusedError } from '../mediaRefusal'
-import { defaultPrefixOf, isAllowedMimeType, maxBytesOf, storageKeyOf } from './mediaLimits'
-import { MediaRowsService } from './mediaRows.service'
+import { isAllowedMimeType, maxBytesOf, prefixOf, storageKeyOf } from './mediaLimits'
+import { ConfirmedObject, isDigestCollision, MediaRowsService } from './mediaRows.service'
 import { MediaUsageService } from './mediaUsage.service'
 import { SchoolStorage, SchoolStorageService } from './schoolStorage.service'
 import { quotaBytesFor, StorageQuotasService } from './storageQuotas.service'
@@ -18,11 +18,12 @@ import { quotaBytesFor, StorageQuotasService } from './storageQuotas.service'
 /**
  * Signing one upload and believing storage about what landed.
  *
- * Nothing the client says about the bytes survives this service: the size and
- * the type it declares bind the signature and are then re-read from storage,
- * and a row whose object turns out to be something else is failed rather than
- * corrected. The quota is refused here, at the signature, because refusing it
- * after two gigabytes have been uploaded is not a refusal anybody can act on.
+ * Nothing the client says about the bytes survives this service: the size, the
+ * type and the digest it declares bind the signature, and what the row ends up
+ * holding is what storage reports about the object — a row whose object turns
+ * out to be something else is failed rather than corrected. The quota is
+ * refused here, at the signature, because refusing it after two gigabytes have
+ * been uploaded is not a refusal anybody can act on.
  */
 @Injectable()
 export class MediaUploadsService {
@@ -45,13 +46,16 @@ export class MediaUploadsService {
     this.assertUploadable(request)
 
     const opened = await this.storages.openCurrent(request.schoolId)
-    await this.assertRoomFor(request, opened.profile)
 
     const mediaId = randomUUID() as MediaId
-    const prefix = opened.profile.prefix || defaultPrefixOf(request.schoolId)
-    const storageKey = storageKeyOf(prefix, request.kind, mediaId, request.mimeType)
+    const storageKey = storageKeyOf(
+      prefixOf(opened.profile),
+      request.kind,
+      mediaId,
+      request.mimeType,
+    )
 
-    await this.rows.createPending({
+    const reserved = await this.rows.createPending({
       id: mediaId,
       schoolId: request.schoolId,
       profileId: opened.profile.id,
@@ -62,6 +66,8 @@ export class MediaUploadsService {
       sizeBytes: request.sizeBytes,
       createdBy,
     })
+
+    await this.assertRoomFor(reserved, opened.profile)
 
     const deduplicated = this.isDeduplicated(request)
 
@@ -76,7 +82,13 @@ export class MediaUploadsService {
     }
   }
 
-  async completeUpload(media: Media, declared?: string): Promise<protocol.MediaRecord> {
+  /**
+   * The digest a completion declares is not read: the only digest worth
+   * recording is one storage verified against the bytes it accepted, and
+   * hashing the object ourselves would mean moving every uploaded byte through
+   * this process.
+   */
+  async completeUpload(media: Media, _declared?: string): Promise<protocol.MediaRecord> {
     if (media.status === 'ready') return toMediaRecord(media)
     if (media.status !== 'pending') throw new MediaRefusedError('not-ready')
 
@@ -86,18 +98,19 @@ export class MediaUploadsService {
     if (!stored) throw new MediaRefusedError('not-ready')
     if (!this.matchesGrant(media, stored)) await this.refuseObject(media, opened)
 
-    const digest = this.digestOf(stored, declared)
-    const held = digest ? await this.rows.findReadyByDigest(media.schoolId, digest) : null
+    const confirmed: ConfirmedObject = {
+      sizeBytes: stored.sizeBytes,
+      mimeType: stored.contentType,
+      sha256: stored.sha256 ?? null,
+    }
+
+    const held = confirmed.sha256
+      ? await this.rows.findReadyByDigest(media.schoolId, confirmed.sha256)
+      : null
 
     if (held) return this.dropCopy(media, opened, held)
 
-    const ready = await this.rows.markReady(media, {
-      sizeBytes: stored.sizeBytes,
-      mimeType: stored.contentType,
-      sha256: digest,
-    })
-
-    return toMediaRecord(ready)
+    return this.recordReady(media, opened, confirmed)
   }
 
   private assertUploadable(request: protocol.CreateUploadRequest): void {
@@ -111,47 +124,28 @@ export class MediaUploadsService {
   }
 
   /**
-   * Room for this file, counting what is stored and what outstanding grants
-   * already promised.
+   * Room for the reservation just written, or no reservation and a refusal.
    *
-   * Without the reservation ten parallel grants each pass on their own and
-   * overfill the bucket together, and the school finds out from its provider
-   * rather than from us.
+   * The row is written before the question is answered because the answer is
+   * the database's: a school's room is what its rows say it is, and asking
+   * before writing is what lets parallel grants overfill the bucket together.
    */
-  private async assertRoomFor(
-    request: protocol.CreateUploadRequest,
-    profile: StorageProfile,
-  ): Promise<void> {
+  private async assertRoomFor(reserved: Media, profile: StorageProfile): Promise<void> {
     const quotaBytes = quotaBytesFor(
-      await this.quotas.findQuotaBytes(request.schoolId),
+      await this.quotas.findQuotaBytes(reserved.schoolId),
       hasOwnCredentials(profile),
       this.config.defaultQuotaBytes,
     )
 
     if (quotaBytes === null) return
+    if (await this.rows.keepIfRoom(reserved, quotaBytes)) return
 
-    const stored = await this.usage.usedBytesOf(request.schoolId)
-    const reserved = await this.usage.reservedBytesOf(request.schoolId)
-
-    if (stored + reserved + request.sizeBytes > quotaBytes) {
-      throw new MediaRefusedError('quota-exceeded')
-    }
+    throw new MediaRefusedError('quota-exceeded')
   }
 
   /** Above the hashing limit the browser is not asked for a digest, so nothing matches. */
   private isDeduplicated(request: protocol.CreateUploadRequest): boolean {
     return Boolean(request.sha256) && request.sizeBytes <= this.config.hashLimitBytes
-  }
-
-  /**
-   * The digest this file is deduplicated by, or nothing above the hashing
-   * limit — the grant promised no deduplication for those, and a digest that
-   * arrives anyway does not release us from what was promised.
-   */
-  private digestOf(stored: StoredObject, declared?: string): string | null {
-    if (stored.sizeBytes > this.config.hashLimitBytes) return null
-
-    return stored.sha256 ?? declared ?? null
   }
 
   private matchesGrant(media: Media, stored: StoredObject): boolean {
@@ -163,6 +157,32 @@ export class MediaUploadsService {
     await opened.storage.remove(media.storageKey)
 
     throw new MediaRefusedError('not-ready')
+  }
+
+  /**
+   * Turns the row ready, unless another completion of the same bytes got there
+   * first.
+   *
+   * One ready row per school and digest is an index, and the completion that
+   * loses to it has landed a copy the school does not need: it reads the row
+   * that won and drops its own object, rather than answering the uploader with
+   * a failed write and leaving the reservation to the sweep.
+   */
+  private async recordReady(
+    media: Media,
+    opened: SchoolStorage,
+    confirmed: ConfirmedObject,
+  ): Promise<protocol.MediaRecord> {
+    try {
+      return toMediaRecord(await this.rows.markReady(media, confirmed))
+    } catch (failure) {
+      if (!isDigestCollision(failure) || !confirmed.sha256) throw failure
+
+      const held = await this.rows.findReadyByDigest(media.schoolId, confirmed.sha256)
+      if (!held) throw failure
+
+      return this.dropCopy(media, opened, held)
+    }
   }
 
   /** The school already holds these bytes, so the second copy is the one that goes. */

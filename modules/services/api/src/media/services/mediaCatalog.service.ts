@@ -15,6 +15,16 @@ import { DataSource, ILike } from 'typeorm'
 export const MediaPageSize = 24
 
 /**
+ * Reads a search term as a literal rather than as a pattern.
+ *
+ * `%` and `_` are wildcards to `ILIKE`, so a term of one per cent sign matches
+ * every file the school has. The escape character is escaped first, or escaping
+ * the wildcards would itself introduce pairs the pattern reads as one.
+ */
+const escapeWildcards = (term: string): string =>
+  term.replace(/[\\%_]/g, (character) => `\\${character}`)
+
+/**
  * One school's library, listed.
  *
  * Only `ready` rows are listed: a pending row has no bytes behind it and a
@@ -35,9 +45,13 @@ export class MediaCatalogService {
         schoolId: query.schoolId,
         status: 'ready',
         ...(query.kind ? { kind: query.kind } : {}),
-        ...(query.term ? { name: ILike(`%${query.term}%`) } : {}),
+        ...(query.term ? { name: ILike(`%${escapeWildcards(query.term)}%`) } : {}),
       },
-      order: { createdAt: 'DESC' },
+
+      // The id breaks the tie: files stored in one instant are otherwise cut
+      // into pages in whatever order the rows happen to come back in, and the
+      // same file then shows on two pages or on none.
+      order: { createdAt: 'DESC', id: 'ASC' },
       skip: (page - 1) * MediaPageSize,
       take: MediaPageSize,
     })
