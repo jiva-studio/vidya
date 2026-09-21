@@ -8,7 +8,7 @@ import {
   removeAllUnder,
   standCredentials,
   writeByGrant,
-  writeLyingAboutLength,
+  writeRawByGrant,
 } from './stand'
 
 const BODY = Buffer.from('a stored lesson illustration, as bytes', 'utf8')
@@ -44,7 +44,7 @@ describe('what a write signature binds on live storage', () => {
   it('turns away a body longer than the grant declared', async () => {
     const grant = await storage.signUpload(key, { contentType: TYPE, sizeBytes: BODY.length })
 
-    const answer = await writeByGrant(grant, Buffer.concat([BODY, Buffer.from('extra')]))
+    const answer = await writeRawByGrant(grant, Buffer.concat([BODY, Buffer.from('extra')]))
 
     expect(answer.status).toBeGreaterThanOrEqual(400)
     await expect(storage.head(key)).resolves.toBeUndefined()
@@ -53,7 +53,7 @@ describe('what a write signature binds on live storage', () => {
   it('turns away a body shorter than the grant declared', async () => {
     const grant = await storage.signUpload(key, { contentType: TYPE, sizeBytes: BODY.length })
 
-    const answer = await writeByGrant(grant, BODY.subarray(0, BODY.length - 1))
+    const answer = await writeRawByGrant(grant, BODY.subarray(0, BODY.length - 1))
 
     expect(answer.status).toBeGreaterThanOrEqual(400)
     await expect(storage.head(key)).resolves.toBeUndefined()
@@ -72,7 +72,9 @@ describe('what a write signature binds on live storage', () => {
     const grant = await storage.signUpload(key, { contentType: TYPE, sizeBytes: BODY.length })
     const longer = Buffer.concat([BODY, Buffer.from('and a tail nobody signed for')])
 
-    const answer = await writeLyingAboutLength(grant, BODY.length, longer)
+    const answer = await writeRawByGrant(grant, longer, {
+      'Content-Length': String(BODY.length),
+    })
     const stored = await storage.head(key)
 
     expect(answer.status).toBeLessThan(500)

@@ -145,7 +145,12 @@ case "$MODE" in
       exit 1
     fi
 
-    npm run test -w @vidya/api -- --testPathPattern '\.storage\.spec\.ts$' --runInBand
+    # The package config ignores these suites so the default run stays green
+    # without a provider; this is the one caller that wants them.
+    npm run test -w @vidya/api -- \
+      --testPathPattern '\.storage\.spec\.ts$' \
+      --testPathIgnorePatterns '/node_modules/' \
+      --runInBand
     ;;
   *)
     usage

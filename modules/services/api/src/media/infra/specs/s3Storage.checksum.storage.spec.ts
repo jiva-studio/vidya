@@ -36,6 +36,18 @@ describe('a write signature that carries a checksum on live storage', () => {
     const answer = await writeByGrant(grant, BODY)
 
     expect(answer.status).toBe(200)
+    await expect(storage.head(key)).resolves.toMatchObject({ sizeBytes: BODY.length })
+  })
+
+  it('reports the hash it verified when the object is headed', async () => {
+    const grant = await storage.signUpload(key, {
+      contentType: TYPE,
+      sizeBytes: BODY.length,
+      sha256: sha256Of(BODY),
+    })
+
+    await writeByGrant(grant, BODY)
+
     await expect(storage.head(key)).resolves.toMatchObject({ sha256: sha256Of(BODY) })
   })
 
