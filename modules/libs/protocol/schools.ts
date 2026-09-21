@@ -28,9 +28,9 @@ export type SchoolCard = Pick<SchoolDetails, 'id' | 'name' | 'logoUrl'>
 
 export type ResolveSchoolResponse = crud.GetItemResponse<SchoolCard>
 
-/** The code a school hands out; minted on request, never derived from the name. */
+/** The code a school hands out; created on request, never derived from the name. */
 export type SchoolJoinCode = { code: string }
-export type MintSchoolCodeResponse = crud.GetItemResponse<SchoolJoinCode>
+export type CreateSchoolCodeResponse = crud.GetItemResponse<SchoolJoinCode>
 
 /* -------------------------------------------------------------------------- */
 /*                                   Create                                   */

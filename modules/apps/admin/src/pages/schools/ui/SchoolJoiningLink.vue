@@ -19,8 +19,8 @@ const settings = computed(() => ({ name: 'school-settings', params: { id: props.
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onMint() {
-  void joining.mint()
+function onCreate() {
+  void joining.create()
 }
 
 function onCopy() {
@@ -34,8 +34,8 @@ function onCopy() {
       <Input :model-value="joining.link.value" readonly />
       <Button variant="secondary" @click="onCopy">{{ $t('schools-join-copy') }}</Button>
     </div>
-    <Button v-else variant="secondary" :busy="joining.busy.value" @click="onMint">
-      {{ $t('schools-join-mint') }}
+    <Button v-else variant="secondary" :busy="joining.busy.value" @click="onCreate">
+      {{ $t('schools-join-create') }}
     </Button>
     <p v-if="joining.copied.value" :class="joinStatusClasses" role="status">
       {{ $t('schools-join-copied') }}

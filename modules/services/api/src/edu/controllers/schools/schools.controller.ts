@@ -162,21 +162,21 @@ export class SchoolsController {
   /* -------------------------------------------------------------------------- */
 
   /**
-   * Mints the school's joining code, or returns the one it already holds.
+   * Creates the school's joining code, or returns the one it already holds.
    *
    * Asked for rather than handed out at creation: until a school wants a link,
-   * no link to it exists anywhere, and that is the only state in which nobody
-   * can be holding one. Minting twice is the same as minting once.
+   * no link to it exists, so a school that has not asked for one cannot be
+   * reached by a stale link. Creating twice returns the same code.
    */
   @Post(Routes().edu.schools.code(':id'))
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Mint the school's joining code", operationId: 'School::mintCode' })
-  @ApiOkResponse({ type: dto.MintSchoolCodeResponse, description: 'The code, new or existing' })
+  @ApiOperation({ summary: "Create the school's joining code", operationId: 'School::createCode' })
+  @ApiOkResponse({ type: dto.CreateSchoolCodeResponse, description: 'The code, new or existing' })
   @ApiConflictResponse({ description: 'The school has no role to give a student' })
-  async mintCode(
+  async createCode(
     @Param('id', new ParseUUIDPipe(), SchoolExistsPipe) id: domain.SchoolId,
     @Authentication() auth: UserAuthentication,
-  ): Promise<dto.MintSchoolCodeResponse> {
+  ): Promise<dto.CreateSchoolCodeResponse> {
     // Holding the permission in another school is not authority over this one.
     if (!auth.permissions.has(['schools:update'], { schoolId: id })) {
       throw new ForbiddenException('User does not have permission')
@@ -184,7 +184,7 @@ export class SchoolsController {
 
     const school = await this.schoolsService.findOneBy({ id })
 
-    return { code: await this.schoolsService.mintCode(school) }
+    return { code: await this.schoolsService.createCode(school) }
   }
 
   /* -------------------------------------------------------------------------- */

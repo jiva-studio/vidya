@@ -1,4 +1,4 @@
--- A course is prepared out of sight and then shown.
+-- Courses gain a draft state: only published ones appear in a school's catalogue.
 --
 -- Two defaults in a row on purpose: the first one backfills the courses that
 -- already exist, which their schools have been showing all along, and the

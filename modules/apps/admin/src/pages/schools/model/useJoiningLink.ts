@@ -7,11 +7,11 @@ import { reasonOf } from '@/shared/lib'
 import { buildJoiningLink, hasNoStudentRole } from './joiningLink'
 
 /**
- * The link a school hands out, minted when somebody asks for it.
+ * The link a school hands out, created when somebody asks for it.
  *
  * Nothing is requested when the screen opens: until a school wants a link, no
- * link to it exists anywhere, and that is the only state in which nobody can
- * be holding one.
+ * link to it exists, so a school that has not asked for one cannot be reached
+ * by a stale link.
  */
 export const useJoiningLink = (schoolId: SchoolId) => {
   const api = useSchoolApi()
@@ -24,7 +24,7 @@ export const useJoiningLink = (schoolId: SchoolId) => {
 
   const link = computed(() => (code.value ? buildJoiningLink(code.value) : ''))
 
-  const mint = async (): Promise<void> => {
+  const create = async (): Promise<void> => {
     if (busy.value) return
 
     busy.value = true
@@ -33,8 +33,8 @@ export const useJoiningLink = (schoolId: SchoolId) => {
     copied.value = false
 
     try {
-      const minted = await api.mintCode(schoolId)
-      code.value = minted.code
+      const created = await api.createCode(schoolId)
+      code.value = created.code
     } catch (failure) {
       missingStudentRole.value = hasNoStudentRole(failure)
       if (!missingStudentRole.value) error.value = reasonOf(failure)
@@ -56,5 +56,5 @@ export const useJoiningLink = (schoolId: SchoolId) => {
     }
   }
 
-  return { code, link, busy, copied, error, missingStudentRole, mint, copy }
+  return { code, link, busy, copied, error, missingStudentRole, create, copy }
 }

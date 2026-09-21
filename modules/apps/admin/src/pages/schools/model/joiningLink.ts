@@ -17,7 +17,7 @@ export const buildJoiningLink = (code: string): string =>
 /**
  * Whether a refusal means the school has nothing to give a joiner.
  *
- * The server mints no code for a school whose settings name no role for a new
+ * The server creates no code for a school whose settings name no role for a new
  * student, because a link to one would meet its first visitor with a failure.
  * That is a setting nobody has filled in, not a fault, and the screen says so.
  */

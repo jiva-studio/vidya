@@ -4,7 +4,7 @@ import type {
   CreateSchoolResponse,
   GetSchoolResponse,
   GetSchoolsResponse,
-  MintSchoolCodeResponse,
+  CreateSchoolCodeResponse,
   UpdateSchoolRequest,
   UpdateSchoolResponse,
 } from '@vidya/protocol'
@@ -38,9 +38,9 @@ export const schoolApi = (http: HttpClient) => ({
   update: (id: SchoolId, body: UpdateSchoolRequest) =>
     http.patch<UpdateSchoolResponse>(Routes().edu.schools.update(id), body),
 
-  // Minting twice hands back the same code, so the caller need not remember
+  // Asking twice hands back the same code, so the caller need not remember
   // whether the school has one.
-  mintCode: (id: SchoolId) => http.post<MintSchoolCodeResponse>(Routes().edu.schools.code(id)),
+  createCode: (id: SchoolId) => http.post<CreateSchoolCodeResponse>(Routes().edu.schools.code(id)),
 
   configs: (id: SchoolId) => http.get<SchoolConfigs>(Routes().edu.schools.configs.getAll(id)),
 

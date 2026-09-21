@@ -158,7 +158,7 @@ export class ResolveSchoolResponse implements protocol.SchoolCard {
   logoUrl: string | null
 }
 
-export class MintSchoolCodeResponse implements protocol.SchoolJoinCode {
+export class CreateSchoolCodeResponse implements protocol.SchoolJoinCode {
   @ApiProperty({ example: 'AB3K7Q' })
   code: string
 }

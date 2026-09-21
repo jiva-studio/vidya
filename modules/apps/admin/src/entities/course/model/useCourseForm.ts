@@ -8,7 +8,7 @@ import { reasonOf } from '@/shared/lib'
 import { createCourse, getCourse, updateCourse } from '../api'
 import type { CourseFormValues } from '../types'
 
-// A course is born out of sight: it is shown to students when someone says so.
+// A new course starts as a draft; publishing it is a separate action.
 const blank = (): CourseFormValues => ({
   name: '',
   description: '',

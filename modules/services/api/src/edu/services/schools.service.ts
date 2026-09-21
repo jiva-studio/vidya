@@ -9,7 +9,7 @@ import { Scope, ScopedEntitiesService } from './entities.service'
 
 // Six characters out of thirty-two collide often enough for a retry to be an
 // ordinary outcome; past this many the alphabet, not the draw, is the problem.
-const MINT_ATTEMPTS = 8
+const CODE_ATTEMPTS = 8
 
 @Injectable()
 export class SchoolsService extends ScopedEntitiesService<School, Scope> {
@@ -41,12 +41,12 @@ export class SchoolsService extends ScopedEntitiesService<School, Scope> {
   }
 
   /**
-   * The code a school hands out, minted once and then kept.
+   * The code a school hands out, created once and then kept.
    *
    * Drawn and retried rather than derived from the name: a derived code would
    * leak a rename into every poster already printed.
    */
-  async mintCode(school: School): Promise<string> {
+  async createCode(school: School): Promise<string> {
     if (school.code) return school.code
 
     // Joining assigns the school's default student role. Without one the first
@@ -55,7 +55,7 @@ export class SchoolsService extends ScopedEntitiesService<School, Scope> {
       throw new ConflictException('School has no default student role and takes no students yet')
     }
 
-    for (let attempt = 0; attempt < MINT_ATTEMPTS; attempt++) {
+    for (let attempt = 0; attempt < CODE_ATTEMPTS; attempt++) {
       const code = this.generateCode()
       if (await this.repository.existsBy({ code })) continue
 
@@ -63,7 +63,7 @@ export class SchoolsService extends ScopedEntitiesService<School, Scope> {
       return code
     }
 
-    throw new Error(`Could not mint a free code for school ${school.id}`)
+    throw new Error(`Could not create a free code for school ${school.id}`)
   }
 
   private generateCode(): string {

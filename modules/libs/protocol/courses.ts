@@ -6,14 +6,13 @@ import * as crud from './crud'
 /*                                   Models                                   */
 /* -------------------------------------------------------------------------- */
 
+/** Only a published course appears in a school's catalogue; see {@link domain.CourseStatuses}. */
 export type CourseDetails = {
   id: domain.CourseId
   schoolId: domain.SchoolId
   name: string
   description?: string
   learningType: domain.CourseLearningType
-
-  /** Only a published course is drawn in the catalogue; see {@link domain.CourseStatuses}. */
   status: domain.CourseStatus
 }
 
@@ -23,7 +22,7 @@ export type CourseSummary = Pick<CourseDetails, 'id' | 'name' | 'description' | 
 /*                                   Create                                   */
 /* -------------------------------------------------------------------------- */
 
-/** A course is created out of sight: publication is a separate, later decision. */
+/** A new course starts as a draft; publishing it is a separate request. */
 export type CreateCourseRequest = crud.CreateItemRequest<Omit<CourseDetails, 'id' | 'status'>>
 export type CreateCourseResponse = crud.CreateItemResponse<CourseDetails['id']>
 

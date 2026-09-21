@@ -36,7 +36,7 @@ export const isLive = (status: EnrollmentStatus): boolean =>
   (LiveEnrollmentStatuses as readonly string[]).includes(status)
 
 /**
- * A course is prepared out of sight and then shown.
+ * A course is a draft until its school publishes it.
  *
  * Only a published course is drawn in a school's catalogue. Unpublishing does
  * not take a place away: the content a student already holds arrives through

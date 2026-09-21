@@ -81,7 +81,7 @@ describe('GET /j/:code', () => {
     return request(app.getHttpServer()).get(routes.resolve('ABIK7Q')).expect(404)
   })
 
-  it('does not reach a school that has never minted a code', async () => {
+  it('does not reach a school that has never created a code', async () => {
     await request(app.getHttpServer()).get(routes.resolve(LISTED_CODE)).expect(200)
 
     const response = await request(app.getHttpServer()).get(routes.resolve('ZZZZZZ')).expect(404)

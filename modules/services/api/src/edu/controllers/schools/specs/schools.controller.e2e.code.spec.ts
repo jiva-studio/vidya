@@ -10,7 +10,7 @@ import { Context, createContext } from './context'
 const routes = protocol.Routes().edu.schools
 
 /**
- * Minting the code a joining link carries.
+ * Creating the code a joining link carries.
  *
  * School one is ready for students — its config names the role a joiner gets.
  * School two is not, and that difference is the whole of the last two cases: a
@@ -29,26 +29,26 @@ describe('POST /edu/schools/:id/code', () => {
     await app.close()
   })
 
-  const mint = (schoolId: string, token: string) =>
+  const askForCode = (schoolId: string, token: string) =>
     request(app.getHttpServer()).post(routes.code(schoolId)).set('Authorization', token)
 
   it('refuses a caller who does not hold schools:update in that school', async () => {
     const token = await ctx.getAuthTokenFor(ctx.one.users.readonly)
 
-    return mint(ctx.one.school.id, token).expect(403)
+    return askForCode(ctx.one.school.id, token).expect(403)
   })
 
   it('refuses a caller who holds schools:update in a different school', async () => {
     const token = await ctx.getAuthTokenFor(ctx.two.users.admin)
 
-    return mint(ctx.one.school.id, token).expect(403)
+    return askForCode(ctx.one.school.id, token).expect(403)
   })
 
-  it('mints six characters drawn from the alphabet a code is spelled in', async () => {
+  it('creates six characters drawn from the alphabet a code is spelled in', async () => {
     const token = await ctx.getAuthTokenFor(ctx.one.users.owner)
 
-    const response = await mint(ctx.one.school.id, token).expect(200)
-    const { code } = response.body as protocol.MintSchoolCodeResponse
+    const response = await askForCode(ctx.one.school.id, token).expect(200)
+    const { code } = response.body as protocol.CreateSchoolCodeResponse
 
     expect(code).toHaveLength(domain.SCHOOL_CODE_LENGTH)
     expect([...code].every((character) => domain.schoolCodeAlphabet().includes(character))).toBe(
@@ -60,11 +60,11 @@ describe('POST /edu/schools/:id/code', () => {
   it('returns the code the school already holds when asked a second time', async () => {
     const token = await ctx.getAuthTokenFor(ctx.one.users.owner)
 
-    const first = await mint(ctx.one.school.id, token).expect(200)
-    const second = await mint(ctx.one.school.id, token).expect(200)
+    const first = await askForCode(ctx.one.school.id, token).expect(200)
+    const second = await askForCode(ctx.one.school.id, token).expect(200)
 
-    expect((second.body as protocol.MintSchoolCodeResponse).code).toBe(
-      (first.body as protocol.MintSchoolCodeResponse).code,
+    expect((second.body as protocol.CreateSchoolCodeResponse).code).toBe(
+      (first.body as protocol.CreateSchoolCodeResponse).code,
     )
   })
 
@@ -76,24 +76,24 @@ describe('POST /edu/schools/:id/code', () => {
         { config: { defaultStudentRoleId: ctx.two.roles.admin.id } },
       )
 
-    const one = await mint(
+    const one = await askForCode(
       ctx.one.school.id,
       await ctx.getAuthTokenFor(ctx.one.users.owner),
     ).expect(200)
-    const two = await mint(
+    const two = await askForCode(
       ctx.two.school.id,
       await ctx.getAuthTokenFor(ctx.two.users.admin),
     ).expect(200)
 
-    expect((two.body as protocol.MintSchoolCodeResponse).code).not.toBe(
-      (one.body as protocol.MintSchoolCodeResponse).code,
+    expect((two.body as protocol.CreateSchoolCodeResponse).code).not.toBe(
+      (one.body as protocol.CreateSchoolCodeResponse).code,
     )
   })
 
-  it('refuses a school that has no role to give a student, rather than minting one', async () => {
+  it('refuses a school that has no role to give a student, rather than creating one', async () => {
     const token = await ctx.getAuthTokenFor(ctx.two.users.admin)
 
-    const response = await mint(ctx.two.school.id, token).expect(409)
+    const response = await askForCode(ctx.two.school.id, token).expect(409)
 
     expect(String(response.body.message)).toMatch(/student/i)
   })
@@ -101,7 +101,7 @@ describe('POST /edu/schools/:id/code', () => {
   it('leaves a school that has no role to give a student without a code at all', async () => {
     const token = await ctx.getAuthTokenFor(ctx.two.users.admin)
 
-    await mint(ctx.two.school.id, token).expect(409)
+    await askForCode(ctx.two.school.id, token).expect(409)
 
     expect((await app.get(SchoolsService).findOneBy({ id: ctx.two.school.id })).code).toBeNull()
   })

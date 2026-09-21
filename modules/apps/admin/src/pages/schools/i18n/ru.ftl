@@ -25,7 +25,7 @@ schools-form-description-hint = Коротко о школе — это увид
 
 schools-join-title = Ссылка для вступления
 schools-join-hint = Раздайте эту ссылку: кто откроет её, попадёт в школу и увидит её курсы.
-schools-join-mint = Получить ссылку
+schools-join-create = Получить ссылку
 schools-join-copy = Скопировать
 schools-join-copied = Ссылка скопирована.
 schools-join-no-student-role = В школе ещё не выбрана роль для нового студента, поэтому и ссылки пока нет.

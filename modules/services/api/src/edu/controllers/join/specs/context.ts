@@ -6,7 +6,7 @@ import { School } from '@vidya/entities'
 /**
  * Two schools: one that hands out a link, one that never asked for one.
  *
- * The code is written straight onto the row rather than minted, because the
+ * The code is written straight onto the row rather than created through the route, because the
  * route under test is the reader. Which school a code belongs to is the whole
  * question here, so the fixture states it instead of drawing it.
  */

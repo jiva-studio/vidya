@@ -8,7 +8,7 @@ import { Context, createContext } from './context'
 const routes = protocol.Routes().edu.courses
 
 /**
- * A course is prepared out of sight and then shown.
+ * Publishing a course and taking it back.
  *
  * Publication is a decision of its own, taken after the course exists, so the
  * cases here are about what a course starts as and what moves it either way.
@@ -67,7 +67,7 @@ describe('/edu/courses, published and unpublished', () => {
     expect((response.body as protocol.UpdateCourseResponse).status).toBe('published')
   })
 
-  it('takes a published course back out of sight on a further update', async () => {
+  it('unpublishes a course on a further update', async () => {
     const id = await create()
     await setStatus(id, 'published').expect(200)
 

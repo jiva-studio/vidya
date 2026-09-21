@@ -42,7 +42,7 @@ describe('SchoolJoiningLink', () => {
     locale.value = 'en'
   })
 
-  it('mints no code until somebody asks for the link', () => {
+  it('creates no code until somebody asks for the link', () => {
     const { transport } = open({ [CODE]: { code: 'AB3K7Q' } })
 
     expect(transport.calls).toHaveLength(0)

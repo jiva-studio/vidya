@@ -25,7 +25,7 @@ schools-form-description-hint = A line or two about the school — students see 
 
 schools-join-title = Joining link
 schools-join-hint = Hand this link out: whoever opens it joins the school and sees its courses.
-schools-join-mint = Get the link
+schools-join-create = Get the link
 schools-join-copy = Copy
 schools-join-copied = The link is copied.
 schools-join-no-student-role = The school has no role for a new student yet, so there is no link to give out.
