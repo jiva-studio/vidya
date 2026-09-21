@@ -14,6 +14,7 @@ courses-empty-title = No courses yet
 courses-empty-body = Create a course, then add lessons to it.
 courses-empty-action = Create a course
 courses-load-failed = The courses could not be loaded.
+courses-draft = Draft
 courses-no-description = —
 
 course-form-create-title = New course
@@ -28,6 +29,9 @@ course-form-type-individual = Individual
 course-form-type-individual-hint = No groups needed: the student goes through the course alone
 course-form-type-group = Group
 course-form-type-group-hint = Students have to be placed into groups
+course-form-publish-label = Show to students
+course-form-publish-on = Students see this course in the school.
+course-form-publish-off = A draft: students do not see this course yet. Publish it when it is ready.
 course-form-submit = Save
 course-form-cancel = Cancel
 course-load-failed = The course could not be loaded.

@@ -51,9 +51,9 @@ const moment = (value: unknown): number | null => {
  * borrowed, because a push runs inside its own transaction:
  *
  * - the place asked for is the caller's own, or there is nothing to write;
- * - the course has to exist, which is the whole of what `POST /edu/enrollments`
- *   asks of it — access to a course *comes from* being enrolled, so there is no
- *   further permission a student could be missing here;
+ * - a course asked for has to exist and be on offer, because a draft is a
+ *   course only its school can see — access to a course *comes from* being
+ *   enrolled, so there is no further permission a student could be missing;
  * - a group may only be wished for on the course being asked for.
  *
  * **A request that meets a decision is answered, not refused**, as long as the
@@ -193,7 +193,7 @@ const mayWrite = (
 }
 
 /**
- * The course the request is for.
+ * The course the request is for, and whether the school offers it at all.
  *
  * A stored row takes it from the table: identity is written once and never
  * merged, so a client repeating a different `courseId` on a row that exists is
@@ -214,6 +214,12 @@ const courseOf = async (
 
   if (!course) {
     return reject('malformed', 'the requested course does not exist')
+  }
+
+  // Only a new request is held to it: unpublishing takes no place away, so a
+  // student still has to be able to act on the one they already hold.
+  if (!existing && course.status !== 'published') {
+    return reject('courseNotOffered', 'the school does not offer this course yet')
   }
 
   return course

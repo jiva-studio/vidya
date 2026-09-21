@@ -43,22 +43,6 @@ export type HomeworkSummary = Pick<
 >
 
 /* -------------------------------------------------------------------------- */
-/*                                   Submit                                   */
-/* -------------------------------------------------------------------------- */
-
-/**
- * The only transition a student can ask for. Submitting freezes the answer:
- * the text cannot be edited again until the work is returned for revision.
- */
-export type SubmitHomeworkRequest = {
-  lessonVersionId: domain.LessonVersionId
-  sectionId: domain.SectionId
-  text: string
-}
-
-export type SubmitHomeworkResponse = crud.UpdateItemResponse<HomeworkDetails>
-
-/* -------------------------------------------------------------------------- */
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -105,14 +89,3 @@ export type BlockStateDetails = {
   state: LessonBlockState
   updatedAt: domain.IsoDateTime
 }
-
-export type SaveBlockStateRequest = {
-  lessonVersionId: domain.LessonVersionId
-  blockId: domain.BlockId
-  state: LessonBlockState
-}
-
-export type SaveBlockStateResponse = crud.UpdateItemResponse<BlockStateDetails>
-/** Without an enrolment the caller asks for their own, across every enrolment they hold. */
-export type GetBlockStatesQuery = { enrollmentId?: string; lessonVersionId?: string }
-export type GetBlockStatesResponse = crud.GetItemsListResponse<BlockStateDetails>

@@ -86,7 +86,10 @@ describe('the schools table on the device', () => {
     // purpose so every row comes back carrying the scope it arrived on.
     const upgraded = await openTestDatabase({
       images,
-      migrations: deviceMigrations.slice(0, deviceMigrations.length - 1),
+      migrations: deviceMigrations.slice(
+        0,
+        deviceMigrations.findIndex((migration) => migration.name === '005_row_scope'),
+      ),
     })
 
     expect(await listTables(upgraded.db)).toContain('schools')

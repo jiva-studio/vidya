@@ -8,6 +8,7 @@ import { reasonOf, useToasts } from '@/shared/lib'
 import { useSchoolApi } from '@/entities/school'
 
 import SchoolAboutField from './SchoolAboutField.vue'
+import SchoolJoiningLink from './SchoolJoiningLink.vue'
 import SchoolLogoField from './SchoolLogoField.vue'
 import SchoolNameField from './SchoolNameField.vue'
 import type { SchoolFormPageProps } from './types'
@@ -140,5 +141,6 @@ async function send(): Promise<void> {
         @cancel="onCancel"
       />
     </form>
+    <SchoolJoiningLink v-if="props.id" :id="props.id" />
   </section>
 </template>

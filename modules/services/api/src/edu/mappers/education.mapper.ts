@@ -3,14 +3,13 @@ import * as domain from '@vidya/domain'
 import * as entities from '@vidya/entities'
 
 import { project, projectAll } from './project'
-import { toStudentContent } from './studentContent'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Fields                                   */
 /* -------------------------------------------------------------------------- */
 
-const COURSE = ['id', 'schoolId', 'name', 'description', 'learningType'] as const
-const COURSE_SUMMARY = ['id', 'name', 'description'] as const
+const COURSE = ['id', 'schoolId', 'name', 'description', 'learningType', 'status'] as const
+const COURSE_SUMMARY = ['id', 'name', 'description', 'status'] as const
 
 const GROUP = ['id', 'courseId', 'name', 'description'] as const
 const GROUP_SUMMARY = ['id', 'courseId', 'name', 'status'] as const
@@ -64,16 +63,6 @@ const HOMEWORK_SUMMARY = [
   'submittedAt',
 ] as const
 
-const BLOCK_STATE = [
-  'id',
-  'enrollmentId',
-  'lessonVersionId',
-  'blockId',
-  'schoolId',
-  'state',
-  'updatedAt',
-] as const
-
 /* -------------------------------------------------------------------------- */
 /*                                   Courses                                  */
 /* -------------------------------------------------------------------------- */
@@ -106,14 +95,6 @@ export const toVersionSummaries = (v: entities.LessonVersion[]) =>
 export const toVersionDetails = (v: entities.LessonVersion) =>
   project<dto.LessonVersionDetails>(v, VERSION_DETAILS)
 
-/** The same version as a student may see it — quiz keys withheld. */
-export const toStudentVersionDetails = (
-  v: entities.LessonVersion,
-): dto.StudentLessonVersionDetails => ({
-  ...project<dto.LessonVersionSummary>(v, VERSION),
-  content: toStudentContent(v.content),
-})
-
 /* -------------------------------------------------------------------------- */
 /*                                 Enrollments                                */
 /* -------------------------------------------------------------------------- */
@@ -130,8 +111,3 @@ export const toEnrollmentSummaries = (e: entities.Enrollment[]) =>
 export const toHomeworkDetails = (h: entities.Homework) => project<dto.HomeworkDetails>(h, HOMEWORK)
 export const toHomeworkSummaries = (h: entities.Homework[]) =>
   projectAll<dto.HomeworkSummary>(h, HOMEWORK_SUMMARY)
-
-export const toBlockStateDetails = (b: entities.BlockState) =>
-  project<dto.BlockStateDetails>(b, BLOCK_STATE)
-export const toBlockStateDetailsList = (b: entities.BlockState[]) =>
-  projectAll<dto.BlockStateDetails>(b, BLOCK_STATE)

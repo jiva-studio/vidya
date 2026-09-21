@@ -3,7 +3,6 @@ import { INestApplication } from '@nestjs/common'
 import { AuthService } from '@vidya/api/auth/services'
 import {
   CoursesService,
-  EnrollmentsService,
   LessonsService,
   LessonVersionsService,
   SchoolsService,
@@ -46,16 +45,7 @@ const quizContent = (title: string): domain.LessonContent => ({
 export type Context = {
   lessonId: domain.LessonId
   publishedVersionId: domain.LessonVersionId
-
-  /** A lesson whose only version is still a draft. */
-  unpublishedLessonId: domain.LessonId
   tokens: {
-    /** Accepted on the course, holding no permission at all. */
-    student: string
-    /** Has an account and a request that was never accepted. */
-    pendingStudent: string
-    /** Enrolled nowhere. */
-    stranger: string
     /** Staff who may read lessons. */
     teacher: string
   }
@@ -66,7 +56,6 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
   const courses = app.get(CoursesService)
   const lessons = app.get(LessonsService)
   const versions = app.get(LessonVersionsService)
-  const enrollments = app.get(EnrollmentsService)
   const users = app.get(UsersService)
   const auth = app.get(AuthService)
 
@@ -85,13 +74,6 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
     title: 'Introduction',
   })
 
-  const unpublished = await lessons.create({
-    courseId: course.id,
-    schoolId: school.id,
-    lessonNumber: 2,
-    title: 'Not ready yet',
-  })
-
   const published = await versions.create({
     lessonId: lesson.id,
     version: 1,
@@ -100,39 +82,7 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
     content: quizContent('Introduction'),
   })
 
-  // A newer draft of the same lesson: what the published route must not answer with.
-  await versions.create({
-    lessonId: lesson.id,
-    version: 2,
-    status: 'draft',
-    content: quizContent('Rewritten, not published'),
-  })
-
-  await versions.create({
-    lessonId: unpublished.id,
-    version: 1,
-    status: 'draft',
-    content: quizContent('Still being written'),
-  })
-
-  const student = await users.create({ email: faker.internet.email() })
-  const pendingStudent = await users.create({ email: faker.internet.email() })
-  const stranger = await users.create({ email: faker.internet.email() })
   const teacher = await users.create({ email: faker.internet.email() })
-
-  await enrollments.create({
-    courseId: course.id,
-    studentId: student.id,
-    schoolId: school.id,
-    status: 'accepted',
-  })
-
-  await enrollments.create({
-    courseId: course.id,
-    studentId: pendingStudent.id,
-    schoolId: school.id,
-    status: 'pending',
-  })
 
   const token = async (userId: domain.UserId, p: domain.PermissionKey[]) =>
     (await auth.generateTokens(userId, p.length ? [{ sid: school.id, p }] : [])).accessToken
@@ -140,11 +90,7 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
   return {
     lessonId: lesson.id,
     publishedVersionId: published.id,
-    unpublishedLessonId: unpublished.id,
     tokens: {
-      student: await token(student.id, []),
-      pendingStudent: await token(pendingStudent.id, []),
-      stranger: await token(stranger.id, []),
       teacher: await token(teacher.id, ['lessons:read']),
     },
   }

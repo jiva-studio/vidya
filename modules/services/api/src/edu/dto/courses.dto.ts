@@ -25,11 +25,17 @@ export class CourseDetails implements protocol.CourseDetails {
 
   @ApiProperty({ enum: domain.CourseLearningTypes, example: 'group' })
   learningType: domain.CourseLearningType
+
+  @ApiProperty({ enum: domain.CourseStatuses, example: 'published' })
+  status: domain.CourseStatus
 }
 
 export class CourseSummary implements protocol.CourseSummary {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   id: domain.CourseId
+
+  @ApiProperty({ enum: domain.CourseStatuses, example: 'published' })
+  status: domain.CourseStatus
 
   @ApiProperty({ example: 'Bhakti-shastri' })
   name: string
@@ -101,6 +107,11 @@ export class GetCourseResponse extends CourseDetails {}
 /* -------------------------------------------------------------------------- */
 
 export class UpdateCourseRequest implements protocol.UpdateCourseRequest {
+  @ApiPropertyOptional({ enum: domain.CourseStatuses, example: 'published' })
+  @IsOptional()
+  @IsEnum(domain.CourseStatuses)
+  status?: domain.CourseStatus
+
   @ApiPropertyOptional({ example: 'Bhakti-shastri' })
   @IsOptional()
   @IsString()

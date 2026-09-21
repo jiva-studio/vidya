@@ -94,6 +94,7 @@ const courses: CollectionProjection<Course> = {
     name: course.name,
     description: course.description ?? null,
     learningType: course.learningType,
+    status: course.status,
   }),
 }
 

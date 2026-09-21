@@ -42,14 +42,6 @@ export type EnrollmentSummary = Pick<
 >
 
 /* -------------------------------------------------------------------------- */
-/*                                   Enrol                                    */
-/* -------------------------------------------------------------------------- */
-
-/** A student asks to join a course. The school decides. */
-export type CreateEnrollmentRequest = { courseId: string }
-export type CreateEnrollmentResponse = crud.CreateItemResponse<EnrollmentDetails['id']>
-
-/* -------------------------------------------------------------------------- */
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -67,16 +59,6 @@ export type GetEnrollmentsQuery = crud.PageQuery & {
    */
   schoolId?: domain.SchoolId
 }
-
-/**
- * The caller is the student, so naming one would only let them ask about
- * someone else. It does not page either: the endpoint answers every place the
- * caller holds, which is a handful, and the DTO refuses what it cannot honour.
- */
-export type GetMyEnrollmentsQuery = Omit<
-  GetEnrollmentsQuery,
-  'studentId' | 'groupId' | 'schoolId' | 'limit' | 'offset'
->
 
 export type GetEnrollmentsResponse = crud.GetPagedItemsListResponse<EnrollmentSummary>
 export type GetEnrollmentResponse = crud.GetItemResponse<EnrollmentDetails>

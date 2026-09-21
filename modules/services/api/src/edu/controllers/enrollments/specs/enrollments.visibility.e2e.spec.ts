@@ -17,9 +17,7 @@ const WHEN_THE_SCHOOL_TIDIED_UP = new Date('2026-09-06T09:00:00.000Z')
 /**
  * Each side tidies its own list, and neither tidies the other's.
  *
- * Both list endpoints are exercised by name: `getMy` is what a device reads,
- * and `getMany` answers a student as well as staff, on the same route with a
- * different rule.
+ * One route answers a student as well as staff, with a different rule for each.
  */
 describe('what each side is shown by the enrollment lists', () => {
   let app: INestApplication
@@ -50,9 +48,6 @@ describe('what each side is shown by the enrollment lists', () => {
   const items = (response: request.Response) =>
     (response.body as protocol.GetEnrollmentsResponse).items
 
-  const my = (token: string) =>
-    request(app.getHttpServer()).get(routes.my()).auth(token, { type: 'bearer' }).expect(200)
-
   const many = (token: string, query = '') =>
     request(app.getHttpServer())
       .get(`${routes.find()}${query}`)
@@ -60,34 +55,6 @@ describe('what each side is shown by the enrollment lists', () => {
       .expect(200)
 
   const ids = (response: request.Response) => items(response).map((item) => item.id)
-
-  /* -------------------------------------------------------------------------- */
-  /*                             GET /enrollments/my                            */
-  /* -------------------------------------------------------------------------- */
-
-  describe('getMy', () => {
-    it('drops a finished row the student put away', async () => {
-      const tidied = await place('declined', {
-        archivedByStudentAt: WHEN_THE_STUDENT_TIDIED_UP,
-      })
-
-      expect(ids(await my(ctx.tokens.student))).not.toContain(tidied.id)
-    })
-
-    it('keeps a row the school put away, because that is the school tidying up', async () => {
-      const closed = await place('revoked', {
-        archivedBySchoolAt: WHEN_THE_SCHOOL_TIDIED_UP,
-      })
-
-      expect(ids(await my(ctx.tokens.student))).toContain(closed.id)
-    })
-
-    it('keeps a place the student still holds', async () => {
-      const studying = await place('accepted', { groupId: ctx.groupId })
-
-      expect(ids(await my(ctx.tokens.student))).toContain(studying.id)
-    })
-  })
 
   /* -------------------------------------------------------------------------- */
   /*                               GET /enrollments                             */

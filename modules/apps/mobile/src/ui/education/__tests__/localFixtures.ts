@@ -62,6 +62,7 @@ export const aCourse = (overrides: Partial<LocalCourse> = {}): LocalCourse => ({
   name: 'Sanskrit for beginners',
   description: 'The alphabet, sandhi and the first verses.',
   learningType: 'individual',
+  status: 'published',
   ...overrides,
 })
 

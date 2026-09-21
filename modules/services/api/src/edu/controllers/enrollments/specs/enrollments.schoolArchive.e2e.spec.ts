@@ -95,7 +95,7 @@ describe('PATCH /edu/enrollments/:id/archive', () => {
     await archive(taken.id, moderatorToken).expect(200)
 
     const mine = await request(app.getHttpServer())
-      .get(routes.my())
+      .get(routes.find())
       .auth(ctx.tokens.student, { type: 'bearer' })
       .expect(200)
 

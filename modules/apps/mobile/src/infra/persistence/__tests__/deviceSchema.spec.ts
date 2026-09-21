@@ -3,6 +3,13 @@ import { describe, expect, it } from 'vitest'
 import type { IDatabase } from '@/ports'
 
 import { deviceMigrations, runMigrations } from '../migrations'
+
+/** Every migration applied before the named one, which stays unapplied. */
+const migrationsBefore = (name: string) =>
+  deviceMigrations.slice(
+    0,
+    deviceMigrations.findIndex((migration) => migration.name === name),
+  )
 import { fixedClock, listTables, openTestDatabase } from '../testing'
 
 /**
@@ -119,7 +126,9 @@ describe('the device schema the migration set builds', () => {
   describe('005_row_scope', () => {
     /** A database migrated up to, but not including, the scope columns. */
     const openBeforeScopes = async () => {
-      const upToScopes = deviceMigrations.slice(0, deviceMigrations.length - 1)
+      // Named rather than counted from the end: a migration appended after
+      // this one would otherwise silently move where "before" is.
+      const upToScopes = migrationsBefore('005_row_scope')
       const { db } = await openTestDatabase({ migrations: upToScopes })
 
       return db

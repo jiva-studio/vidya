@@ -27,11 +27,13 @@ export interface CourseRowEmits {
   lessons: [id: string]
 }
 
+/** `publishable` is off while creating: a course that does not exist yet cannot be published. */
 export interface CourseFormProps {
   modelValue: CourseFormValues
   busy?: boolean
   error?: string
   submitLabel?: string
+  publishable?: boolean
 }
 
 export interface CourseFormEmits {

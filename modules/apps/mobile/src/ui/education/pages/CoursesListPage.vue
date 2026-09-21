@@ -61,7 +61,11 @@ const { data, busy, loaded } = useLocalData(
   { courses: [], schools: [] },
 )
 
-const cards = computed(() => toCourseCards(data.value.courses, data.value.schools))
+// A course is a draft until its school publishes it, and both arrive on the
+// device: the catalogue is what a school offers, not everything it has written.
+const offered = computed(() => data.value.courses.filter((course) => course.status === 'published'))
+
+const cards = computed(() => toCourseCards(offered.value, data.value.schools))
 
 // The catalogue takes no search term from anywhere: it is what the device
 // holds, and filtering it is a property of the screen.

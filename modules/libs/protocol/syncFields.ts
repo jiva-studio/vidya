@@ -37,6 +37,7 @@ export const SYNC_WIRE_FIELDS: Readonly<Record<domain.SyncCollection, readonly s
       'name',
       'description',
       'learningType',
+      'status',
     ] satisfies readonly (keyof CourseDetails)[],
 
     // No `schoolId`: the envelope states it, and the group rides the school

@@ -1,5 +1,7 @@
 import { INestApplication } from '@nestjs/common'
+import { EnrollmentsService } from '@vidya/api/edu/services'
 import { createTestingApp } from '@vidya/api/edu/shared'
+import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
 
@@ -27,11 +29,18 @@ describe('/edu/enrollments/:id/moderation, as the wire sees it', () => {
 
   const routes = protocol.Routes().edu.enrollments
 
-  const enrol = () =>
-    request(app.getHttpServer())
-      .post(routes.create())
-      .auth(ctx.tokens.student, { type: 'bearer' })
-      .send({ courseId: ctx.courseId })
+  // A student asks for a place through the sync engine, so the request itself
+  // is fixture work here; the endpoint under test is the school's answer to it.
+  const enrol = async (): Promise<string> => {
+    const created = await app.get(EnrollmentsService).create({
+      courseId: domain.asId<domain.CourseId>(ctx.courseId),
+      studentId: domain.asId<domain.UserId>(ctx.studentId),
+      schoolId: domain.asId<domain.SchoolId>(ctx.schoolId),
+      status: 'pending',
+    })
+
+    return created.id
+  }
 
   const decide = (id: string, body: Record<string, unknown>) =>
     request(app.getHttpServer())
@@ -40,9 +49,9 @@ describe('/edu/enrollments/:id/moderation, as the wire sees it', () => {
       .send(body)
 
   const accepted = async (): Promise<string> => {
-    const created = await enrol().expect(201)
-    await decide(created.body.id, { status: 'accepted' }).expect(200)
-    return created.body.id
+    const id = await enrol()
+    await decide(id, { status: 'accepted' }).expect(200)
+    return id
   }
 
   it('takes a place back', async () => {
@@ -59,12 +68,12 @@ describe('/edu/enrollments/:id/moderation, as the wire sees it', () => {
   it.each(['withdrawn', 'pending', 'approved', '', null])(
     'refuses %p as a decision before it reaches the transition table',
     async (status) => {
-      const created = await enrol().expect(201)
+      const id = await enrol()
 
-      await decide(created.body.id, { status }).expect(400)
+      await decide(id, { status }).expect(400)
 
       const after = await request(app.getHttpServer())
-        .get(routes.get(created.body.id))
+        .get(routes.get(id))
         .auth(ctx.tokens.moderator, { type: 'bearer' })
         .expect(200)
 
@@ -73,9 +82,9 @@ describe('/edu/enrollments/:id/moderation, as the wire sees it', () => {
   )
 
   it('refuses a decision with no status at all', async () => {
-    const created = await enrol().expect(201)
+    const id = await enrol()
 
-    return decide(created.body.id, {}).expect(400)
+    return decide(id, {}).expect(400)
   })
 
   it('refuses a group on a place it is taking back', async () => {

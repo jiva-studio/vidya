@@ -17,17 +17,11 @@ const BLOCK_ID = domain.asId<domain.BlockId>('22222222-2222-4222-8222-2222222222
 export type Context = {
   schoolId: domain.SchoolId
   sectionId: domain.SectionId
-  blockId: domain.BlockId
   publishedVersionId: domain.LessonVersionId
   enrollmentId: domain.EnrollmentId
-
-  /** The request that was never accepted, so it grants nothing. */
-  pendingEnrollmentId: domain.EnrollmentId
   tokens: {
     /** Accepted on the course. */
     student: string
-    /** Has an account, but only a pending request. */
-    pendingStudent: string
     /** Not enrolled at all. */
     stranger: string
     teacher: string
@@ -77,7 +71,6 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
   })
 
   const student = await users.create({ email: faker.internet.email() })
-  const pendingStudent = await users.create({ email: faker.internet.email() })
   const stranger = await users.create({ email: faker.internet.email() })
   const teacher = await users.create({ email: faker.internet.email() })
 
@@ -88,26 +81,16 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
     status: 'accepted',
   })
 
-  const pending = await enrollments.create({
-    courseId: course.id,
-    studentId: pendingStudent.id,
-    schoolId: school.id,
-    status: 'pending',
-  })
-
   const token = async (userId: domain.UserId, p: domain.PermissionKey[]) =>
     (await auth.generateTokens(userId, p.length ? [{ sid: school.id, p }] : [])).accessToken
 
   return {
     schoolId: school.id,
     sectionId: SECTION_ID,
-    blockId: BLOCK_ID,
     publishedVersionId: version.id,
     enrollmentId: enrollment.id,
-    pendingEnrollmentId: pending.id,
     tokens: {
       student: await token(student.id, []),
-      pendingStudent: await token(pendingStudent.id, []),
       stranger: await token(stranger.id, []),
       teacher: await token(teacher.id, ['homework:read', 'homework:grade']),
     },

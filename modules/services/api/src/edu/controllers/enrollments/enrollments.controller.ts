@@ -2,39 +2,27 @@ import {
   Body,
   Controller,
   ForbiddenException,
-  Get,
-  NotFoundException,
   Param,
   ParseUUIDPipe,
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
-import {
-  CoursesService,
-  EnrollmentsService,
-  visibleToSchool,
-  visibleToStudent,
-} from '@vidya/api/edu/services'
+import { EnrollmentsService, visibleToSchool, visibleToStudent } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
 import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
 
-import {
-  toCreatedId,
-  toEnrollmentDetails,
-  toEnrollmentSummaries,
-} from '../../mappers/education.mapper'
+import { toEnrollmentDetails, toEnrollmentSummaries } from '../../mappers/education.mapper'
 
 const Crud = CrudDecorators({
   entityName: 'Enrollment',
   getOneResponseDto: dto.GetEnrollmentResponse,
   getManyResponseDto: dto.GetEnrollmentsResponse,
-  createOneResponseDto: dto.CreateEnrollmentResponse,
   updateOneResponseDto: dto.ModerateEnrollmentResponse,
   deleteOneResponseDto: dto.DeleteEnrollmentResponse,
 })
@@ -44,41 +32,7 @@ const Crud = CrudDecorators({
 @ApiBearerAuth()
 @UseGuards(AuthenticatedUserGuard)
 export class EnrollmentsController {
-  constructor(
-    private readonly enrollments: EnrollmentsService,
-    private readonly courses: CoursesService,
-  ) {}
-
-  /* -------------------------------------------------------------------------- */
-  /*                            POST /edu/enrollments                           */
-  /* -------------------------------------------------------------------------- */
-
-  /**
-   * A student asks to join a course.
-   *
-   * This is the one route a student reaches without holding any permission:
-   * access to a course comes from being enrolled on it, not from a permission
-   * key, so requiring one here would make enrolling impossible.
-   */
-  @Crud.CreateOne(Routes().edu.enrollments.create())
-  async createOne(
-    @Body() request: dto.CreateEnrollmentRequest,
-    @Authentication() auth: UserAuthentication,
-  ): Promise<dto.CreateEnrollmentResponse> {
-    const course = await this.courses.findOneBy({ id: request.courseId })
-
-    if (!course) {
-      throw new NotFoundException(`Course with id ${request.courseId} not found`)
-    }
-
-    const created = await this.enrollments.request(course, auth.userId, {
-      preferredGroupId: request.preferredGroupId,
-      preferredTimes: request.preferredTimes,
-      comment: request.comment,
-    })
-
-    return toCreatedId(created)
-  }
+  constructor(private readonly enrollments: EnrollmentsService) {}
 
   /* -------------------------------------------------------------------------- */
   /*                            GET /edu/enrollments                            */
@@ -118,46 +72,10 @@ export class EnrollmentsController {
   }
 
   /* -------------------------------------------------------------------------- */
-  /*                          GET /edu/enrollments/my                           */
-  /* -------------------------------------------------------------------------- */
-
-  /**
-   * Every place the caller holds, whatever permissions they also carry.
-   *
-   * A client starting up has no enrolment id to ask with, and the list above
-   * answers a different question for staff — a teacher who also studies would
-   * get the school's enrolments instead of their own. Declared above the
-   * `:id` route because Express matches in declaration order.
-   */
-  @Get(Routes().edu.enrollments.my())
-  @ApiOperation({
-    summary: 'Get the enrollments of the calling user',
-    operationId: 'Enrollment::getMy',
-  })
-  @ApiOkResponse({
-    type: dto.GetEnrollmentsResponse,
-    description: "The caller's own enrollments",
-  })
-  async getMy(
-    @Query() query: dto.GetMyEnrollmentsQuery,
-    @Authentication() auth: UserAuthentication,
-  ): Promise<dto.GetEnrollmentsResponse> {
-    const found = await this.enrollments.findAll({
-      where: {
-        studentId: auth.userId,
-        courseId: query.courseId,
-        status: query.status,
-        ...visibleToStudent(),
-      },
-    })
-
-    return { items: toEnrollmentSummaries(found), total: found.length }
-  }
-
-  /* -------------------------------------------------------------------------- */
   /*                          GET /edu/enrollments/:id                          */
   /* -------------------------------------------------------------------------- */
 
+  /** Staff only: a student reads their own places off the list route, or off a sync pull. */
   @Crud.GetOne(Routes().edu.enrollments.get(':id'))
   async getOne(
     @Param('id', new ParseUUIDPipe()) id: domain.EnrollmentId,
@@ -165,12 +83,7 @@ export class EnrollmentsController {
   ): Promise<dto.GetEnrollmentResponse> {
     const enrollment = await this.enrollments.getOrFail(id)
 
-    const isOwner = this.enrollments.isOwnedBy(enrollment, auth.userId)
-    const isStaff = auth.permissions.has(['enrollments:read'], {
-      schoolId: enrollment.schoolId,
-    })
-
-    if (!isOwner && !isStaff) {
+    if (!auth.permissions.has(['enrollments:read'], { schoolId: enrollment.schoolId })) {
       throw new ForbiddenException('User does not have permission')
     }
 

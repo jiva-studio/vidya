@@ -120,7 +120,7 @@ describe('the school scope', () => {
 
   // Granting is fixture work and goes straight at the join table; taking a role
   // back is the behaviour under test and must go through the school's own path.
-  const leaveSchool = (userId: domain.UserId): Promise<void> =>
+  const leaveSchool = (userId: domain.UserId): Promise<number> =>
     app.get(UserSchoolsService).removeUser(userId, ctx.schoolId)
 
   const placeOn = (

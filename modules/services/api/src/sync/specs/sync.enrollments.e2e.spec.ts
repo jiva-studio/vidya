@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common'
-import { EnrollmentsService } from '@vidya/api/edu/services'
+import { CoursesService, EnrollmentsService } from '@vidya/api/edu/services'
 import { createTestingApp } from '@vidya/api/edu/shared'
 import { CLOCK } from '@vidya/api/sync'
 import * as domain from '@vidya/domain'
@@ -134,6 +134,41 @@ describe('POST /sync/push: a request for a place on a course', () => {
     const [result] = await results([change])
 
     expect((result as protocol.PushRejected).reason).toBe('malformed')
+  })
+
+  it('refuses a request for a course the school has not published', async () => {
+    // Drawn with a status of its own rather than taken from the fixture: what
+    // this case is about is the difference between the two, and a course only
+    // the school can see takes no requests.
+    const draft = await app.get(CoursesService).create({
+      name: 'Bhakti-vaibhava',
+      learningType: 'individual',
+      schoolId: ctx.schoolId,
+      status: 'draft',
+    })
+
+    const change = asks(draft.id)
+
+    const [result] = await results([change])
+
+    expect(result.status).toBe('rejected')
+    expect(await stored(change.docId)).toBeNull()
+  })
+
+  it('takes a request for a course the school has published', async () => {
+    const published = await app.get(CoursesService).create({
+      name: 'Bhakti-vaibhava',
+      learningType: 'individual',
+      schoolId: ctx.schoolId,
+      status: 'published',
+    })
+
+    const change = asks(published.id)
+
+    const [result] = await results([change])
+
+    expect(result.status).toBe('accepted')
+    expect((await stored(change.docId)).status).toBe('pending')
   })
 
   it('reads a status the client may not claim as the request it is', async () => {

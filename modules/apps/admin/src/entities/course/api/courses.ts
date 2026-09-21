@@ -53,4 +53,5 @@ export const updateCourse = (
     name: values.name,
     description: values.description,
     learningType: values.learningType,
+    status: values.status,
   } satisfies UpdateCourseRequest)

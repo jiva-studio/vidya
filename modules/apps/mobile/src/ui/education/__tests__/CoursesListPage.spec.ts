@@ -5,6 +5,9 @@ import { nextTick } from 'vue'
 vi.mock('@/app', async () => (await import('./localScreens')).appDouble)
 vi.mock('@capacitor/network', async () => (await import('./localScreens')).capacitorNetworkDouble)
 
+import type { CourseId } from '@vidya/domain'
+import { asId } from '@vidya/domain'
+
 import type { LocalCourse } from '@/ports'
 import { BackfillProgress, OfflineBanner } from '@/ui/sync'
 
@@ -133,6 +136,26 @@ describe('the catalogue reads the device', () => {
     })
 
     expect(wrapper.text()).toContain('Sanskrit for beginners')
+  })
+
+  it('leaves a course the school has not published out of the catalogue', async () => {
+    // A course is created as a draft, so an unfiltered catalogue lists every
+    // course a school has ever started writing.
+    seed.schools.push(aSchool())
+    seed.courses.push(aCourse({ name: 'Still being written', status: 'draft' }))
+    seed.courses.push(
+      aCourse({
+        id: asId<CourseId>('e9f81b40-5d27-4c36-a0b9-7f2e6c1d5a38'),
+        name: 'Sanskrit for beginners',
+        status: 'published',
+      }),
+    )
+
+    const wrapper = await mountPage(CoursesListPage)
+    await settle()
+
+    expect(wrapper.text()).toContain('Sanskrit for beginners')
+    expect(wrapper.text()).not.toContain('Still being written')
   })
 
   it('drops a course a run took away, again without leaving', async () => {

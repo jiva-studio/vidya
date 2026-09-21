@@ -129,21 +129,6 @@ export class GetLessonVersionsResponse implements protocol.GetLessonVersionsResp
 
 export class GetLessonVersionResponse extends LessonVersionDetails {}
 
-/**
- * A published version as a student receives it. It is a separate class, not a
- * flag on the one above, so that the quiz key cannot be reintroduced by a
- * caller passing the wrong argument.
- */
-export class StudentLessonVersionDetails
-  extends LessonVersionSummary
-  implements protocol.StudentLessonVersionDetails
-{
-  @ApiProperty({ example: { schemaVersion: 1, sections: [] } })
-  content: protocol.StudentLessonContent
-}
-
-export class GetPublishedLessonVersionResponse extends StudentLessonVersionDetails {}
-
 export class UpdateLessonVersionRequest implements protocol.UpdateLessonVersionRequest {
   @ApiProperty({ example: { schemaVersion: 1, sections: [] } })
   @IsObject()

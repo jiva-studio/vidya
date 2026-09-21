@@ -1,5 +1,6 @@
 import type { SchoolId } from '@vidya/domain'
 import type {
+  CreateSchoolCodeResponse,
   CreateSchoolRequest,
   CreateSchoolResponse,
   GetSchoolResponse,
@@ -44,6 +45,10 @@ export const schoolApi = (http: HttpClient) => ({
 
   update: (id: SchoolId, body: UpdateSchoolRequest) =>
     http.patch<UpdateSchoolResponse>(Routes().edu.schools.update(id), body),
+
+  // Asking twice hands back the same code, so the caller need not remember
+  // whether the school has one.
+  createCode: (id: SchoolId) => http.post<CreateSchoolCodeResponse>(Routes().edu.schools.code(id)),
 
   configs: (id: SchoolId) => http.get<SchoolConfigs>(Routes().edu.schools.configs.getAll(id)),
 
