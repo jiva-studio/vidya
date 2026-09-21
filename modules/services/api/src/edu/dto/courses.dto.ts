@@ -93,9 +93,10 @@ export class GetCourseResponse extends CourseDetails {}
 /* -------------------------------------------------------------------------- */
 
 export class UpdateCourseRequest implements protocol.UpdateCourseRequest {
-  @ApiProperty({ enum: domain.CourseStatuses, example: 'published' })
+  @ApiPropertyOptional({ enum: domain.CourseStatuses, example: 'published' })
+  @IsOptional()
   @IsEnum(domain.CourseStatuses)
-  status: domain.CourseStatus
+  status?: domain.CourseStatus
 
   @ApiPropertyOptional({ example: 'Bhakti-shastri' })
   @IsOptional()
