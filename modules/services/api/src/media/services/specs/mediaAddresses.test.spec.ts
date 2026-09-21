@@ -21,6 +21,33 @@ class RecordingRedis {
   }
 }
 
+/** A cache that refuses every read, which is a Redis nobody can reach. */
+class UnreachableRedis {
+  async get(key: string): Promise<string | null> {
+    throw new Error(`Stream isn't writeable and enableOfflineQueue options is false: ${key}`)
+  }
+
+  async set(key: string, _value: string, _seconds: number): Promise<void> {
+    throw new Error(`Stream isn't writeable and enableOfflineQueue options is false: ${key}`)
+  }
+}
+
+/** A cache that answers nothing and keeps nothing: the same as having none. */
+class AbsentRedis {
+  async get(): Promise<string | null> {
+    return null
+  }
+
+  async set(): Promise<void> {}
+}
+
+/** A cache that takes no writes but answers reads, so one half can fail alone. */
+class WriteOnlyFailingRedis extends AbsentRedis {
+  override async set(): Promise<void> {
+    throw new Error("Stream isn't writeable and enableOfflineQueue options is false")
+  }
+}
+
 /**
  * An instant well inside an hour, so the boundary the expiry is rounded to is
  * an exact number a test can name rather than whatever the run happened at.
@@ -55,8 +82,7 @@ const rowOf = (kind: MediaKind, id: string): Media =>
     storageKey: `school/one/${kind}/${id}`,
   }) as Media
 
-const open = (from = NOON) => {
-  const redis = new RecordingRedis()
+const openWith = (redis: { get: unknown; set: unknown }, from = NOON) => {
   let nowMs = from
   const clock: Clock = { nowMs: () => nowMs }
   const { signed, storages } = recordingStorage(clock)
@@ -71,7 +97,12 @@ const open = (from = NOON) => {
     nowMs = instant
   }
 
-  return { service, redis, signed, moveTo }
+  return { service, signed, moveTo }
+}
+
+const open = (from = NOON) => {
+  const redis = new RecordingRedis()
+  return { redis, ...openWith(redis, from) }
 }
 
 describe('handing out a playable address', () => {
@@ -86,16 +117,16 @@ describe('handing out a playable address', () => {
     expect(second[row.id]).toEqual(first[row.id])
   })
 
-  it('keeps a cached address for eight tenths of the window it belongs to', async () => {
+  it('keeps a cached address for as long as that address still works', async () => {
     const { service, redis } = open()
 
-    await service.signAll([rowOf('image', '22222222-2222-4222-8222-222222222222')])
-    await service.signAll([rowOf('video', '33333333-3333-4333-8333-333333333333')])
+    const image = await service.signAll([rowOf('image', '22222222-2222-4222-8222-222222222222')])
+    const video = await service.signAll([rowOf('video', '33333333-3333-4333-8333-333333333333')])
 
-    expect(redis.writes.map((write) => write.seconds)).toEqual([
-      ReadWindowSeconds.image * 0.8,
-      ReadWindowSeconds.video * 0.8,
-    ])
+    const lifeOf = (answered: Record<string, SignedUrl>) =>
+      Math.floor((Date.parse(Object.values(answered)[0].expiresAt) - NOON) / 1000)
+
+    expect(redis.writes.map((write) => write.seconds)).toEqual([lifeOf(image), lifeOf(video)])
   })
 
   it('names the window the clock is in, to the millisecond, in the key', async () => {
@@ -145,5 +176,69 @@ describe('handing out a playable address', () => {
     const answered = await service.signAll(rows)
 
     expect(Object.keys(answered).sort()).toEqual(rows.map((row) => row.id).sort())
+  })
+})
+
+describe('handing out a playable address with no cache to lean on', () => {
+  const ROW = rowOf('image', '99999999-9999-4999-8999-999999999999')
+
+  const withoutCache = () => openWith(new AbsentRedis())
+
+  it('answers the batch when the cache cannot be read', async () => {
+    const unreachable = openWith(new UnreachableRedis())
+
+    const answered = await unreachable.service.signAll([ROW])
+
+    expect(answered).toEqual(await withoutCache().service.signAll([ROW]))
+  })
+
+  it('keeps an address it has already signed when the cache will not take it', async () => {
+    const unwritable = openWith(new WriteOnlyFailingRedis())
+
+    const answered = await unwritable.service.signAll([ROW])
+
+    expect(answered).toEqual(await withoutCache().service.signAll([ROW]))
+  })
+
+  it('answers every file of the batch, not only the ones cached before the failure', async () => {
+    const unreachable = openWith(new UnreachableRedis())
+    const rows = [ROW, rowOf('video', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')]
+
+    const answered = await unreachable.service.signAll(rows)
+
+    expect(Object.keys(answered).sort()).toEqual(rows.map((row) => row.id).sort())
+  })
+})
+
+describe('a cached address that cannot be trusted', () => {
+  const trustworthy = async (held: SignedUrl, kind: MediaKind = 'image') => {
+    const row = rowOf(kind, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')
+    const { service, redis, signed } = open()
+
+    await service.signAll([row])
+    redis.store.set(redis.writes[0].key, JSON.stringify(held))
+    signed.length = 0
+
+    return { again: (await service.signAll([row]))[row.id], signed }
+  }
+
+  it('signs again rather than serving an address whose expiry has already passed', async () => {
+    const { again, signed } = await trustworthy({
+      url: 'memory://bucket/school/one/image/stale?sig=0',
+      expiresAt: new Date(NOON - 1_000).toISOString(),
+    } as SignedUrl)
+
+    expect(signed).toHaveLength(1)
+    expect(again.url).not.toContain('sig=0')
+  })
+
+  it('signs again rather than serving an address cut to another window', async () => {
+    const { again, signed } = await trustworthy({
+      url: 'memory://bucket/school/one/image/other-window?sig=0',
+      expiresAt: new Date(Date.UTC(2026, 8, 21, 23, 0, 0, 0)).toISOString(),
+    } as SignedUrl)
+
+    expect(signed).toHaveLength(1)
+    expect(again.url).not.toContain('sig=0')
   })
 })

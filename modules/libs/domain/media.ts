@@ -101,15 +101,33 @@ export const ReadWindowSeconds: Readonly<Record<MediaKind, number>> = Object.fre
  * the CDN and in the browser for every single view. Equal expiry makes the
  * address shareable, which it is anyway — a signature can be forwarded whatever
  * its expiry — so nothing is given up by making it cacheable.
+ *
+ * Rounding alone would hand the reader who arrives near a boundary whatever is
+ * left of the window, which is why the next boundary is taken once the
+ * remainder falls under half a window: six hours were chosen so that a
+ * signature outlasts a two-hour lecture, and three hours still do. The grid is
+ * kept either way — an expiry is always a multiple of the window — so readers
+ * of one file inside one window are still handed one address.
  */
 export const windowExpiry = (nowMs: number, windowSeconds: number): number => {
   const window = windowSeconds * 1000
-  return Math.ceil((nowMs + 1) / window) * window
+  const boundary = Math.ceil((nowMs + 1) / window) * window
+
+  return boundary - nowMs < window / 2 ? boundary + window : boundary
 }
 
 /* -------------------------------------------------------------------------- */
 /*                                   Limits                                   */
 /* -------------------------------------------------------------------------- */
+
+/**
+ * How many files one batch of addresses may name.
+ *
+ * The server refuses a larger request whole, which would take down every file
+ * on a screen rather than the last one, so the client splits by the same number
+ * the server validates against.
+ */
+export const MediaResolveLimit = 100
 
 /** What an upload declares in advance, and what the signature is bound to. */
 export type UploadLimits = {

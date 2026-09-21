@@ -234,7 +234,12 @@ export const MediaRefusals = Object.freeze({
   // The stored secret will not decrypt — ours to explain, theirs to re-enter.
   secretUnreadable: 'storage-secret-unreadable',
 
+  // This profile cannot sign a whole catalogue, only one object at a time.
+  streamUnsupported: 'storage-stream-unsupported',
+
   notConfigured: 'storage-not-configured',
 } as const)
 
 export type MediaRefusal = (typeof MediaRefusals)[keyof typeof MediaRefusals]
+
+export { MediaResolveLimit } from '@vidya/domain'

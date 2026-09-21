@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  ForbiddenException,
-  HttpCode,
-  Post,
-  UseFilters,
-  UseGuards,
-} from '@nestjs/common'
+import { Body, Controller, HttpCode, Post, UseFilters, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
@@ -22,11 +14,11 @@ import { StorageFailureFilter } from './storageFailure.filter'
 /**
  * The addresses a screen needs before it draws, in one call.
  *
- * A file the caller may not read is left out of the answer instead of refusing
- * the batch: a screen asking for twelve must still draw the eleven it is
- * entitled to, and one stale reference in old content cannot be allowed to
- * blank a lesson. The refusal is kept for the batch that reaches nothing at
- * all, which is the only case where there is nothing to draw.
+ * A file the caller may not read is left out of the answer rather than refused:
+ * a screen asking for twelve must still draw the eleven it is entitled to, and
+ * one stale reference in old content cannot be allowed to blank a lesson.
+ * Absence is also the quieter answer — it says nothing about whether the file
+ * exists, so another school's id and an id that never existed read alike.
  */
 @Controller()
 @ApiTags('🗄 Media :: Reading')
@@ -48,10 +40,6 @@ export class MediaUrlsController {
     @Authentication() auth: UserAuthentication,
   ): Promise<protocol.ResolveMediaResponse> {
     const readable = await this.access.findReadable(request.ids, auth)
-
-    if (readable.length === 0 && request.ids.length > 0) {
-      throw new ForbiddenException('User does not have permission')
-    }
 
     return { urls: await this.addresses.signAll(readable) }
   }

@@ -6,16 +6,6 @@ import { Media } from '@vidya/entities'
 
 import { SchoolStorageService } from './schoolStorage.service'
 
-/**
- * How much of the window a cached address is kept for.
- *
- * Short of the whole window on purpose: an address handed out at the very end
- * of its cached life still has to be worth loading, so the last fifth of the
- * window is signed afresh rather than served from a copy that is about to stop
- * working.
- */
-const CachedShareOfWindow = 0.8
-
 const cacheKeyOf = (mediaId: MediaId, expiresAtMs: number): string =>
   `media:address:${mediaId}:${expiresAtMs}`
 
@@ -27,6 +17,11 @@ const cacheKeyOf = (mediaId: MediaId, expiresAtMs: number): string =>
  * copy. That is also what makes the cache sound: the entry is keyed by the
  * boundary it expires at, so a window that has rolled over cannot be answered
  * from the last one's signature.
+ *
+ * The cache is an economy and never a dependency. Signing is local arithmetic,
+ * so a Redis nobody can reach costs a round trip and nothing else — every
+ * failure of it is answered with a freshly signed address rather than with a
+ * refused screen.
  */
 @Injectable()
 export class MediaAddressesService {
@@ -47,36 +42,60 @@ export class MediaAddressesService {
   }
 
   private async sign(media: Media): Promise<SignedUrl> {
-    const windowSeconds = ReadWindowSeconds[media.kind]
-    const key = cacheKeyOf(media.id, windowExpiry(this.clock.nowMs(), windowSeconds))
+    const expiresAtMs = windowExpiry(this.clock.nowMs(), ReadWindowSeconds[media.kind])
+    const key = cacheKeyOf(media.id, expiresAtMs)
 
-    const held = await this.readCached(key)
+    const held = await this.readCached(key, expiresAtMs)
     if (held) return held
 
     const opened = await this.storages.openProfileById(media.profileId)
-    const address = await opened.storage.signRead(media.storageKey, media.kind)
+    const address = await opened.storage.signRead(media.storageKey, media.kind, media.mimeType)
 
-    await this.redis.set(
-      key,
-      JSON.stringify(address),
-      Math.floor(windowSeconds * CachedShareOfWindow),
-    )
+    // The address is what was asked for; keeping a copy of it is not, so the
+    // batch is answered without waiting to hear whether the copy was taken.
+    void this.keepCached(key, address, expiresAtMs)
 
     return address
   }
 
-  private async readCached(key: string): Promise<SignedUrl | undefined> {
-    const held = await this.redis.get(key)
+  /** Kept for exactly as long as the address it holds still works. */
+  private async keepCached(key: string, address: SignedUrl, expiresAtMs: number): Promise<void> {
+    const seconds = Math.floor((expiresAtMs - this.clock.nowMs()) / 1000)
+
+    try {
+      await this.redis.set(key, JSON.stringify(address), seconds)
+    } catch {
+      // The key is named and the value never is, because the value is the access.
+      this.logger.warn(`Could not cache the address at ${key}`)
+    }
+  }
+
+  /**
+   * The address this window was signed with, if one is held and still holds.
+   *
+   * The expiry is compared rather than trusted: an entry naming any instant but
+   * the boundary asked for was cut to another window or has already died, and
+   * either way it is worth no more than an empty cache.
+   */
+  private async readCached(key: string, expiresAtMs: number): Promise<SignedUrl | undefined> {
+    const held = await this.readRaw(key)
     if (!held) return undefined
 
     try {
-      return JSON.parse(held) as SignedUrl
+      const address = JSON.parse(held) as SignedUrl
+      return Date.parse(address.expiresAt) === expiresAtMs ? address : undefined
     } catch {
-      // A value we cannot read is worth no more than an empty cache: the
-      // address is signed again. The key is named, never the value, because
-      // the value is the access.
       this.logger.warn(`Unreadable cached address at ${key}`)
       return undefined
+    }
+  }
+
+  private async readRaw(key: string): Promise<string | null> {
+    try {
+      return await this.redis.get(key)
+    } catch {
+      this.logger.warn(`Could not read the cached address at ${key}`)
+      return null
     }
   }
 }

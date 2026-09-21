@@ -23,16 +23,22 @@ const boundaries = (kind: MediaKind, from: number, to: number): string[] => [
 /**
  * Whether an expiry sits on the grid this kind's window divides time into.
  *
- * Stated as a grid rather than as "more than an hour of life left", which is
- * what this suite asked for first and was wrong to: rounding up to a boundary
- * leaves a remainder anywhere in the window, so a run inside the last hour of
- * a six-hour window has minutes left and is no less correct for it. The grid
- * holds at every instant, and a video handed an hourly window falls off it —
- * except on the one boundary in six where the two grids meet, which is why the
- * criterion is also pinned to `windowExpiry` by kind above.
+ * A video handed an hourly window falls off this grid, except on the one
+ * boundary in six where the two grids meet, which is why the criterion is also
+ * pinned to `windowExpiry` by kind above.
  */
 const onGrid = (kind: MediaKind, expiresAt: string): boolean =>
   Date.parse(expiresAt) % (ReadWindowSeconds[kind] * 1000) === 0
+
+/**
+ * The least life a reader may be handed: half of the kind's own window.
+ *
+ * The grid says when a signature dies, not how long the reader holding it has.
+ * Six hours were chosen so a signature outlasts a two-hour lecture, and a
+ * reader arriving in the tail of a window only gets that if they are carried to
+ * the next boundary.
+ */
+const leastLifeMs = (kind: MediaKind): number => (ReadWindowSeconds[kind] * 1000) / 2
 
 describe('how long a playable address lasts', () => {
   let app: INestApplication
@@ -69,6 +75,8 @@ describe('how long a playable address lasts', () => {
     const { entry, before, after } = await askFor(mediaId)
 
     expect(boundaries('image', before, after)).toContain(entry.expiresAt)
+    expect(onGrid('image', entry.expiresAt)).toBe(true)
+    expect(Date.parse(entry.expiresAt) - after).toBeGreaterThanOrEqual(leastLifeMs('image'))
   })
 
   it('gives a video six hours, because a signature must outlast the lecture', async () => {
@@ -79,6 +87,7 @@ describe('how long a playable address lasts', () => {
 
     expect(boundaries('video', before, after)).toContain(entry.expiresAt)
     expect(onGrid('video', entry.expiresAt)).toBe(true)
+    expect(Date.parse(entry.expiresAt) - after).toBeGreaterThanOrEqual(leastLifeMs('video'))
   })
 
   it('gives audio the same six hours a video gets', async () => {
@@ -89,12 +98,14 @@ describe('how long a playable address lasts', () => {
 
     expect(boundaries('audio', before, after)).toContain(entry.expiresAt)
     expect(onGrid('audio', entry.expiresAt)).toBe(true)
+    expect(Date.parse(entry.expiresAt) - after).toBeGreaterThanOrEqual(leastLifeMs('audio'))
   })
 
-  it('never expires a video before the image asked for beside it', async () => {
+  it('gives a video and an image asked for together each its own window', async () => {
     await boot()
     const ids = { video: await store('video'), image: await store('image') }
 
+    const at = Date.now()
     const answered = await read.askUrls([ids.video, ids.image], await staff())
 
     expect(answered.status).toBe(200)
@@ -103,7 +114,9 @@ describe('how long a playable address lasts', () => {
 
     expect(onGrid('video', video)).toBe(true)
     expect(onGrid('image', image)).toBe(true)
-    expect(Date.parse(video)).toBeGreaterThanOrEqual(Date.parse(image))
+    expect(Date.parse(video) - at).toBeGreaterThanOrEqual(leastLifeMs('video'))
+    expect(Date.parse(image) - at).toBeGreaterThanOrEqual(leastLifeMs('image'))
+    expect(Date.parse(video)).toBeGreaterThan(Date.parse(image))
   })
 
   it('hands two askers inside one window the very same bytes of address', async () => {

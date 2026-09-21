@@ -15,6 +15,7 @@ import {
 import { StorageFailedError } from '../storageFailure'
 import { acceptedCredentials } from './fixtureCredentials'
 import { MediaStorageFactory, SignedHttpPort, StorageCredentials } from './ports'
+import { refuseStreamSigning } from './streamSigning'
 
 export type StorageCall = {
   op: 'signUpload' | 'write' | 'head' | 'signRead' | 'signStream' | 'readRange' | 'remove' | 'list'
@@ -163,15 +164,11 @@ class InMemoryStorageDriver implements MediaStoragePort {
     }
   }
 
-  /**
-   * Refused for the same reason the real driver refuses it: this profile signs
-   * one object at a time, and a signature covering the manifest alone fails on
-   * the first segment the player asks for.
-   */
+  /** Refused for the reason the real driver refuses it, and with the same key. */
   async signStream(prefix: string): Promise<SignedUrl> {
     this.store.record('signStream', prefix, this.credentials.accessKeyId)
 
-    throw new Error('This storage profile signs files, not prefixes.')
+    return refuseStreamSigning(this.credentials.delivery)
   }
 
   async head(key: string): Promise<StoredObject | undefined> {

@@ -1,6 +1,13 @@
-import { MediaStoragePort, UploadGrant } from '@vidya/domain'
+import { MediaStoragePort, StorageDelivery, UploadGrant } from '@vidya/domain'
 
-/** Everything needed to reach one bucket, as a school hands it over. */
+/**
+ * Everything needed to reach one bucket, as a school hands it over.
+ *
+ * `delivery` decides what a driver may be asked for rather than what it may
+ * reach: a bucket signed by its own endpoint signs one object at a time, and
+ * only a CDN in front of it can sign a whole catalogue. It is absent where a
+ * caller only ever moves single objects, and then nothing may sign a prefix.
+ */
 export type StorageCredentials = {
   endpoint: string
   region: string
@@ -8,6 +15,7 @@ export type StorageCredentials = {
   prefix: string
   accessKeyId: string
   secret: string
+  delivery?: StorageDelivery
 }
 
 /**

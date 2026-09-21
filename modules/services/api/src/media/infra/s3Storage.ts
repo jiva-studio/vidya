@@ -23,9 +23,14 @@ import {
   windowExpiry,
 } from '@vidya/domain'
 
+import { isAllowedMimeType, mimeTypeOfKey } from '../services/mediaLimits'
 import { MediaStorageFactory, StorageCredentials } from './ports'
+import { refuseStreamSigning } from './streamSigning'
 
 const UPLOAD_WINDOW_SECONDS = 900
+
+/** What a type nobody may be shown is served as, whatever the object claims. */
+const OPAQUE_TYPE = 'application/octet-stream'
 
 const clientFor = (credentials: StorageCredentials): S3Client =>
   new S3Client({
@@ -41,6 +46,28 @@ const clientFor = (credentials: StorageCredentials): S3Client =>
   })
 
 const expiryIn = (nowMs: number, seconds: number) => toIsoDateTime(new Date(nowMs + seconds * 1000))
+
+/**
+ * What the browser is told to do with the bytes it is about to be handed.
+ *
+ * Only a type from the upload white list is shown in place. Everything else is
+ * handed down as a file to save and stripped of its type on the way out,
+ * because an SVG is a document a browser executes: served inline from a host
+ * the school's operators are signed into, one upload becomes a script tag.
+ */
+const responseHeadersFor = (
+  key: string,
+  kind: MediaKind,
+  mimeType: string | undefined,
+): { ResponseContentDisposition: string; ResponseContentType?: string } => {
+  const declared = mimeType ?? mimeTypeOfKey(key)
+
+  if (declared && isAllowedMimeType(kind, declared)) {
+    return { ResponseContentDisposition: 'inline', ResponseContentType: declared }
+  }
+
+  return { ResponseContentDisposition: 'attachment', ResponseContentType: OPAQUE_TYPE }
+}
 
 /** Whether the error means the object is absent rather than unreachable. */
 const isMissing = (error: unknown): boolean => {
@@ -109,36 +136,39 @@ class S3Storage implements MediaStoragePort {
   }
 
   /**
-   * Signed from the start of the window rather than from now, so that every
-   * reader inside it is handed the same bytes of address.
+   * Signed from the start of the window the clock is in rather than from now, so
+   * that every reader inside that window is handed the same bytes of address.
    *
    * `X-Amz-Date` and `X-Amz-Expires` are both in the query string, so signing
    * at "now, for an hour" mints a different address every second and a CDN and
-   * a browser hold a separate copy per view. Taking the window's own start as
-   * the signing instant makes the whole address a function of the window, and
-   * the signature still stops working at exactly the boundary it names.
+   * a browser hold a separate copy per view. The window's own start is in the
+   * past at every instant of it, which is what a signature needs — storage
+   * refuses one dated ahead of its clock — while the expiry may be carried a
+   * window further on, so the life signed for is measured to it rather than
+   * assumed to be one window.
    */
-  async signRead(key: string, kind: MediaKind): Promise<SignedUrl> {
-    const seconds = ReadWindowSeconds[kind]
-    const expiresAtMs = windowExpiry(this.clock.nowMs(), seconds)
-    const command = new GetObjectCommand({ Bucket: this.credentials.bucket, Key: key })
+  async signRead(key: string, kind: MediaKind, mimeType?: string): Promise<SignedUrl> {
+    const window = ReadWindowSeconds[kind] * 1000
+    const nowMs = this.clock.nowMs()
+    const expiresAtMs = windowExpiry(nowMs, ReadWindowSeconds[kind])
+    const signedFromMs = Math.floor(nowMs / window) * window
+
+    const command = new GetObjectCommand({
+      Bucket: this.credentials.bucket,
+      Key: key,
+      ...responseHeadersFor(key, kind, mimeType),
+    })
 
     const url = await getSignedUrl(this.client, command, {
-      expiresIn: seconds,
-      signingDate: new Date(expiresAtMs - seconds * 1000),
+      expiresIn: (expiresAtMs - signedFromMs) / 1000,
+      signingDate: new Date(signedFromMs),
     })
 
     return { url, expiresAt: toIsoDateTime(new Date(expiresAtMs)) }
   }
 
-  /**
-   * Refused rather than answered with a signature for the manifest alone: a
-   * player fetches the manifest and then hundreds of segments by relative path,
-   * and a signature that covers one file fails on the first segment. Signing a
-   * prefix needs a CDN that can, which a plain presigned profile is not.
-   */
   async signStream(): Promise<SignedUrl> {
-    throw new Error('This storage profile signs files, not prefixes.')
+    return refuseStreamSigning(this.credentials.delivery)
   }
 
   async head(key: string): Promise<StoredObject | undefined> {

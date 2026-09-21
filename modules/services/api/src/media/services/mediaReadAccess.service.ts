@@ -8,11 +8,31 @@ import { DataSource, In } from 'typeorm'
 /** Who is asking, as the token describes them and nothing more. */
 export type MediaReader = Pick<UserAuthentication, 'userId' | 'permissions'>
 
-/** The addresses one block can carry, both of which may name a stored file. */
-const addressesOf = (block: domain.LessonBlock): string[] =>
-  ['url', 'posterUrl']
-    .map((field) => (block as unknown as Record<string, unknown>)[field])
-    .filter((address): address is string => typeof address === 'string')
+const stated = (address: string | undefined): address is string => typeof address === 'string'
+
+/**
+ * Where each kind of block keeps the files it shows.
+ *
+ * Written out per kind rather than probed by field name so that a block type
+ * added to the document cannot quietly carry an address nobody reads: it has no
+ * entry here and the module does not compile. A student's access is computed
+ * from these addresses, so a missed one is a lesson they cannot open.
+ */
+const ADDRESSES: {
+  [TKind in domain.LessonBlock['type']]: (
+    block: Extract<domain.LessonBlock, { type: TKind }>,
+  ) => string[]
+} = {
+  text: () => [],
+  quiz: () => [],
+  image: (block) => [block.url].filter(stated),
+  audio: (block) => [block.url].filter(stated),
+  video: (block) => [block.url, block.posterUrl].filter(stated),
+}
+
+/** The files one block shows, in the order the block names them. */
+export const addressesOf = (block: domain.LessonBlock): string[] =>
+  (ADDRESSES[block.type] as (named: domain.LessonBlock) => string[])(block)
 
 const mediaIdsIn = (content: domain.LessonContent | null): domain.MediaId[] =>
   (content?.sections ?? [])

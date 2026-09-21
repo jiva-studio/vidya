@@ -1,7 +1,7 @@
 {
   "name": "refusals",
   "endpoint": "various",
-  "description": "Every refusal a client has to render, with the status it arrives as and the message key it carries. The keys live in libs/protocol/media.ts so the admin's locales cannot drift from the API's exceptions. Storage says no in three distinguishable ways and a school acts on each differently: `storage-endpoint-rejected` is us refusing to dial the address at all, `storage-credentials-rejected` is the address answering and turning the keys away, `storage-unreachable` is nothing answering. `storage-secret-unreadable` is none of those three — the stored ciphertext will not decrypt, which is our failure to explain and their credentials to enter again. Note where each one happens: the quota is refused when the grant is asked for, not when the upload completes — making someone upload two gigabytes and then saying there is no room is not a failure mode we ship. `media-in-use` names the lessons, because 'in use' without saying where cannot be acted on.",
+  "description": "Every refusal a client has to render, with the status it arrives as and the message key it carries. The keys live in libs/protocol/media.ts so the admin's locales cannot drift from the API's exceptions. Storage says no in three distinguishable ways and a school acts on each differently: `storage-endpoint-rejected` is us refusing to dial the address at all, `storage-credentials-rejected` is the address answering and turning the keys away, `storage-unreachable` is nothing answering. `storage-secret-unreadable` is none of those three — the stored ciphertext will not decrypt, which is our failure to explain and their credentials to enter again. Note where each one happens: the quota is refused when the grant is asked for, not when the upload completes — making someone upload two gigabytes and then saying there is no room is not a failure mode we ship. `storage-stream-unsupported` is a bucket that signs one object at a time being asked for a whole catalogue, which only a CDN in front of it can sign. `media-in-use` names the lessons, because 'in use' without saying where cannot be acted on.",
   "cases": [
     {
       "endpoint": "POST /media/uploads",
@@ -88,6 +88,15 @@
         "error": "Conflict",
         "statusCode": 409,
         "message": ["storage-not-configured"]
+      }
+    },
+    {
+      "endpoint": "POST /media/urls",
+      "status": 409,
+      "response": {
+        "error": "Conflict",
+        "statusCode": 409,
+        "message": ["storage-stream-unsupported"]
       }
     },
     {

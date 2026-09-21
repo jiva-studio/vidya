@@ -20,6 +20,15 @@ const NOON = Date.UTC(2026, 8, 21, 12, 17, 43, 512)
 const HOUR_END = Date.UTC(2026, 8, 21, 13, 0, 0, 0)
 const SIX_HOUR_END = Date.UTC(2026, 8, 21, 18, 0, 0, 0)
 
+/**
+ * The last instant an hourly window is still worth handing out.
+ *
+ * A signature is cut to the boundary, and a reader who arrives after this is
+ * carried to the next boundary rather than handed the remainder: the two share
+ * no address, which is the price of never handing out one that dies at once.
+ */
+const HOUR_SHAREABLE_UNTIL = HOUR_END - 1_800_000
+
 const fixed = (nowMs: number): Clock => ({ nowMs: () => nowMs })
 
 const drivers: [string, (clock: Clock) => MediaStoragePort][] = [
@@ -42,6 +51,13 @@ describe.each(drivers)('the window a read signature is cut to: %s', (_name, open
     expect(signed.expiresAt).toBe(new Date(HOUR_END).toISOString())
   })
 
+  it('gives the reader who arrives in the last minute a window they can use', async () => {
+    const signed = await open(fixed(HOUR_END - 60_000)).signRead(KEY, 'image')
+
+    expect(Date.parse(signed.expiresAt) - (HOUR_END - 60_000)).toBeGreaterThanOrEqual(1_800_000)
+    expect(Date.parse(signed.expiresAt) % 3_600_000).toBe(0)
+  })
+
   it('expires at the end of the six hours the clock is in, for a video', async () => {
     const signed = await open(fixed(NOON)).signRead(KEY, 'video')
 
@@ -50,14 +66,14 @@ describe.each(drivers)('the window a read signature is cut to: %s', (_name, open
 
   it('hands two askers inside one window the very same address', async () => {
     const early = await open(fixed(NOON)).signRead(KEY, 'image')
-    const late = await open(fixed(HOUR_END - 1)).signRead(KEY, 'image')
+    const late = await open(fixed(HOUR_SHAREABLE_UNTIL)).signRead(KEY, 'image')
 
     expect(late.url).toBe(early.url)
     expect(late.expiresAt).toBe(early.expiresAt)
   })
 
   it('hands the asker past the boundary a different address', async () => {
-    const inside = await open(fixed(HOUR_END - 1)).signRead(KEY, 'image')
+    const inside = await open(fixed(HOUR_SHAREABLE_UNTIL)).signRead(KEY, 'image')
     const after = await open(fixed(HOUR_END + 1)).signRead(KEY, 'image')
 
     expect(after.url).not.toBe(inside.url)
@@ -83,6 +99,24 @@ describe('the signature S3 is asked for', () => {
     const query = await signedQuery('image', NOON)
 
     expect(query.get('X-Amz-Date')).toBe('20260921T120000Z')
+  })
+
+  it('is never dated after the instant it was asked for', async () => {
+    const asked = HOUR_END - 60_000
+    const signed = await new S3StorageFactory(fixed(asked))
+      .openStorage(credentials())
+      .signRead(KEY, 'image')
+    const query = new URL(signed.url).searchParams
+
+    const stamped = query.get('X-Amz-Date') ?? ''
+    const signedAt = Date.parse(
+      stamped.replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/, '$1-$2-$3T$4:$5:$6Z'),
+    )
+
+    expect(signedAt).toBeLessThanOrEqual(asked)
+    expect(signedAt + Number(query.get('X-Amz-Expires')) * 1000).toBeGreaterThanOrEqual(
+      Date.parse(signed.expiresAt),
+    )
   })
 
   it('lives the whole window and not the remainder of it', async () => {

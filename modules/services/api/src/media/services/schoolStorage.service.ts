@@ -49,6 +49,7 @@ export class SchoolStorageService {
 
   private credentialsOf(profile: StorageProfile): StorageCredentials {
     return {
+      delivery: profile.delivery,
       endpoint: profile.endpoint,
       region: profile.region,
       bucket: profile.bucket,

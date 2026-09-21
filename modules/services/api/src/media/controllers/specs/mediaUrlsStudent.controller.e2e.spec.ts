@@ -38,11 +38,14 @@ describe('a student asking for a playable address', () => {
     expect(Date.parse(response.body.urls[shown].expiresAt)).toBeGreaterThan(Date.now())
   })
 
-  it('refuses a file that only a draft shows, because nothing published names it', async () => {
+  it('gives nothing for a file that only a draft shows, and says nothing about it', async () => {
+    const key = await read.keyOf(hidden)
+
     const response = await read.askUrls([hidden], coursework.studentToken)
 
-    expect(response.status).toBe(403)
-    expect(response.body.urls).toBeUndefined()
+    expect(response.status).toBe(200)
+    expect(response.body.urls).toEqual({})
+    expect(read.signedReadsOf(key)).toBe(0)
   })
 
   it('draws the published lesson even when a draft file is asked for beside it', async () => {
@@ -53,10 +56,21 @@ describe('a student asking for a playable address', () => {
     expect(hidden in response.body.urls).toBe(false)
   })
 
-  it('refuses someone with an account and no place on the course', async () => {
+  it('gives nothing to someone with an account and no place on the course', async () => {
+    const key = await read.keyOf(shown)
+
     const response = await read.askUrls([shown], coursework.strangerToken)
 
-    expect(response.status).toBe(403)
-    expect(response.body.urls).toBeUndefined()
+    expect(response.status).toBe(200)
+    expect(response.body.urls).toEqual({})
+    expect(read.signedReadsOf(key)).toBe(0)
+  })
+
+  it('tells a stranger about a published file what it tells them about nothing', async () => {
+    const published = await read.askUrls([shown], coursework.strangerToken)
+    const nothing = await read.askUrls([], coursework.strangerToken)
+
+    expect(published.status).toBe(nothing.status)
+    expect(published.body).toEqual(nothing.body)
   })
 })

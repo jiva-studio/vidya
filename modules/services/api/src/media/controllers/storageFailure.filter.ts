@@ -18,6 +18,7 @@ const STATUSES: Readonly<Record<StorageFailure, number>> = Object.freeze({
   unreachable: HttpStatus.BAD_GATEWAY,
   'secret-unreadable': HttpStatus.CONFLICT,
   'not-configured': HttpStatus.CONFLICT,
+  'stream-unsupported': HttpStatus.CONFLICT,
 })
 
 const REASONS: Readonly<Record<number, string>> = Object.freeze({

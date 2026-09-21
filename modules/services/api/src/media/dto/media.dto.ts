@@ -96,13 +96,13 @@ export class MediaQuery implements protocol.MediaQuery {
  * Bounded because the list becomes an `IN` over `media` and a caller that can
  * choose the length of it chooses the cost of the query.
  */
-export const MediaResolveLimit = 100
+export const MediaResolveLimit = domain.MediaResolveLimit
 
 /** The files a screen is about to draw, asked for before it draws them. */
 export class ResolveMediaRequest implements protocol.ResolveMediaRequest {
   @ApiProperty({ example: ['b2c3d4e5-6f70-4812-9a3b-4c5d6e7f8091'] })
   @IsArray()
-  @ArrayMaxSize(MediaResolveLimit)
+  @ArrayMaxSize(domain.MediaResolveLimit)
   @IsUUID(undefined, { each: true })
   ids: domain.MediaId[]
 }

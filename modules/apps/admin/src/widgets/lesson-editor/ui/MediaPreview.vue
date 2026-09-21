@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import { useMediaGateway } from '@/entities/media'
 import { embedSrc, mediaSrc } from '@/features/edit-lesson-content'
@@ -21,6 +21,7 @@ const embed = computed(() => embedSrc(props.block.source, props.block.url))
 
 const direct = ref<string | undefined>(undefined)
 const asked = ref(false)
+const player = ref<HTMLMediaElement | undefined>(undefined)
 
 const isVideo = computed(() => props.block.type === 'video')
 
@@ -39,8 +40,15 @@ const readAddress = async (): Promise<void> => {
     return
   }
 
-  await gateway.prime?.([props.block.url])
-  direct.value = gateway.resolve(props.block.url)
+  try {
+    await gateway.prime?.([props.block.url])
+    direct.value = gateway.resolve(props.block.url)
+  } catch {
+    // Whatever stopped the asking, this block has no address to draw and says
+    // so; the reason itself is the gateway's to announce, once per screen.
+    direct.value = undefined
+  }
+
   asked.value = true
 }
 
@@ -51,14 +59,37 @@ const readAddress = async (): Promise<void> => {
 const Resignings = 3
 let resigned = 0
 
-const resign = (): void => {
-  if (resigned >= Resignings) return
+/**
+ * A new address for the element already on screen, resumed where it was.
+ *
+ * Assigning `src` runs the resource selection algorithm, which returns the
+ * element to the beginning, so the position is carried across by hand. Once the
+ * addresses are spent the absence is stated: a player left holding a source
+ * storage refuses shows nothing and explains nothing.
+ */
+const resign = async (): Promise<void> => {
+  if (resigned >= Resignings) {
+    direct.value = undefined
+    asked.value = true
+    return
+  }
 
   resigned += 1
-  void readAddress()
+  const at = player.value?.currentTime ?? 0
+
+  await readAddress()
+  await nextTick()
+
+  if (player.value) player.value.currentTime = at
 }
 
 watch(() => props.block.url, readAddress, { immediate: true })
+
+/* -------------------------------- Handlers -------------------------------- */
+
+function onPlayerError() {
+  void resign()
+}
 </script>
 
 <template>
@@ -79,12 +110,20 @@ watch(() => props.block.url, readAddress, { immediate: true })
     />
     <video
       v-else-if="direct && isVideo"
+      ref="player"
       :src="direct"
       :class="playerClasses"
       controls
-      @error="resign"
+      @error="onPlayerError"
     />
-    <audio v-else-if="direct" :src="direct" :class="playerClasses" controls @error="resign" />
+    <audio
+      v-else-if="direct"
+      ref="player"
+      :src="direct"
+      :class="playerClasses"
+      controls
+      @error="onPlayerError"
+    />
     <p v-else-if="asked" :class="mutedClasses">{{ $t('editor-preview-media-missing') }}</p>
   </div>
 </template>

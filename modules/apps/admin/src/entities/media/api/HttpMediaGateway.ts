@@ -14,6 +14,7 @@ import { Routes } from '@vidya/protocol'
 import { useCurrentSchool } from '@/shared/access'
 import type { HttpClient } from '@/shared/api'
 import { HttpError } from '@/shared/api'
+import { useSession } from '@/shared/session'
 
 import type {
   MediaGateway,
@@ -65,9 +66,15 @@ const reasonOf = (failure: unknown, fallback: string): MediaError => {
  * to draw in one call and then draws it. Nothing is signed twice for one
  * window — the server rounds every expiry to the window boundary, so the
  * address a second screen is given is byte for byte the one already held.
+ *
+ * What is held belongs to the operator it was signed for. A signature is the
+ * access itself, so the tab that signs somebody else in — or signs the same
+ * person into another school — starts with nothing rather than with the last
+ * operator's addresses.
  */
 export class HttpMediaGateway implements MediaGateway {
   private readonly signed = new Map<string, string>()
+  private holder = ''
 
   constructor(private readonly http: HttpClient) {}
 
@@ -78,9 +85,8 @@ export class HttpMediaGateway implements MediaGateway {
 
     if (ids.length === 0) return
 
-    const answer = await this.http.post<ResolveMediaResponse>(Routes().media.urls(), {
-      ids,
-    } satisfies ResolveMediaRequest)
+    const answer = await this.ask(ids)
+    this.holdFor(this.operator())
 
     for (const [id, address] of Object.entries(answer.urls ?? {})) {
       this.signed.set(mediaPath(id as MediaId), address.url)
@@ -96,6 +102,7 @@ export class HttpMediaGateway implements MediaGateway {
     const target = url.trim()
     if (!target) return undefined
     if (!target.startsWith(MediaPathPrefix)) return target
+    if (this.operator() !== this.holder) return undefined
 
     return this.signed.get(target)
   }
@@ -145,6 +152,31 @@ export class HttpMediaGateway implements MediaGateway {
     } catch (failure) {
       throw reasonOf(failure, 'media-upload-failed')
     }
+  }
+
+  private async ask(ids: MediaId[]): Promise<ResolveMediaResponse> {
+    try {
+      return await this.http.post<ResolveMediaResponse>(Routes().media.urls(), {
+        ids,
+      } satisfies ResolveMediaRequest)
+    } catch (failure) {
+      throw reasonOf(failure, Unavailable)
+    }
+  }
+
+  /** Who the addresses in hand were signed for: the account, in the school. */
+  private operator(): string {
+    const { userId } = useSession()
+    const { schoolId } = useCurrentSchool()
+
+    return `${userId.value ?? ''}:${schoolId.value ?? ''}`
+  }
+
+  private holdFor(operator: string): void {
+    if (operator === this.holder) return
+
+    this.signed.clear()
+    this.holder = operator
   }
 
   private schoolId(): SchoolId {

@@ -66,8 +66,8 @@ describe('the instant a playable address dies', () => {
     const mediaId = await store('image')
     const key = await read.keyOf(mediaId)
 
-    const early = await askAt(MIDDAY + HOUR / 2, mediaId)
-    const late = await askAt(MIDDAY + HOUR - 1, mediaId)
+    const early = await askAt(MIDDAY + HOUR / 4, mediaId)
+    const late = await askAt(MIDDAY + HOUR / 2, mediaId)
 
     expect(read.signedReadsOf(key)).toBe(2)
     expect(late.url).toBe(early.url)
@@ -77,7 +77,7 @@ describe('the instant a playable address dies', () => {
   it('gives a different address once the hour has turned', async () => {
     const mediaId = await store('image')
 
-    const before = await askAt(MIDDAY + HOUR - 1, mediaId)
+    const before = await askAt(MIDDAY + HOUR / 2, mediaId)
     const after = await askAt(MIDDAY + HOUR, mediaId)
 
     expect(after.url).not.toBe(before.url)
@@ -85,11 +85,30 @@ describe('the instant a playable address dies', () => {
     expect(after.expiresAt).toBe('2026-09-21T14:00:00.000Z')
   })
 
-  it('holds a video on one address through the last hour of its six, then moves', async () => {
+  it('carries the reader who arrives in the last minute of an hour into the next', async () => {
+    const mediaId = await store('image')
+
+    const entry = await askAt(MIDDAY + HOUR - 60_000, mediaId)
+
+    expect(entry.expiresAt).toBe('2026-09-21T14:00:00.000Z')
+  })
+
+  it('never hands a lecture a signature that dies inside it', async () => {
+    const mediaId = await store('video')
+
+    const entry = await askAt(MIDDAY + 6 * HOUR - 60_000, mediaId)
+
+    expect(Date.parse(entry.expiresAt) - (MIDDAY + 6 * HOUR - 60_000)).toBeGreaterThanOrEqual(
+      3 * HOUR,
+    )
+    expect(entry.expiresAt).toBe('2026-09-22T00:00:00.000Z')
+  })
+
+  it('holds a video on one address through the half of its six it can share, then moves', async () => {
     const mediaId = await store('video')
 
     const early = await askAt(MIDDAY + HOUR, mediaId)
-    const last = await askAt(MIDDAY + 6 * HOUR - 1, mediaId)
+    const last = await askAt(MIDDAY + 3 * HOUR, mediaId)
     const next = await askAt(MIDDAY + 6 * HOUR, mediaId)
 
     expect(last.url).toBe(early.url)

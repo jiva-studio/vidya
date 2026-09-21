@@ -12,47 +12,44 @@
  * module that defines it. This is written as a guard rather than as an ESLint
  * rule because it holds for every client application, present and future, and
  * not for one app's layer list.
+ *
+ * The name is what is looked for, wherever it is written: an import binds it,
+ * but so do a namespace, a re-export, a dynamic import and the module loader,
+ * and a guard that read import statements alone would pass all four. The suites
+ * are read as well — a test reaching past the seam is the case this exists for.
  */
 
 import { readFileSync } from 'node:fs'
 
 import ts from 'typescript'
 
-import { allSources, lineOf, parseSource, shortPath, walk } from './sources.ts'
+import { allSources, AREAS, lineOf, parseSource, shortPath, walk } from './sources.ts'
 
 const BUILDER = 'useApi'
 
 /** Where building the client is the job rather than a shortcut out of a layer. */
 const ALLOWED = [/\/src\/app\//, /\/src\/shared\/api\//]
 
-const reachesForBuilder = (node: ts.Node): boolean => {
-  if (!ts.isImportDeclaration(node)) return false
+const namesBuilder = (node: ts.Node): boolean => ts.isIdentifier(node) && node.text === BUILDER
 
-  const bindings = node.importClause?.namedBindings
-  if (!bindings || !ts.isNamedImports(bindings)) return false
-
-  return bindings.elements.some(
-    (element) => (element.propertyName ?? element.name).text === BUILDER,
-  )
-}
-
+/** One finding per file: a layer either reaches for the builder or it does not. */
 const reachesIn = (path: string): string[] => {
   const file = parseSource(path, readFileSync(path, 'utf8'))
-  const found: string[] = []
+  let at: number | undefined
 
   walk(file, (node) => {
-    if (!reachesForBuilder(node)) return
-
-    found.push(
-      `${shortPath(path)}:${lineOf(file, node.getStart(file))}: reaches for ${BUILDER}. ` +
-        'Take the transport as a parameter, or ask useHttp in a screen.',
-    )
+    if (at === undefined && namesBuilder(node)) at = node.getStart(file)
   })
 
-  return found
+  if (at === undefined) return []
+
+  return [
+    `${shortPath(path)}:${lineOf(file, at)}: reaches for ${BUILDER}. ` +
+      'Take the transport as a parameter, or ask useHttp in a screen.',
+  ]
 }
 
 export const checkTransportRoot = (): string[] =>
-  allSources()
+  allSources(AREAS, { tests: true })
     .filter((path) => !ALLOWED.some((allowed) => allowed.test(path)))
     .flatMap(reachesIn)

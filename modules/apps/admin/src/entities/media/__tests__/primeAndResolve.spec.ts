@@ -3,10 +3,10 @@ import { flushPromises } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 import { manualClock } from '@/shared/lib'
-import { fakeHttpClient } from '@/shared/testing'
+import { fakeHttpClient, refusal } from '@/shared/testing'
 
 import type { MediaGateway } from '..'
-import { FakeMediaGateway, HttpMediaGateway } from '..'
+import { FakeMediaGateway, HttpMediaGateway, MediaError } from '..'
 
 const Urls = Routes().media.urls()
 
@@ -129,6 +129,22 @@ describe('priming a screen before it draws', () => {
 
     expect(gateway.resolve(STORED)).toBe('https://cdn.test/one.png?sig=1')
     expect(gateway.resolve(ALSO_STORED)).toBeUndefined()
+  })
+
+  it('refuses with a reason a screen can show rather than with a status code', async () => {
+    const http = fakeHttpClient({ [`POST ${Urls}`]: refusal(503, 'gateway down', Urls) })
+    const gateway = new HttpMediaGateway(http.client)
+
+    await expect(priming(gateway)([STORED])).rejects.toBeInstanceOf(MediaError)
+  })
+
+  it('names the reason with a key the locale bundle holds', async () => {
+    const http = fakeHttpClient({ [`POST ${Urls}`]: refusal(503, 'gateway down', Urls) })
+    const gateway = new HttpMediaGateway(http.client)
+
+    const refused = await priming(gateway)([STORED]).catch((failure: unknown) => failure)
+
+    expect((refused as MediaError).reason).toMatch(/^media-/)
   })
 
   it('troubles nobody for a screen whose media is all somewhere else', async () => {
