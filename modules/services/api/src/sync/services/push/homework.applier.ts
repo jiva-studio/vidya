@@ -14,15 +14,19 @@ import {
   Rejection,
 } from './types'
 
+/** The one status a device may bring about: work handed in, waiting to be read. */
+const SUBMITTED: domain.HomeworkStatus = 'pending'
+
 /**
- * The one status a student can never write over.
+ * Whether handing the work in again may still write over what is stored.
  *
- * An answer still on its way through review may be corrected from a device,
- * because a batch is allowed to carry two edits of one document and the second
- * must land. Accepted is final, and the only status whose refusal the contract
- * has a word for.
+ * The lifecycle table is asked rather than a list of statuses repeated here.
+ * Work already handed in is the one case the table has nothing to say about: a
+ * batch may carry two edits of one document, and the second is not a
+ * transition but the same status written twice.
  */
-const FINAL = 'accepted'
+const mayResubmit = (status: domain.HomeworkStatus): boolean =>
+  status === SUBMITTED || domain.canTransitionHomework(status, SUBMITTED)
 
 const instant = (value: unknown): Date | null =>
   value === null || value === undefined ? null : new Date(String(value))
@@ -36,11 +40,36 @@ const find = async (manager: EntityManager, change: PushChange): Promise<Homewor
     : null
 
 /**
+ * The row this push acts on: the one it names, or the one its natural key
+ * already holds.
+ *
+ * A device generates the id for work it writes offline, so two devices of one
+ * student can hand in the same section under two ids. Whether the work may
+ * still be written and where it is written have to ask about the same row, or a
+ * fresh name would walk past a freeze that stands on the stored one.
+ */
+const stored = async (manager: EntityManager, change: PushChange): Promise<Homework | null> => {
+  const byId = await find(manager, change)
+
+  if (byId) return byId
+
+  const refs = refsFrom(change.data)
+
+  if (isRejection(refs) || !isUuid(change.data?.sectionId)) return null
+
+  return manager.findOneBy(Homework, {
+    enrollmentId: refs.enrollmentId,
+    lessonVersionId: refs.lessonVersionId,
+    sectionId: domain.asId<domain.SectionId>(String(change.data.sectionId)),
+  })
+}
+
+/**
  * A student's answer, arriving from a device.
  *
  * This is the only door an answer comes through, so the rules are applied here
- * rather than borrowed: the client may only ever ask for `pending`, and an
- * answer freezes once it has been accepted.
+ * rather than borrowed: the client may only ever ask for `pending`, and the
+ * text stops being the student's the moment a reviewer takes the work up.
  *
  * The server fields — `status`, `grade`, `reviewedById`, `reviewedAt` — are
  * dropped from whatever the client sent without a word. Refusing a row
@@ -74,11 +103,15 @@ export const homeworkApplier: PushApplier = {
   },
 
   async editable(manager: EntityManager, change: PushChange): Promise<Rejection | null> {
-    const existing = await find(manager, change)
+    const existing = await stored(manager, change)
 
-    if (!existing || existing.status !== FINAL) return null
+    if (!existing || mayResubmit(existing.status)) return null
 
-    return reject('alreadyAccepted', 'the work has been accepted and its text is frozen')
+    if (existing.status === 'accepted') {
+      return reject('alreadyAccepted', 'the work has been accepted and its text is frozen')
+    }
+
+    return reject('underReview', 'a reviewer has the work open and will answer it')
   },
 
   async apply(
@@ -89,9 +122,9 @@ export const homeworkApplier: PushApplier = {
   ): Promise<string> {
     const entity = await locate(manager, change, prepared)
 
-    // Handed in, so `pending` — the only status a client may bring about — and
+    // Handed in, so `SUBMITTED` — the only status a client may bring about — and
     // flagged when the text it answers has since been revised.
-    entity.status = 'pending'
+    entity.status = SUBMITTED
     entity.answeredSupersededVersion = await isSuperseded(manager, prepared.access.version)
     entity.updatedAt = new Date(context.now)
     entity.text = (prepared.body.text as string) ?? entity.text ?? ''
@@ -108,39 +141,27 @@ export const homeworkApplier: PushApplier = {
 }
 
 /**
- * The row to write: the one this document names, or the one the natural key
- * already holds.
+ * The row to write, created when neither name nor key finds one.
  *
- * A device generates the id for work it writes offline, so two devices of one
- * student can hand in the same section under two ids. The table's unique key is
- * `(enrolment, version, section)`, so the second id would fail the insert and
- * the student would lose the answer they wrote last. Writing the row the key
- * already points at keeps both answers' text and lets the ordinary HLC
- * tiebreak decide, which is what it is for.
+ * The table's unique key is `(enrolment, version, section)`, so a second
+ * device's id would fail the insert and the student would lose the answer they
+ * wrote last. Writing the row the key already points at keeps both answers'
+ * text and lets the ordinary HLC tiebreak decide, which is what it is for.
  */
 const locate = async (
   manager: EntityManager,
   change: PushChange,
   prepared: PreparedRow,
 ): Promise<Homework> => {
-  const byId = await find(manager, change)
+  const existing = await stored(manager, change)
 
-  if (byId) return byId
-
-  const sectionId = domain.asId<domain.SectionId>(String(change.data?.sectionId))
-  const natural = await manager.findOneBy(Homework, {
-    enrollmentId: prepared.access.enrollment.id,
-    lessonVersionId: prepared.access.version.id,
-    sectionId,
-  })
-
-  if (natural) return natural
+  if (existing) return existing
 
   return manager.create(Homework, {
     id: domain.asId<domain.HomeworkId>(change.docId),
     enrollmentId: prepared.access.enrollment.id,
     lessonVersionId: prepared.access.version.id,
-    sectionId,
+    sectionId: domain.asId<domain.SectionId>(String(change.data?.sectionId)),
     schoolId: prepared.access.enrollment.schoolId,
     text: '',
     grade: null,

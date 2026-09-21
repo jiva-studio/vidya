@@ -90,15 +90,6 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
     return enrollment?.studentId === userId
   }
 
-  /** How many live places a student holds in one school — what leaving it costs. */
-  async countLivePlacesIn(studentId: domain.UserId, schoolId: domain.SchoolId): Promise<number> {
-    return this.repository.countBy({
-      studentId,
-      schoolId,
-      status: In([...LiveEnrollmentStatuses]),
-    })
-  }
-
   /**
    * Takes back every place this student holds in the school, decided or still
    * asked for. A place is what belonging to the school bought, so it does not
@@ -108,13 +99,15 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
    * entity subscriber, so a bulk `UPDATE` would move the table and reach no
    * device: the scope cursor would walk past a change that was never written
    * down. `manager` is the caller's transaction, so the places and whatever
-   * ended the membership commit or roll back together.
+   * ended the membership commit or roll back together, and the count they
+   * answer with is what was actually taken back rather than what was there to
+   * take before the transaction opened.
    */
   async revokePlacesIn(
     studentId: domain.UserId,
     schoolId: domain.SchoolId,
     manager: EntityManager,
-  ): Promise<void> {
+  ): Promise<number> {
     const places = await manager.findBy(Enrollment, {
       studentId,
       schoolId,
@@ -130,6 +123,8 @@ export class EnrollmentsService extends ScopedEntitiesService<Enrollment, Scope>
 
       await manager.save(place)
     }
+
+    return places.length
   }
 
   /**

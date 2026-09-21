@@ -13,6 +13,18 @@ import { RolesService } from './roles.service'
  */
 export const NO_STUDENT_ROLE = 'The school is not accepting students yet'
 
+/**
+ * Refused rather than failed: a school without an owner is a school nobody can
+ * administer, so the last word is not the departing owner's. Another owner
+ * takes the rights away through ordinary role administration, and only then is
+ * there anyone left to leave.
+ */
+export const OWNER_CANNOT_LEAVE =
+  'An owner cannot leave the school until another owner takes the owner role away'
+
+/** Being an owner of a school is holding the wildcard permission in it, as bootstrap writes it. */
+const OWNER_PERMISSION = '*'
+
 @Injectable()
 export class UserSchoolsService {
   constructor(
@@ -70,7 +82,7 @@ export class UserSchoolsService {
   }
 
   /**
-   * Take a user's membership of one school back.
+   * Take a user's membership of one school back, and say what it cost in places.
    *
    * The work is `RolesService`'s, and deliberately so: taking a role away is
    * what ends a membership, and it happens from several places. A second
@@ -81,7 +93,17 @@ export class UserSchoolsService {
     userId: domain.UserId,
     schoolId: domain.SchoolId,
     actorUserId?: domain.UserId | null,
-  ): Promise<void> {
-    await this.rolesService.setRolesForUserWithin(userId, [], [schoolId], actorUserId)
+  ): Promise<number> {
+    if (await this.ownsSchool(userId, schoolId)) {
+      throw new ConflictException(OWNER_CANNOT_LEAVE)
+    }
+
+    return this.rolesService.setRolesForUserWithin(userId, [], [schoolId], actorUserId)
+  }
+
+  private async ownsSchool(userId: domain.UserId, schoolId: domain.SchoolId): Promise<boolean> {
+    const roles = await this.rolesService.getRolesOfUserWithin(userId, [schoolId])
+
+    return roles.some((role) => role.permissions.includes(OWNER_PERMISSION))
   }
 }

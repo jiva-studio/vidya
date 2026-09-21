@@ -6,12 +6,12 @@ import {
   ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiConflictResponse, ApiTags } from '@nestjs/swagger'
 import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/edu/dto'
-import { EnrollmentsService, UserSchoolsService } from '@vidya/api/edu/services'
+import { UserSchoolsService } from '@vidya/api/edu/services'
 import { CrudDecorators } from '@vidya/api/shared/decorators'
 import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
@@ -31,10 +31,7 @@ const Crud = CrudDecorators({
 @ApiBearerAuth()
 @UseGuards(AuthenticatedUserGuard)
 export class UserSchoolsController {
-  constructor(
-    private readonly userSchoolsService: UserSchoolsService,
-    private readonly enrollments: EnrollmentsService,
-  ) {}
+  constructor(private readonly userSchoolsService: UserSchoolsService) {}
 
   /* -------------------------------------------------------------------------- */
   /*                        GET /edu/users/:userId/schools                      */
@@ -85,7 +82,11 @@ export class UserSchoolsController {
    * the answer so a screen can say what it cost — the places are already gone
    * by the time the caller reads it, which is why a confirmation belongs
    * before the call and not after.
+   *
+   * An owner does not leave this way: another owner takes the owner role away
+   * first, or the school is left with nobody who can administer it.
    */
+  @ApiConflictResponse({ description: 'An owner of the school cannot leave it' })
   @Crud.DeleteOne(Routes().edu.user(':userId').schools.delete(':schoolId'))
   async leave(
     @Param('userId', new ParseUUIDPipe(), UserExistsPipe) userId: domain.UserId,
@@ -96,8 +97,7 @@ export class UserSchoolsController {
       throw new ForbiddenException('User does not have permission')
     }
 
-    const revokedPlaces = await this.enrollments.countLivePlacesIn(userId, schoolId)
-    await this.userSchoolsService.removeUser(userId, schoolId, auth.userId)
+    const revokedPlaces = await this.userSchoolsService.removeUser(userId, schoolId, auth.userId)
 
     return new dto.LeaveSchoolResponse({ revokedPlaces })
   }

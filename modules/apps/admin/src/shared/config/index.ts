@@ -5,8 +5,9 @@
  * origin under `/api` and the dev server forwards them.
  *
  * The student site is a different origin — its own `localStorage`, its own
- * database — so the console cannot build a joining link out of its own address
- * and is told where that site stands. The default is the development port.
+ * database. A joining link is built from the console's own address where the
+ * naming allows it, and `studentBaseUrl` answers where it does not: a console
+ * on a bare host, development among them. The default is the development port.
  */
 export const config = {
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '/api',

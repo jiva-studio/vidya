@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { SCHOOL_CODE_LENGTH, schoolCodeAlphabet } from '@vidya/domain'
+import { SCHOOL_CODE_LENGTH, schoolCodeAlphabet, SchoolId } from '@vidya/domain'
 import { Role, School, User } from '@vidya/entities'
 import { randomInt } from 'crypto'
 import { In, Repository } from 'typeorm'
@@ -45,6 +45,10 @@ export class SchoolsService extends ScopedEntitiesService<School, Scope> {
    *
    * Drawn and retried rather than derived from the name: a derived code would
    * leak a rename into every poster already printed.
+   *
+   * The write is what decides, not the entity the caller read: two curators
+   * pressing the button together both read a school without a code, and a
+   * caller handed the draw that lost would be handed a link that opens nothing.
    */
   async createCode(school: School): Promise<string> {
     if (school.code) return school.code
@@ -59,11 +63,30 @@ export class SchoolsService extends ScopedEntitiesService<School, Scope> {
       const code = this.generateCode()
       if (await this.repository.existsBy({ code })) continue
 
-      await this.repository.update({ id: school.id }, { code })
+      const written = await this.repository
+        .createQueryBuilder()
+        .update(School)
+        .set({ code })
+        .where('id = :id', { id: school.id })
+        // `code IS NULL`, negated: the unique index over codes is partial on
+        // `code IS NOT NULL`, and pg-mem answers the plain form from that index
+        // alone, so under the memory suite no school without a code is ever found.
+        .andWhere('NOT (code IS NOT NULL)')
+        .execute()
+
+      if (written.affected === 0) return this.storedCode(school.id)
+
       return code
     }
 
     throw new Error(`Could not create a free code for school ${school.id}`)
+  }
+
+  /** The code the school ended up with, once a draw of ours found one there. */
+  private async storedCode(schoolId: SchoolId): Promise<string> {
+    const stored = await this.repository.findOneBy({ id: schoolId })
+
+    return stored.code
   }
 
   private generateCode(): string {
