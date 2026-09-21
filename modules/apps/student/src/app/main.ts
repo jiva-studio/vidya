@@ -86,6 +86,7 @@ async function start(): Promise<void> {
     name: WRITER_LOCK,
     onElected: async () => {
       try {
+        db = await openSite()
         await startWriting(db, http)
         // Reported here and carried out, because this also runs when a tab
         // takes the role over long after start-up, where there is no longer a
