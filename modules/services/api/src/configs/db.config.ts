@@ -13,4 +13,12 @@ export default registerAs('db', () => ({
   // answer that passes through a query into the application log. Dev turns
   // it on explicitly (see modules/Makefile).
   logging: process.env.VIDYA_DB_LOGGING === 'true',
+  poolSize: parseInt(process.env.VIDYA_DB_POOL_MAX, 10) || 20,
+  minPoolSize: parseInt(process.env.VIDYA_DB_POOL_MIN, 10) || 2,
+  idleTimeoutMillis: parseInt(process.env.VIDYA_DB_IDLE_TIMEOUT_MS, 10) || 30000,
+  connectionTimeoutMillis: parseInt(process.env.VIDYA_DB_CONNECTION_TIMEOUT_MS, 10) || 5000,
+  ssl:
+    process.env.VIDYA_DB_SSL === 'true'
+      ? { rejectUnauthorized: process.env.VIDYA_DB_SSL_REJECT_UNAUTHORIZED !== 'false' }
+      : false,
 }))
