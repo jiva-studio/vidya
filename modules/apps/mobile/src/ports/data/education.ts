@@ -2,6 +2,7 @@ import type {
   BlockId,
   CourseId,
   CourseLearningType,
+  CourseStatus,
   EnrollmentId,
   EnrollmentStatus,
   GroupId,
@@ -57,12 +58,14 @@ export interface LocalSchool {
   readonly description: string | null
 }
 
+/** `status` decides whether a catalogue draws the course; drafts arrive too. */
 export interface LocalCourse {
   readonly id: CourseId
   readonly schoolId: SchoolId
   readonly name: string
   readonly description: string | null
   readonly learningType: CourseLearningType
+  readonly status: CourseStatus
 }
 
 export interface LocalLesson {

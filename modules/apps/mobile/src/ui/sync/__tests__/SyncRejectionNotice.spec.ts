@@ -34,6 +34,8 @@ const about: Record<(typeof SyncRejectionReasons)[number], Record<Locale, RegExp
   scopeRevoked: { en: /took away your access/i, ru: /сняла с вас доступ/i },
   unknownLessonVersion: { en: /lesson version/i, ru: /версию урока/i },
   alreadyAccepted: { en: /already been accepted/i, ru: /уже принят/i },
+  underReview: { en: /teacher has this work open/i, ru: /смотрит преподаватель/i },
+  courseNotOffered: { en: /not taking students onto this course/i, ru: /не набирает на этот курс/i },
   payloadTooLarge: { en: /too long/i, ru: /слишком длинный/i },
   malformed: { en: /could not read/i, ru: /не смогла прочитать/i },
 }

@@ -1,4 +1,4 @@
-import type { CourseId, CourseLearningType, SchoolId, SyncPayload } from '@vidya/domain'
+import type { CourseId, CourseLearningType, CourseStatus, SchoolId, SyncPayload } from '@vidya/domain'
 
 import type { ICourseRepository, IDatabase, LocalCourse } from '@/ports'
 
@@ -42,5 +42,6 @@ function toCourse(payload: SyncPayload): LocalCourse {
     name: (payload.name as string) ?? '',
     description: (payload.description as string | null) ?? null,
     learningType: payload.learningType as CourseLearningType,
+    status: (payload.status as CourseStatus) ?? 'published',
   }
 }

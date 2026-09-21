@@ -161,7 +161,7 @@ const createCourse = async (
   const lessons = app.get(LessonsService)
   const versions = app.get(LessonVersionsService)
 
-  const course = await courses.create({ name, learningType: 'individual', schoolId })
+  const course = await courses.create({ name, learningType: 'individual', schoolId, status: 'published' })
 
   const lesson = await lessons.create({
     courseId: course.id,
