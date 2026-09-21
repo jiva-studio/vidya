@@ -109,6 +109,7 @@ describe('/edu/users/:userId/roles', () => {
     const rolesService = app.get(RolesService)
     const superRole = await rolesService.create({
       name: 'Lessons Superuser',
+      description: 'Superuser for lessons',
       schoolId: ctx.one.school.id,
       permissions: ['lessons:delete', 'lessons:publish'],
     })
@@ -125,6 +126,7 @@ describe('/edu/users/:userId/roles', () => {
     const rolesService = app.get(RolesService)
     const superRole = await rolesService.create({
       name: 'Lessons Superuser in One',
+      description: 'Superuser for lessons in school one',
       schoolId: ctx.one.school.id,
       permissions: ['lessons:delete'],
     })
