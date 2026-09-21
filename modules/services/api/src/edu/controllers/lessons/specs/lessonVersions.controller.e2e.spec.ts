@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common'
-import { createTestingApp } from '@vidya/api/edu/shared'
+import { AuthService } from '@vidya/api/auth/services'
+import { createTestingApp, newId } from '@vidya/api/edu/shared'
 import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
@@ -140,5 +141,36 @@ describe('/edu/lessons/:lessonId/versions', () => {
 
     expect(draft.body.content.sections[0].title).toBe('Published text')
     expect(draft.body.status).toBe('draft')
+  })
+
+  it('refuses to update a draft when holding editor permissions in another school and only read in this school', async () => {
+    const auth = app.get(AuthService)
+    const token = (
+      await auth.generateTokens(newId<domain.UserId>(), [
+        { sid: ctx.otherSchoolId, p: ['lessons:update'] },
+        { sid: ctx.schoolId, p: ['lessons:read'] },
+      ])
+    ).accessToken
+
+    return request(app.getHttpServer())
+      .patch(routes.update(ctx.lessonId, ctx.draftVersionId))
+      .auth(token, { type: 'bearer' })
+      .send({ content: content('Hijacked') })
+      .expect(403)
+  })
+
+  it('refuses to publish a draft when holding publish permissions in another school and only read in this school', async () => {
+    const auth = app.get(AuthService)
+    const token = (
+      await auth.generateTokens(newId<domain.UserId>(), [
+        { sid: ctx.otherSchoolId, p: ['lessons:publish'] },
+        { sid: ctx.schoolId, p: ['lessons:read'] },
+      ])
+    ).accessToken
+
+    return request(app.getHttpServer())
+      .post(routes.publish(ctx.lessonId, ctx.draftVersionId))
+      .auth(token, { type: 'bearer' })
+      .expect(403)
   })
 })

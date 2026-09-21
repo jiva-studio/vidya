@@ -18,6 +18,7 @@ export type Context = {
   draftVersionId: domain.LessonVersionId
 
   /** A course in a second school, so scoping is proved rather than assumed. */
+  otherSchoolId: domain.SchoolId
   otherCourseId: domain.CourseId
   otherLessonId: domain.LessonId
   tokens: {
@@ -85,6 +86,7 @@ export const createContext = async (app: INestApplication): Promise<Context> => 
     courseId: course.id,
     lessonId: lesson.id,
     draftVersionId: draft.id,
+    otherSchoolId: other.id,
     otherCourseId: otherCourse.id,
     otherLessonId: otherLesson.id,
     tokens: {
