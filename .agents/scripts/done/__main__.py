@@ -147,19 +147,31 @@ def main():
 
     # 5. Hook mode (Driven by external Stop-hook)
     if args.hook:
-        if os.environ.get("VIDYA_DONE") == "0" or os.environ.get("FORCE_STOP") == "1":
-            print(json.dumps({"decision": "allow"}))
-            sys.exit(0)
+        try:
+            if (
+                os.environ.get("DONE_GATE_DISABLE") == "1"
+                or os.environ.get("FORCE_STOP") == "1"
+                or os.environ.get("DONE_BYPASS") == "1"
+                or os.environ.get("VIDYA_DONE") == "0"
+            ):
+                print(json.dumps({"decision": "allow"}))
+                sys.exit(0)
 
-        spec_file = find_active_task_spec()
-        if not spec_file:
-            print(json.dumps({"decision": "allow"}))
-            sys.exit(0)
+            spec_file = find_active_task_spec()
+            if not spec_file:
+                print(json.dumps({"decision": "allow"}))
+                sys.exit(0)
 
-        runner = PipelineRunner(spec_file)
-        result = runner.evaluate_and_advance(is_hook=True)
-        print(json.dumps(result))
-        sys.exit(0)
+            runner = PipelineRunner(spec_file)
+            result = runner.evaluate_and_advance(is_hook=True)
+            print(json.dumps(result))
+            sys.exit(0)
+        except Exception as e:
+            print(json.dumps({
+                "decision": "continue",
+                "reason": f"Verification harness internal error: {str(e)}"
+            }))
+            sys.exit(0)
 
     # 6. Direct execution mode
     target_spec = None

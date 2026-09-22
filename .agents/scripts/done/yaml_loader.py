@@ -28,9 +28,15 @@ def load_yaml(file_path_or_text: Any) -> Any:
         candidate_paths = [
             str(REPO_ROOT / "modules"),
             str(REPO_ROOT),
-            str(REPO_ROOT.parent / "vidya" / "modules"),
-            str(REPO_ROOT.parent / "vidya"),
         ]
+        # Add sibling git worktree module paths if present
+        if REPO_ROOT.parent.exists():
+            for sibling in REPO_ROOT.parent.iterdir():
+                if sibling.is_dir() and (sibling / "modules" / "node_modules").exists():
+                    candidate_paths.append(str(sibling / "modules"))
+                elif sibling.is_dir() and (sibling / "node_modules").exists():
+                    candidate_paths.append(str(sibling))
+
         candidate_paths_json = json.dumps(candidate_paths)
         node_script = f"""
 const fs = require("fs");

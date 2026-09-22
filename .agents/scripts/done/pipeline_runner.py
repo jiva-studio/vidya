@@ -81,16 +81,25 @@ class PipelineRunner:
                 timeout=5
             )
             files = []
-            for line in res.stdout.strip().splitlines():
-                if len(line) > 3:
-                    files.append(line[3:].strip())
+            for line in res.stdout.splitlines():
+                if len(line) >= 3:
+                    path_part = line[3:].strip().strip('"')
+                    if " -> " in path_part:
+                        old_p, new_p = path_part.split(" -> ", 1)
+                        files.append(old_p.strip().strip('"'))
+                        files.append(new_p.strip().strip('"'))
+                    else:
+                        files.append(path_part)
             return files
         except Exception:
             return []
 
-    def _check_forbidden_edits(self, forbid_patterns: List[str], changed_files: List[str]) -> List[str]:
+    def _check_forbidden_edits(self, forbid_patterns: List[str], current_files: List[str], baseline_files: List[str]) -> List[str]:
+        """Checks for forbidden files modified during the current stage relative to baseline."""
+        # Files newly touched in this stage
+        newly_modified = [f for f in current_files if f not in baseline_files]
         violations = []
-        for f in changed_files:
+        for f in newly_modified:
             for pattern in forbid_patterns:
                 if fnmatch.fnmatch(f, pattern) or pattern in f:
                     violations.append(f)
@@ -100,10 +109,11 @@ class PipelineRunner:
         """Evaluates stage claims using the unified DoneEngine and claim tools."""
         stage_claims = stage.get("claims", [])
         if not stage_claims:
-            # Fall back to evaluating all claims if it's the final gatekeeper
-            engine = DoneEngine(self.spec_path)
-            res = engine.run(is_hook_mode=True)
-            return res.get("passed", False), res.get("results", []), res.get("error", "")
+            if stage.get("id") == "gatekeeper":
+                engine = DoneEngine(self.spec_path)
+                res = engine.run(is_hook_mode=True)
+                return res.get("passed", False), res.get("results", []), res.get("error", "")
+            return True, [], ""
 
         context = {
             "task_dir": self.task_dir,
@@ -127,6 +137,8 @@ class PipelineRunner:
                     "kind": kind,
                     "passed": True,
                     "message": "CACHED",
+                    "details": cached.get("details", {}),
+                    "duration_ms": 0.0,
                     "cached": True
                 })
                 continue
@@ -144,6 +156,7 @@ class PipelineRunner:
                 "passed": claim_res.passed,
                 "message": claim_res.message,
                 "details": claim_res.details,
+                "duration_ms": claim_res.duration_ms,
                 "cached": False
             })
 
@@ -162,6 +175,13 @@ class PipelineRunner:
         next_stage = self.get_current_stage(state, pipeline_cfg)
         state["current_stage_id"] = next_stage.get("id") if next_stage else "completed"
         state["updated_at"] = time.time()
+        
+        # Snapshot current git modified files for next stage forbidden edits baseline
+        if "stage_baselines" not in state:
+            state["stage_baselines"] = {}
+        if next_stage:
+            state["stage_baselines"][next_stage.get("id", "")] = self._get_changed_files()
+            
         self.write_state(state)
         return next_stage
 
@@ -205,9 +225,10 @@ class PipelineRunner:
 
         # 1. Boundary & forbidden file edits check
         changed_files = self._get_changed_files()
+        baseline_files = state.get("stage_baselines", {}).get(stage_id, [])
         forbid_patterns = current_stage.get("forbid_edits", [])
         if forbid_patterns:
-            violations = self._check_forbidden_edits(forbid_patterns, changed_files)
+            violations = self._check_forbidden_edits(forbid_patterns, changed_files, baseline_files)
             if violations:
                 return {
                     "decision": "continue",

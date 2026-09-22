@@ -33,29 +33,43 @@ class ClaimCache:
         params = json.dumps(claim.get("params", {}), sort_keys=True)
         target = claim.get("target") or claim.get("package") or claim.get("params", {}).get("PKG", "")
 
-        # Get git diff for the target if available
+        # Get git diff for the workspace or target path if it is an actual filesystem path
         diff_str = ""
         try:
             cmd = ["git", "-C", str(REPO_ROOT), "diff", "HEAD"]
-            if target and isinstance(target, str) and not target.startswith("@"):
+            if target and isinstance(target, str) and (REPO_ROOT / target).exists():
                 cmd.extend(["--", target])
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             diff_str = res.stdout
         except Exception:
             diff_str = "no-git"
 
-        # Also capture untracked files hash in repo
+        # Also capture untracked files list and content hashes
+        untracked_data = []
         try:
-            untracked = subprocess.run(
+            status_res = subprocess.run(
                 ["git", "-C", str(REPO_ROOT), "status", "--porcelain"],
                 capture_output=True,
                 text=True,
                 timeout=5
-            ).stdout
+            )
+            for line in status_res.stdout.splitlines():
+                if line.startswith("?? "):
+                    fpath = line[3:].strip().strip('"')
+                    full_p = REPO_ROOT / fpath
+                    if full_p.is_file():
+                        try:
+                            untracked_data.append(f"{fpath}:{hashlib.md5(full_p.read_bytes()).hexdigest()}")
+                        except Exception:
+                            untracked_data.append(fpath)
+                    else:
+                        untracked_data.append(fpath)
+                else:
+                    untracked_data.append(line)
         except Exception:
-            untracked = ""
+            untracked_data = []
 
-        raw = f"{claim_id}|{kind}|{params}|{diff_str}|{untracked}"
+        raw = f"{claim_id}|{kind}|{params}|{diff_str}|{'|'.join(untracked_data)}"
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     def get_cached_result(self, claim: Dict[str, Any]) -> Optional[Dict[str, Any]]:

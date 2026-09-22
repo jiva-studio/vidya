@@ -31,7 +31,15 @@ def validate_done_manifest(data: Any) -> Tuple[bool, List[str]]:
         if not isinstance(pipeline_name, str):
             errors.append("\"pipeline\" must be a string identifier (e.g. \"hardened\", \"standard\", \"fast\")")
         else:
-            custom_exists = (PIPELINES_DIR / f"{pipeline_name}.yaml").exists() or DEFAULT_PIPELINE_FILE.exists()
+            custom_exists = (PIPELINES_DIR / f"{pipeline_name}.yaml").exists()
+            if not custom_exists and DEFAULT_PIPELINE_FILE.exists():
+                try:
+                    from done.yaml_loader import load_yaml
+                    p_data = load_yaml(DEFAULT_PIPELINE_FILE)
+                    if isinstance(p_data, dict) and "pipelines" in p_data and pipeline_name in p_data["pipelines"]:
+                        custom_exists = True
+                except Exception:
+                    pass
             builtin_exists = pipeline_name in BUILTIN_PIPELINES
             if not custom_exists and not builtin_exists:
                 errors.append(f"Unknown pipeline profile: \"{pipeline_name}\"")

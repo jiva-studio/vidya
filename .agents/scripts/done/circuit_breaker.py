@@ -38,7 +38,7 @@ class CircuitBreaker:
         stagnant_count = state.get("stagnant_count", 0)
 
         # Compute hash of failed claims
-        error_fingerprint = "|".join([f"{c['id']}:{c.get('message', '')}" for c in failed_claims])
+        error_fingerprint = "|".join([f"{c.get('claim_id', c.get('id', ''))}:{c.get('message', '')}" for c in failed_claims])
         curr_hash = hashlib.md5(error_fingerprint.encode("utf-8")).hexdigest()
 
         if curr_hash == state.get("last_error_hash"):

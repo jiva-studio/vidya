@@ -16,9 +16,9 @@ flowchart TD
     WriteSpec --> WriteDone["4. Generate .agents/tasks/<slug>/done.yaml
 (Declarative Claims: make, mutation, critic)"]
     WriteDone --> ValidateDone{"5. MANDATORY VALIDATION
-(python3 -m scripts.done --validate)"}
+(python3 .agents/scripts/done --validate)"}
     ValidateDone -->|Exit != 0 (Errors)| FixDone["Fix done.yaml schema/params"] --> ValidateDone
-    ValidateDone -->|Exit 0 (Valid)| Complete["6. Spec Locked! Ready for /coder"]
+    ValidateDone -->|Exit 0 (Valid)| Complete["6. Spec Locked! Ready for /band"]
 ```
 
 ---

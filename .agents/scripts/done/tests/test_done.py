@@ -87,6 +87,45 @@ class TestDoneHarness(unittest.TestCase):
         finally:
             shutil.rmtree(tmp_dir)
 
+    def test_circuit_breaker_claim_id_key(self):
+        import tempfile, shutil
+        tmp_dir = Path(tempfile.mkdtemp())
+        try:
+            cb = CircuitBreaker(tmp_dir, max_retries=3)
+            # Should accept claim_id without KeyError
+            res = cb.check_and_update([{"claim_id": "c1", "kind": "make", "message": "error msg"}])
+            self.assertFalse(res["is_tripped"])
+            self.assertEqual(res["attempt"], 1)
+        finally:
+            shutil.rmtree(tmp_dir)
+
+    def test_hook_payload_formatting(self):
+        from done.reporters.hook_payload import format_hook_response
+        results = [
+            {"claim_id": "c1", "kind": "make", "passed": False, "message": "fail reason"}
+        ]
+        resp_json = format_hook_response(
+            passed=False,
+            circuit_tripped=False,
+            circuit_reason="",
+            results=results,
+            attempt=1
+        )
+        data = json.loads(resp_json)
+        self.assertEqual(data["decision"], "continue")
+        self.assertTrue("Claim c1 (make)" in data["reason"])
+        self.assertTrue("fail reason" in data["reason"])
+
+    def test_validator_invalid_pipeline(self):
+        invalid = {
+            "slug": "task",
+            "pipeline": "nonexistent_bogus_profile_12345",
+            "claims": [{"id": "c1", "kind": "make", "target": "check"}]
+        }
+        is_valid, errors = validate_done_manifest(invalid)
+        self.assertFalse(is_valid)
+        self.assertTrue(any("Unknown pipeline profile" in e for e in errors))
+
     def test_yaml_loader(self):
         raw = "slug: my-slug\ncount: 42"
         data = load_yaml(raw)
