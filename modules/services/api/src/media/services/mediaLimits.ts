@@ -31,8 +31,24 @@ const EXTENSIONS: Readonly<Record<string, string>> = Object.freeze({
   'video/quicktime': 'mov',
 })
 
+const MIME_TYPES: Readonly<Record<string, string>> = Object.freeze(
+  Object.fromEntries(
+    Object.entries(EXTENSIONS).map(([mimeType, extension]) => [extension, mimeType]),
+  ),
+)
+
 export const isAllowedMimeType = (kind: MediaKind, mimeType: string): boolean =>
   AllowedMimeTypes[kind].includes(mimeType.toLowerCase())
+
+/**
+ * The type an object key names, for a caller that holds no row to ask.
+ *
+ * The extension is the one `storageKeyOf` wrote from the declared type, so the
+ * key answers the same question the row does — and anything it does not name is
+ * a type nobody declared, which is treated as one nobody may be shown.
+ */
+export const mimeTypeOfKey = (key: string): string | undefined =>
+  MIME_TYPES[key.slice(key.lastIndexOf('.') + 1).toLowerCase()]
 
 /** The ceilings deployment sets, named per kind rather than per environment variable. */
 export type MediaSizeLimits = {

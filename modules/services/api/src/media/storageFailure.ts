@@ -4,9 +4,9 @@ import { MediaRefusal, MediaRefusals } from '@vidya/protocol'
  * The ways a school's storage can refuse, kept apart because a school acts on
  * each one differently: we would not dial the address, the address turned the
  * keys away, nothing answered, the ciphertext we hold no longer opens, somebody
- * else rotated the keys first, or the ceiling stored for the school is not a
- * number we can answer with. Collapsing them into one message leaves the school
- * guessing which of them to change.
+ * else rotated the keys first, the ceiling stored for the school is not a
+ * number we can answer with, or what was asked for is more than this bucket can sign.
+ * Collapsing them into one message leaves the school guessing which of them to change.
  */
 export type StorageFailure =
   | 'endpoint-rejected'
@@ -16,6 +16,7 @@ export type StorageFailure =
   | 'rotation-conflicted'
   | 'quota-unreadable'
   | 'not-configured'
+  | 'stream-unsupported'
 
 const MESSAGES: Readonly<Record<StorageFailure, MediaRefusal>> = Object.freeze({
   'endpoint-rejected': MediaRefusals.endpointRejected,
@@ -25,6 +26,7 @@ const MESSAGES: Readonly<Record<StorageFailure, MediaRefusal>> = Object.freeze({
   'rotation-conflicted': MediaRefusals.rotationConflicted,
   'quota-unreadable': MediaRefusals.quotaUnreadable,
   'not-configured': MediaRefusals.notConfigured,
+  'stream-unsupported': MediaRefusals.streamUnsupported,
 })
 
 /**

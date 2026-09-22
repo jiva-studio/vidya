@@ -21,6 +21,7 @@ const STATUSES: Readonly<Record<StorageFailure, number>> = Object.freeze({
   'rotation-conflicted': HttpStatus.CONFLICT,
   'quota-unreadable': HttpStatus.CONFLICT,
   'not-configured': HttpStatus.CONFLICT,
+  'stream-unsupported': HttpStatus.CONFLICT,
 })
 
 const REASONS: Readonly<Record<number, string>> = Object.freeze({

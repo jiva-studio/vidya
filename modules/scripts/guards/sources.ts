@@ -24,25 +24,46 @@ const SKIPPED = new Set([
   'storybook-static',
   '.stryker-tmp',
   '.git',
-  '__tests__',
   'android',
   'ios',
 ])
 
-export const sourcesIn = (directory: string, out: string[] = []): string[] => {
+const TESTS = '__tests__'
+
+/**
+ * Whether the suites are swept too.
+ *
+ * Off by default: most guards describe what the shipped code may contain, and a
+ * suite is allowed to write what it is testing. A guard whose whole subject is a
+ * seam asks for them, because a test that reaches past the seam is the
+ * regression it exists to stop.
+ */
+export type SourceScope = { tests?: boolean }
+
+const isSwept = (entry: string, scope: SourceScope): boolean =>
+  !SKIPPED.has(entry) && (scope.tests === true || entry !== TESTS)
+
+const isSource = (entry: string, scope: SourceScope): boolean =>
+  /\.(ts|vue)$/.test(entry) && (scope.tests === true || !/\.spec\.ts$/.test(entry))
+
+export const sourcesIn = (
+  directory: string,
+  out: string[] = [],
+  scope: SourceScope = {},
+): string[] => {
   for (const entry of readdirSync(directory)) {
-    if (SKIPPED.has(entry)) continue
+    if (!isSwept(entry, scope)) continue
 
     const path = join(directory, entry)
-    if (statSync(path).isDirectory()) sourcesIn(path, out)
-    else if (/\.(ts|vue)$/.test(entry) && !/\.spec\.ts$/.test(entry)) out.push(path)
+    if (statSync(path).isDirectory()) sourcesIn(path, out, scope)
+    else if (isSource(entry, scope)) out.push(path)
   }
 
   return out
 }
 
-export const allSources = (areas: string[] = AREAS): string[] =>
-  areas.flatMap((area) => sourcesIn(join(MODULES, area)))
+export const allSources = (areas: string[] = AREAS, scope: SourceScope = {}): string[] =>
+  areas.flatMap((area) => sourcesIn(join(MODULES, area), [], scope))
 
 export const shortPath = (path: string): string => path.slice(MODULES.length + 1)
 

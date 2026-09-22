@@ -16,9 +16,12 @@ export interface MediaStoragePort {
    * Permission to read one object until `expiresAt`.
    *
    * `kind` decides the window rather than the caller: six hours for audio and
-   * video, one for an image (see `ReadWindowSeconds`).
+   * video, one for an image (see `ReadWindowSeconds`). `mimeType` is what the
+   * row recorded when the bytes landed, and it decides whether the browser is
+   * told to show the file or to save it; without it the object key's own
+   * extension answers, which is what the key was written from.
    */
-  signRead(key: string, kind: MediaKind): Promise<SignedUrl>
+  signRead(key: string, kind: MediaKind, mimeType?: string): Promise<SignedUrl>
 
   /**
    * Permission to read everything under a prefix.

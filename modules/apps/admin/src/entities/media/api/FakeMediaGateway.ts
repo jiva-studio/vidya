@@ -56,6 +56,12 @@ export class FakeMediaGateway implements MediaGateway {
     })
   }
 
+  /**
+   * Nothing to ask anyone: this session's files are already in hand, and a
+   * path from an earlier session has no address to be given one.
+   */
+  async prime(_urls: string[]): Promise<void> {}
+
   async list(query: MediaQuery): Promise<MediaPage> {
     const page = Math.max(1, query.page ?? 1)
     const matching = this.all().filter((record) => this.matches(record, query))
