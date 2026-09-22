@@ -3,20 +3,23 @@ description: "Documentation and spec authoring workflow"
 stages:
   - id: authoring
     role: "Doc Author"
-    verify:
-      type: "diff_present"
     directive: "Write documentation according to style guidelines."
-    on_success: "next"
-    on_failure: "retry"
+    claims:
+      - id: doc-hygiene
+        tool: hygiene
+        no_stubs: true
 
   - id: critic
     role: "Doc Critic"
-    verify:
-      type: "review"
     directive: "Review technical clarity, accuracy, and cross-links."
-    on_success: "next"
-    on_failure: "authoring"
+    claims:
+      - id: doc-critic
+        tool: critic
+        runner: auto
+        checks:
+          - "Technical clarity and cross-links"
 
   - id: gatekeeper
-    verify:
-      type: "all_claims"
+    role: "Gatekeeper"
+    directive: "Verify all task claims in done.yaml."
+    claims: []

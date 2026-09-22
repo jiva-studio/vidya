@@ -37,9 +37,14 @@ class MakeClaimTool(ClaimTool):
                 timeout=timeout,
                 shell=False
             )
+            expected_code = claim.get("expect_exit", 0)
+            if claim.get("expect") in ["fail", "red", "failure"]:
+                passed = (res.returncode != 0)
+            else:
+                passed = (res.returncode == expected_code)
+
             duration_ms = (time.time() - start_time) * 1000
-            passed = (res.returncode == 0)
-            msg = "" if passed else (res.stderr.strip() or res.stdout.strip() or f"make exited with code {res.returncode}")
+            msg = "" if passed else (res.stderr.strip() or res.stdout.strip() or f"make exited with code {res.returncode} (expected {expected_code})")
             return ClaimResult(
                 claim_id=claim_id,
                 kind=self.kind,

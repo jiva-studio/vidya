@@ -7,15 +7,18 @@ from typing import Any, Dict, List, Optional, Tuple
 from done.config import REPO_ROOT, TASKS_DIR
 from done.yaml_loader import load_yaml
 from done.pipeline_loader import load_pipeline_config
+from done.validator import TOOL_REGISTRY
+from done.cache import ClaimCache
 from done.engine import DoneEngine
 
 class PipelineRunner:
-    """Deterministic, Generic State-Machine Runner and Hook Driver for Pipelines."""
+    """Deterministic, Claims-Driven State-Machine Runner and Hook Controller."""
 
     def __init__(self, spec_path: Path):
         self.spec_path = spec_path
         self.task_dir = spec_path.parent
         self.state_file = self.task_dir / "artifacts" / "state.json"
+        self.cache = ClaimCache(self.task_dir)
 
     def read_state(self) -> Dict[str, Any]:
         if not self.state_file.exists():
@@ -65,7 +68,7 @@ class PipelineRunner:
         if 0 <= idx < len(stages):
             stage = stages[idx]
             if isinstance(stage, str):
-                return {"id": stage, "role": stage, "verify": {"type": "all_claims"}}
+                return {"id": stage, "role": stage, "claims": []}
             return stage
         return None
 
@@ -93,17 +96,77 @@ class PipelineRunner:
                     violations.append(f)
         return violations
 
+    def _evaluate_stage_claims(self, stage: Dict[str, Any], manifest: Dict[str, Any]) -> Tuple[bool, List[Dict[str, Any]], str]:
+        """Evaluates stage claims using the unified DoneEngine and claim tools."""
+        stage_claims = stage.get("claims", [])
+        if not stage_claims:
+            # Fall back to evaluating all claims if it's the final gatekeeper
+            engine = DoneEngine(self.spec_path)
+            res = engine.run(is_hook_mode=True)
+            return res.get("passed", False), res.get("results", []), res.get("error", "")
+
+        context = {
+            "task_dir": self.task_dir,
+            "slug": manifest.get("slug", "task"),
+            "spec_data": manifest,
+        }
+
+        all_passed = True
+        results = []
+        err_messages = []
+
+        for claim in stage_claims:
+            kind = claim.get("tool") or claim.get("kind")
+            claim_id = claim.get("id", "stage-claim")
+
+            # Check cache
+            cached = self.cache.get_cached_result(claim)
+            if cached:
+                results.append({
+                    "claim_id": claim_id,
+                    "kind": kind,
+                    "passed": True,
+                    "message": "CACHED",
+                    "cached": True
+                })
+                continue
+
+            tool = TOOL_REGISTRY.get(kind)
+            if not tool:
+                all_passed = False
+                err_messages.append(f"Unknown claim tool: {kind}")
+                continue
+
+            claim_res = tool.execute(claim, context)
+            results.append({
+                "claim_id": claim_id,
+                "kind": kind,
+                "passed": claim_res.passed,
+                "message": claim_res.message,
+                "details": claim_res.details,
+                "cached": False
+            })
+
+            if claim_res.passed:
+                self.cache.store_result(claim, passed=True, message=claim_res.message, details=claim_res.details)
+            else:
+                all_passed = False
+                if claim_res.message:
+                    err_messages.append(f"{claim_id}: {claim_res.message}")
+
+        return all_passed, results, "\n".join(err_messages)
+
     def advance_to_next_stage(self, state: Dict[str, Any], pipeline_cfg: Dict[str, Any], stage_id: str) -> Optional[Dict[str, Any]]:
         state["stages_completed"].append(stage_id)
         state["current_stage_idx"] += 1
         next_stage = self.get_current_stage(state, pipeline_cfg)
-        state["current_stage_id"] = next_stage.get("id") if next_stage else "gatekeeper"
+        state["current_stage_id"] = next_stage.get("id") if next_stage else "completed"
         state["updated_at"] = time.time()
         self.write_state(state)
         return next_stage
 
     def evaluate_and_advance(self, is_hook: bool = True) -> Dict[str, Any]:
-        """Evaluates current stage condition purely based on declarative schema, advancing FSM."""
+        """Unified FSM and Hook evaluation driven strictly by pipeline stage claims."""
         if not self.spec_path.exists():
             return {"decision": "allow", "message": "No active spec found"}
 
@@ -120,7 +183,7 @@ class PipelineRunner:
 
         current_stage = self.get_current_stage(state, pipeline_cfg)
         if not current_stage:
-            # End of stages -> Run final Gatekeeper
+            # All stages completed -> Final Gatekeeper
             engine = DoneEngine(self.spec_path)
             gate_res = engine.run(is_hook_mode=is_hook)
             if gate_res.get("passed"):
@@ -129,117 +192,54 @@ class PipelineRunner:
                 self.write_state(state)
                 return {
                     "decision": "allow",
-                    "reason": f"🎉 Pipeline [{pipeline_name}] for task [{state.get('slug')}] PASSED all quality gates."
+                    "reason": f"🎉 Pipeline [{pipeline_name}] for task [{state.get('slug')}] PASSED all quality claims."
                 }
             else:
                 return {
                     "decision": "continue",
-                    "reason": f"⛔ Gatekeeper verification failed: {gate_res.get('error', 'Quality claims not satisfied')}"
+                    "reason": f"⛔ Final Gatekeeper verification failed:\n{gate_res.get('error', 'Claims not satisfied')}"
                 }
 
         stage_id = current_stage.get("id", "stage")
         stage_role = current_stage.get("role", stage_id)
-        verify_cfg = current_stage.get("verify", {})
-        verify_type = verify_cfg.get("type") if isinstance(verify_cfg, dict) else str(verify_cfg)
 
+        # 1. Boundary & forbidden file edits check
         changed_files = self._get_changed_files()
-
-        # 1. Check forbidden edits if specified
         forbid_patterns = current_stage.get("forbid_edits", [])
-        if isinstance(verify_cfg, dict) and "forbid_edits" in verify_cfg:
-            forbid_patterns.extend(verify_cfg["forbid_edits"])
         if forbid_patterns:
             violations = self._check_forbidden_edits(forbid_patterns, changed_files)
             if violations:
                 return {
                     "decision": "continue",
-                    "reason": f"⛔ Pipeline Stage [{stage_id}]: Modified forbidden files violating role boundaries:\n" + "\n".join([f"  - {v}" for v in violations])
+                    "reason": f"⛔ Stage [{stage_id}] ({stage_role}) modified forbidden files:\n" + "\n".join([f"  - {v}" for v in violations])
                 }
 
-        # 2. Generic Verification Handling
-        if verify_type in ["tests_red", "tests_failed_red"]:
-            patterns = verify_cfg.get("patterns", [".spec.", ".test.", "/tests/", "/specs/"]) if isinstance(verify_cfg, dict) else [".spec.", ".test."]
-            has_matching_tests = any(any(p in f for p in patterns) for f in changed_files)
-            if not has_matching_tests:
-                return {
-                    "decision": "continue",
-                    "reason": f"⛔ Pipeline Stage [{stage_id}] ({stage_role}): Must author test suites matching {patterns} before proceeding."
-                }
+        # 2. Evaluate stage claims
+        passed, results, err_msg = self._evaluate_stage_claims(current_stage, manifest)
+        if not passed:
+            return {
+                "decision": "continue",
+                "reason": f"⛔ Stage [{stage_id}] ({stage_role}) claims not satisfied:\n{err_msg or 'Checks failed'}"
+            }
 
-            next_stage = self.advance_to_next_stage(state, pipeline_cfg, stage_id)
-            next_role = next_stage.get("role", "Implementer") if next_stage else "Gatekeeper"
-            next_directive = next_stage.get("directive", "Implement clean code to satisfy requirements.") if next_stage else "Verify gatekeeper claims."
+        # 3. Advance to next stage upon claim pass
+        next_stage = self.advance_to_next_stage(state, pipeline_cfg, stage_id)
+        if next_stage:
+            next_role = next_stage.get("role", "Next Step")
+            next_directive = next_stage.get("directive", "Proceed to next verification.")
             return {
                 "decision": "continue",
                 "reason": (
-                    f"🚀 STAGE ADVANCEMENT [{stage_id} -> {state['current_stage_id']}]: Red test baseline confirmed.\n"
+                    f"🚀 STAGE ADVANCEMENT [{stage_id} -> {next_stage['id']}]: All claims passed.\n"
                     f"DIRECTIVE FOR {next_role}: {next_directive}"
                 )
             }
-
-        elif verify_type in ["tests_green", "tests_passed_green"]:
-            engine = DoneEngine(self.spec_path)
-            gate_res = engine.run(is_hook_mode=is_hook)
-            if not gate_res.get("passed"):
-                return {
-                    "decision": "continue",
-                    "reason": f"⛔ Pipeline Stage [{stage_id}] ({stage_role}): Tests/verification not yet passing:\n{gate_res.get('error', '')}"
-                }
-
-            next_stage = self.advance_to_next_stage(state, pipeline_cfg, stage_id)
-            next_role = next_stage.get("role", "Next Step") if next_stage else "Gatekeeper"
-            next_directive = next_stage.get("directive", "Proceed to next verification.") if next_stage else "Run final gatekeeper."
-            return {
-                "decision": "continue",
-                "reason": f"🚀 STAGE ADVANCEMENT [{stage_id} -> {state['current_stage_id']}]: Tests passing (Green).\nDIRECTIVE FOR {next_role}: {next_directive}"
-            }
-
-        elif verify_type in ["claim", "mutation"]:
-            engine = DoneEngine(self.spec_path)
-            gate_res = engine.run(is_hook_mode=is_hook)
-            next_stage = self.advance_to_next_stage(state, pipeline_cfg, stage_id)
-            next_role = next_stage.get("role", "Reviewer") if next_stage else "Gatekeeper"
-            next_directive = next_stage.get("directive", "Review changes.") if next_stage else "Complete verification."
-            return {
-                "decision": "continue",
-                "reason": f"🚀 STAGE ADVANCEMENT [{stage_id} -> {state['current_stage_id']}]: Claim executed.\nDIRECTIVE FOR {next_role}: {next_directive}"
-            }
-
-        elif verify_type in ["diff_present"]:
-            if not changed_files:
-                return {
-                    "decision": "continue",
-                    "reason": f"⛔ Pipeline Stage [{stage_id}] ({stage_role}): No file changes detected. Author documentation/code before proceeding."
-                }
-            next_stage = self.advance_to_next_stage(state, pipeline_cfg, stage_id)
-            next_role = next_stage.get("role", "Critic") if next_stage else "Gatekeeper"
-            next_directive = next_stage.get("directive", "Review changes.") if next_stage else "Run gatekeeper."
-            return {
-                "decision": "continue",
-                "reason": f"🚀 STAGE ADVANCEMENT [{stage_id} -> {state['current_stage_id']}]: Changes detected.\nDIRECTIVE FOR {next_role}: {next_directive}"
-            }
-
-        elif verify_type in ["review", "review_approval"]:
-            next_stage = self.advance_to_next_stage(state, pipeline_cfg, stage_id)
-            return {
-                "decision": "continue",
-                "reason": f"🚀 STAGE ADVANCEMENT [{stage_id} -> {state['current_stage_id']}]: Review step completed."
-            }
-
         else:
-            # Default / all_claims
-            engine = DoneEngine(self.spec_path)
-            gate_res = engine.run(is_hook_mode=is_hook)
-            if gate_res.get("passed"):
-                state["status"] = "completed"
-                state["updated_at"] = time.time()
-                self.write_state(state)
-                return {
-                    "decision": "allow",
-                    "reason": f"🎉 Pipeline [{pipeline_name}] for task [{state.get('slug')}] PASSED all quality gates."
-                }
-            else:
-                return {
-                    "decision": "continue",
-                    "reason": f"⛔ Gatekeeper verification failed: {gate_res.get('error', 'Quality gates not met')}"
-                }
+            # Reached end
+            state["status"] = "completed"
+            state["updated_at"] = time.time()
+            self.write_state(state)
+            return {
+                "decision": "allow",
+                "reason": f"🎉 Pipeline [{pipeline_name}] for task [{state.get('slug')}] PASSED all stages and claims."
+            }

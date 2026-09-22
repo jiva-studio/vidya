@@ -3,40 +3,44 @@ description: "Hardened TDD workflow with diff mutation analysis, survived mutant
 stages:
   - id: red-phase
     role: "Test Author"
-    verify:
-      type: "tests_red"
-      patterns: [".spec.", ".test.", "/tests/", "/specs/"]
     directive: "Author Red test suite strictly derived from spec.md acceptance criteria and prove red failure."
-    on_success: "next"
-    on_failure: "retry"
+    forbid_edits: ["modules/libs/**/src/**", "modules/services/**/src/**", "modules/apps/**/src/**"]
+    claims:
+      - id: red-tests-fail
+        tool: make
+        target: test-package
+        expect: "red"
 
   - id: green-phase
     role: "Code Implementer"
-    verify:
-      type: "tests_green"
-      forbid_edits: ["tests/**", "**/*.spec.*", "**/specs/**"]
     directive: "Implement minimal clean code to turn tests green without editing test files."
-    on_success: "next"
-    on_failure: "retry"
+    forbid_edits: ["tests/**", "**/*.spec.*", "**/specs/**"]
+    claims:
+      - id: green-tests-pass
+        tool: make
+        target: check-package
+        expect_exit: 0
 
   - id: mutation-gate
-    verify:
-      type: "claim"
-      claim_tool: "mutation"
-    on_success: "next"
-    on_failure:
-      target: "adversarial-review"
-      pass_artifacts: ["survived_mutants"]
+    role: "Mutation Runner"
+    directive: "Execute mutation testing on diff and surface survived mutants."
+    claims:
+      - id: diff-mutation
+        tool: mutation
+        mode: diff
 
   - id: adversarial-review
     role: "Adversarial Reviewer"
-    verify:
-      type: "review"
-    inputs: ["diff", "survived_mutants"]
     directive: "Break the implementation using intent.md invariants and eliminate all survived mutants."
-    on_success: "next"
-    on_failure: "red-phase"
+    claims:
+      - id: adversarial-audit
+        tool: critic
+        runner: auto
+        checks:
+          - "Intent check & non-goals respected"
+          - "Zero survived mutants"
 
   - id: gatekeeper
-    verify:
-      type: "all_claims"
+    role: "Gatekeeper"
+    directive: "Verify all task claims in done.yaml."
+    claims: []

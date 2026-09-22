@@ -3,12 +3,14 @@ description: "Fast-path workflow for simple hotfixes, formatting, and UI styling
 stages:
   - id: implementation
     role: "Solo Coder"
-    verify:
-      type: "tests_green"
     directive: "Implement fix and verify narrow tests pass."
-    on_success: "next"
-    on_failure: "retry"
+    claims:
+      - id: fast-check
+        tool: make
+        target: check-package
+        expect_exit: 0
 
   - id: gatekeeper
-    verify:
-      type: "all_claims"
+    role: "Gatekeeper"
+    directive: "Verify all task claims in done.yaml."
+    claims: []
