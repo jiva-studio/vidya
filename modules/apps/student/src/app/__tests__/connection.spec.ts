@@ -54,19 +54,30 @@ describe('the transport of the one connection', () => {
 
   it('takes the renewed session, so the next run carries it', async () => {
     signIn()
+    useConnection().adopt({ needsSignIn: true })
 
-    await expect(renewSession(fakeHttpClient(renewed))).resolves.toBe(true)
+    const postSpy = vi.fn().mockResolvedValue(renewed)
+    const client = { post: postSpy } as unknown as HttpClient
+
+    await expect(renewSession(client)).resolves.toBe(true)
+    expect(postSpy).toHaveBeenCalledWith('/auth/refresh', {
+      refreshToken: 'first-refresh',
+    })
     expect(useConnection().connection.value?.session).toEqual(renewed)
+    expect(useConnection().connection.value?.needsSignIn).toBe(false)
   })
 
   it('answers that it could not renew, and signs nobody out for it', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     signIn()
 
-    await expect(renewSession(fakeHttpClient(new Error('refused')))).resolves.toBe(false)
+    const err = new Error('refused')
+    await expect(renewSession(fakeHttpClient(err))).resolves.toBe(false)
 
     const { connection, isSignedIn } = useConnection()
     expect(isSignedIn.value).toBe(true)
     expect(connection.value?.needsSignIn).toBe(true)
+    expect(warnSpy).toHaveBeenCalledWith('the session could not be renewed', err)
   })
 
   it('does not ask for a renewal it has no token for', async () => {

@@ -85,7 +85,16 @@ describe('the one connection', () => {
     const connection = useConnection()
 
     connection.restore()
+    expect(connection.connection.value).toBeUndefined()
 
+    // Missing ownerId
+    localStorage.setItem('vidya.student.connection', JSON.stringify({ refreshToken: 'tok' }))
+    connection.restore()
+    expect(connection.connection.value).toBeUndefined()
+
+    // Missing refreshToken
+    localStorage.setItem('vidya.student.connection', JSON.stringify({ ownerId: 'user-1' }))
+    connection.restore()
     expect(connection.connection.value).toBeUndefined()
   })
 
