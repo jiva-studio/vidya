@@ -4,6 +4,7 @@
   "testRunner": "command",
   "commandRunner": { "command": "npx vitest run --exclude '**/contentSecurityPolicy.spec.ts'" },
   "coverageAnalysis": "off",
+  "inPlace": true,
   "incremental": true,
   "incrementalFile": "../../../.stryker/incremental/student.json",
   "mutate": [
