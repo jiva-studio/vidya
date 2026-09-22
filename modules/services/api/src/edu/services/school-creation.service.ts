@@ -6,6 +6,20 @@ import * as domain from '@vidya/domain'
 import { Role, School, User } from '@vidya/entities'
 import { Repository } from 'typeorm'
 
+/**
+ * Keys of the role that keeps a school's storage working: enough to configure
+ * the bucket and manage what sits in it, and nothing that touches the school's
+ * own presentation.
+ */
+const TECHNICAL_SPECIALIST_PERMISSIONS: domain.PermissionKey[] = [
+  'storage:read',
+  'storage:update',
+  'media:read',
+  'media:upload',
+  'media:delete',
+  'schools:read',
+]
+
 @Injectable()
 export class SchoolCreationService {
   constructor(
@@ -25,6 +39,15 @@ export class SchoolCreationService {
         description: 'Owner of the school',
         schoolId: school.id,
         permissions: ['*'],
+      })
+
+      // Created alongside the owner so a school is never left with storage
+      // nobody but its owner can configure.
+      const technicalRole = await transaction.save(Role, {
+        name: 'Technical Specialist',
+        description: 'Keeps the school storage configured',
+        schoolId: school.id,
+        permissions: TECHNICAL_SPECIALIST_PERMISSIONS,
       })
 
       // Find the user
@@ -51,7 +74,11 @@ export class SchoolCreationService {
           subjectType: 'school',
           subjectId: school.id,
           schoolId: school.id,
-          payload: { ownerId: userId, ownerRoleId: adminRole.id },
+          payload: {
+            ownerId: userId,
+            ownerRoleId: adminRole.id,
+            technicalRoleId: technicalRole.id,
+          },
         },
         transaction,
       )

@@ -1,0 +1,28 @@
+{
+  "name": "upload-grant-put",
+  "endpoint": "POST /media/uploads",
+  "description": "A grant on a provider without POST policies, which is every Bunny zone: the method is PUT and the size and type are bound by signing their headers, because a presigned PUT carries no conditions of its own. The row exists before the grant is issued — its id is in the object key — and `fields` is empty for PUT. `sha256` is present because the file is under the hashing limit.",
+  "request": {
+    "schoolId": "6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f",
+    "kind": "image",
+    "name": "lesson-cover.png",
+    "mimeType": "image/png",
+    "sizeBytes": 402118,
+    "sha256": "qvS1pYTxvE0ByS3+7t7nB3qP0uZ8mM+8Jt2cM6bP0Wc="
+  },
+  "status": 201,
+  "response": {
+    "mediaId": "b2c3d4e5-6f70-4812-9a3b-4c5d6e7f8091",
+    "grant": {
+      "method": "put",
+      "url": "https://de-s3.storage.bunnycdn.com/vidya-demo/school/6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f/image/b2c3d4e5-6f70-4812-9a3b-4c5d6e7f8091/original.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-SignedHeaders=content-length%3Bcontent-type%3Bhost%3Bx-amz-checksum-sha256&X-Amz-Expires=900&X-Amz-Signature=REDACTED",
+      "headers": {
+        "Content-Type": "image/png",
+        "Content-Length": "402118",
+        "x-amz-checksum-sha256": "qvS1pYTxvE0ByS3+7t7nB3qP0uZ8mM+8Jt2cM6bP0Wc="
+      },
+      "fields": {},
+      "expiresAt": "2026-09-21T12:15:00.000Z"
+    }
+  }
+}

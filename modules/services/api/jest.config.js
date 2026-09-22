@@ -2,6 +2,12 @@ module.exports = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: 'src',
   testRegex: '.*\\.spec\\.ts$',
+  // `*.storage.spec.ts` needs a real S3 and is run by
+  // `scripts/vidya-test-suite-run storage-required`, which overrides this.
+  // Unlike the postgres suites there is no in-file gate to skip behind: a
+  // suite that asks a provider what it does cannot answer half of it without
+  // one, and a silent skip would report a pass for a contract never checked.
+  testPathIgnorePatterns: ['/node_modules/', '\\.storage\\.spec\\.ts$'],
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },

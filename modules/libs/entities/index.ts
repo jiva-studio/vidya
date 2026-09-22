@@ -8,12 +8,15 @@ import { Lesson } from './lesson'
 import { LessonVersion } from './lessonVersion'
 import { Role } from './role'
 import { School } from './school'
+import { SchoolStorageQuota } from './schoolStorageQuota'
+import { StorageProfile } from './storageProfile'
 import { SyncJournal } from './syncJournal'
 import { User } from './user'
 import { UserRole } from './userRole'
 
 export type { AuditAction } from './auditLog'
 export type { SchoolConfig } from './school'
+export type { SealedText, StorageSecrets } from './storageProfile'
 export type { SyncOp, SyncScopeKind } from './syncJournal'
 export type { GroupStatus } from '@vidya/domain'
 
@@ -29,6 +32,8 @@ export {
   LessonVersion,
   Role,
   School,
+  SchoolStorageQuota,
+  StorageProfile,
   SyncJournal,
   User,
   UserRole,
@@ -44,6 +49,8 @@ export const Entities = [
   Lesson,
   LessonVersion,
   School,
+  SchoolStorageQuota,
+  StorageProfile,
   SyncJournal,
   User,
   Role,

@@ -108,6 +108,26 @@ Each checkout derives its own test database name, so several worktrees can share
 one Postgres server without dropping each other's schema. `make db-testdb-drop`
 reclaims the databases of checkouts that no longer exist.
 
+### Tests against real storage
+
+A fake storage port cannot answer what a provider does: whether a signed
+`Content-Length` is honoured, whether a range request comes back as `206`,
+whether a POST policy exists at all. Those are the provider's properties, and
+every provider answers differently — Bunny has no POST policy and no lifecycle
+rules, MinIO has both.
+
+```bash
+make dev-up                  # brings up MinIO on 7804 (console 7805, bucket created)
+make test-storage-required   # only the *.storage.spec.ts suites
+```
+
+Like `test-postgres-required`, it refuses to report a pass for suites it could
+not run — in both directions: no S3 reachable, or no such suites found. The
+stand's MinIO doubles as the installation's default storage, so a school that
+hands over no credentials of its own writes there (`make dev` exports the
+`VIDYA_MEDIA_DEFAULT_*` fixtures; see the "Local stand" section of the root
+`Makefile`).
+
 ### Mutation testing
 
 Coverage says a line ran. Mutation testing says the suite would have noticed if

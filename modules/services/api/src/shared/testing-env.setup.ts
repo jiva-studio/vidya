@@ -13,3 +13,11 @@
  * key to be unpredictable.
  */
 process.env.VIDYA_JWT_SECRET ||= 'test-fixture-jwt-secret-not-for-production-use'
+
+/**
+ * The media master key, for the same reason and on the same terms: suites that
+ * boot the whole `AppModule` need one, and none of them is testing it. The
+ * value is a fixture — committed, so it must never protect anything real — and
+ * the suite that exercises booting without a key removes it itself.
+ */
+process.env.VIDYA_MEDIA_MASTER_KEY ||= Buffer.alloc(32, 7).toString('base64')
