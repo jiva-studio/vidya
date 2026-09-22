@@ -1,39 +1,17 @@
 -- Where a school's files live, and with what keys.
 --
--- A profile is never edited: new keys retire this row and the school points at
--- a new one, because files already uploaded are read through the profile that
--- wrote them. Rotating a key under published content would otherwise break
--- every file a school has.
---
--- `provider` is named rather than inferred, and the endpoint is derived from it
--- wherever it can be — `s3.<region>.amazonaws.com`,
--- `<region>-s3.storage.bunnycdn.com`, `<account>.r2.cloudflarestorage.com`. A
--- school picks its provider and types keys, not a URL. Only `s3-compatible`
--- carries an endpoint of its own, and that is the one case the SSRF allowlist
--- has to police: a free-form address is one the API dials from inside its own
--- network. rclone models the same set the same way, for the same reason.
---
--- The sealed keys live in one `secrets` document rather than in three pairs of
--- bytea columns. What is sealed is one envelope — a data key wrapped by the
--- installation's master key, and under it the storage secret and the CDN token
--- secret — so splitting it across the schema only spread the encryption over
--- six columns that must be written and read together or not at all.
---
--- What this table does NOT hold, on purpose:
---
---   * how much a school has stored. That is `SUM(sizeBytes)` over its ready
---     files, which cannot drift; a counter here already produced a defect, by
---     being incremented on the profile that wrote the file while the quota was
---     read from the profile that is current, so a key rotated on the same
---     bucket reset the count to zero. A stored counter earns its keep at
---     millions of rows, not at a school library's thousands.
---   * the video provider. A transcoding library is a second vendor
---     relationship, not a bucket's credentials, and it gets its own table when
---     one is needed.
+-- A profile is never edited: new keys retire this row and the school points at a
+-- new one, because files already uploaded are read through the profile that
+-- wrote them. Why the table is shaped this way — the derived addresses, the
+-- single sealed document, what it deliberately does not hold — is in
+-- `docs/adr/003 School Storage Profiles.md`.
 
 CREATE TABLE "storage_profiles" (
   "id"            uuid NOT NULL DEFAULT uuid_generate_v4(),
-  "schoolId"      uuid NOT NULL,
+
+  -- Null for the installation's own bucket, lent to every school that brought
+  -- no keys of its own under its `school/<id>` prefix.
+  "schoolId"      uuid,
 
   -- 'aws' | 'bunny' | 'r2' | 's3-compatible'
   "provider"      character varying NOT NULL,
@@ -74,16 +52,21 @@ CREATE TABLE "storage_profiles" (
     REFERENCES "schools" ("id") ON DELETE CASCADE
 );
 
+-- Lookups over a school's retired profiles, which the partial index below does
+-- not cover: an old file is read through the profile that wrote it.
 CREATE INDEX "IDX_storage_profiles_school" ON "storage_profiles" ("schoolId");
 
 -- A school has one live profile at a time, and the database is what says so:
 -- two grants asking at once must not lend the same school two buckets.
--- Declared after the plain index on purpose — pg-mem matches a partial index by
--- its columns without reading the predicate, and finds this one first
--- otherwise.
 CREATE UNIQUE INDEX "UQ_storage_profiles_live_per_school"
   ON "storage_profiles" ("schoolId")
   WHERE "retiredAt" IS NULL;
+
+-- And the installation has one, which needs an index of its own: nulls are
+-- distinct to the index above, so it would permit any number of these rows.
+CREATE UNIQUE INDEX "UQ_storage_profiles_live_installation"
+  ON "storage_profiles" (("schoolId" IS NULL))
+  WHERE "schoolId" IS NULL AND "retiredAt" IS NULL;
 
 -- What a school may store. Policy, not measurement: null means no ceiling of
 -- ours, which is what a school paying its own provider gets.

@@ -10,6 +10,18 @@ const matchesSuffix = (host: string, suffix: string): boolean =>
   host === suffix || host.endsWith(`.${suffix}`)
 
 /**
+ * An address that passed the check, and the addresses it passed it on.
+ *
+ * The addresses travel with the approval because they are the whole of what was
+ * approved: a name is the school's to re-point at any moment, so a dial that
+ * resolves it again is dialling something nobody checked.
+ */
+export type ApprovedEndpoint = {
+  endpoint: string
+  addresses: string[]
+}
+
+/**
  * Decides whether the API will dial an address a school typed in.
  *
  * The school's endpoint is reached from inside our network, which makes it a
@@ -25,7 +37,7 @@ export class EndpointGuardService {
     @Inject(MEDIA_ADDRESS_RESOLVER) private readonly resolver: AddressResolverPort,
   ) {}
 
-  async assertEndpointAllowed(endpoint: string): Promise<void> {
+  async assertEndpointAllowed(endpoint: string): Promise<ApprovedEndpoint> {
     const host = this.parseHttpsHost(endpoint)
 
     if (!this.config.endpointAllowlist.some((suffix) => matchesSuffix(host, suffix))) {
@@ -37,12 +49,18 @@ export class EndpointGuardService {
     if (addresses.length === 0 || !addresses.every(isPublicAddress)) {
       throw new StorageFailedError('endpoint-rejected')
     }
+
+    return { endpoint, addresses }
   }
 
   private parseHttpsHost(endpoint: string): string {
     try {
       const url = new URL(endpoint)
       if (url.protocol !== 'https:') throw new StorageFailedError('endpoint-rejected')
+
+      // A credential in front of the host is stripped before the dial, which
+      // makes it a password stored in an address rather than a way past this.
+      if (url.username || url.password) throw new StorageFailedError('endpoint-rejected')
 
       return url.hostname.replace(/^\[|\]$/g, '')
     } catch {

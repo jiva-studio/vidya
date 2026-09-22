@@ -72,7 +72,6 @@ describe('handing a school its own storage credentials', () => {
       id: response.body.data.id,
       schoolId: ctx.one.school.id,
       prefix: credentials.prefix,
-      usedBytes: 0,
       verifiedAt: response.body.data.verifiedAt,
     })
   })

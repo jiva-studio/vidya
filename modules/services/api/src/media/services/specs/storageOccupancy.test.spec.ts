@@ -89,7 +89,6 @@ describe('the bytes a school occupies', () => {
       profiles,
       new StorageQuotasService(ds),
       new SecretSealingService(config),
-      usage,
     )
 
     schoolId = await schoolNamed('One')

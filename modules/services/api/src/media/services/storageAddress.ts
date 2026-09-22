@@ -18,6 +18,30 @@ const label = (value: string | null | undefined): string => {
 }
 
 /**
+ * A host and nothing in front of it.
+ *
+ * Credentials written into the address (`https://user:password@host`) are
+ * refused rather than dropped: the client strips them before dialling, so what
+ * they really are is a password in a column that is read back to everyone with
+ * `storage:read` and repeated into the audit trail.
+ */
+const httpsAddress = (endpoint: string): string => {
+  let url: URL
+
+  try {
+    url = new URL(endpoint)
+  } catch {
+    throw new StorageFailedError('endpoint-rejected')
+  }
+
+  if (url.protocol !== 'https:' || url.username || url.password) {
+    throw new StorageFailedError('endpoint-rejected')
+  }
+
+  return endpoint
+}
+
+/**
  * The address of each provider we drive, one builder apiece.
  *
  * A school picks a provider and types keys, never a URL: the host is ours to
@@ -32,7 +56,7 @@ const addressBuilders: Record<StorageProvider, (ask: StorageAddressAsk) => strin
   's3-compatible': (ask) => {
     if (!ask.endpoint) throw new StorageFailedError('endpoint-rejected')
 
-    return ask.endpoint
+    return httpsAddress(ask.endpoint)
   },
 }
 

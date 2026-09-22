@@ -40,13 +40,13 @@ export class StorageProbeService {
       sizeBytes: PROBE_BODY.length,
     })
 
-    await this.http.writeByGrant(grant, PROBE_BODY)
+    await this.http.writeByGrant(grant, PROBE_BODY, credentials.addresses)
 
     const stored = await storage.head(key)
     if (!stored) throw new StorageFailedError('unreachable')
 
     const signed = await storage.signRead(key, 'image')
-    await this.http.readRange(signed.url, PROBE_BODY.length)
+    await this.http.readRange(signed.url, PROBE_BODY.length, credentials.addresses)
 
     await storage.remove(key)
   }

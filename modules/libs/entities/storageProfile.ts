@@ -48,8 +48,10 @@ export class StorageProfile {
   @PrimaryGeneratedColumn('uuid')
   id: StorageProfileId
 
-  @Column({ type: 'uuid', nullable: false })
-  schoolId: SchoolId
+  // Null for the installation's own bucket, which every school without keys of
+  // its own writes into: one row, lent under each school's prefix.
+  @Column({ type: 'uuid', nullable: true })
+  schoolId: SchoolId | null
 
   @Column({ type: 'character varying', nullable: false })
   provider: StorageProvider

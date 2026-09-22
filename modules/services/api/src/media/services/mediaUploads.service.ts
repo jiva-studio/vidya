@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { MediaConfig } from '@vidya/api/configs'
-import { hasOwnCredentials, toMediaRecord } from '@vidya/api/media/mappers'
+import { toMediaRecord } from '@vidya/api/media/mappers'
 import { MediaId, StoredObject, UserId } from '@vidya/domain'
 import { Media, StorageProfile } from '@vidya/entities'
 import * as protocol from '@vidya/protocol'
@@ -133,7 +133,7 @@ export class MediaUploadsService {
   private async assertRoomFor(reserved: Media, profile: StorageProfile): Promise<void> {
     const quotaBytes = quotaBytesFor(
       await this.quotas.findQuotaBytes(reserved.schoolId),
-      hasOwnCredentials(profile),
+      profile.schoolId !== null,
       this.config.defaultQuotaBytes,
     )
 

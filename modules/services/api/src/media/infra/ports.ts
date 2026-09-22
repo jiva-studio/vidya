@@ -1,6 +1,14 @@
 import { MediaStoragePort, UploadGrant } from '@vidya/domain'
 
-/** Everything needed to reach one bucket, as a school hands it over. */
+/**
+ * Everything needed to reach one bucket, as a school hands it over.
+ *
+ * `addresses` is what the endpoint check approved: the dial connects to one of
+ * them and never resolves the name a second time, so the host cannot be moved
+ * to an address nobody checked between the approval and the request. It is
+ * absent for a host we composed ourselves, which is not the school's to
+ * re-point and goes through no check to pin.
+ */
 export type StorageCredentials = {
   endpoint: string
   region: string
@@ -8,6 +16,7 @@ export type StorageCredentials = {
   prefix: string
   accessKeyId: string
   secret: string
+  addresses?: string[]
 }
 
 /**
@@ -29,8 +38,8 @@ export interface MediaStorageFactory {
  * that used a private path would prove a path nobody uses.
  */
 export interface SignedHttpPort {
-  writeByGrant(grant: UploadGrant, body: Buffer): Promise<void>
-  readRange(url: string, lengthBytes: number): Promise<Buffer>
+  writeByGrant(grant: UploadGrant, body: Buffer, addresses?: string[]): Promise<void>
+  readRange(url: string, lengthBytes: number, addresses?: string[]): Promise<Buffer>
 }
 
 /**

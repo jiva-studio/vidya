@@ -3,8 +3,9 @@ import { ConfigType } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
 import { MediaConfig } from '@vidya/api/configs'
-import { RedisService } from '@vidya/api/shared/services'
+import { AuditLogService, RedisService } from '@vidya/api/shared/services'
 import {
+  AuditLog,
   Media,
   Role,
   School,
@@ -41,6 +42,7 @@ import {
   MediaUsageService,
   SchoolStorageService,
   SecretSealingService,
+  StorageAuditService,
   StorageProbeService,
   StorageProfilesService,
   StorageQuotasService,
@@ -91,6 +93,7 @@ const storageProviders: Provider[] = [
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      AuditLog,
       Media,
       StorageProfile,
       SchoolStorageQuota,
@@ -107,6 +110,7 @@ const storageProviders: Provider[] = [
     RedisService,
     AuthUsersService,
     RevokedTokensService,
+    AuditLogService,
 
     ...storageProviders,
 
@@ -120,6 +124,7 @@ const storageProviders: Provider[] = [
     MediaUsageService,
     SchoolStorageService,
     SecretSealingService,
+    StorageAuditService,
     StorageProbeService,
     StorageProfilesService,
     StorageQuotasService,
