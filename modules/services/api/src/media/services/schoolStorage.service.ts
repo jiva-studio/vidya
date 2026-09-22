@@ -4,7 +4,9 @@ import { StorageProfile } from '@vidya/entities'
 
 import { MEDIA_STORAGE, MediaStorageFactory, StorageCredentials } from '../infra/ports'
 import { StorageFailedError } from '../storageFailure'
+import { InstallationStorageService } from './installationStorage.service'
 import { SecretSealingService } from './secretSealing.service'
+import { storageEndpointFor } from './storageAddress'
 import { StorageProfilesService } from './storageProfiles.service'
 
 /** A bucket a school's files live in, together with the row that named it. */
@@ -19,18 +21,23 @@ export type SchoolStorage = {
  * A file is always reached through the profile that wrote it rather than the
  * school's current one: a school that changes bucket keeps everything it has
  * already published readable, and only new uploads follow the new keys.
+ *
+ * A school that has handed over no credentials is not refused: it is given the
+ * storage of the installation, under a prefix of its own.
  */
 @Injectable()
 export class SchoolStorageService {
   constructor(
     @Inject(MEDIA_STORAGE) private readonly storages: MediaStorageFactory,
+    private readonly installation: InstallationStorageService,
     private readonly profiles: StorageProfilesService,
     private readonly sealing: SecretSealingService,
   ) {}
 
   async openCurrent(schoolId: SchoolId): Promise<SchoolStorage> {
-    const profile = await this.profiles.findCurrentFor(schoolId)
-    if (!profile) throw new StorageFailedError('not-configured')
+    const profile =
+      (await this.profiles.findCurrentFor(schoolId)) ??
+      (await this.installation.provisionProfileFor(schoolId))
 
     return this.openProfile(profile)
   }
@@ -49,13 +56,14 @@ export class SchoolStorageService {
 
   private credentialsOf(profile: StorageProfile): StorageCredentials {
     return {
-      endpoint: profile.endpoint,
+      delivery: profile.delivery,
+      endpoint: storageEndpointFor(profile.provider, profile),
       region: profile.region,
       bucket: profile.bucket,
       prefix: profile.prefix,
       accessKeyId: profile.accessKeyId,
-      secret: this.sealing.openSecret(profile, {
-        schoolId: profile.schoolId as SchoolId,
+      secret: this.sealing.openSecret(profile.secrets, {
+        schoolId: profile.schoolId,
         profileId: profile.id,
       }),
     }

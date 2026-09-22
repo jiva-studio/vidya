@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { EmptyState, FailureState, Input, Pagination, Skeleton } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 
 import type { MediaRecord } from '@/entities/media'
-import { useMediaGateway } from '@/entities/media'
+import { useMediaAddresses } from '@/entities/media'
 
 import { useMediaLibrary } from '../model'
 import MediaLibraryTile from './MediaLibraryTile.vue'
@@ -23,7 +23,7 @@ const emit = defineEmits<MediaLibraryPanelEmits>()
 
 const { $t } = useFluent()
 
-const gateway = useMediaGateway()
+const { addressOf, readListed } = useMediaAddresses()
 const library = useMediaLibrary(props.kind)
 
 const showing = computed(() => !library.loading.value && !library.error.value)
@@ -35,6 +35,9 @@ const paged = computed(() => showing.value && library.total.value > library.page
 onMounted(() => {
   void library.open()
 })
+
+// Every page of the library is one batch: a grid of dozens cannot ask per tile.
+watch(library.items, (listed) => void readListed(listed))
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -56,10 +59,10 @@ function onPick(record: MediaRecord) {
 
 /* -------------------------------- Helpers --------------------------------- */
 
-// A file this session never held has no address to show, so the tile falls back
-// to the icon for its kind rather than to a broken image.
-function addressOf(record: MediaRecord): string | undefined {
-  return gateway.resolve(record.url)
+// A file the server signed no address for falls back to the icon for its kind
+// rather than to a broken image.
+function srcOf(record: MediaRecord): string | undefined {
+  return addressOf(record.url)
 }
 </script>
 
@@ -86,7 +89,7 @@ function addressOf(record: MediaRecord): string | undefined {
     />
     <ul v-else :class="gridClasses">
       <li v-for="record in library.items.value" :key="record.id">
-        <MediaLibraryTile :record="record" :src="addressOf(record)" @pick="onPick" />
+        <MediaLibraryTile :record="record" :src="srcOf(record)" @pick="onPick" />
       </li>
     </ul>
     <Pagination

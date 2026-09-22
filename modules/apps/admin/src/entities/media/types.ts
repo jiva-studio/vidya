@@ -45,12 +45,16 @@ export interface UploadRequest {
  * Everything the editor needs from storage, and the seam the fake stands in.
  *
  * `resolve` exists because a stored `/media/<id>` means nothing to an `img`
- * until something hands back an address for it.
+ * until something hands back an address for it, and it is synchronous for the
+ * same reason: an element cannot wait for a promise. `prime` is the batch that
+ * fills it — one call for a whole screen — and it is optional because a
+ * gateway holding its own files has nothing to ask anyone.
  */
 export interface MediaGateway {
   upload(request: UploadRequest): Promise<MediaRecord>
   list(query: MediaQuery): Promise<MediaPage>
   resolve(url: string): string | undefined
+  prime?(urls: string[]): Promise<void>
 }
 
 /** What a picker hands back, whichever way the file was chosen. */

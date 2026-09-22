@@ -9,9 +9,10 @@ const ROUTE = 'POST /edu/schools/:schoolId/storage/verify'
 
 /**
  * A secret is sealed against the row that holds it: the school and the profile
- * are part of the additional data, so a ciphertext lifted from one row and
- * written into another stops being readable. These suites move it by hand
- * through SQL, which is what a leaked dump or a mistaken migration would do.
+ * are part of the additional data, so the envelope lifted from one row and
+ * written into another stops being readable. These suites move the whole
+ * `secrets` document by hand through SQL, which is what a leaked dump or a
+ * mistaken migration would do.
  */
 describe('a secret carried into a row it was not sealed for', () => {
   let app: INestApplication
@@ -54,7 +55,11 @@ describe('a secret carried into a row it was not sealed for', () => {
     const retired = await configure(ctx.one.school.id, ctx.one.users.owner)
     const current = await configure(ctx.one.school.id, ctx.one.users.owner)
 
-    await ctx.moveSecretCiphertext(retired.body.data.id, current.body.data.id)
+    await ctx.moveSecrets(retired.body.data.id, current.body.data.id)
+    await expect(ctx.sealedSecretsOf(current.body.data.id)).resolves.toEqual(
+      await ctx.sealedSecretsOf(retired.body.data.id),
+    )
+
     const response = await verify(ctx.one.school.id, ctx.one.users.owner)
 
     expect(response.status).toBe(refusal.status)
@@ -69,7 +74,11 @@ describe('a secret carried into a row it was not sealed for', () => {
     const mine = await configure(ctx.one.school.id, ctx.one.users.owner)
     const theirs = await configure(ctx.two.school.id, ctx.two.users.technician)
 
-    await ctx.moveSecretCiphertext(theirs.body.data.id, mine.body.data.id)
+    await ctx.moveSecrets(theirs.body.data.id, mine.body.data.id)
+    await expect(ctx.sealedSecretsOf(mine.body.data.id)).resolves.toEqual(
+      await ctx.sealedSecretsOf(theirs.body.data.id),
+    )
+
     const response = await verify(ctx.one.school.id, ctx.one.users.owner)
 
     expect(response.status).toBe(refusal.status)
@@ -86,7 +95,7 @@ describe('a secret carried into a row it was not sealed for', () => {
     const mine = await configure(ctx.one.school.id, ctx.one.users.owner)
     const theirs = await configure(ctx.two.school.id, ctx.two.users.technician)
 
-    await ctx.moveSecretCiphertext(theirs.body.data.id, mine.body.data.id)
+    await ctx.moveSecrets(theirs.body.data.id, mine.body.data.id)
     const response = await verify(ctx.one.school.id, ctx.one.users.owner)
 
     expect(response.status).toBe(409)
@@ -99,7 +108,7 @@ describe('a secret carried into a row it was not sealed for', () => {
     const mine = await configure(ctx.one.school.id, ctx.one.users.owner)
     const theirs = await configure(ctx.two.school.id, ctx.two.users.technician)
 
-    await ctx.moveSecretCiphertext(theirs.body.data.id, mine.body.data.id)
+    await ctx.moveSecrets(theirs.body.data.id, mine.body.data.id)
     const response = await verify(ctx.one.school.id, ctx.one.users.owner)
 
     expect(response.status).toBe(409)

@@ -5,12 +5,14 @@ import { checkCyrillicText } from './cyrillicText.ts'
 import { checkDomainLiterals } from './domainLiterals.ts'
 import { checkLocaleKeys } from './localeKeys.ts'
 import { checkRecordString } from './recordString.ts'
+import { checkTransportRoot } from './transportRoot.ts'
 
 const GUARDS = [
   { name: 'locale keys assembled at runtime', run: checkLocaleKeys },
   { name: 'lifecycle lists copied out of the domain', run: checkDomainLiterals },
   { name: 'string-keyed maps of lifecycle states', run: checkRecordString },
   { name: 'human text written into a screen', run: checkCyrillicText },
+  { name: 'the transport reached for instead of taken', run: checkTransportRoot },
   { name: 'attribution', run: checkAttribution },
 ]
 

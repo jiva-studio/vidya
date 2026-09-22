@@ -3,14 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { manualClock } from '@/shared/lib'
 
-import {
-  FailingUploadPrefix,
-  FakeMediaGateway,
-  HttpMediaGateway,
-  MediaError,
-  mediaFixtures,
-  MediaPageSize,
-} from '..'
+import { FailingUploadPrefix, FakeMediaGateway, mediaFixtures, MediaPageSize } from '..'
 
 const file = (name: string, type = 'image/png') => new File(['x'.repeat(64)], name, { type })
 
@@ -210,15 +203,5 @@ describe('the library the school appears to have', () => {
 
     expect(page.items).toEqual([])
     expect(page.total).toBe(0)
-  })
-})
-
-describe('the implementation that will replace it', () => {
-  it('refuses to be used while nothing serves a file', async () => {
-    const gateway = new HttpMediaGateway()
-
-    await expect(gateway.upload({ file: file('Chart.png') })).rejects.toBeInstanceOf(MediaError)
-    await expect(gateway.list({})).rejects.toBeInstanceOf(MediaError)
-    expect(gateway.resolve('/media/abc')).toBeUndefined()
   })
 })

@@ -3,12 +3,23 @@ import { ConfigType } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
 import { MediaConfig } from '@vidya/api/configs'
-import { RedisService } from '@vidya/api/shared/services'
-import { Media, Role, School, StorageProfile, User, UserRole } from '@vidya/entities'
+import { CLOCK, systemClock } from '@vidya/api/shared/clock'
+import { AuditLogService, RedisService } from '@vidya/api/shared/services'
+import {
+  AuditLog,
+  Media,
+  Role,
+  School,
+  SchoolStorageQuota,
+  StorageProfile,
+  User,
+  UserRole,
+} from '@vidya/entities'
 
 import {
   MediaCatalogController,
   MediaUploadsController,
+  MediaUrlsController,
   StorageProfilesController,
 } from './controllers'
 import {
@@ -23,8 +34,11 @@ import {
 } from './infra'
 import {
   EndpointGuardService,
+  InstallationStorageService,
+  MediaAddressesService,
   MediaCatalogService,
   MediaMasterKeyService,
+  MediaReadAccessService,
   MediaRowsService,
   MediaSweepSchedule,
   MediaSweepService,
@@ -32,8 +46,10 @@ import {
   MediaUsageService,
   SchoolStorageService,
   SecretSealingService,
+  StorageAuditService,
   StorageProbeService,
   StorageProfilesService,
+  StorageQuotasService,
   StorageSetupService,
 } from './services'
 
@@ -48,6 +64,9 @@ const pickDriver = <TPort>(config: ConfigType<typeof MediaConfig>, fake: TPort, 
  * real driver says so through the environment instead of undoing an override.
  */
 const storageProviders: Provider[] = [
+  // The signature windows are rounded to wall-clock boundaries, so the instant
+  // a driver signs at has to be movable by a suite.
+  { provide: CLOCK, useValue: systemClock },
   InMemoryStorage,
   S3StorageFactory,
   FetchSignedHttp,
@@ -79,19 +98,39 @@ const storageProviders: Provider[] = [
  * concerns that belong together and beside nothing else.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Media, StorageProfile, School, User, Role, UserRole])],
-  controllers: [StorageProfilesController, MediaUploadsController, MediaCatalogController],
+  imports: [
+    TypeOrmModule.forFeature([
+      AuditLog,
+      Media,
+      StorageProfile,
+      SchoolStorageQuota,
+      School,
+      User,
+      Role,
+      UserRole,
+    ]),
+  ],
+  controllers: [
+    StorageProfilesController,
+    MediaUploadsController,
+    MediaCatalogController,
+    MediaUrlsController,
+  ],
   providers: [
     // What the authentication guard needs to read a token; `AuthModule`
     // exports nothing, so every context that guards a route provides them.
     RedisService,
     AuthUsersService,
     RevokedTokensService,
+    AuditLogService,
 
     ...storageProviders,
 
     EndpointGuardService,
+    InstallationStorageService,
+    MediaAddressesService,
     MediaCatalogService,
+    MediaReadAccessService,
     MediaRowsService,
     MediaSweepSchedule,
     MediaSweepService,
@@ -99,8 +138,10 @@ const storageProviders: Provider[] = [
     MediaUsageService,
     SchoolStorageService,
     SecretSealingService,
+    StorageAuditService,
     StorageProbeService,
     StorageProfilesService,
+    StorageQuotasService,
     StorageSetupService,
     MediaMasterKeyService,
   ],

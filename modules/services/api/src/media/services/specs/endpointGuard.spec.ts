@@ -29,7 +29,10 @@ describe('the endpoint a school points the API at', () => {
 
     await expect(
       guard.assertEndpointAllowed('https://s3.eu-central-1.amazonaws.com'),
-    ).resolves.toBeUndefined()
+    ).resolves.toEqual({
+      endpoint: 'https://s3.eu-central-1.amazonaws.com',
+      addresses: ['52.219.44.10'],
+    })
   })
 
   it('is refused over plain http, which anyone on the path can read', async () => {
@@ -67,7 +70,10 @@ describe('the endpoint a school points the API at', () => {
   it('admits the suffix itself, not only a name below it', async () => {
     const { guard } = guardWith({ 'amazonaws.com': ['52.219.44.10'] })
 
-    await expect(guard.assertEndpointAllowed('https://amazonaws.com')).resolves.toBeUndefined()
+    await expect(guard.assertEndpointAllowed('https://amazonaws.com')).resolves.toEqual({
+      endpoint: 'https://amazonaws.com',
+      addresses: ['52.219.44.10'],
+    })
   })
 
   // What a name resolves to is the school's to change at any moment, so the

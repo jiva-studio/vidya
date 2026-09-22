@@ -17,7 +17,7 @@ import { Authentication } from '@vidya/api/auth/decorators'
 import { AuthenticatedUserGuard } from '@vidya/api/auth/guards'
 import { UserAuthentication } from '@vidya/api/auth/utils'
 import * as dto from '@vidya/api/media/dto'
-import { StorageSetupService } from '@vidya/api/media/services'
+import { StorageAuditService, StorageSetupService } from '@vidya/api/media/services'
 import * as domain from '@vidya/domain'
 import { Routes } from '@vidya/protocol'
 
@@ -33,7 +33,10 @@ import { StorageFailureFilter } from './storageFailure.filter'
 @UseGuards(AuthenticatedUserGuard)
 @UseFilters(StorageFailureFilter)
 export class StorageProfilesController {
-  constructor(private readonly storage: StorageSetupService) {}
+  constructor(
+    private readonly storage: StorageSetupService,
+    private readonly trail: StorageAuditService,
+  ) {}
 
   @Get(Routes().edu.schools.storage.get(':schoolId'))
   @ApiOperation({ summary: 'Read a school storage profile', operationId: 'Storage::get' })
@@ -68,7 +71,16 @@ export class StorageProfilesController {
   ) {
     this.assertMay(auth, 'storage:update', schoolId)
 
-    return new dto.StorageProfileResponse(await this.storage.configureProfile(schoolId, request))
+    try {
+      const profile = await this.storage.configureProfile(schoolId, request)
+      await this.trail.recordConfigured(auth.userId, schoolId, profile, request.secret)
+
+      return new dto.StorageProfileResponse(profile)
+    } catch (failure) {
+      await this.trail.recordAskRefused(auth.userId, schoolId, request, failure)
+
+      throw failure
+    }
   }
 
   @Post(Routes().edu.schools.storage.verify(':schoolId'))
@@ -81,7 +93,15 @@ export class StorageProfilesController {
   ) {
     this.assertMay(auth, 'storage:read', schoolId)
 
-    return new dto.StorageProfileResponse(await this.storage.verifyProfile(schoolId))
+    try {
+      return new dto.StorageProfileResponse(await this.storage.verifyProfile(schoolId))
+    } catch (failure) {
+      await this.trail.recordVerifyRefused(auth.userId, schoolId, failure, () =>
+        this.storage.findProfileView(schoolId),
+      )
+
+      throw failure
+    }
   }
 
   @Delete(Routes().edu.schools.storage.delete(':schoolId'))
@@ -91,7 +111,9 @@ export class StorageProfilesController {
     @Authentication() auth: UserAuthentication,
   ) {
     this.assertMay(auth, 'storage:update', schoolId)
-    await this.storage.retireProfile(schoolId)
+
+    const retired = await this.storage.retireProfile(schoolId)
+    await this.trail.recordRetired(auth.userId, schoolId, retired)
 
     return { success: true }
   }

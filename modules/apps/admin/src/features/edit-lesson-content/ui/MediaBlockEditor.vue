@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useFluent } from 'fluent-vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import type { MediaRecord, PickedMedia } from '@/entities/media'
-import { useMediaGateway } from '@/entities/media'
+import { useMediaAddresses } from '@/entities/media'
 import { useToasts } from '@/shared/lib'
 import { MediaPickerDialog, useMediaUpload } from '@/features/pick-media'
 
@@ -27,7 +27,7 @@ const emit = defineEmits<MediaBlockEditorEmits>()
 
 const { $t } = useFluent()
 
-const gateway = useMediaGateway()
+const { addressOf, readAddresses } = useMediaAddresses()
 const upload = useMediaUpload()
 
 const toasts = useToasts()
@@ -49,13 +49,21 @@ const retryLabel = computed(() =>
   upload.status.value === 'failed' ? $t('editor-media-retry') : undefined,
 )
 
-// An uploaded file is addressed by a path only this session can answer, so the
-// stored url is never handed to a player directly: the gateway resolves it, and
-// a url it has lost renders as a stated absence rather than as a broken frame.
+// An uploaded file is addressed by a path the server signs on request, so the
+// stored url is never handed to a player directly: the address is asked for, and
+// one that never arrives renders as a stated absence rather than a broken frame.
 const src = computed(() =>
   props.block.source === 'upload'
-    ? gateway.resolve(props.block.url)
+    ? addressOf(props.block.url)
     : mediaSrc(props.block.source, props.block.url),
+)
+
+/* --------------------------------- Hooks ---------------------------------- */
+
+watch(
+  () => props.block.url,
+  (url) => void readAddresses([url]),
+  { immediate: true },
 )
 
 /* -------------------------------- Handlers -------------------------------- */

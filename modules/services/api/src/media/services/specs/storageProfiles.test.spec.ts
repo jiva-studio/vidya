@@ -7,24 +7,23 @@ import { DataSource } from 'typeorm'
 import { StorageProfileDraft, StorageProfilesService } from '../storageProfiles.service'
 
 const sealedValue = (fill: number) => ({
-  ciphertext: Buffer.alloc(24, fill),
-  nonce: Buffer.alloc(12, fill),
+  ciphertext: Buffer.alloc(24, fill).toString('base64'),
+  nonce: Buffer.alloc(12, fill).toString('base64'),
 })
 
 const draftFor = (schoolId: SchoolId, bucket: string): StorageProfileDraft => ({
   id: randomUUID() as StorageProfileId,
   schoolId,
-  kind: 's3',
+  provider: 's3-compatible',
   endpoint: 'https://de-s3.storage.bunnycdn.com',
+  r2AccountId: null,
   region: 'de',
   bucket,
   prefix: `school/${schoolId}`,
   accessKeyId: 'vidya-demo',
   delivery: 'presigned',
   publicBaseUrl: null,
-  video: { kind: 'none' },
-  quotaBytes: null,
-  sealed: {
+  secrets: {
     keyVersion: 1,
     dek: sealedValue(1),
     secret: sealedValue(2),
@@ -68,15 +67,15 @@ describe('the rows behind a school storage profile', () => {
     await expect(profiles.findCurrentFor(schoolId)).resolves.toMatchObject({ bucket: 'first' })
   })
 
-  it('keeps the sealed values as bytes, so the ciphertext still opens', async () => {
+  it('keeps the sealed document exactly as it was handed over, so it still opens', async () => {
     const draft = draftFor(schoolId, 'first')
 
     await profiles.replaceProfile(draft)
     const found = await profiles.findCurrentFor(schoolId)
 
-    expect(found?.secretCiphertext?.equals(draft.sealed.secret.ciphertext)).toBe(true)
-    expect(found?.secretNonce?.equals(draft.sealed.secret.nonce)).toBe(true)
-    expect(found?.dekCiphertext?.equals(draft.sealed.dek.ciphertext)).toBe(true)
+    expect(found?.secrets).toEqual(draft.secrets)
+    expect(found?.secrets.secret.ciphertext).toBe(draft.secrets.secret.ciphertext)
+    expect(found?.secrets.keyVersion).toBe(1)
   })
 
   it('retires the previous row rather than editing it', async () => {
@@ -101,7 +100,7 @@ describe('the rows behind a school storage profile', () => {
     const retired = (await rowsOf()).find((row) => row.id === draft.id)
 
     expect(retired?.accessKeyId).toBe(draft.accessKeyId)
-    expect(retired?.secretCiphertext?.equals(draft.sealed.secret.ciphertext)).toBe(true)
+    expect(retired?.secrets.secret.ciphertext).toBe(draft.secrets.secret.ciphertext)
     expect(retired?.bucket).toBe('first')
   })
 
@@ -132,19 +131,52 @@ describe('the rows behind a school storage profile', () => {
     expect(proved?.verifiedAt).toEqual(provedAt)
   })
 
-  it('starts a new profile with nothing occupied and no quota of our making', async () => {
+  // Neither the ceiling nor the bytes already stored may sit on a row that is
+  // replaced whenever a key is rotated: the counter that used to live here was
+  // read from the live profile and written to the one that stored the file.
+  it('carries neither a quota nor a counter of occupied bytes', async () => {
     const saved = await profiles.replaceProfile(draftFor(schoolId, 'first'))
 
-    expect(Number(saved.usedBytes)).toBe(0)
-    expect(saved.quotaBytes).toBeNull()
+    expect(saved).not.toHaveProperty('quotaBytes')
+    expect(saved).not.toHaveProperty('usedBytes')
+
+    const columns = (
+      await ds.query('SELECT * FROM "storage_profiles" WHERE "id" = $1', [saved.id])
+    )[0]
+
+    expect(Object.keys(columns).sort()).toEqual([
+      'accessKeyId',
+      'bucket',
+      'createdAt',
+      'delivery',
+      'endpoint',
+      'id',
+      'prefix',
+      'provider',
+      'publicBaseUrl',
+      'r2AccountId',
+      'region',
+      'retiredAt',
+      'schoolId',
+      'secrets',
+      'updatedAt',
+      'verifiedAt',
+      'verifyError',
+    ])
   })
 
-  it('keeps a quota the school set, as a number a bucket can be measured against', async () => {
-    await profiles.replaceProfile({ ...draftFor(schoolId, 'first'), quotaBytes: 53687091200 })
+  it('stores the address only for a provider whose host it did not compose', async () => {
+    const typed = await profiles.replaceProfile(draftFor(schoolId, 'typed'))
 
-    const found = await profiles.findCurrentFor(schoolId)
+    expect(typed.endpoint).toBe('https://de-s3.storage.bunnycdn.com')
 
-    expect(Number(found?.quotaBytes)).toBe(53687091200)
-    expect(Number(found?.usedBytes)).toBe(0)
+    const named = await profiles.replaceProfile({
+      ...draftFor(schoolId, 'named'),
+      provider: 'bunny',
+      endpoint: null,
+    })
+
+    expect(named.provider).toBe('bunny')
+    expect(named.endpoint).toBeNull()
   })
 })

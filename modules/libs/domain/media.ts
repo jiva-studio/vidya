@@ -28,9 +28,20 @@ export type MediaStatus = (typeof MediaStatuses)[number]
 export const StorageDeliveries = ['presigned', 'bunny-token', 'public'] as const
 export type StorageDelivery = (typeof StorageDeliveries)[number]
 
-/** Only S3-compatible storage is supported; Bunny, R2, MinIO and AWS all are. */
-export const StorageProfileKinds = ['s3'] as const
-export type StorageProfileKind = (typeof StorageProfileKinds)[number]
+/**
+ * Who holds the bucket. All four speak the same S3 API; what differs is the
+ * address, and for three of them we can build it ourselves —
+ * `s3.<region>.amazonaws.com`, `<region>-s3.storage.bunnycdn.com`,
+ * `<account>.r2.cloudflarestorage.com`. A school picks its provider and types
+ * keys, not a URL.
+ *
+ * `s3-compatible` is the escape hatch for MinIO, Wasabi, Ceph and the rest, and
+ * the only one that carries an address of its own — which is why it is also the
+ * only one the endpoint allowlist has to police: a free-form address is one the
+ * API dials from inside its own network.
+ */
+export const StorageProviders = ['aws', 'bunny', 'r2', 's3-compatible'] as const
+export type StorageProvider = (typeof StorageProviders)[number]
 
 /**
  * Adaptive bitrate is a property of transcoding, not of storage, so it arrives
@@ -56,7 +67,9 @@ export type VideoProvider =
  */
 export const MediaPathPrefix = '/media/'
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+// Lower case only: `mediaPath` emits nothing else, and accepting an upper-case
+// id would let two strings name one row everywhere a path is compared.
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 export const mediaPath = (id: MediaId): string => `${MediaPathPrefix}${id}`
 
@@ -101,10 +114,19 @@ export const ReadWindowSeconds: Readonly<Record<MediaKind, number>> = Object.fre
  * the CDN and in the browser for every single view. Equal expiry makes the
  * address shareable, which it is anyway — a signature can be forwarded whatever
  * its expiry — so nothing is given up by making it cacheable.
+ *
+ * Rounding alone would hand the reader who arrives near a boundary whatever is
+ * left of the window, which is why the next boundary is taken once the
+ * remainder falls under half a window: six hours were chosen so that a
+ * signature outlasts a two-hour lecture, and three hours still do. The grid is
+ * kept either way — an expiry is always a multiple of the window — so readers
+ * of one file inside one window are still handed one address.
  */
 export const windowExpiry = (nowMs: number, windowSeconds: number): number => {
   const window = windowSeconds * 1000
-  return Math.ceil((nowMs + 1) / window) * window
+  const boundary = Math.ceil((nowMs + 1) / window) * window
+
+  return boundary - nowMs < window / 2 ? boundary + window : boundary
 }
 
 /* -------------------------------------------------------------------------- */

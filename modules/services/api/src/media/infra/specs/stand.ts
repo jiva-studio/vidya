@@ -3,8 +3,8 @@ import { connect } from 'node:net'
 import { S3Client } from '@aws-sdk/client-s3'
 import { MediaStoragePort, UploadGrant } from '@vidya/domain'
 
-import { S3StorageFactory } from '../s3Storage'
 import { StorageCredentials } from '../ports'
+import { S3StorageFactory } from '../s3Storage'
 
 /**
  * The stand's MinIO, with the same defaults the runner probes before it starts
@@ -66,7 +66,10 @@ export const readRange = async (url: string, first: number, last: number): Promi
 
 const answerOf = (raw: Buffer): Answer => {
   const split = raw.indexOf('\r\n\r\n')
-  const head = raw.subarray(0, split < 0 ? raw.length : split).toString('latin1').split('\r\n')
+  const head = raw
+    .subarray(0, split < 0 ? raw.length : split)
+    .toString('latin1')
+    .split('\r\n')
   const status = Number(head[0]?.split(' ')[1] ?? 0)
 
   const headers = Object.fromEntries(
@@ -129,10 +132,7 @@ export const writeRawByGrant = async (
     socket.on('error', reject)
   })
 
-export const removeAllUnder = async (
-  storage: MediaStoragePort,
-  prefix: string,
-): Promise<void> => {
+export const removeAllUnder = async (storage: MediaStoragePort, prefix: string): Promise<void> => {
   for await (const found of storage.listPrefix(prefix)) await storage.remove(found.key)
   for await (const session of storage.listUnfinished(prefix)) {
     await storage.abortUnfinished(session.key, session.uploadId)

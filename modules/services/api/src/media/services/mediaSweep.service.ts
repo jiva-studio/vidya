@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
-import { StorageProfile } from '@vidya/entities'
+import { DefaultAbandonedAfterMs, MediaConfig } from '@vidya/api/configs'
+import { Media, StorageProfile } from '@vidya/entities'
 import { DataSource, QueryRunner } from 'typeorm'
 
+import { prefixOf } from './mediaLimits'
 import { MediaRowsService } from './mediaRows.service'
 import { SchoolStorageService } from './schoolStorage.service'
 
@@ -12,14 +14,8 @@ import { SchoolStorageService } from './schoolStorage.service'
  */
 const SWEEP_LOCK_ID = 4_182_004
 
-/**
- * How long an upload is given before it is presumed abandoned.
- *
- * A day rather than an hour because an upload is a person on a hotel wifi with
- * a two-gigabyte lecture, and a sweep that collects a running upload deletes
- * the object out from under it.
- */
-const ABANDONED_AFTER_MS = 24 * 60 * 60 * 1000
+/** The part of the installation's media configuration the sweep reads. */
+type SweepWindow = { abandonedAfterMs: number }
 
 /**
  * Clearing up after uploads that were never finished.
@@ -33,13 +29,21 @@ const ABANDONED_AFTER_MS = 24 * 60 * 60 * 1000
  * More than one instance of the API runs, so the work is taken under a session
  * advisory lock on a dedicated connection: whoever gets it sweeps, and everyone
  * else leaves without an error rather than deleting the same objects twice.
+ *
+ * One object that will not go must not cost the rest their tick: a failure is
+ * named and the row kept, so an operator can find it and the next tick reaches
+ * everything behind it.
  */
 @Injectable()
 export class MediaSweepService {
+  private readonly logger = new Logger(MediaSweepService.name)
+
   constructor(
     @InjectDataSource() private readonly dataSource: DataSource,
     private readonly rows: MediaRowsService,
     private readonly storages: SchoolStorageService,
+    @Inject(MediaConfig.KEY)
+    private readonly config: SweepWindow = { abandonedAfterMs: DefaultAbandonedAfterMs },
   ) {}
 
   async sweepAbandonedUploads(): Promise<void> {
@@ -51,7 +55,7 @@ export class MediaSweepService {
       taken = await this.takeLock(runner)
       if (!taken) return
 
-      const before = new Date(Date.now() - ABANDONED_AFTER_MS)
+      const before = new Date(Date.now() - this.config.abandonedAfterMs)
       await this.dropAbandonedRows(before)
       await this.abortStaleSessions(before)
     } finally {
@@ -83,10 +87,28 @@ export class MediaSweepService {
 
   private async dropAbandonedRows(before: Date): Promise<void> {
     for (const media of await this.rows.findAbandoned(before)) {
+      await this.dropRow(media)
+    }
+  }
+
+  /**
+   * Clears one row and its object, or reports what is left behind.
+   *
+   * The row outlives a storage that would not delete its object: forgetting it
+   * would leave an object nobody can name any more, and the next tick is a
+   * cheaper place to try again than a person is.
+   */
+  private async dropRow(media: Media): Promise<void> {
+    try {
       const opened = await this.storages.openProfileById(media.profileId)
 
       await opened.storage.remove(media.storageKey)
       await this.rows.deleteRow(media.id)
+    } catch (failure) {
+      this.logger.error(
+        `media ${media.id} was left behind: its object ${media.storageKey} would not go ` +
+          `(${(failure as Error).message})`,
+      )
     }
   }
 
@@ -99,7 +121,7 @@ export class MediaSweepService {
   private async abortSessionsIn(profile: StorageProfile, before: Date): Promise<void> {
     const opened = this.storages.openProfile(profile)
 
-    for await (const session of opened.storage.listUnfinished(profile.prefix)) {
+    for await (const session of opened.storage.listUnfinished(prefixOf(profile))) {
       if (session.startedAt < before) {
         await opened.storage.abortUnfinished(session.key, session.uploadId)
       }
