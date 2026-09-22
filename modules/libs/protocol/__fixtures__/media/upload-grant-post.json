@@ -1,0 +1,29 @@
+{
+  "name": "upload-grant-post",
+  "endpoint": "POST /media/uploads",
+  "description": "The same call on a provider that does have POST policies — AWS S3 and MinIO. Here the range is a policy condition rather than a signed header, so the storage refuses a file outside it without the client having to be honest about its length. Above the hashing limit the client sends no `sha256`, the response says so by carrying no checksum field, and that file is not deduplicated.",
+  "request": {
+    "schoolId": "6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f",
+    "kind": "video",
+    "name": "lecture-04.mp4",
+    "mimeType": "video/mp4",
+    "sizeBytes": 734003200
+  },
+  "status": 201,
+  "response": {
+    "mediaId": "c3d4e5f6-7081-4923-ab4c-5d6e7f809102",
+    "grant": {
+      "method": "post",
+      "url": "https://s3.eu-central-1.amazonaws.com/vidya-demo",
+      "headers": {},
+      "fields": {
+        "key": "school/6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f/video/c3d4e5f6-7081-4923-ab4c-5d6e7f809102/original.mp4",
+        "Content-Type": "video/mp4",
+        "Policy": "REDACTED",
+        "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+        "X-Amz-Signature": "REDACTED"
+      },
+      "expiresAt": "2026-09-21T18:00:00.000Z"
+    }
+  }
+}

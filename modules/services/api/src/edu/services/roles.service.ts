@@ -11,6 +11,17 @@ import { assertPermissionsGrantable } from '../validations/permission-grant.vali
 import { EnrollmentsService } from './enrollments.service'
 import { Scope, ScopedEntitiesService } from './entities.service'
 
+/**
+ * The keys through which a role reaches the school's storage credentials.
+ *
+ * `'*'` is returned as itself rather than expanded: it opens the storage
+ * whole, and the trail has to name what was actually handed over.
+ */
+const storageAccessIn = (
+  permissions: readonly domain.PermissionKey[] = [],
+): domain.PermissionKey[] =>
+  permissions.includes('*') ? ['*'] : permissions.filter((key) => key.startsWith('storage:'))
+
 @Injectable()
 export class RolesService extends ScopedEntitiesService<Role, Scope> {
   constructor(
@@ -62,6 +73,8 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
       schoolId: role.schoolId,
       payload: { name: role.name, permissions: role.permissions },
     })
+
+    await this.recordStorageGrant(role, storageAccessIn(role.permissions), actorUserId)
 
     return role
   }
@@ -278,6 +291,7 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
   ): Promise<Role> {
     return await this.repository.manager.transaction(async (manager) => {
       const entity = await manager.findOneBy(Role, query)
+      const held = storageAccessIn(entity?.permissions)
       const updated = await manager.save(Role, manager.merge(Role, entity, request))
 
       const holders = (await manager.findBy(UserRole, { roleId: updated.id })).map(
@@ -307,8 +321,43 @@ export class RolesService extends ScopedEntitiesService<Role, Scope> {
         )
       }
 
+      await this.recordStorageGrant(
+        updated,
+        storageAccessIn(updated.permissions).filter((key) => !held.includes(key)),
+        actorUserId,
+        manager,
+      )
+
       return updated
     })
+  }
+
+  /**
+   * Says that a role may now reach the school's storage credentials.
+   *
+   * Only the role gaining the key is the event: handing an existing role to a
+   * person is already `edu.role.assigned`. The payload names the keys and
+   * nothing about the credentials themselves.
+   */
+  private async recordStorageGrant(
+    role: Role,
+    grantedKeys: domain.PermissionKey[],
+    actorUserId: domain.UserId | null | undefined,
+    manager?: EntityManager,
+  ): Promise<void> {
+    if (grantedKeys.length === 0) return
+
+    await this.auditLog.record(
+      {
+        action: 'media.role.storageGranted',
+        actorUserId: actorUserId ?? null,
+        subjectType: 'role',
+        subjectId: role.id,
+        schoolId: role.schoolId,
+        payload: { granted: grantedKeys },
+      },
+      manager,
+    )
   }
 
   /**

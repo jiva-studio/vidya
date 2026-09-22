@@ -49,6 +49,15 @@ export const PermissionKeys = [
   // Homework
   'homework:read',
   'homework:grade',
+
+  // Media
+  'media:read',
+  'media:upload',
+  'media:delete',
+
+  // Storage — a school's credentials, not its presentation
+  'storage:read',
+  'storage:update',
 ] as const
 
 export type PermissionKey = (typeof PermissionKeys)[number]

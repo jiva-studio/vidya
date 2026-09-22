@@ -1,4 +1,4 @@
-import { RoleId, SchoolId } from '@vidya/domain'
+import { RoleId, SchoolId, StorageProfileId } from '@vidya/domain'
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
 export type SchoolConfig = {
@@ -34,4 +34,10 @@ export class School {
 
   @Column({ nullable: false, type: 'json', default: {} })
   config: SchoolConfig
+
+  // Null means the school runs on the storage of the installation. It moves to
+  // a new row on every credential change rather than the row being edited, so
+  // files written by the previous profile stay readable through it.
+  @Column({ nullable: true, type: 'uuid' })
+  currentStorageProfileId: StorageProfileId | null
 }
