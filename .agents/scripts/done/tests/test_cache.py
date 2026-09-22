@@ -2,7 +2,7 @@ import tempfile
 import shutil
 import unittest
 from pathlib import Path
-from scripts.done.cache import ClaimCache
+from done.cache import ClaimCache
 
 class TestClaimCache(unittest.TestCase):
     def setUp(self):

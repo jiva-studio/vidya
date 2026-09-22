@@ -1,12 +1,12 @@
 import json
 import unittest
 from pathlib import Path
-from scripts.done.validator import validate_done_manifest
-from scripts.done.circuit_breaker import CircuitBreaker
-from scripts.done.adapters.make_tool import MakeClaimTool
-from scripts.done.adapters.http_tool import HttpClaimTool
-from scripts.done.adapters.hygiene_tool import HygieneClaimTool
-from scripts.done.yaml_loader import load_yaml
+from done.validator import validate_done_manifest
+from done.circuit_breaker import CircuitBreaker
+from done.adapters.make_tool import MakeClaimTool
+from done.adapters.http_tool import HttpClaimTool
+from done.adapters.hygiene_tool import HygieneClaimTool
+from done.yaml_loader import load_yaml
 
 class TestDoneHarness(unittest.TestCase):
     def test_validator_valid_manifest(self):

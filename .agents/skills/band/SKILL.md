@@ -5,11 +5,11 @@ description: Hook-driven multi-agent pipeline orchestrator for autonomous featur
 
 # Hook-Driven Multi-Agent Pipeline Orchestrator (`/band`)
 
-The `/band` skill is a **deterministic, hook-driven workflow orchestrator**. Rather than relying solely on LLM prompt instructions that can be skipped or hallucinated, `/band` initializes the state machine (`state.json`), and the **external harness hook** (`python3 -m scripts.done --hook` in `.agents/hooks.json`) actively intercepts actions, runs deterministic checks, blocks premature stopping, and pushes the agent from stage to stage.
+The `/band` skill is a **deterministic, hook-driven workflow orchestrator**. Rather than relying solely on LLM prompt instructions that can be skipped or hallucinated, `/band` initializes the state machine (`state.json`), and the **external harness hook** (`python3 .agents/scripts/done --hook` in `.agents/hooks.json`) actively intercepts actions, runs deterministic checks, blocks premature stopping, and pushes the agent from stage to stage.
 
 ```mermaid
 flowchart TD
-    Trigger["User: /band"] --> InitFSM["1. Initialize Pipeline FSM\n(python3 -m scripts.done --start-pipeline)"]
+    Trigger["User: /band"] --> InitFSM["1. Initialize Pipeline FSM\n(python3 .agents/scripts/done --start-pipeline)"]
     
     InitFSM --> HookLoop["2. External Hook Loop (.agents/hooks.json)\n- Hook intercepts turn completion / stop attempts\n- Evaluates active stage condition in pipeline.yaml\n- Runs verification tools & diff mutation analysis\n- Injects next stage directive or blocks completion"]
     
@@ -29,14 +29,14 @@ flowchart TD
 1. **Activation**:
    When `/band` is invoked, start the pipeline for the active task:
    ```bash
-   python3 -m scripts.done --start-pipeline
+   python3 .agents/scripts/done --start-pipeline
    ```
    This loads the configured pipeline profile (from `done.yaml` or `.agents/pipelines/`), creates `artifacts/state.json`, and outputs the initial stage directive.
 
 2. **External Hook Enforcement (`.agents/hooks.json`)**:
    Every time the agent completes an action or attempts to finish a turn, the harness hook executes:
    ```bash
-   python3 -m scripts.done --hook
+   python3 .agents/scripts/done --hook
    ```
    - **Blocks early exit**: Returns `{"decision": "continue", "reason": "..."}` if current stage requirements are unmet.
    - **Evaluates stage transitions**:
@@ -56,8 +56,8 @@ flowchart TD
 When working within the pipeline directed by the hook:
 - Follow the high-priority directive emitted by the hook for the active stage.
 - For subagent stages: spawn specialized subagents (`invoke_subagent`) matching the stage's `role` and context.
-- For tool verifications: let the hook and `scripts.done` run deterministic checks and leverage content-addressed caching.
+- For tool verifications: let the hook and `.agents/scripts/done` run deterministic checks and leverage content-addressed caching.
 - Check current status anytime with:
   ```bash
-  python3 -m scripts.done --status
+  python3 .agents/scripts/done --status
   ```

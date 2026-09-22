@@ -1,5 +1,5 @@
 import unittest
-from scripts.done.pipeline_loader import load_pipeline_config, validate_pipeline_manifest
+from done.pipeline_loader import load_pipeline_config, validate_pipeline_manifest
 
 class TestPipelineLoader(unittest.TestCase):
     def test_load_and_validate_hardened_pipeline(self):

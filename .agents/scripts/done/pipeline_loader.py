@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from scripts.done.config import REPO_ROOT
-from scripts.done.yaml_loader import load_yaml
+from done.config import REPO_ROOT
+from done.yaml_loader import load_yaml
 
 PIPELINES_DIR = REPO_ROOT / ".agents" / "pipelines"
 DEFAULT_PIPELINE_FILE = REPO_ROOT / ".agents" / "pipeline.yaml"

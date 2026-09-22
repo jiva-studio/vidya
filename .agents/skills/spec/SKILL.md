@@ -106,7 +106,7 @@ claims:
 
 Run the validation command in the terminal:
 ```bash
-python3 -m scripts.done --validate .agents/tasks/<slug>/done.yaml
+python3 .agents/scripts/done --validate .agents/tasks/<slug>/done.yaml
 ```
 
 * **HARD RULE**: The specification process **CANNOT finish** until this command exits with code `0`.

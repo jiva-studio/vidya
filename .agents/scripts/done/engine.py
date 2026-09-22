@@ -2,12 +2,12 @@ import json
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from scripts.done.yaml_loader import load_yaml
-from scripts.done.validator import TOOL_REGISTRY, validate_done_manifest
-from scripts.done.circuit_breaker import CircuitBreaker
-from scripts.done.cache import ClaimCache
-from scripts.done.reporters.markdown_report import write_markdown_report
-from scripts.done.reporters.hook_payload import format_hook_response
+from done.yaml_loader import load_yaml
+from done.validator import TOOL_REGISTRY, validate_done_manifest
+from done.circuit_breaker import CircuitBreaker
+from done.cache import ClaimCache
+from done.reporters.markdown_report import write_markdown_report
+from done.reporters.hook_payload import format_hook_response
 
 class DoneEngine:
     def __init__(self, spec_path: Path):

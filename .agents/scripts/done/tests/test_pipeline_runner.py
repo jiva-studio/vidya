@@ -2,8 +2,8 @@ import tempfile
 import shutil
 import unittest
 from pathlib import Path
-from scripts.done.pipeline_runner import PipelineRunner
-from scripts.done.pipeline_loader import load_pipeline_config
+from done.pipeline_runner import PipelineRunner
+from done.pipeline_loader import load_pipeline_config
 
 class TestPipelineRunner(unittest.TestCase):
     def setUp(self):

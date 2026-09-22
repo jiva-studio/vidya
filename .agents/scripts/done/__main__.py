@@ -3,13 +3,19 @@ import json
 import os
 import sys
 from pathlib import Path
+
+# Ensure .agents/scripts is in sys.path
+_scripts_dir = str(Path(__file__).resolve().parent.parent)
+if _scripts_dir not in sys.path:
+    sys.path.insert(0, _scripts_dir)
+
 from typing import Optional
-from scripts.done.yaml_loader import load_yaml
-from scripts.done.config import TASKS_DIR, REPO_ROOT
-from scripts.done.validator import validate_done_manifest
-from scripts.done.pipeline_loader import validate_pipeline_manifest
-from scripts.done.engine import DoneEngine
-from scripts.done.pipeline_runner import PipelineRunner
+from done.yaml_loader import load_yaml
+from done.config import TASKS_DIR, REPO_ROOT
+from done.validator import validate_done_manifest
+from done.pipeline_loader import validate_pipeline_manifest
+from done.engine import DoneEngine
+from done.pipeline_runner import PipelineRunner
 
 def find_active_task_spec() -> Optional[Path]:
     # 1. Check if git branch matches a task folder in .agents/tasks/

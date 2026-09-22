@@ -4,10 +4,10 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from scripts.done.config import REPO_ROOT, TASKS_DIR
-from scripts.done.yaml_loader import load_yaml
-from scripts.done.pipeline_loader import load_pipeline_config
-from scripts.done.engine import DoneEngine
+from done.config import REPO_ROOT, TASKS_DIR
+from done.yaml_loader import load_yaml
+from done.pipeline_loader import load_pipeline_config
+from done.engine import DoneEngine
 
 class PipelineRunner:
     """Deterministic, Generic State-Machine Runner and Hook Driver for Pipelines."""

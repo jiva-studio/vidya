@@ -1,13 +1,13 @@
 from typing import Any, Dict, List, Tuple
-from scripts.done.ports.claim_tool import ClaimTool
-from scripts.done.adapters import (
+from done.ports.claim_tool import ClaimTool
+from done.adapters import (
     MakeClaimTool,
     MutationClaimTool,
     HttpClaimTool,
     CriticClaimTool,
     HygieneClaimTool,
 )
-from scripts.done.pipeline_loader import BUILTIN_PIPELINES, PIPELINES_DIR, DEFAULT_PIPELINE_FILE
+from done.pipeline_loader import BUILTIN_PIPELINES, PIPELINES_DIR, DEFAULT_PIPELINE_FILE
 
 TOOL_REGISTRY: Dict[str, ClaimTool] = {
     "make": MakeClaimTool(),

@@ -2,7 +2,7 @@ import json
 import subprocess
 from pathlib import Path
 from typing import Any
-from scripts.done.config import REPO_ROOT
+from done.config import REPO_ROOT
 
 def load_yaml(file_path_or_text: Any) -> Any:
     """Universal YAML loader with multiple fallbacks (PyYAML -> js-yaml via node -> json)."""
