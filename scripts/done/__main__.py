@@ -40,6 +40,7 @@ def main():
     parser = argparse.ArgumentParser(description="Deterministic task completion harness and validator.")
     parser.add_argument("--validate", type=str, help="Validate a done.yaml manifest against schema.")
     parser.add_argument("--validate-pipeline", type=str, help="Validate a pipeline.yaml file against schema.")
+    parser.add_argument("--pipeline", type=str, help="Specify or override pipeline profile name (e.g. hardened, standard, fast, docs).")
     parser.add_argument("--start-pipeline", type=str, nargs="?", const="", help="Initialize pipeline FSM for a task.")
     parser.add_argument("--status", type=str, nargs="?", const="", help="Show pipeline FSM status for a task.")
     parser.add_argument("--spec", type=str, help="Run verification against specific done.yaml path.")
@@ -108,7 +109,7 @@ def main():
             sys.exit(1)
 
         runner = PipelineRunner(target_spec)
-        state = runner.init_pipeline()
+        state = runner.init_pipeline(pipeline_override=args.pipeline)
         print(f"🚀 Pipeline [{state['pipeline']}] INITIALIZED for task [{state['slug']}].")
         print(f"👉 Current Stage: [{state['current_stage_id']}]")
         print(f"Active hooks in .agents/hooks.json will drive and gate each stage transition.")

@@ -3,15 +3,22 @@ description: "Standard TDD workflow for regular features and components"
 stages:
   - id: red-phase
     role: "Test Author"
-    prompt: "Author red test suite derived from spec.md"
-    verify: "tests_failed_red"
+    verify:
+      type: "tests_red"
+      patterns: [".spec.", ".test.", "/tests/", "/specs/"]
+    directive: "Author Red test suite derived from spec.md acceptance criteria and prove red failure."
+    on_success: "next"
+    on_failure: "retry"
 
   - id: green-phase
     role: "Code Implementer"
-    prompt: "Implement clean code to make tests pass"
-    forbid_edits: ["tests/**", "**/*.spec.*", "**/specs/**"]
-    verify: "tests_passed_green"
+    verify:
+      type: "tests_green"
+      forbid_edits: ["tests/**", "**/*.spec.*", "**/specs/**"]
+    directive: "Implement clean code to make tests pass without editing test files."
+    on_success: "next"
+    on_failure: "retry"
 
   - id: gatekeeper
-    type: harness
-    run: "python3 -m scripts.done --spec"
+    verify:
+      type: "all_claims"

@@ -3,12 +3,20 @@ description: "Documentation and spec authoring workflow"
 stages:
   - id: authoring
     role: "Doc Author"
-    prompt: "Write documentation according to style guidelines"
+    verify:
+      type: "diff_present"
+    directive: "Write documentation according to style guidelines."
+    on_success: "next"
+    on_failure: "retry"
 
   - id: critic
     role: "Doc Critic"
-    prompt: "Review technical clarity and cross-links"
+    verify:
+      type: "review"
+    directive: "Review technical clarity, accuracy, and cross-links."
+    on_success: "next"
+    on_failure: "authoring"
 
   - id: gatekeeper
-    type: harness
-    run: "python3 -m scripts.done --spec"
+    verify:
+      type: "all_claims"

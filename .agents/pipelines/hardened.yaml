@@ -3,27 +3,40 @@ description: "Hardened TDD workflow with diff mutation analysis, survived mutant
 stages:
   - id: red-phase
     role: "Test Author"
-    prompt: "Author red test suite strictly derived from spec.md acceptance criteria and prove red failure"
-    verify: "tests_failed_red"
+    verify:
+      type: "tests_red"
+      patterns: [".spec.", ".test.", "/tests/", "/specs/"]
+    directive: "Author Red test suite strictly derived from spec.md acceptance criteria and prove red failure."
+    on_success: "next"
+    on_failure: "retry"
 
   - id: green-phase
     role: "Code Implementer"
-    prompt: "Implement minimal clean code to turn tests green without editing test files"
-    forbid_edits: ["tests/**", "**/*.spec.*", "**/specs/**"]
-    verify: "tests_passed_green"
+    verify:
+      type: "tests_green"
+      forbid_edits: ["tests/**", "**/*.spec.*", "**/specs/**"]
+    directive: "Implement minimal clean code to turn tests green without editing test files."
+    on_success: "next"
+    on_failure: "retry"
 
   - id: mutation-gate
-    type: claim
-    claim_kind: mutation
-    mode: diff
+    verify:
+      type: "claim"
+      claim_tool: "mutation"
+    on_success: "next"
+    on_failure:
+      target: "adversarial-review"
+      pass_artifacts: ["survived_mutants"]
 
   - id: adversarial-review
     role: "Adversarial Reviewer"
+    verify:
+      type: "review"
     inputs: ["diff", "survived_mutants"]
-    prompt: "Break the implementation using intent.md invariants and eliminate all survived mutants"
-    on_reject: loop_to(red-phase)
-    on_approve: next_stage
+    directive: "Break the implementation using intent.md invariants and eliminate all survived mutants."
+    on_success: "next"
+    on_failure: "red-phase"
 
   - id: gatekeeper
-    type: harness
-    run: "python3 -m scripts.done --spec"
+    verify:
+      type: "all_claims"
