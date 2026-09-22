@@ -1,10 +1,18 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from done.config import REPO_ROOT
-from done.yaml_loader import load_yaml
+from band.config import REPO_ROOT
+from band.yaml_loader import load_yaml
 
-PIPELINES_DIR = REPO_ROOT / ".agents" / "pipelines"
-DEFAULT_PIPELINE_FILE = REPO_ROOT / ".agents" / "pipeline.yaml"
+PIPELINES_DIR = (
+    REPO_ROOT / ".agents" / "pipelines"
+    if (REPO_ROOT / ".agents" / "pipelines").exists()
+    else REPO_ROOT / "pipelines"
+)
+DEFAULT_PIPELINE_FILE = (
+    REPO_ROOT / ".agents" / "pipeline.yaml"
+    if (REPO_ROOT / ".agents" / "pipeline.yaml").exists()
+    else REPO_ROOT / "pipeline.yaml"
+)
 
 # Standard built-in default pipeline fallback
 BUILTIN_PIPELINES = {
@@ -31,14 +39,14 @@ BUILTIN_PIPELINES = {
 }
 
 def load_pipeline_config(name: Optional[str] = None) -> Dict[str, Any]:
-    """Loads a named pipeline profile from .agents/pipelines/<name>.yaml, .agents/pipeline.yaml, or built-in defaults."""
-    # 1. Check .agents/pipelines/<name>.yaml
+    """Loads a named pipeline profile from pipelines/<name>.yaml, .agents/pipelines/<name>.yaml, or built-in defaults."""
+    # 1. Check pipelines/<name>.yaml or .agents/pipelines/<name>.yaml
     if name and PIPELINES_DIR.exists():
         p_file = PIPELINES_DIR / f"{name}.yaml"
         if p_file.exists():
             return load_yaml(p_file)
 
-    # 2. Check .agents/pipeline.yaml
+    # 2. Check pipeline.yaml or .agents/pipeline.yaml
     if DEFAULT_PIPELINE_FILE.exists():
         data = load_yaml(DEFAULT_PIPELINE_FILE)
         if name and "pipelines" in data and name in data["pipelines"]:

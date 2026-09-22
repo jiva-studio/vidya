@@ -3,7 +3,7 @@ import re
 import subprocess
 from pathlib import Path
 from typing import Any
-from done.config import REPO_ROOT
+from band.config import REPO_ROOT
 
 
 def _parse_val(v: str) -> Any:

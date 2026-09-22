@@ -1,8 +1,8 @@
 import subprocess
 import time
 from typing import Any, Dict, List
-from done.ports.claim_tool import ClaimTool, ClaimResult
-from done.config import REPO_ROOT
+from band.ports.claim_tool import ClaimTool, ClaimResult
+from band.config import REPO_ROOT
 
 class MakeClaimTool(ClaimTool):
     @property

@@ -2,7 +2,7 @@ import hashlib
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from done.config import DEFAULT_MAX_RETRIES
+from band.config import DEFAULT_MAX_RETRIES
 
 class CircuitBreaker:
     def __init__(self, task_dir: Optional[Path], max_retries: int = DEFAULT_MAX_RETRIES):

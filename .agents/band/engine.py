@@ -2,12 +2,12 @@ import json
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from done.yaml_loader import load_yaml
-from done.validator import TOOL_REGISTRY, validate_done_manifest
-from done.circuit_breaker import CircuitBreaker
-from done.cache import ClaimCache
-from done.reporters.markdown_report import write_markdown_report
-from done.reporters.hook_payload import format_hook_response
+from band.yaml_loader import load_yaml
+from band.validator import TOOL_REGISTRY, validate_done_manifest
+from band.circuit_breaker import CircuitBreaker
+from band.cache import ClaimCache
+from band.reporters.markdown_report import write_markdown_report
+from band.reporters.hook_payload import format_hook_response
 
 class DoneEngine:
     def __init__(self, spec_path: Path):
@@ -20,7 +20,7 @@ class DoneEngine:
         if not self.spec_path.exists():
             return {
                 "passed": False,
-                "error": f"done.yaml not found at {self.spec_path}",
+                "error": f"band.yaml not found at {self.spec_path}",
                 "results": [],
                 "hook_payload": json.dumps({"decision": "allow"}) if is_hook_mode else ""
             }
@@ -33,12 +33,12 @@ class DoneEngine:
                 "passed": False,
                 "error": f"Failed to parse YAML: {str(e)}",
                 "results": [],
-                "hook_payload": json.dumps({"decision": "continue", "reason": "Invalid done.yaml syntax"}) if is_hook_mode else ""
+                "hook_payload": json.dumps({"decision": "continue", "reason": "Invalid band.yaml syntax"}) if is_hook_mode else ""
             }
 
         is_valid, errors = validate_done_manifest(data)
         if not is_valid:
-            err_msg = "done.yaml schema validation failed:\n" + "\n".join([f"- {e}" for e in errors])
+            err_msg = "band.yaml schema validation failed:\n" + "\n".join([f"- {e}" for e in errors])
             return {
                 "passed": False,
                 "error": err_msg,

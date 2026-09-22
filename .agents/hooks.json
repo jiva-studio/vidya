@@ -4,7 +4,7 @@
     "Stop": [
       {
         "type": "command",
-        "command": "python3 .agents/scripts/done --hook",
+        "command": "python3 -m band --hook",
         "timeout": 120
       }
     ]

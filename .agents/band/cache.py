@@ -3,7 +3,7 @@ import json
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, Optional
-from done.config import REPO_ROOT
+from band.config import REPO_ROOT
 
 class ClaimCache:
     """Content-Addressed Cache for Verification Claims."""
