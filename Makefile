@@ -2,7 +2,7 @@
         check check-package typecheck lint lint-fix format format-check \
         test test-package test-postgres-required test-postgres test-storage-required \
         coverage coverage-package \
-        mutate-diff mutate-full \
+        mutate-diff mutate-full mutate-all-diff mutate-all-full \
         api-build api-run api-test \
         db-start db-schema-drop db-migrate db-testdb-drop \
         dev dev-up dev-down dev-logs mail storybook bootstrap seed-student \
@@ -111,6 +111,12 @@ mutate-diff:
 
 mutate-full:
 	./scripts/vidya-run-alone "mutation testing" ./scripts/vidya-mutation-suite-run full $(PKG)
+
+mutate-all-diff:
+	./scripts/vidya-run-alone "mutation testing" ./scripts/vidya-mutation-suite-run diff all
+
+mutate-all-full:
+	./scripts/vidya-run-alone "mutation testing" ./scripts/vidya-mutation-suite-run full all
 
 # ---------------------------------------------------------------------------
 # API service
@@ -255,4 +261,4 @@ seed-student:
 # ---------------------------------------------------------------------------
 
 clean:
-	rm -rf modules/node_modules modules/*/*/dist modules/*/*/*.tsbuildinfo
+	rm -rf modules/node_modules modules/*/*/dist modules/*/*/*.tsbuildinfo modules/*/*/.stryker-tmp .stryker-tmp
