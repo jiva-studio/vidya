@@ -1,0 +1,1 @@
+export { leaveSchool } from './leaving'

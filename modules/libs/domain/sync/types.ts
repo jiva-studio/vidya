@@ -121,6 +121,7 @@ export const HomeworkSyncFields = [
   'reviewedById',
   'reviewedAt',
   'answeredSupersededVersion',
+  'comment',
 ] as const
 
 export type HomeworkSyncField = (typeof HomeworkSyncFields)[number]
@@ -137,6 +138,10 @@ export const EnrollmentSyncFields = [
 ] as const
 
 export type EnrollmentSyncField = (typeof EnrollmentSyncFields)[number]
+
+export const BlockStateSyncFields = ['state', 'verdict', 'updatedAt'] as const
+
+export type BlockStateSyncField = (typeof BlockStateSyncFields)[number]
 
 /* -------------------------------------------------------------------------- */
 /*                              Rejection reasons                             */
@@ -172,6 +177,17 @@ export const ServerRejectionReasons = [
 
   /** The work has already been accepted, so its text is frozen for good. */
   'alreadyAccepted',
+
+  /**
+   * The block has been answered once and graded, and one answer is all there is.
+   *
+   * Separate from `alreadyAccepted` because a student reads them differently:
+   * that one says a person has finished with the work, this one says the
+   * question is spent. A repeat of the same change is not this — the engine
+   * resends after a broken connection, and a resend is the answer already
+   * given, not a second one.
+   */
+  'alreadyGraded',
 
   /** The row, or the batch carrying it, is over the size ceiling. */
   'payloadTooLarge',

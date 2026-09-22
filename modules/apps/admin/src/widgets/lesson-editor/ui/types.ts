@@ -1,13 +1,10 @@
 import type {
-  AudioBlock,
   BlockId,
   LessonBlock,
   LessonContent,
   LessonId,
   LessonSection,
-  QuizBlock,
   SectionId,
-  VideoBlock,
 } from '@vidya/domain'
 
 import type {
@@ -142,26 +139,6 @@ export interface ContentProblemsNoticeProps {
 
 export interface ContentProblemsNoticeEmits {
   reveal: [blockId: BlockId]
-}
-
-export interface LessonPreviewProps {
-  content: LessonContent
-}
-
-export interface SectionPreviewProps {
-  section: LessonSection
-}
-
-export interface BlockPreviewProps {
-  block: LessonBlock
-}
-
-export interface MediaPreviewProps {
-  block: VideoBlock | AudioBlock
-}
-
-export interface QuizPreviewProps {
-  block: QuizBlock
 }
 
 export interface UnsavedChangesGuardProps {

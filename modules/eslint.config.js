@@ -254,19 +254,19 @@ export default tseslint.config(
     // Each layer, and what it is forbidden to reach for. Listed one layer at a
     // time because a single pattern list cannot say "pages may see widgets but
     // widgets may not see pages".
-    files: ['apps/admin/src/pages/**/*.{ts,vue}'],
+    files: ['apps/{admin,student}/src/pages/**/*.{ts,vue}'],
     rules: { 'no-restricted-imports': ['error', { patterns: [...upward([]), ...sidestep] }] },
   },
 
   {
-    files: ['apps/admin/src/widgets/**/*.{ts,vue}'],
+    files: ['apps/{admin,student}/src/widgets/**/*.{ts,vue}'],
     rules: {
       'no-restricted-imports': ['error', { patterns: [...upward(['pages']), ...sidestep] }],
     },
   },
 
   {
-    files: ['apps/admin/src/features/**/*.{ts,vue}'],
+    files: ['apps/{admin,student}/src/features/**/*.{ts,vue}'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -276,7 +276,7 @@ export default tseslint.config(
   },
 
   {
-    files: ['apps/admin/src/entities/**/*.{ts,vue}'],
+    files: ['apps/{admin,student}/src/entities/**/*.{ts,vue}'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -286,7 +286,7 @@ export default tseslint.config(
   },
 
   {
-    files: ['apps/admin/src/shared/**/*.{ts,vue}'],
+    files: ['apps/{admin,student}/src/shared/**/*.{ts,vue}'],
     rules: {
       'no-restricted-imports': [
         'error',

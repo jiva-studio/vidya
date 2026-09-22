@@ -24,6 +24,7 @@ const DIST = path.resolve(__dirname, '..', 'modules', 'services', 'api', 'dist',
 const PACKAGES = {
   '@vidya/domain': 'domain',
   '@vidya/entities': 'entities',
+  '@vidya/journal': 'journal',
   '@vidya/protocol': 'protocol',
 }
 

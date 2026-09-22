@@ -134,7 +134,7 @@ const refuse = (): Promise<never> => Promise.reject(new NoConnectionError())
 
 /** What the device looks like while no connection is running: nothing on it. */
 const emptyDevice: DeviceRepositories = {
-  schools: { list: async () => [], getById: async () => null },
+  schools: { list: async () => [], getById: async () => null, getByCode: async () => null },
   courses: { list: async () => [], getById: async () => null },
   lessons: { listByCourse: async () => [], getById: async () => null },
   lessonVersions: { getById: async () => null, getPublished: async () => null },

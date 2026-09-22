@@ -4,6 +4,7 @@
   "testRunner": "command",
   "commandRunner": { "command": "npx vitest run" },
   "coverageAnalysis": "off",
+  "inPlace": true,
   "incremental": true,
   "incrementalFile": "../../../.stryker/incremental/ui.json",
   "mutate": [
@@ -19,9 +20,9 @@
   ],
   "reporters": ["clear-text", "progress"],
   "clearTextReporter": { "maxTestsToLog": 0 },
-  "timeoutMS": 120000,
-  "timeoutFactor": 2,
-  "dryRunTimeoutMinutes": 15,
-  "concurrency": 4,
+  "timeoutMS": 10000,
+  "timeoutFactor": 1.5,
+  "dryRunTimeoutMinutes": 5,
+  "concurrency": 6,
   "thresholds": { "high": 80, "low": 60, "break": 50 }
 }

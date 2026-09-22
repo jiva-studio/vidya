@@ -4,6 +4,7 @@ import { PushChange } from '@vidya/protocol'
 import { EntityManager } from 'typeorm'
 
 import { isUuid, refsFrom, resolveAccess } from './access'
+import { markAnswer } from './quizGrading'
 import {
   isRejection,
   ownedBy,
@@ -37,12 +38,37 @@ const find = async (manager: EntityManager, change: PushChange): Promise<BlockSt
     : null
 
 /**
- * How far a student got through one block.
+ * The row this change acts on: the one it names, or the one its natural key
+ * already holds.
  *
- * The collection replicates upward only: the server writes nothing here, so
- * there is no field split to apply and no merge to reason about. The only
- * questions are whether the row belongs to the caller and whether its body is a
- * block state at all.
+ * A device names a row it wrote offline, and the same block answered on a
+ * second device arrives under a second name. The checks and the write belong to
+ * the row the key points at, or one attempt per block would mean one attempt
+ * per identifier a device cares to invent.
+ */
+const rowFor = async (manager: EntityManager, change: PushChange): Promise<BlockState | null> => {
+  const byId = await find(manager, change)
+
+  if (byId) return byId
+
+  const refs = refsFrom(change.data)
+
+  if (isRejection(refs) || !isUuid(change.data?.blockId)) return null
+
+  return manager.findOneBy(BlockState, {
+    enrollmentId: refs.enrollmentId,
+    lessonVersionId: refs.lessonVersionId,
+    blockId: domain.asId<domain.BlockId>(String(change.data.blockId)),
+  })
+}
+
+/**
+ * How far a student got through one block, and what the server makes of it.
+ *
+ * The answer is the student's and the verdict on it is not: the key lives on
+ * this side alone, so a quiz is marked as it arrives and the mark travels back
+ * down. That is also why an answer is given once — an unlimited retry hands out
+ * the key one wrong answer at a time.
  */
 export const blockStatesApplier: PushApplier = {
   collection: 'block_states',
@@ -70,10 +96,20 @@ export const blockStatesApplier: PushApplier = {
     return { access, body }
   },
 
-  // Progress is never frozen: a student may rewatch a video after the homework
-  // on that lesson has been marked.
-  async editable(): Promise<Rejection | null> {
-    return null
+  /**
+   * Progress is never frozen — a student may rewatch a video after the homework
+   * on that lesson has been marked — but a marked question is spent.
+   *
+   * A resend never reaches here: the push answers a repeated stamp with a
+   * repeated body from the journal, so the only thing refused is an answer the
+   * student did not give before.
+   */
+  async editable(manager: EntityManager, change: PushChange): Promise<Rejection | null> {
+    const existing = await rowFor(manager, change)
+
+    if (!existing?.verdict) return null
+
+    return reject('alreadyGraded', 'the question has been answered and marked')
   },
 
   async apply(
@@ -88,36 +124,28 @@ export const blockStatesApplier: PushApplier = {
     entity.updatedAt = new Date(context.now)
 
     await manager.save(BlockState, entity)
+    await markAnswer(manager, entity, prepared.access.version, new Date(context.now))
 
     // The row the natural key held, when that is not the one the device named.
     return entity.id
   },
 }
 
-/** The row this document names, or the one the natural key already holds. */
+/** The row to write: the one this change acts on, or a new one under its name. */
 const locate = async (
   manager: EntityManager,
   change: PushChange,
   prepared: PreparedRow,
 ): Promise<BlockState> => {
-  const byId = await find(manager, change)
+  const existing = await rowFor(manager, change)
 
-  if (byId) return byId
-
-  const blockId = domain.asId<domain.BlockId>(String(change.data?.blockId))
-  const natural = await manager.findOneBy(BlockState, {
-    enrollmentId: prepared.access.enrollment.id,
-    lessonVersionId: prepared.access.version.id,
-    blockId,
-  })
-
-  if (natural) return natural
+  if (existing) return existing
 
   return manager.create(BlockState, {
     id: domain.asId<domain.BlockStateId>(change.docId),
     enrollmentId: prepared.access.enrollment.id,
     lessonVersionId: prepared.access.version.id,
-    blockId,
+    blockId: domain.asId<domain.BlockId>(String(change.data?.blockId)),
     schoolId: prepared.access.enrollment.schoolId,
   })
 }

@@ -1,34 +1,78 @@
+# The gateway's whole configuration. Unlike the nginx setup this replaces,
+# there is no local/TLS template pair and no envsubst render step: Caddy
+# substitutes every {$VAR} placeholder itself when it loads this file (see
+# https://caddyserver.com/docs/caddyfile/concepts#environment-variables), so
+# one file, parametrized, covers both shapes. docker-entrypoint.sh computes
+# the handful of values that differ structurally between them —
+# VIDYA_GATEWAY_SITE_ADDRESS and VIDYA_GATEWAY_ADMIN_SITE_ADDRESS (bare ports
+# locally, real domains once TLS is on) and VIDYA_GATEWAY_HSTS_DIRECTIVE
+# (blank, or a `header` line) — and exports them before Caddy reads this file.
+# See README.md.
+#
+# Two sites, not two paths. A browser shares localStorage, IndexedDB and Web
+# Locks by origin, so serving the student site under a path of the console's
+# origin would put the console's refresh token within reach of any scripting
+# hole in the public site. See README.md, "Two origins".
 {
 	http_port 8080
 	https_port 8443
 }
 
-{$VIDYA_GATEWAY_SITE_ADDRESS} {
+# What both sites are, minus which application answers. The first argument
+# keeps the two rate-limit zones apart, so one site's traffic cannot spend the
+# other's budget; the second names the upstream that serves its documents.
+(vidya_site) {
+	# A coarse, per-client-IP outer limit — see README.md, "Rate limiting",
+	# for why two zones and where the numbers come from
+	# (docker-entrypoint.sh). caddy-ratelimit (github.com/mholt/caddy-ratelimit,
+	# compiled in at build time — see Dockerfile) has no separate burst
+	# parameter of its own, so this approximates nginx's rate+burst with two
+	# fixed windows instead: a short one capping any single second, a longer
+	# one capping the sustained average.
 	rate_limit {
-		zone gateway_burst {
+		zone {args[0]}_burst {
 			key {remote_host}
 			events {$VIDYA_GATEWAY_RATE_LIMIT_BURST}
 			window 1s
 		}
-		zone gateway_sustained {
+		zone {args[0]}_sustained {
 			key {remote_host}
 			events {$VIDYA_GATEWAY_RATE_LIMIT_SUSTAINED_EVENTS}
 			window 5s
 		}
 	}
 
-	# Forward /api/* to the backend API service (prefix stripped)
+	# Matches each application's own Vite dev proxy: `handle_path` strips the
+	# matched `/api` prefix before proxying, the same rewrite the Vite proxies
+	# do, so both applications talk to one same-origin path in every
+	# environment and CORS never has to enter the picture in production.
+	#
+	# No response headers are added here on purpose: this is JSON, and helmet
+	# already owns every header on it (see README.md, "Header ownership").
 	handle_path /api/* {
 		reverse_proxy {$VIDYA_GATEWAY_API_UPSTREAM}
 	}
 
-	# Forward all other requests to the frontend Admin UI service
+	# Nothing else runs in front of these documents, and `frame-ancestors`
+	# cannot live in the <meta> tag in either index.html (see the comment
+	# there) — a CSP directive ignored there by specification. These are the
+	# gateway's alone to set. See README.md, "Header ownership".
 	handle {
-		reverse_proxy {$VIDYA_GATEWAY_ADMIN_UPSTREAM}
+		reverse_proxy {args[1]}
 		{$VIDYA_GATEWAY_HSTS_DIRECTIVE}
 		header X-Frame-Options "DENY"
 		header Content-Security-Policy "frame-ancestors 'none'"
 		header X-Content-Type-Options "nosniff"
 		header Referrer-Policy "no-referrer"
 	}
+}
+
+# The student site answers on the bare domain: a joining link is the one
+# address a person is handed, and it points here.
+{$VIDYA_GATEWAY_SITE_ADDRESS} {
+	import vidya_site student {$VIDYA_GATEWAY_STUDENT_UPSTREAM}
+}
+
+{$VIDYA_GATEWAY_ADMIN_SITE_ADDRESS} {
+	import vidya_site admin {$VIDYA_GATEWAY_ADMIN_UPSTREAM}
 }

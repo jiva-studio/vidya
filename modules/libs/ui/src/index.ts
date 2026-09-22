@@ -2,8 +2,12 @@
  * The public face of @vidya/ui.
  *
  * Every component of the library is listed here once, with its types. Nothing
- * in this package knows the Vidya domain: no protocol types, no router, no
+ * in this package reaches the network or the router: no protocol types, no
  * HTTP. A component that needs one of those belongs in the application.
+ *
+ * The one thing the library does know is the shape of lesson material, because
+ * a lesson is drawn in the console and on the student's site and a second
+ * implementation would show the author something the student never sees.
  */
 
 export { cn } from './lib/utils'
@@ -59,6 +63,31 @@ export { default as TableFilters } from './components/TableFilters'
 export type * from './components/TableFilters/types'
 export { default as Thumbnail } from './components/Thumbnail'
 export type * from './components/Thumbnail/types'
+
+/* ------------------------------ Lesson content ---------------------------- */
+
+export { default as BlockPreview } from './components/BlockPreview'
+export type * from './components/BlockPreview/types'
+export { default as LessonPreview } from './components/LessonPreview'
+export type * from './components/LessonPreview/types'
+export { default as MarkdownText } from './components/MarkdownText'
+export type * from './components/MarkdownText/types'
+export { default as MediaPreview } from './components/MediaPreview'
+export type * from './components/MediaPreview/types'
+export { default as QuizPreview } from './components/QuizPreview'
+export type * from './components/QuizPreview/types'
+export { default as SectionPreview } from './components/SectionPreview'
+export type * from './components/SectionPreview/types'
+export {
+  checkBlockUrl,
+  detectSource,
+  EmbedHosts,
+  embedSrc,
+  isEmbedSource,
+  mediaSrc,
+  type UrlProblem,
+} from './lib/blockUrls'
+export { type MediaResolver, mediaResolverKey } from './lib/mediaResolver'
 
 /* -------------------------------- Overlays -------------------------------- */
 

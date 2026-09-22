@@ -1,11 +1,11 @@
 .PHONY: install \
         check check-package typecheck lint lint-fix format format-check \
-        test test-package test-postgres-required test-postgres \
+        test test-package test-postgres-required test-postgres test-storage-required \
         coverage coverage-package \
-        mutate-diff mutate-full \
+        mutate-diff mutate-full mutate-all-diff mutate-all-full \
         api-build api-run api-test \
         db-start db-schema-drop db-migrate db-testdb-drop \
-        dev dev-up dev-down dev-logs mail storybook bootstrap \
+        dev dev-up dev-down dev-logs mail storybook bootstrap seed-student \
         gateway-up gateway-down gateway-logs \
         seed clean
 
@@ -75,6 +75,13 @@ test-postgres-required:
 test-postgres:
 	./scripts/vidya-test-suite-run postgres
 
+# Only the suites a real S3 is required for: whether a signed Content-Length is
+# honoured, whether a range request answers 206, whether a POST policy exists.
+# A fake port cannot answer any of those — they are the provider's properties,
+# not ours. Needs the stand (`make dev-up`).
+test-storage-required:
+	./scripts/vidya-test-suite-run storage-required
+
 # ---------------------------------------------------------------------------
 # Coverage
 #
@@ -104,6 +111,12 @@ mutate-diff:
 
 mutate-full:
 	./scripts/vidya-run-alone "mutation testing" ./scripts/vidya-mutation-suite-run full $(PKG)
+
+mutate-all-diff:
+	./scripts/vidya-run-alone "mutation testing" ./scripts/vidya-mutation-suite-run diff all
+
+mutate-all-full:
+	./scripts/vidya-run-alone "mutation testing" ./scripts/vidya-mutation-suite-run full all
 
 # ---------------------------------------------------------------------------
 # API service
@@ -147,6 +160,7 @@ seed:
 #
 #   780x  infrastructure   7800 postgres · 7801 redis · 7802 smtp · 7803 mail ui
 #   781x  applications     7810 api · 7811 admin · 7812 storybook · 7813 gateway
+#                          7814 student site · 7815 gateway, console host
 
 COMPOSE := docker compose -f modules/docker-compose.dev.yml
 MAIL_UI := http://localhost:7803
@@ -157,6 +171,7 @@ export VIDYA_MAILER_PORT  := 7802
 export VIDYA_API_PORT     := 7810
 export VIDYA_ADMIN_PORT   := 7811
 export VIDYA_SB_PORT      := 7812
+export VIDYA_STUDENT_PORT := 7814
 export VIDYA_API_URL      := http://localhost:7810
 
 # Query logging defaults to off (see db.config.ts); set explicitly here so
@@ -169,12 +184,25 @@ export VIDYA_DB_LOGGING   := true
 # local stand only; anything beyond one developer's machine sets its own.
 export VIDYA_JWT_SECRET   := local-dev-fixture-jwt-secret-do-not-use-elsewhere
 
+# The stand's S3, which is also the installation's default storage: a school
+# that hands over no credentials of its own writes here. Fixtures, like the
+# secret above — `media.config.ts` refuses a master key that is not 32 bytes of
+# base64, so the stand carries one that is.
+export VIDYA_MEDIA_DEFAULT_ENDPOINT      := http://127.0.0.1:7804
+export VIDYA_MEDIA_DEFAULT_REGION        := us-east-1
+export VIDYA_MEDIA_DEFAULT_BUCKET        := vidya-media
+export VIDYA_MEDIA_DEFAULT_ACCESS_KEY_ID := vidya
+export VIDYA_MEDIA_DEFAULT_SECRET        := vidya-dev-secret
+export VIDYA_MEDIA_MASTER_KEY            := bG9jYWwtZGV2LWZpeHR1cmUtbWFzdGVyLWtleS0yNTY=
+export VIDYA_MEDIA_ENDPOINT_ALLOWLIST    := 127.0.0.1
+
 dev-up:
 	$(COMPOSE) up -d
 	@echo ""
 	@echo "  postgres  localhost:7800"
 	@echo "  redis     localhost:7801"
 	@echo "  smtp      localhost:7802"
+	@echo "  s3        localhost:7804 (console 7805)"
 	@echo "  mail ui   $(MAIL_UI)"
 	@echo ""
 
@@ -195,15 +223,17 @@ dev: dev-up
 storybook:
 	$(NPM) run storybook -w @vidya/admin
 
-# The production shape, locally: one origin serving a built admin and proxying
-# /api to the API on the host. Opt-in — see the `gateway` profile note in
+# The production shape, locally: two origins — the student site and the
+# console — each serving its own build and proxying its own /api to the API on
+# the host. Opt-in — see the `gateway` profile note in
 # modules/docker-compose.dev.yml and modules/services/gateway/README.md — and
 # not part of `dev`/`dev-up`, so the everyday Vite-proxy flow is unaffected.
 # `api-run` or `dev` must already be serving the API for /api to answer.
 gateway-up:
 	$(COMPOSE) --profile gateway up -d --build gateway
 	@echo ""
-	@echo "  gateway   http://localhost:7813"
+	@echo "  student   http://localhost:7813"
+	@echo "  console   http://localhost:7815"
 	@echo ""
 
 gateway-down:
@@ -218,9 +248,17 @@ bootstrap:
 	@test -n "$(EMAIL)" || (echo "usage: make bootstrap EMAIL=you@example.com" && exit 1)
 	$(NPM) run bootstrap -w @vidya/seeder -- --email $(EMAIL)
 
+# What opening the student site needs and `bootstrap` does not make: a school
+# with a joining code and a student role set, a published course with one
+# published lesson, and an account holding no permission at all. Prints the
+# joining link and the address to sign in with. Idempotent, like `bootstrap`.
+seed-student:
+	@test -n "$(EMAIL)" || (echo "usage: make seed-student EMAIL=student@example.com" && exit 1)
+	$(NPM) run seed:student -w @vidya/seeder -- --email $(EMAIL)
+
 # ---------------------------------------------------------------------------
 # Housekeeping
 # ---------------------------------------------------------------------------
 
 clean:
-	rm -rf modules/node_modules modules/*/*/dist modules/*/*/*.tsbuildinfo
+	rm -rf modules/node_modules modules/*/*/dist modules/*/*/*.tsbuildinfo modules/*/*/.stryker-tmp .stryker-tmp

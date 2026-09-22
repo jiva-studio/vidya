@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { detectSource, mediaSrc } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
 
@@ -7,7 +8,6 @@ import { useMediaGateway } from '@/entities/media'
 import { useToasts } from '@/shared/lib'
 import { MediaPickerDialog, useMediaUpload } from '@/features/pick-media'
 
-import { mediaSrc, detectSource } from '../model/urls'
 import { mediaBlockClasses } from './MediaBlockEditor.styles'
 import MediaBlockEditorEmpty from './MediaBlockEditorEmpty.vue'
 import MediaBlockEditorFilled from './MediaBlockEditorFilled.vue'

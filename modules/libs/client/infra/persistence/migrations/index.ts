@@ -5,6 +5,8 @@ import { migration_003_groups } from './003_groups'
 import { migration_004_enrollment_request_details } from './004_enrollment_request_details'
 import { migration_005_row_scope } from './005_row_scope'
 import { migration_006_course_publication } from './006_course_publication'
+import { migration_007_answer_verdict } from './007_answer_verdict'
+import { migration_008_school_code } from './008_school_code'
 import type { Migration } from './types'
 
 /**
@@ -22,6 +24,8 @@ export const deviceMigrations: readonly Migration[] = [
   migration_004_enrollment_request_details,
   migration_005_row_scope,
   migration_006_course_publication,
+  migration_007_answer_verdict,
+  migration_008_school_code,
 ]
 
 export { migration_000_migrations_table } from './000_migrations_table'
@@ -31,5 +35,7 @@ export { migration_003_groups } from './003_groups'
 export { migration_004_enrollment_request_details } from './004_enrollment_request_details'
 export { migration_005_row_scope } from './005_row_scope'
 export { migration_006_course_publication } from './006_course_publication'
+export { migration_007_answer_verdict } from './007_answer_verdict'
+export { migration_008_school_code } from './008_school_code'
 export { EmptyMigrationSetError, runMigrations, SchemaAheadOfCodeError } from './runMigrations'
 export type { Migration, UtcClock } from './types'

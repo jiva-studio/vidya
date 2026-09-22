@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      The refresh token in localStorage (see shared/connection/tokenStore.ts) is
+      only as safe as this line: it is reachable by any script that runs on the
+      page, so the policy that keeps an injected script from running is what
+      protects it, not where the token is kept. The local database is reachable
+      the same way, and it holds the student's unsent work.
+
+      `script-src` carries `'wasm-unsafe-eval'`, which the console's policy does
+      not need and must not be given: the local database is SQLite compiled to
+      WebAssembly, and under `default-src 'self'` alone a page may not compile a
+      wasm module at all — `WebAssembly.instantiate` is refused and the site
+      opens with no database. The directive allows compiling WebAssembly and
+      nothing else; it does not open `eval()`.
+
+      `style-src` carries `unsafe-inline` on purpose, not by default: several of
+      @vidya/ui's components bind `:style` to values computed at runtime, which
+      Vue writes as inline `style=""` attributes, and CSP polices those the same
+      as a `<style>` block. Those values are never attacker input.
+
+      The API is reached under `/api` on this origin — the dev server forwards
+      it, the gateway serves it — so `default-src 'self'` covers every request
+      the site makes and no `connect-src` exception is needed.
+
+      `frame-ancestors` is deliberately absent. A `<meta>` tag cannot carry it —
+      the directive is ignored there by specification — so it has to be a
+      response header from whatever serves this build, as the gateway already
+      sends for the console.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'"
+    />
+    <title>Vidya</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/app/main.ts"></script>
+  </body>
+</html>

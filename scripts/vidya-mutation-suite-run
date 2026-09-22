@@ -49,7 +49,7 @@ skipped() {
 }
 
 usage() {
-  echo "usage: $(basename "$0") <diff|full> <@vidya/package>" >&2
+  echo "usage: $(basename "$0") <diff|full> <@vidya/package|all>" >&2
   exit 2
 }
 
@@ -68,86 +68,103 @@ done
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MODULES_DIR="$REPO_ROOT/modules"
 
-LOCATION="$(cd "$MODULES_DIR" && npm query ".workspace" | PKG="$PKG" node -e '
-  let raw = ""
-  process.stdin.on("data", (chunk) => (raw += chunk))
-  process.stdin.on("end", () => {
-    const match = JSON.parse(raw).find((w) => w.name === process.env.PKG)
-    if (!match) {
-      console.error(`unknown workspace: ${process.env.PKG}`)
-      process.exit(1)
-    }
-    console.log(match.location)
-  })
-')"
+# Unset stand/fixture env vars exported by Makefile so unit tests run in pristine isolated mode
+unset VIDYA_MEDIA_DEFAULT_ENDPOINT VIDYA_MEDIA_DEFAULT_BUCKET VIDYA_MEDIA_DEFAULT_ACCESS_KEY_ID VIDYA_MEDIA_DEFAULT_SECRET VIDYA_MEDIA_MASTER_KEY 2>/dev/null || true
 
-PKG_DIR="$MODULES_DIR/$LOCATION"
+run_for_package() {
+  local package="$1"
+  local location
+  location="$(cd "$MODULES_DIR" && npm query ".workspace" | PKG="$package" node -e '
+    let raw = ""
+    process.stdin.on("data", (chunk) => (raw += chunk))
+    process.stdin.on("end", () => {
+      const match = JSON.parse(raw).find((w) => w.name === process.env.PKG)
+      if (!match) {
+        console.error(`unknown workspace: ${process.env.PKG}`)
+        process.exit(1)
+      }
+      console.log(match.location)
+    })
+  ')"
 
-if [ ! -f "$PKG_DIR/stryker.config.json" ]; then
-  echo "$PKG has no stryker.config.json — it is not under mutation testing." >&2
-  echo "Add one next to its jest.config.js to bring it in." >&2
-  exit 1
-fi
+  local pkg_dir="$MODULES_DIR/$location"
 
-mkdir -p "$REPO_ROOT/.stryker/incremental"
-cd "$PKG_DIR"
+  if [ ! -f "$pkg_dir/stryker.config.json" ]; then
+    echo "$package has no stryker.config.json — it is not under mutation testing." >&2
+    echo "Add one next to its jest.config.js to bring it in." >&2
+    return 1
+  fi
 
-case "$MODE" in
-  full)
-    timeout "$BUDGET" npx stryker run && exit 0
-    status=$?
-    [ "$status" -eq 124 ] && skipped "It ran past the $BUDGET budget and was abandoned."
-    exit "$status"
-    ;;
-  diff)
-    BASE="$(git -C "$REPO_ROOT" merge-base HEAD origin/main 2>/dev/null || git -C "$REPO_ROOT" merge-base HEAD main)"
+  mkdir -p "$REPO_ROOT/.stryker/incremental"
+  (
+    cd "$pkg_dir"
+    echo "=== Running mutation testing ($MODE) for $package ($location) ==="
 
-    # Committed work plus whatever is still in the tree, so the run answers the
-    # question before the last commit as well as after it. Stryker's own mutate
-    # patterns do not apply to files named on the command line, so the same
-    # exclusions — specs, modules, barrel files — are applied here instead.
-    #
-    # `.vue` is absent on purpose. Stryker instruments a component with local
-    # counters, and Vue refuses a `defineProps` that reads a local, so a
-    # component written the way this project writes them cannot be compiled once
-    # it is instrumented.
-    #
-    # `apps/admin` and `libs/ui` carry a config, and both run the command
-    # runner: the vitest runner does not drive vitest 5 — it fails to resolve a
-    # root inside the sandbox, and where it starts it reports a fraction of a
-    # test per mutant, so everything survives. The command runner has no way to
-    # name the specs that cover the mutated file, so it runs the whole package
-    # suite once per mutant. A front-end package is therefore measured file by
-    # file, with `--mutate` naming what is worth the minutes, and not by a whole
-    # branch at once; `apps/mobile` carries no config at all for the same
-    # reason. Tracked as issue #61.
-    CHANGED="$(
-      {
-        git -C "$REPO_ROOT" diff --name-only --diff-filter=d "$BASE...HEAD" -- "modules/$LOCATION/src"
-        git -C "$REPO_ROOT" diff --name-only --diff-filter=d HEAD -- "modules/$LOCATION/src"
-      } \
-        | sort -u \
-        | grep -E '\.ts$' \
-        | grep -v -E '(/specs/|/__tests__/|\.spec\.ts$|\.stories\.ts$|/main\.ts$|\.module\.ts$|/index\.ts$)' \
-        | grep -v -E '(/types\.ts$|/styles\.ts$)' \
-        | grep -v -E '(/shared/datasources/|/shared/testing-app\.ts$)' \
-        | sed "s|^modules/$LOCATION/||" || true
-    )"
+    case "$MODE" in
+      full)
+        timeout "$BUDGET" npx stryker run && exit 0
+        status=$?
+        [ "$status" -eq 124 ] && skipped "It ran past the $BUDGET budget and was abandoned."
+        exit "$status"
+        ;;
+      diff)
+        local base
+        base="$(git -C "$REPO_ROOT" merge-base HEAD origin/main 2>/dev/null || git -C "$REPO_ROOT" merge-base HEAD main)"
 
-    if [ -z "$CHANGED" ]; then
-      echo "$PKG: no mutatable source changed since $BASE. Nothing to measure."
-      exit 0
-    fi
+        local changed
+        changed="$(
+          {
+            git -C "$REPO_ROOT" diff --name-only --diff-filter=d "$base...HEAD" -- "modules/$location"
+            git -C "$REPO_ROOT" diff --name-only --diff-filter=d HEAD -- "modules/$location"
+          } \
+            | sort -u \
+            | grep -E '\.ts$' \
+            | grep -v -E '(/specs/|/__tests__/|/__fixtures__/|\.spec\.ts$|\.test\.ts$|\.stories\.ts$|/main\.ts$|\.module\.ts$|/index\.ts$|/testing\.ts$)' \
+            | grep -v -E '(/types\.ts$|/styles\.ts$)' \
+            | grep -v -E '(/shared/datasources/|/shared/testing-app\.ts$)' \
+            | sed "s|^modules/$location/||" || true
+        )"
 
-    echo "$PKG: mutating $(echo "$CHANGED" | wc -l) changed file(s) since $BASE"
-    echo "$CHANGED" | sed 's/^/  /'
+        if [ -z "$changed" ]; then
+          echo "$package: no mutatable source changed since $base. Nothing to measure."
+          exit 0
+        fi
 
-    timeout "$BUDGET" npx stryker run --mutate "$(echo "$CHANGED" | paste -sd, -)" && exit 0
-    status=$?
-    [ "$status" -eq 124 ] && skipped "It ran past the $BUDGET budget and was abandoned."
-    exit "$status"
+        echo "$package: mutating $(echo "$changed" | wc -l) changed file(s) since $base"
+        echo "$changed" | sed 's/^/  /'
+
+        timeout "$BUDGET" npx stryker run --mutate "$(echo "$changed" | paste -sd, -)" && exit 0
+        status=$?
+        [ "$status" -eq 124 ] && skipped "It ran past the $BUDGET budget and was abandoned."
+        exit "$status"
+        ;;
+      *)
+        usage
+        ;;
+    esac
+  )
+}
+
+case "$PKG" in
+  all)
+    echo "=== Finding all packages with Stryker configs in $MODULES_DIR ==="
+    STATUS=0
+    for config_file in "$MODULES_DIR"/*/*/stryker.config.json; do
+      if [ -f "$config_file" ]; then
+        pkg_dir="$(dirname "$config_file")"
+        pkg_name="$(node -e "console.log(require('$pkg_dir/package.json').name)")"
+        echo ""
+        echo "================================================================================"
+        echo "Package: $pkg_name"
+        echo "================================================================================"
+        if ! run_for_package "$pkg_name"; then
+          STATUS=1
+        fi
+      fi
+    done
+    exit $STATUS
     ;;
   *)
-    usage
+    run_for_package "$PKG"
     ;;
 esac

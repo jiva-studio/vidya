@@ -49,6 +49,12 @@ jobs:
               - 'modules/package*.json'
               - 'modules/tsconfig.base.json'
               - '.github/workflows/docker-publish.yml'
+            student:
+              - 'modules/apps/student/**'
+              - 'modules/libs/**'
+              - 'modules/package*.json'
+              - 'modules/tsconfig.base.json'
+              - '.github/workflows/docker-publish.yml'
             gateway:
               - 'modules/services/gateway/**'
               - '.github/workflows/docker-publish.yml'
@@ -65,6 +71,10 @@ jobs:
 
           if [ "$FORCE_ALL" = "true" ] || [ "${{ steps.filter.outputs.admin }}" = "true" ]; then
             SERVICES=$(echo "$SERVICES" | jq -c '. + [{"name": "vidya-admin", "file": "modules/apps/admin/Dockerfile", "context": "."}]')
+          fi
+
+          if [ "$FORCE_ALL" = "true" ] || [ "${{ steps.filter.outputs.student }}" = "true" ]; then
+            SERVICES=$(echo "$SERVICES" | jq -c '. + [{"name": "vidya-student", "file": "modules/apps/student/Dockerfile", "context": "."}]')
           fi
 
           if [ "$FORCE_ALL" = "true" ] || [ "${{ steps.filter.outputs.gateway }}" = "true" ]; then

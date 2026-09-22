@@ -5,6 +5,7 @@ Vidya is a school organization platform that helps schools manage their students
 
 ## Architecture & Production
 - [Observability and Production Readiness](./Observability%20and%20Production%20Readiness.md) - logging, Sentry error tracking, telemetry, health checks, and database pooling
+- [ADR 003: School Storage Profiles](./adr/003%20School%20Storage%20Profiles.md) - storage profiles lifecycle, address derivation, and sealed envelopes
 
 
 ## Development

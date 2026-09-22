@@ -48,7 +48,7 @@ describe('SYNC_DIRECTION', () => {
     expect(SYNC_DIRECTION.courses).toBe('down')
     expect(SYNC_DIRECTION.lessons).toBe('down')
     expect(SYNC_DIRECTION.lesson_versions).toBe('down')
-    expect(SYNC_DIRECTION.block_states).toBe('up')
+    expect(SYNC_DIRECTION.block_states).toBe('both')
     expect(SYNC_DIRECTION.enrollments).toBe('both')
     expect(SYNC_DIRECTION.homework).toBe('both')
   })
@@ -119,7 +119,7 @@ describe('FIELD_OWNER', () => {
   })
 
   it('gives the client something to write and the server something to answer', () => {
-    for (const collection of Object.keys(FIELD_OWNER) as ('homework' | 'enrollments')[]) {
+    for (const collection of Object.keys(FIELD_OWNER) as (keyof typeof FIELD_OWNER)[]) {
       expect(FIELD_OWNER[collection].client.length).toBeGreaterThan(0)
       expect(FIELD_OWNER[collection].server.length).toBeGreaterThan(0)
     }
@@ -132,9 +132,9 @@ describe('ownership lookups', () => {
     expect(clientOwnedFields('courses')).toHaveLength(0)
   })
 
-  it('gives an upload-only collection to the client whole', () => {
-    expect(ownsEveryField(clientOwnedFields('block_states'))).toBe(true)
-    expect(serverOwnedFields('block_states')).toHaveLength(0)
+  it('splits an answer from the verdict on it', () => {
+    expect(clientOwnedFields('block_states')).toEqual(['state', 'updatedAt'])
+    expect(serverOwnedFields('block_states')).toEqual(['verdict'])
   })
 
   it('splits a two-way collection by name', () => {

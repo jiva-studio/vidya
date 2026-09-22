@@ -3,7 +3,9 @@
 # Ports follow one scheme, so nothing has to be remembered twice:
 #
 #   780x  infrastructure      7800 postgres · 7801 redis · 7802 smtp · 7803 mail ui
+#                       7804 s3 · 7805 s3 console
 #   781x  applications        7810 api · 7811 admin · 7812 storybook · 7813 gateway
+#                             7814 student site · 7815 gateway, console host
 #
 # Nothing here is reachable on a default port, so a system Postgres or Redis
 # already running on this machine cannot be hit by accident.
@@ -61,13 +63,52 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
-  # Reverse proxy in front of a built admin and the API. Opt-in (see the
-  # `gateway` profile note above); `make gateway-up` passes `--build`, so an
-  # admin source change is picked up on the next run rather than serving a
-  # stale bundle. TLS is off by default here — there is no certificate to hand
-  # it in a dev stand — so this only exercises the same-origin routing, the
-  # coarse rate limit and the admin document's headers, not the TLS path. See
-  # services/gateway/README.md.
+  # S3 for the stand, so uploads are exercised against a real S3 API rather
+  # than a fake. Bunny Storage, R2 and AWS all speak the same protocol, so one
+  # driver covers them; what a fake cannot cover is the protocol itself —
+  # whether a signed Content-Length is honoured, whether a range request comes
+  # back as 206. `*.storage.spec.ts` needs this service; nothing else does.
+  minio:
+    # quay, not Docker Hub: MinIO stopped publishing a `latest` tag there.
+    image: quay.io/minio/minio:latest
+    container_name: vidya-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${VIDYA_MEDIA_DEFAULT_ACCESS_KEY_ID:-vidya}
+      MINIO_ROOT_PASSWORD: ${VIDYA_MEDIA_DEFAULT_SECRET:-vidya-dev-secret}
+    ports:
+      - '7804:9000'
+      - '7805:9001'
+    volumes:
+      - vidya-minio:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Creates the bucket and exits. A bucket that has to be made by hand is a
+  # bucket the next person does not have.
+  minio-bucket:
+    image: quay.io/minio/mc:latest
+    container_name: vidya-minio-bucket
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set stand http://minio:9000 ${VIDYA_MEDIA_DEFAULT_ACCESS_KEY_ID:-vidya} ${VIDYA_MEDIA_DEFAULT_SECRET:-vidya-dev-secret} &&
+      mc mb --ignore-existing stand/${VIDYA_MEDIA_DEFAULT_BUCKET:-vidya-media} &&
+      mc anonymous set none stand/${VIDYA_MEDIA_DEFAULT_BUCKET:-vidya-media}
+      "
+
+  # Reverse proxy in front of the two built applications and the API. Opt-in
+  # (see the `gateway` profile note above); `make gateway-up` passes
+  # `--build`, so a source change is picked up on the next run rather than
+  # serving a stale bundle. TLS is off by default here — there is no
+  # certificate to hand it in a dev stand — so this only exercises the
+  # same-origin routing, the coarse rate limit and the documents' headers, not
+  # the TLS path. See services/gateway/README.md.
   gateway:
     build:
       context: ..
@@ -75,7 +116,11 @@ services:
     container_name: vidya-gateway
     profiles: ['gateway']
     ports:
-      - '7813:8080'
+      # Two ports are two origins, which is what the two hosts of a real
+      # deployment give: localStorage, IndexedDB and Web Locks stay apart
+      # without any DNS to arrange. See services/gateway/README.md.
+      - '7813:8080' # student site
+      - '7815:8081' # console
     environment:
       VIDYA_GATEWAY_API_UPSTREAM: http://host.docker.internal:${VIDYA_API_PORT:-7810}
       VIDYA_GATEWAY_RATE_LIMIT_RPS: ${VIDYA_GATEWAY_RATE_LIMIT_RPS:-20}
@@ -88,3 +133,4 @@ services:
 
 volumes:
   vidya-postgres:
+  vidya-minio:

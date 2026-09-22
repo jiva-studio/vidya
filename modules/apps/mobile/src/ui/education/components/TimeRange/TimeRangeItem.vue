@@ -18,12 +18,12 @@
 
 <script setup lang="ts">
 import { IonButton, IonIcon, IonItem, IonLabel } from '@ionic/vue'
+import { education } from '@vidya/client'
 import { Weekdays } from '@vidya/domain'
 import { useFluent } from 'fluent-vue'
 import { closeOutline } from 'ionicons/icons'
 import { computed } from 'vue'
 
-import { formatMinuteOfDay, orderDays } from '../../model/timeRanges'
 import type { TimeRangeItemEmits, TimeRangeItemProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -40,13 +40,14 @@ const fluent = useFluent()
 
 const hours = computed(
   () =>
-    `${formatMinuteOfDay(props.range.startMinute)} – ${formatMinuteOfDay(props.range.endMinute)}`,
+    `${education.formatMinuteOfDay(props.range.startMinute)} – ${education.formatMinuteOfDay(props.range.endMinute)}`,
 )
 
 const days = computed(() =>
   props.range.days.length === Weekdays.length
     ? fluent.$t('time-range-every-day')
-    : orderDays(props.range.days)
+    : education
+        .orderDays(props.range.days)
         .map((day) => fluent.$t(`weekday-short-${day}`))
         .join(' '),
 )

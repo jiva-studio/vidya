@@ -1,0 +1,47 @@
+{
+  "description": "Wire fixtures for the media contract: the server drives them through HTTP, the clients through their fake gateway, so a drift between the two is caught here rather than when the parts are first put together. Change them only together with libs/protocol/media.ts and libs/domain/media.ts. One rule runs through all of them — the bytes never pass through the API: the browser writes them by signature and reads them from storage or a CDN, and no fixture here carries a file body.",
+  "fixtures": [
+    {
+      "file": "upload-grant-put.json",
+      "name": "upload-grant-put",
+      "endpoint": "POST /media/uploads",
+      "description": "A grant where the provider has no POST policy — every Bunny zone. Size and type are bound by signing their headers, which is the only way to bind them on a presigned PUT."
+    },
+    {
+      "file": "upload-grant-post.json",
+      "name": "upload-grant-post",
+      "endpoint": "POST /media/uploads",
+      "description": "The same call where a POST policy exists (AWS, MinIO): the range is a policy condition. Also the shape of a file above the hashing limit, which carries no checksum and is not deduplicated."
+    },
+    {
+      "file": "upload-complete.json",
+      "name": "upload-complete",
+      "endpoint": "POST /media/:id/complete",
+      "description": "The record as storage describes it — size and type from the HEAD, not from the client — and the durable `/media/<id>` path a block stores."
+    },
+    {
+      "file": "media-page.json",
+      "name": "media-page",
+      "endpoint": "GET /media",
+      "description": "One page of the library, in the shape the admin's gallery already expects. Only `ready` files appear, and never another school's."
+    },
+    {
+      "file": "resolve-urls.json",
+      "name": "resolve-urls",
+      "endpoint": "POST /media/urls",
+      "description": "A screen's worth of playable addresses in one call, with the expiry rounded to the window boundary so the address is shared and cacheable. An unreadable id is absent, not null."
+    },
+    {
+      "file": "storage-profile.json",
+      "name": "storage-profile",
+      "endpoint": "PUT /edu/schools/:schoolId/storage",
+      "description": "Credentials in, never out: the answer carries the key id and four characters of the secret. `delivery` is derived from the presence of a CDN host, and applying the call retires the old profile instead of editing it."
+    },
+    {
+      "file": "refusals.json",
+      "name": "refusals",
+      "endpoint": "various",
+      "description": "Every refusal with its status and message key, including where it happens: the quota is refused at the grant, not at completion."
+    }
+  ]
+}

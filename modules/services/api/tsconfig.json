@@ -8,6 +8,7 @@
     "**/*.ts",
     "../../libs/domain/**/*.ts",
     "../../libs/entities/**/*.ts",
+    "../../libs/journal/**/*.ts",
     "../../libs/protocol/**/*.ts"
   ]
 }

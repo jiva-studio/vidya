@@ -40,6 +40,9 @@ export class HomeworkDetails implements protocol.HomeworkDetails {
   @ApiPropertyOptional({ example: 5 })
   grade?: number
 
+  @ApiPropertyOptional({ example: 'Name the chapter your quotation comes from.' })
+  comment?: string | null
+
   @ApiPropertyOptional({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   reviewedById?: domain.UserId
 

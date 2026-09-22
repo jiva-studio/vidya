@@ -1,0 +1,23 @@
+{
+  "name": "@vidya/journal",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The change log every device reads: what is journalled, how it is stamped and how it is written",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "jest --passWithNoTests"
+  },
+  "dependencies": {
+    "@vidya/domain": "^0.0.0",
+    "@vidya/entities": "*",
+    "@vidya/protocol": "^0.0.0",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.2",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0"
+  }
+}

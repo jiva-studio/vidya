@@ -90,6 +90,7 @@ export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionP
         text('school_id', 'schoolId', { ...KEY, ...EMPTY }),
         text('name', 'name', EMPTY),
         text('logo_url', 'logoUrl'),
+        text('code', 'code'),
         text('description', 'description'),
       ],
     },
@@ -191,6 +192,7 @@ export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionP
         text('status', 'status', { fallback: 'open' }),
         text('text', 'text', EMPTY),
         { column: 'grade', field: 'grade', kind: 'integer' },
+        text('comment', 'comment'),
         {
           column: 'answered_superseded_version',
           field: 'answeredSupersededVersion',
@@ -215,6 +217,7 @@ export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionP
         text('lesson_version_id', 'lessonVersionId', KEY),
         text('block_id', 'blockId', KEY),
         { column: 'state', field: 'state', kind: 'json', fallback: '{}' },
+        { column: 'verdict', field: 'verdict', kind: 'json' },
         text('updated_at', 'updatedAt', EMPTY),
       ],
     },

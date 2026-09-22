@@ -22,6 +22,13 @@ export const Routes = (baseUrl: string = '') => ({
     push: () => `${baseUrl}/sync/push`,
     cursor: () => `${baseUrl}/sync/cursor`,
   },
+  media: {
+    find: () => `${baseUrl}/media`,
+    uploads: () => `${baseUrl}/media/uploads`,
+    complete: (id: string) => `${baseUrl}/media/${id}/complete`,
+    urls: () => `${baseUrl}/media/urls`,
+    delete: (id: string) => `${baseUrl}/media/${id}`,
+  },
   edu: {
     roles: {
       find: () => `${baseUrl}/edu/roles`,
@@ -91,6 +98,13 @@ export const Routes = (baseUrl: string = '') => ({
       review: (id: string) => `${baseUrl}/edu/homework/${id}/review`,
     },
     schools: {
+      storage: {
+        get: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/storage`,
+        update: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/storage`,
+        delete: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/storage`,
+        verify: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/storage/verify`,
+        usage: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/storage/usage`,
+      },
       configs: {
         getAll: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/configs`,
         update: (schoolId: string) => `${baseUrl}/edu/schools/${schoolId}/configs`,

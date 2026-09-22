@@ -107,6 +107,7 @@ export class HomeworkController {
     const updated = await this.homework.review(work, {
       status: request.status,
       grade: request.grade,
+      comment: request.comment,
       reviewerId: auth.userId,
     })
 

@@ -1,6 +1,6 @@
 ---
 name: coder
-description: Implementation agent for features, bug fixes and refactors. Reads the project's architecture and coding-style rules, respects the spec if one exists, and finishes only when the quality gate passes.
+description: Implementation agent for features, bug fixes and refactors. Reads the project architecture and coding-style rules, verifies that a valid done.yaml exists before starting, and finishes only when all deterministic quality gates pass.
 ---
 
 # Coder Agent
@@ -9,109 +9,67 @@ The mandatory implementation workflow. This skill is the **method**; every
 project-specific constraint lives in [`../../rules/`](../../rules/) and is read
 at Phase 1, never duplicated here.
 
-## Phase 1: Load the rules
+---
 
-1. Read [`../../rules/architecture.md`](../../rules/architecture.md) — layout,
-   layering, dependency direction, structural limits.
-2. Read the coding-style rule for the layer you are touching, from
-   [`../../rules/`](../../rules/).
-3. Read [`../../rules/comments.md`](../../rules/comments.md) — what a comment
-   may say and how long it may be.
-4. Read [`../../rules/process.md`](../../rules/process.md) — who owns which
-   files when more than one agent is on the band, and what you must prove
-   before handing over.
-5. If a spec exists for the current branch at `.agents/specs/<branch-slug>.md`,
-   read it. It is the contract: its acceptance criteria define done, and its
-   non-goals define where to stop.
+## Phase 0: Pre-Condition Check (MANDATORY)
 
-Never infer a convention from surrounding code when a rule states it. Code drifts;
-the rules are what the review enforces.
+Before writing any code or modifying any files, verify that the task specification and contract are locked:
 
-## Phase 2: Design within the constraints
+1. Locate `.agents/tasks/<slug>/done.yaml`.
+2. Execute the validation gate:
+   ```bash
+   python3 -m scripts.done --validate .agents/tasks/<slug>/done.yaml
+   ```
+3. **HARD STOP RULE**:
+   - If `done.yaml` does not exist or fails validation: **DO NOT WRITE CODE**.
+   - Stop immediately and instruct the user to run `/intent` and `/spec` first.
+   - Implementation is strictly forbidden without a validated contract.
+
+---
+
+## Phase 1: Load the Rules & Task Context
+
+1. Read `.agents/tasks/<slug>/intent.md` (the "Why" and Non-Goals).
+2. Read `.agents/tasks/<slug>/spec.md` (the "What", Interfaces, and Blast Radius).
+3. Read [`../../rules/architecture.md`](../../rules/architecture.md) — layout, layering, dependency direction.
+4. Read the coding-style rule for the layer you are touching ([`../../rules/`](../../rules/)).
+5. Read [`../../rules/process.md`](../../rules/process.md) — roles, TDD red-first, and what must be proven.
+
+---
+
+## Phase 2: Design within Constraints
 
 Before writing anything, confirm the change fits:
+- **Layer boundaries** — transport does not hold domain logic; domain stays pure.
+- **Package boundaries** — cross-package imports go through public entry points (`index.ts`).
+- **No swallowed errors** — handle, rethrow, or log explicitly.
 
-- **Size and complexity limits** — if the target file is already near its
-  ceiling, decompose first, then implement. Retrofitting a split afterwards is
-  the expensive order.
-- **Layer boundaries** — transport does not hold domain logic; domain code does
-  not know about transport; pure layers stay pure.
-- **Package boundaries** — cross-package imports go through the package's public
-  entry point, never a relative path that climbs out of it.
-- **Determinism** — in pure layers, ambient clocks, timers and randomness are
-  injected as ports, not called directly.
-- **No swallowed errors** — handle, rethrow, log, or write the comment that
-  explains why ignoring is safe.
+---
 
-If the change cannot fit the constraints, say so and propose the refactor. Do not
-quietly exceed a limit.
+## Phase 3: Implement (TDD)
 
-## Phase 3: Implement
+1. **Red Phase**: Write the failing test first and verify it fails for the right reason.
+2. **Green Phase**: Implement minimal logic until test passes.
+3. **Wire Phase**: Re-export from `index.ts`, register handlers, wire bindings.
 
-Prefer decomposing early over refactoring at the ceiling: a second focused file
-is always cheaper than one that has to be split later.
+---
 
-Leave nothing unwired. A new module that nothing imports, a handler nothing
-routes to, a component nothing renders — these read as complete and are not.
-Stage 0 of [`../review/SKILL.md`](../review/SKILL.md) rejects exactly this.
+## Phase 4: Local Quality Gate
 
-### Names you choose in this phase
-
-A function is named with a verb: a name says what calling it does. `keep`,
-`kindOf`, `stamped`, `take` name the answer or nothing at all — `storeFile`,
-`detectKind`, `stampSchema`, `handleAndStop` name the act. A predicate may read
-as `isPublished`, `hasRight` or `fails`; a bare adjective names a value and
-belongs to a `computed`.
-
-Reach for the name before the comment. A docblock written to explain what a
-call does is a rename waiting to happen, and the name is read at every call
-while the docblock is read only where it is written. The full form of this is
-in [`../../rules/coding-style-frontend.md`](../../rules/coding-style-frontend.md),
-section 3.
-
-Everything you write is in English — code, comments, test names, the sample
-content in stories and fixtures. Russian belongs in `.ftl` bundles and in the
-tests that assert what those bundles render.
-
-### Comments you write in this phase
-
-The full rule is [`../../rules/comments.md`](../../rules/comments.md). The four
-things it forbids, because they are the four that keep happening:
-
-1. **No identifiers from documents that are not in the repository.** `(D-14)`,
-   `(I-2, AC-22f)`, `(T-S-35)` — the plan and the spec are not committed, so for
-   the next reader these point nowhere. This includes test names: a test says
-   what breaks, not which row of which table asked for it.
-2. **No defect history.** What was broken and how it was found belongs in the
-   commit message. The docblock describes the code as it stands.
-3. **Size matches the subject.** One field gets one line. A non-trivial
-   algorithm gets a paragraph. Anything longer is documentation and belongs in
-   `docs/`, linked by path.
-4. **Say why, not what.** What the code does is the code's job — if a comment is
-   needed to explain that, the name is wrong. A comment exists for the constraint,
-   the invariant, or the trade-off that the reader cannot see.
-5. **All the fields or none of them.** A type whose sixth field carries a
-   docblock and whose other five do not reads as if five were forgotten. Either
-   the field comments are worth writing for each, or what is worth saying goes
-   into the type's own docblock.
-
-## Phase 4: Gatekeeper (strict)
-
-While working, use the narrow gate — the same four stages against the one
-workspace you are changing:
-
+While working, run the narrow check:
 ```bash
-make check-package PKG=@vidya/api
+make check-package PKG=@vidya/...
+```
+And verify mutation score:
+```bash
+make mutate-diff PKG=@vidya/...
 ```
 
-Before reporting the task complete, run the full gate from the repository root,
-and the mutation score on what you changed:
+---
 
-```bash
-make check
-make mutate-diff PKG=@vidya/api
-```
+## Phase 5: Task Completion & Stop-Hook Verification
 
+<<<<<<< HEAD
 The [`../makefile/SKILL.md`](../makefile/SKILL.md) skill documents every target.
 
 **A partial gate is not a gate.** `check-package` is the inner loop and not a
@@ -128,6 +86,5 @@ If it prints `SKIPPED`, that package cannot be scored today and the runner says
 why. Report the gap and move on. Never wait out a mutation run that has gone
 past its budget: the runner abandons it, and so should you.
 
-If any check fails, fix the violation and re-run until the gate exits 0. Report
-the result honestly: if something is still failing, say which and why, rather
-than describing the task as done.
+When you believe the task is done, simply finish your turn.
+The deterministic **Stop-Hook** will automatically execute `scripts/done/` to verify all claims in `done.yaml` (including mutation tests and critic checks). If any check fails, you will receive exact error details to fix.

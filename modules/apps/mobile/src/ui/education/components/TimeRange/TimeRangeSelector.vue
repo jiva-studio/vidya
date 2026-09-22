@@ -33,13 +33,13 @@
 
 <script setup lang="ts">
 import { IonChip } from '@ionic/vue'
+import { education } from '@vidya/client'
 import type { TimeRange } from '@vidya/domain'
 import { MAX_TIME_RANGES } from '@vidya/domain'
 import { ref } from 'vue'
 
 import { TimePicker } from '@/design'
 
-import { everyDay, TIME_RANGE_PRESETS, type TimeRangePreset } from '../../model/timeRanges'
 import TimeRangeItem from './TimeRangeItem.vue'
 import type { TimeRangeSelectorEmits, TimeRangeSelectorProps } from './types'
 
@@ -53,14 +53,14 @@ const emit = defineEmits<TimeRangeSelectorEmits>()
 
 /* --------------------------------- State ---------------------------------- */
 
-const presets = TIME_RANGE_PRESETS
+const presets = education.TIME_RANGE_PRESETS
 
 /** The interval the picker is open on; `range` is absent for a new one. */
 const edited = ref<{ index: number | null; range?: TimeRange } | null>(null)
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onPresetClicked(preset: TimeRangePreset) {
+function onPresetClicked(preset: education.TimeRangePreset) {
   add(preset.range)
 }
 
@@ -89,8 +89,8 @@ function onPickerConfirmed(chosen: { startMinute: number; endMinute: number }) {
 
   // The days of an interval being corrected are not in the picker, so they
   // come back from the interval itself rather than from the default.
-  if (open.index === null) add({ days: everyDay(), ...chosen })
-  else replace(open.index, { days: open.range?.days ?? everyDay(), ...chosen })
+  if (open.index === null) add({ days: education.everyDay(), ...chosen })
+  else replace(open.index, { days: open.range?.days ?? education.everyDay(), ...chosen })
 }
 
 function onPickerCancelled() {

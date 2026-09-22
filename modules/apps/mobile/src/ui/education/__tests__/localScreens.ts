@@ -19,6 +19,7 @@ import type {
   LocalLessonVersion,
   LocalSchool,
 } from '@vidya/client'
+import type { SubmissionState } from '@vidya/client'
 import { education } from '@vidya/client'
 import type { SyncCollection, SyncRejectionReason } from '@vidya/domain'
 import { isLive, isRecruiting } from '@vidya/domain'
@@ -29,7 +30,6 @@ import { createMemoryHistory, createRouter, type RouteLocationRaw } from 'vue-ro
 
 import sharedResources from '@/shared/i18n'
 import educationResources from '@/ui/education/i18n'
-import type { SubmissionState } from '@/ui/sync'
 import syncResources from '@/ui/sync/i18n'
 
 import { routes } from '../routes'
@@ -286,6 +286,7 @@ function buildRepositories(): LocalRepositories {
       // would let a row pushed later appear inside an answer already given.
       list: async () => seed.schools.slice(),
       getById: async (id) => seed.schools.find((item) => item.id === id) ?? null,
+      getByCode: async (code) => seed.schools.find((item) => item.code === code) ?? null,
     },
 
     courses: {
