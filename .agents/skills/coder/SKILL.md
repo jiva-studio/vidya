@@ -69,5 +69,22 @@ make mutate-diff PKG=@vidya/...
 
 ## Phase 5: Task Completion & Stop-Hook Verification
 
+<<<<<<< HEAD
+The [`../makefile/SKILL.md`](../makefile/SKILL.md) skill documents every target.
+
+**A partial gate is not a gate.** `check-package` is the inner loop and not a
+substitute: a package's own tests say nothing about the packages that import it,
+and a change that satisfies one stage routinely fails another — a decomposition
+that fixes a line-count violation still has to compile, stay formatted and keep
+the rest of the workspace green.
+
+**A green suite is not the same as a tested change.** `mutate-diff` breaks your
+new code on purpose and checks that something fails. If a mutant survives, the
+suite is passing for a reason unrelated to the behaviour you added.
+
+If it prints `SKIPPED`, that package cannot be scored today and the runner says
+why. Report the gap and move on. Never wait out a mutation run that has gone
+past its budget: the runner abandons it, and so should you.
+
 When you believe the task is done, simply finish your turn.
 The deterministic **Stop-Hook** will automatically execute `scripts/done/` to verify all claims in `done.yaml` (including mutation tests and critic checks). If any check fails, you will receive exact error details to fix.

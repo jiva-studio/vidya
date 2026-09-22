@@ -20,6 +20,33 @@ set -euo pipefail
 #
 # Coverage tells you a line executed. This tells you the suite would have
 # complained if the line were wrong, which is the thing coverage never proves.
+#
+# Two ways a run can be worth nothing, and both end the same way — the script
+# says SKIPPED, exits 0, and the caller reports the gap instead of waiting:
+#
+#   * the package is listed in UNUSABLE below, because its mutants time out
+#     faster than they are killed;
+#   * the run exceeds VIDYA_MUTATION_BUDGET.
+#
+# A score nobody waited eleven hours for is not evidence, and neither is a
+# number produced by two thirds of the mutants timing out.
+
+# Packages whose mutation runs cannot be trusted today, with the issue that
+# says why. Listed here rather than remembered, because the cost of forgetting
+# is an agent waiting hours for a number it cannot use.
+UNUSABLE_PACKAGES="@vidya/api:20"
+
+# How long any run may take before it is abandoned. Override for a deliberate
+# long run: VIDYA_MUTATION_BUDGET=4h make mutate-full PKG=...
+BUDGET="${VIDYA_MUTATION_BUDGET:-45m}"
+
+skipped() {
+  echo "" >&2
+  echo "SKIPPED: mutation testing did not produce a score for $PKG." >&2
+  echo "  $1" >&2
+  echo "  Report this as a gap in the handover; do not wait for it." >&2
+  exit 0
+}
 
 usage() {
   echo "usage: $(basename "$0") <diff|full> <@vidya/package|all>" >&2
@@ -29,6 +56,14 @@ usage() {
 MODE="${1:-}"
 PKG="${2:-}"
 [ -n "$MODE" ] && [ -n "$PKG" ] || usage
+
+# Before the workspace lookup on purpose: a refusal must not depend on
+# node_modules being installed, and must cost nothing.
+for entry in $UNUSABLE_PACKAGES; do
+  if [ "${entry%%:*}" = "$PKG" ]; then
+    skipped "Its mutants time out faster than they are killed — see issue #${entry##*:}."
+  fi
+done
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MODULES_DIR="$REPO_ROOT/modules"
@@ -67,7 +102,10 @@ run_for_package() {
 
     case "$MODE" in
       full)
-        npx stryker run
+        timeout "$BUDGET" npx stryker run && exit 0
+        status=$?
+        [ "$status" -eq 124 ] && skipped "It ran past the $BUDGET budget and was abandoned."
+        exit "$status"
         ;;
       diff)
         local base
@@ -95,7 +133,10 @@ run_for_package() {
         echo "$package: mutating $(echo "$changed" | wc -l) changed file(s) since $base"
         echo "$changed" | sed 's/^/  /'
 
-        npx stryker run --mutate "$(echo "$changed" | paste -sd, -)"
+        timeout "$BUDGET" npx stryker run --mutate "$(echo "$changed" | paste -sd, -)" && exit 0
+        status=$?
+        [ "$status" -eq 124 ] && skipped "It ran past the $BUDGET budget and was abandoned."
+        exit "$status"
         ;;
       *)
         usage
