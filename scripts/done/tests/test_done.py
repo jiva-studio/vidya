@@ -49,7 +49,7 @@ class TestDoneHarness(unittest.TestCase):
         }
         is_valid, errors = validate_done_manifest(invalid)
         self.assertFalse(is_valid)
-        self.assertTrue(any("unknown kind" in e for e in errors))
+        self.assertTrue(any("unknown tool" in e or "unknown kind" in e for e in errors))
 
     def test_circuit_breaker_max_retries(self):
         import tempfile, shutil

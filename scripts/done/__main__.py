@@ -7,6 +7,7 @@ from typing import Optional
 from scripts.done.yaml_loader import load_yaml
 from scripts.done.config import TASKS_DIR, REPO_ROOT
 from scripts.done.validator import validate_done_manifest
+from scripts.done.pipeline_loader import validate_pipeline_manifest
 from scripts.done.engine import DoneEngine
 
 def find_active_task_spec() -> Optional[Path]:
@@ -37,13 +38,37 @@ def find_active_task_spec() -> Optional[Path]:
 def main():
     parser = argparse.ArgumentParser(description="Deterministic task completion harness and validator.")
     parser.add_argument("--validate", type=str, help="Validate a done.yaml manifest against schema.")
+    parser.add_argument("--validate-pipeline", type=str, help="Validate a pipeline.yaml file against schema.")
     parser.add_argument("--spec", type=str, help="Run verification against specific done.yaml path.")
     parser.add_argument("--task", type=str, help="Run verification for specific task slug in .agents/tasks/<slug>.")
     parser.add_argument("--hook", action="store_true", help="Run in Stop-hook mode with JSON stdin/stdout.")
 
     args = parser.parse_args()
 
-    # 1. Validate mode
+    # 1. Validate pipeline mode
+    if args.validate_pipeline:
+        p = Path(args.validate_pipeline).resolve()
+        if not p.exists():
+            print(f"Error: Pipeline file not found at {p}", file=sys.stderr)
+            sys.exit(1)
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                data = load_yaml(p)
+        except Exception as e:
+            print(f"YAML Syntax Error: {str(e)}", file=sys.stderr)
+            sys.exit(1)
+
+        is_valid, errors = validate_pipeline_manifest(data)
+        if is_valid:
+            print(f"✅ pipeline.yaml at {p.name} is VALID.")
+            sys.exit(0)
+        else:
+            print(f"❌ pipeline.yaml schema validation failed with {len(errors)} error(s):", file=sys.stderr)
+            for err in errors:
+                print(f"  - {err}", file=sys.stderr)
+            sys.exit(1)
+
+    # 2. Validate done manifest mode
     if args.validate:
         p = Path(args.validate).resolve()
         if not p.exists():
@@ -66,7 +91,7 @@ def main():
                 print(f"  - {err}", file=sys.stderr)
             sys.exit(1)
 
-    # 2. Hook mode
+    # 3. Hook mode
     if args.hook:
         if os.environ.get("VIDYA_DONE") == "0" or os.environ.get("FORCE_STOP") == "1":
             print(json.dumps({"decision": "allow"}))
@@ -82,7 +107,7 @@ def main():
         print(result.get("hook_payload", json.dumps({"decision": "allow"})))
         sys.exit(0)
 
-    # 3. Direct execution mode
+    # 4. Direct execution mode
     target_spec = None
     if args.spec:
         target_spec = Path(args.spec).resolve()
@@ -99,20 +124,17 @@ def main():
     engine = DoneEngine(target_spec)
     result = engine.run(is_hook_mode=False)
 
-    print("\n=======================================================")
-    print(f"Task: {result.get("slug", "unknown")}")
-    print("=======================================================")
-    for r in result.get("results", []):
-        mark = "✅" if r["passed"] else "❌"
-        print(f"{mark} [{r['kind']}] {r['claim_id']} ({r['duration_ms']:.0f}ms)")
-        if not r["passed"] and r.get("message"):
-            print(f"   Error: {r[message]}")
-
-    if result.get("passed"):
-        print("\n🎉 ALL CLAIMS PASSED! Task is complete and ready for PR.")
+    print("")
+    print("=" * 60)
+    if result["passed"]:
+        print(f"🎉 TASK [{result['slug']}] VERIFIED COMPLETED (Total: {result['total_duration_ms']:.1f}ms)")
         sys.exit(0)
     else:
-        print("\n⛔ VERIFICATION FAILED. See report in artifacts/done-report.md")
+        print(f"❌ TASK [{result['slug']}] VERIFICATION FAILED")
+        for res in result["results"]:
+            status = "✅ PASS" if res["passed"] else "❌ FAIL"
+            cached_str = " [CACHED]" if res.get("cached") else ""
+            print(f"  {status}{cached_str} {res['claim_id']} ({res['kind']}) - {res['message']}")
         sys.exit(1)
 
 if __name__ == "__main__":

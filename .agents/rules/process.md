@@ -99,15 +99,14 @@ An agent that cannot produce these says so and names what is missing. Reporting 
 
 ### The gate and the mutation score
 
-`make check` and `make mutate-diff` are run once per branch, by whoever owns it, after the bands are green. An agent runs neither.
+Quality gates are deterministic and orchestrated via `python3 -m scripts.done --spec .agents/tasks/<slug>/spec.md` (or `--hook`).
+The harness evaluates tiered claims, leverages content-addressed hash receipts (`artifacts/state.json`) to skip re-running unchanged mutation diffs, and feeds any survived mutants directly into the Adversarial Reviewer.
 
-Mid-branch a full gate executes the red suites of every band still in flight, so it says nothing about the one asking. A mutation run costs more than it looks: before the first mutant it runs the package's whole suite once as a dry run (15 minutes is where `@vidya/api` gives up), then one covering-test run per mutant — and in the packages driven by the command runner, `apps/admin` and `libs/ui`, a whole suite per mutant.
-
-Both targets go through `scripts/vidya-run-alone`, which waits for its turn rather than failing: the turn is taken in the common git directory, which every worktree resolves to the same path whatever branch it is on, and each turn is appended to `vidya-run-alone.log` beside it — who ran what, where, and for how long, readable from any checkout. Waiting is unbounded and announced on stderr every minute: these runs take tens of minutes, so any cap short enough to be useful would kill a caller for being second in line. A turn always ends — the holder finishes, or dies and the kernel releases it. `VIDYA_WAIT_SECONDS=<n>` caps the wait where a caller genuinely cannot afford one.
+`make check` and `make mutate-diff` can also be run directly per branch. Both targets go through `scripts/vidya-run-alone` to prevent worktree collision.
 
 Some packages cannot answer at all: their mutants time out faster than they are killed. The runner knows which, refuses them in a second and prints `SKIPPED`, and every run is time-boxed by `VIDYA_MUTATION_BUDGET`. A skipped or abandoned run is a gap to report in the handover, never something to wait out — the hand mutations stand in its place.
 
-An agent that needs a mutation score, or a gate wider than its own suites, asks the band owner for it.
+An agent that needs a mutation score, or a gate wider than its own suites, asks the band owner or runs `python3 -m scripts.done`.
 
 ---
 

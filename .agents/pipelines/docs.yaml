@@ -1,0 +1,14 @@
+name: docs
+description: "Documentation and spec authoring workflow"
+stages:
+  - id: authoring
+    role: "Doc Author"
+    prompt: "Write documentation according to style guidelines"
+
+  - id: critic
+    role: "Doc Critic"
+    prompt: "Review technical clarity and cross-links"
+
+  - id: gatekeeper
+    type: harness
+    run: "python3 -m scripts.done --spec"

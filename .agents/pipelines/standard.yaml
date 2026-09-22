@@ -1,0 +1,17 @@
+name: standard
+description: "Standard TDD workflow for regular features and components"
+stages:
+  - id: red-phase
+    role: "Test Author"
+    prompt: "Author red test suite derived from spec.md"
+    verify: "tests_failed_red"
+
+  - id: green-phase
+    role: "Code Implementer"
+    prompt: "Implement clean code to make tests pass"
+    forbid_edits: ["tests/**", "**/*.spec.*", "**/specs/**"]
+    verify: "tests_passed_green"
+
+  - id: gatekeeper
+    type: harness
+    run: "python3 -m scripts.done --spec"

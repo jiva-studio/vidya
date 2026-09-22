@@ -1,0 +1,29 @@
+name: hardened
+description: "Hardened TDD workflow with diff mutation analysis, survived mutant loop, and adversarial review for core/critical features"
+stages:
+  - id: red-phase
+    role: "Test Author"
+    prompt: "Author red test suite strictly derived from spec.md acceptance criteria and prove red failure"
+    verify: "tests_failed_red"
+
+  - id: green-phase
+    role: "Code Implementer"
+    prompt: "Implement minimal clean code to turn tests green without editing test files"
+    forbid_edits: ["tests/**", "**/*.spec.*", "**/specs/**"]
+    verify: "tests_passed_green"
+
+  - id: mutation-gate
+    type: claim
+    claim_kind: mutation
+    mode: diff
+
+  - id: adversarial-review
+    role: "Adversarial Reviewer"
+    inputs: ["diff", "survived_mutants"]
+    prompt: "Break the implementation using intent.md invariants and eliminate all survived mutants"
+    on_reject: loop_to(red-phase)
+    on_approve: next_stage
+
+  - id: gatekeeper
+    type: harness
+    run: "python3 -m scripts.done --spec"

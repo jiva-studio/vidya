@@ -1,0 +1,11 @@
+name: fast
+description: "Fast-path workflow for simple hotfixes, formatting, and UI styling"
+stages:
+  - id: implementation
+    role: "Solo Coder"
+    prompt: "Implement fix and verify narrow tests pass"
+    verify: "tests_passed_green"
+
+  - id: gatekeeper
+    type: harness
+    run: "python3 -m scripts.done --spec"

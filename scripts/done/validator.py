@@ -7,6 +7,7 @@ from scripts.done.adapters import (
     CriticClaimTool,
     HygieneClaimTool,
 )
+from scripts.done.pipeline_loader import BUILTIN_PIPELINES, PIPELINES_DIR, DEFAULT_PIPELINE_FILE
 
 TOOL_REGISTRY: Dict[str, ClaimTool] = {
     "make": MakeClaimTool(),
@@ -23,6 +24,17 @@ def validate_done_manifest(data: Any) -> Tuple[bool, List[str]]:
 
     if "slug" not in data or not isinstance(data["slug"], str) or not data["slug"].strip():
         errors.append("Missing or empty required field: \"slug\"")
+
+    # Validate pipeline reference if present
+    pipeline_name = data.get("pipeline")
+    if pipeline_name:
+        if not isinstance(pipeline_name, str):
+            errors.append("\"pipeline\" must be a string identifier (e.g. \"hardened\", \"standard\", \"fast\")")
+        else:
+            custom_exists = (PIPELINES_DIR / f"{pipeline_name}.yaml").exists() or DEFAULT_PIPELINE_FILE.exists()
+            builtin_exists = pipeline_name in BUILTIN_PIPELINES
+            if not custom_exists and not builtin_exists:
+                errors.append(f"Unknown pipeline profile: \"{pipeline_name}\"")
 
     claims = data.get("claims")
     if not claims or not isinstance(claims, list) or len(claims) == 0:
@@ -43,15 +55,16 @@ def validate_done_manifest(data: Any) -> Tuple[bool, List[str]]:
         else:
             claim_ids.add(cid)
 
-        kind = claim.get("kind")
+        # Support both 'tool' and 'kind'
+        kind = claim.get("tool") or claim.get("kind")
         if not kind or not isinstance(kind, str):
-            errors.append(f"Claim \"{cid or idx}\" is missing \"kind\"")
+            errors.append(f"Claim \"{cid or idx}\" is missing \"tool\" or \"kind\"")
             continue
 
         tool = TOOL_REGISTRY.get(kind)
         if not tool:
             supported = ", ".join(TOOL_REGISTRY.keys())
-            errors.append(f"Claim \"{cid}\" has unknown kind \"{kind}\". Supported kinds: {supported}")
+            errors.append(f"Claim \"{cid}\" references unknown tool \"{kind}\". Supported tools: {supported}")
             continue
 
         tool_errors = tool.validate(claim)

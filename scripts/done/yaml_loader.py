@@ -25,25 +25,44 @@ def load_yaml(file_path_or_text: Any) -> Any:
         content = str(file_path_or_text)
 
     try:
-        node_script = """
+        candidate_paths = [
+            str(REPO_ROOT / "modules"),
+            str(REPO_ROOT),
+            str(REPO_ROOT.parent / "vidya" / "modules"),
+            str(REPO_ROOT.parent / "vidya"),
+        ]
+        candidate_paths_json = json.dumps(candidate_paths)
+        node_script = f"""
 const fs = require("fs");
-const yaml = require("js-yaml");
+const candidatePaths = {candidate_paths_json};
+let yaml;
+for (const p of candidatePaths) {{
+    try {{
+        const yamlPath = require.resolve("js-yaml", {{ paths: [p] }});
+        yaml = require(yamlPath);
+        break;
+    }} catch (e) {{}}
+}}
+if (!yaml) {{
+    yaml = require("js-yaml");
+}}
+
 let input = "";
 process.stdin.on("data", chunk => input += chunk);
-process.stdin.on("end", () => {
-    try {
+process.stdin.on("end", () => {{
+    try {{
         const obj = yaml.load(input);
         process.stdout.write(JSON.stringify(obj));
-    } catch(e) {
+    }} catch(e) {{
         process.stderr.write(e.message);
         process.exit(1);
-    }
-});
+    }}
+}});
 """
         res = subprocess.run(
             ["node", "-e", node_script],
             input=content,
-            cwd=REPO_ROOT / "modules",
+            cwd=str(REPO_ROOT),
             capture_output=True,
             text=True,
             timeout=10
