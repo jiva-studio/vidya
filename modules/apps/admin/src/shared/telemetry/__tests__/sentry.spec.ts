@@ -20,19 +20,19 @@ vi.mock('@sentry/vue', () => ({
 }))
 
 describe('admin sentry integration', () => {
-  it('does not initialize when VITE_SENTRY_DSN is absent', () => {
+  it('does not initialize when VITE_SENTRY_DSN is absent', async () => {
     const mockApp = {} as App
-    const initialized = initSentry(mockApp)
+    const initialized = await initSentry(mockApp)
 
     expect(initialized).toBe(false)
     expect(isSentryEnabled()).toBe(false)
     expect(Sentry.init).not.toHaveBeenCalled()
   })
 
-  it('initializes and configures Sentry when VITE_SENTRY_DSN is present', () => {
+  it('initializes and configures Sentry when VITE_SENTRY_DSN is present', async () => {
     vi.stubEnv('VITE_SENTRY_DSN', 'https://mock@sentry.io/456')
     const mockApp = {} as App
-    const initialized = initSentry(mockApp)
+    const initialized = await initSentry(mockApp)
 
     expect(initialized).toBe(true)
     expect(isSentryEnabled()).toBe(true)

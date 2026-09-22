@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+"""
+Deterministic Validator for intent.md artifacts.
+Ensures that business intent is complete, grounded, and 100% free of technical code pollution.
+"""
+
+import re
+import sys
+from pathlib import Path
+from typing import List, Tuple
+
+# Technical terms and code tokens strictly forbidden in intent.md
+BANNED_TECHNICAL_PATTERNS = [
+    (r'\b[a-zA-Z0-9_-]+\.(?:vue|ts|tsx|js|jsx|sql|prisma|css|scss|json)\b', 'file names or extensions', re.IGNORECASE),
+    (r'\b(?:DTO|TypeORM|ORM|migration|migrations|schema\.prisma)\b', 'database or ORM terms', re.IGNORECASE),
+    (r'\b(?:database\s+table|database\s+column|foreign\s+key|primary\s+key)\b', 'database schema terms', re.IGNORECASE),
+    (r'\b(?:interface\s+[A-Z][a-zA-Z0-9_]*|class\s+[A-Z][a-zA-Z0-9_]*|type\s+[A-Z][a-zA-Z0-9_]*\s*=)', 'code symbol declarations', 0),
+    (r'\b(?:HTTP\s+(?:GET|POST|PUT|PATCH|DELETE)|(?:GET|POST|PUT|PATCH|DELETE)\s+/[a-zA-Z0-9_/-]+)', 'API endpoint routes', 0),
+    (r'\b(?:use[A-Z][a-zA-Z0-9]+|props\.[a-zA-Z0-9_]+|emit\([\'"][^\'"]+[\'"]\))\b', 'component implementation internals', 0),
+]
+
+REQUIRED_SECTIONS = [
+    ('## 1. Prior Art & Established Solutions', 'Prior Art section'),
+    ('## 2. Problem & JTBD', 'Problem & JTBD section'),
+    ('## 3. Scope Boundaries & Strict Non-Goals', 'Scope & Non-Goals section'),
+    ('## 4. Adversarial Failure Modes & Mitigations', 'Adversarial failure modes section'),
+    ('## 5. Invariants & Business Constraints', 'Invariants section'),
+]
+
+def validate_intent(content: str) -> Tuple[bool, List[str]]:
+    errors: List[str] = []
+
+    if not content.strip():
+        return False, ["intent.md is empty"]
+
+    # 1. Check title and slug metadata
+    if not re.search(r'^#\s+Intent:', content, re.MULTILINE):
+        errors.append("Missing top-level header '# Intent: <Title>'")
+    if not re.search(r'\*\*Task Slug:\*\*\s+`[a-z0-9-]+`', content):
+        errors.append("Missing or malformed metadata: '**Task Slug:** `<slug>`'")
+
+    # 2. Check all 5 mandatory sections
+    for header, name in REQUIRED_SECTIONS:
+        if header not in content:
+            errors.append(f"Missing mandatory section: '{header}' ({name})")
+
+    # 3. Check Prior Art contains at least one URL link
+    prior_art_match = re.search(r'## 1\. Prior Art.*?(?=## 2\.|\Z)', content, re.DOTALL)
+    if prior_art_match:
+        section_text = prior_art_match.group(0)
+        if not re.search(r'https?://|\[[^\]]+\]\(http[^\)]+\)', section_text):
+            errors.append("Section '1. Prior Art' must contain at least one external benchmark reference/URL")
+
+    # 4. Check JTBD elements
+    jtbd_match = re.search(r'## 2\. Problem & JTBD.*?(?=## 3\.|\Z)', content, re.DOTALL)
+    if jtbd_match:
+        section_text = jtbd_match.group(0)
+        if '**Root Pain' not in section_text:
+            errors.append("Section '2. Problem & JTBD' missing '**Root Pain & Trigger:**'")
+        if '**Target User' not in section_text:
+            errors.append("Section '2. Problem & JTBD' missing '**Target User & Scenario:**'")
+        if '**Desired Outcome' not in section_text:
+            errors.append("Section '2. Problem & JTBD' missing '**Desired Outcome:**'")
+
+    # 5. Check Non-Goals
+    scope_match = re.search(r'## 3\. Scope Boundaries.*?(?=## 4\.|\Z)', content, re.DOTALL)
+    if scope_match:
+        section_text = scope_match.group(0)
+        if 'Strictly Out of Scope' not in section_text and 'Non-Goals' not in section_text:
+            errors.append("Section '3. Scope Boundaries' missing explicit 'Strictly Out of Scope (Non-Goals)'")
+
+    # 6. Check Adversarial markdown table
+    adv_match = re.search(r'## 4\. Adversarial Failure Modes.*?(?=## 5\.|\Z)', content, re.DOTALL)
+    if adv_match:
+        section_text = adv_match.group(0)
+        table_rows = [line for line in section_text.splitlines() if line.strip().startswith('|') and not line.strip().startswith('| :--') and not 'Failure Scenario' in line]
+        if len(table_rows) < 2:
+            errors.append("Section '4. Adversarial Failure Modes' must contain a table with at least 2 failure scenarios")
+
+    # 7. Check Invariants
+    inv_match = re.search(r'## 5\. Invariants & Business Constraints.*', content, re.DOTALL)
+    if inv_match:
+        section_text = inv_match.group(0)
+        inv_bullets = [line for line in section_text.splitlines() if line.strip().startswith('-') or line.strip().startswith('1.') or line.strip().startswith('2.')]
+        if len(inv_bullets) < 2:
+            errors.append("Section '5. Invariants & Business Constraints' must contain at least 2 explicit invariants")
+
+    # 8. Anti-Technical Pollution Check
+    lines = content.splitlines()
+    for line_idx, line in enumerate(lines, 1):
+        for pattern, description in BANNED_TECHNICAL_PATTERNS:
+            match = re.search(pattern, line, re.IGNORECASE)
+            if match:
+                matched_text = match.group(0)
+                errors.append(
+                    f"Line {line_idx}: Technical pollution detected ('{matched_text}' matches {description}). "
+                    f"Intent must be 100% human/business layer. Move technical details to /spec."
+                )
+
+    return (len(errors) == 0), errors
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: vidya-intent-validate <path-to-intent.md>")
+        sys.exit(1)
+
+    target = Path(sys.argv[1]).resolve()
+    if not target.exists():
+        print(f"Error: intent file not found at {target}", file=sys.stderr)
+        sys.exit(1)
+
+    with open(target, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    is_valid, errors = validate_intent(content)
+    if is_valid:
+        print(f"✅ Intent artifact '{target.name}' is VALID (100% pure product requirements, zero technical pollution).")
+        sys.exit(0)
+    else:
+        print(f"❌ Intent validation FAILED for '{target.name}':", file=sys.stderr)
+        for err in errors:
+            print(f"  - {err}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

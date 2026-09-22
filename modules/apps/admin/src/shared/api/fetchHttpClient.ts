@@ -1,7 +1,7 @@
 import type { $Fetch, FetchError, FetchOptions } from 'ofetch'
 import { ofetch } from 'ofetch'
 
-import { addAdminBreadcrumb } from '../sentry'
+import { addAdminBreadcrumb } from '../telemetry'
 import { HttpError, OfflineError } from './errors'
 import { backoffMs, retryAfterMs } from './retryTiming'
 import type { FetchHttpClientOptions, HttpClient, HttpQuery } from './types'
