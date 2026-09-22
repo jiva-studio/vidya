@@ -163,5 +163,6 @@ Conventions that coding agents must follow live in [`AGENTS.md`](./AGENTS.md) an
 - [`.agents/rules/coding-style-backend.md`](./.agents/rules/coding-style-backend.md) — NestJS and TypeScript conventions
 - [`.agents/rules/coding-style-frontend.md`](./.agents/rules/coding-style-frontend.md) — Vue component conventions
 - [`.agents/rules/comments.md`](./.agents/rules/comments.md) — what a comment may say, and how long it may be
-- [`.agents/rules/process.md`](./.agents/rules/process.md) — roles, file ownership and evidence when several agents share a branch
-- [`.agents/skills/`](./.agents/skills) — the coder, makefile and 4-stage review workflows
+- [`.agents/skills/band/SKILL.md`](./.agents/skills/band/SKILL.md) — multi-agent TDD orchestrator with automated mutation analysis
+- [`.agents/pipelines/`](./.agents/pipelines) — tiered quality gate pipeline profiles (hardened, standard, fast, docs)
+- [`.agents/skills/`](./.agents/skills) — the coder, makefile, band, and 4-stage review workflows

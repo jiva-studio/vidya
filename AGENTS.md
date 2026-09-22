@@ -11,7 +11,7 @@ clients for school administration and students, in one npm-workspace monorepo.
 - **Backend Coding Style (NestJS)**: [`.agents/rules/coding-style-backend.md`](./.agents/rules/coding-style-backend.md)
 - **Frontend Coding Style (Vue)**: [`.agents/rules/coding-style-frontend.md`](./.agents/rules/coding-style-frontend.md)
 - **Comments & Docblocks**: [`.agents/rules/comments.md`](./.agents/rules/comments.md)
-- **Working in Bands (multi-agent process)**: [`.agents/rules/process.md`](./.agents/rules/process.md)
+- **Multi-Agent TDD Orchestrator (`/band`)**: [`.agents/skills/band/SKILL.md`](./.agents/skills/band/SKILL.md)
 - **Specification Skill (`/spec`)**: [`.agents/skills/spec/SKILL.md`](./.agents/skills/spec/SKILL.md)
 - **Unified Review Skill (`/review`)**: [`.agents/skills/review/SKILL.md`](./.agents/skills/review/SKILL.md)
 - **Coder Agent Skill**: [`.agents/skills/coder/SKILL.md`](./.agents/skills/coder/SKILL.md)
@@ -93,7 +93,7 @@ Every feature or non-trivial change follows a strict 3-stage lifecycle:
    - Performs codebase reconnaissance, maps blast radius, specifies architecture, DTOs, DB migrations, and produces `done.yaml`.
    - Cannot proceed without a valid `intent.md`.
 3. **`/band` or `/coder` (Implementation & Verification)**:
-   - **`/band` (Multi-Agent TDD Orchestrator)**: Autonomously coordinates specialized subagents: Test Author (Red Phase) $\to$ Code Implementer (Green Phase) $\to$ Adversarial Reviewer $\to$ Quality Gatekeeper according to `rules/process.md`.
+   - **`/band` (Multi-Agent TDD Orchestrator)**: Autonomously coordinates specialized subagents: Test Author (Red Phase) $\to$ Code Implementer (Green Phase) $\to$ Mutation Runner (Diff Analysis) $\to$ Adversarial Reviewer $\to$ Quality Gatekeeper according to [`.agents/skills/band/SKILL.md`](./.agents/skills/band/SKILL.md) and configured pipelines in [`.agents/pipelines/`](./.agents/pipelines/).
    - **`/coder` (Direct Implementation Agent)**: Implements strictly according to `spec.md` in a sequential TDD loop and passes all `done.yaml` quality gates.
 
 ---

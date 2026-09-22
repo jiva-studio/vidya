@@ -21,8 +21,11 @@ def format_hook_response(
     failed = [r for r in results if not r["passed"]]
     lines = [f"Deterministic checks failed (Attempt {attempt}):"]
     for f in failed:
-        lines.append(f"\n[FAIL] Claim {f[claim_id]} ({f[kind]}):")
-        lines.append(f"  {f[message]}")
+        cid = f.get("claim_id", f.get("id", "unknown"))
+        kind = f.get("kind", f.get("tool", "unknown"))
+        msg = f.get("message", "")
+        lines.append(f"\n[FAIL] Claim {cid} ({kind}):")
+        lines.append(f"  {msg}")
 
     lines.append("\nYou MUST fix the failing claims above before finishing the task.")
     return json.dumps({

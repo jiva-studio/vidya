@@ -5,8 +5,8 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from scripts.done.ports.claim_tool import ClaimTool, ClaimResult
-from scripts.done.config import REPO_ROOT
+from band.ports.claim_tool import ClaimTool, ClaimResult
+from band.config import REPO_ROOT
 
 class CriticClaimTool(ClaimTool):
     @property
@@ -25,12 +25,12 @@ class CriticClaimTool(ClaimTool):
 
     def _find_cli_runner(self, requested: str) -> Optional[Tuple[str, str]]:
         if requested in ("gemini", "auto"):
-            p = shutil.which("gemini") or "/etc/profiles/per-user/akd/bin/gemini"
-            if Path(p).exists():
+            p = shutil.which("gemini")
+            if p and Path(p).exists():
                 return ("gemini", p)
         if requested in ("claude", "auto"):
-            p = shutil.which("claude") or "/etc/profiles/per-user/akd/bin/claude"
-            if Path(p).exists():
+            p = shutil.which("claude")
+            if p and Path(p).exists():
                 return ("claude", p)
         return None
 
@@ -49,10 +49,10 @@ class CriticClaimTool(ClaimTool):
             if intent_path.exists():
                 intent_text = intent_path.read_text(encoding="utf-8")
 
-        # Collect git diff
+        # Collect active working tree git diff first
         try:
             diff_res = subprocess.run(
-                ["git", "diff", "HEAD~1...HEAD"],
+                ["git", "diff", "HEAD"],
                 cwd=REPO_ROOT,
                 capture_output=True,
                 text=True,
@@ -61,7 +61,7 @@ class CriticClaimTool(ClaimTool):
             git_diff = diff_res.stdout
             if not git_diff.strip():
                 diff_res = subprocess.run(
-                    ["git", "diff", "HEAD"],
+                    ["git", "diff", "HEAD~1...HEAD"],
                     cwd=REPO_ROOT,
                     capture_output=True,
                     text=True,
