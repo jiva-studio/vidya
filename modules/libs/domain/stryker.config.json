@@ -12,19 +12,15 @@
   "coverageAnalysis": "perTest",
   "ignoreStatic": true,
   "incremental": true,
-  "incrementalFile": "../../../.stryker/incremental/api.json",
+  "incrementalFile": "../../../.stryker/incremental/domain.json",
   "mutate": [
-    "src/**/*.ts",
-    "!src/**/specs/**",
-    "!src/**/*.spec.ts",
-    "!src/**/*.dto.ts",
-    "!src/**/*.entity.ts",
-    "!src/**/*.interface.ts",
-    "!src/main.ts",
-    "!src/**/*.module.ts",
-    "!src/**/index.ts",
-    "!src/shared/datasources/**",
-    "!src/edu/shared/testing-app.ts"
+    "*.ts",
+    "permissions/**/*.ts",
+    "ports/**/*.ts",
+    "sync/**/*.ts",
+    "!__tests__/**",
+    "!**/*.spec.ts",
+    "!index.ts"
   ],
   "reporters": ["clear-text", "progress"],
   "clearTextReporter": {
@@ -32,8 +28,6 @@
   },
   "timeoutMS": 5000,
   "timeoutFactor": 1.5,
-  "dryRunTimeoutMinutes": 5,
-  "disableBail": false,
   "thresholds": {
     "high": 80,
     "low": 65,

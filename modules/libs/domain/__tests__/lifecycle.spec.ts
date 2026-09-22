@@ -7,7 +7,7 @@
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 
 import {
   EnrollmentStatus,
@@ -85,7 +85,15 @@ describe('GroupStatuses', () => {
 
 /* -------------------------------------------------------------------------- */
 
-const MODULES = join(__dirname, '..', '..', '..')
+const findModulesRoot = (start: string): string => {
+  let curr = start
+  while (curr !== '/' && basename(curr) !== 'modules') {
+    curr = dirname(curr)
+  }
+  return curr
+}
+
+const MODULES = findModulesRoot(__dirname)
 
 const SKIPPED = new Set(['node_modules', 'dist', 'coverage', '.stryker-tmp', '__tests__'])
 

@@ -1,0 +1,32 @@
+{
+  "$schema": "../../node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "npm",
+  "testRunner": "command",
+  "commandRunner": {
+    "command": "npx vitest run"
+  },
+  "coverageAnalysis": "off",
+  "incremental": true,
+  "incrementalFile": "../../../.stryker/incremental/client.json",
+  "mutate": [
+    "infra/**/*.ts",
+    "ports/**/*.ts",
+    "usecases/**/*.ts",
+    "!__tests__/**",
+    "!**/*.spec.ts",
+    "!index.ts",
+    "!testing.ts"
+  ],
+  "reporters": ["clear-text", "progress"],
+  "clearTextReporter": {
+    "maxTestsToLog": 0
+  },
+  "timeoutMS": 10000,
+  "timeoutFactor": 1.5,
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "break": 50
+  },
+  "concurrency": 6
+}
