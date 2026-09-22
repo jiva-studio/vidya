@@ -1,8 +1,21 @@
+<<<<<<< HEAD
 import { Injectable, Logger } from '@nestjs/common'
+||||||| 2f94496
+import { Injectable } from '@nestjs/common'
+=======
+import { Inject, Injectable, Logger } from '@nestjs/common'
+>>>>>>> origin/feat/media-upload
 import { InjectDataSource } from '@nestjs/typeorm'
+<<<<<<< HEAD
+||||||| 2f94496
+import { StorageProfile } from '@vidya/entities'
+=======
+import { DefaultAbandonedAfterMs, MediaConfig } from '@vidya/api/configs'
+>>>>>>> origin/feat/media-upload
 import { Media, StorageProfile } from '@vidya/entities'
 import { DataSource, QueryRunner } from 'typeorm'
 
+import { prefixOf } from './mediaLimits'
 import { MediaRowsService } from './mediaRows.service'
 import { SchoolStorageService } from './schoolStorage.service'
 
@@ -12,14 +25,8 @@ import { SchoolStorageService } from './schoolStorage.service'
  */
 const SWEEP_LOCK_ID = 4_182_004
 
-/**
- * How long an upload is given before it is presumed abandoned.
- *
- * A day rather than an hour because an upload is a person on a hotel wifi with
- * a two-gigabyte lecture, and a sweep that collects a running upload deletes
- * the object out from under it.
- */
-const ABANDONED_AFTER_MS = 24 * 60 * 60 * 1000
+/** The part of the installation's media configuration the sweep reads. */
+type SweepWindow = { abandonedAfterMs: number }
 
 /**
  * Clearing up after uploads that were never finished.
@@ -34,18 +41,32 @@ const ABANDONED_AFTER_MS = 24 * 60 * 60 * 1000
  * advisory lock on a dedicated connection: whoever gets it sweeps, and everyone
  * else leaves without an error rather than deleting the same objects twice.
  *
+<<<<<<< HEAD
  * A row a deletion archived and never finished is swept the same way. It is the
  * one state nobody else repairs: the bytes are no longer charged for, so nothing
  * but this notices that the object is still being paid for.
+||||||| 2f94496
+=======
+ * One object that will not go must not cost the rest their tick: a failure is
+ * named and the row kept, so an operator can find it and the next tick reaches
+ * everything behind it.
+>>>>>>> origin/feat/media-upload
  */
 @Injectable()
 export class MediaSweepService {
+<<<<<<< HEAD
   private readonly log = new Logger(MediaSweepService.name)
+||||||| 2f94496
+=======
+  private readonly logger = new Logger(MediaSweepService.name)
+>>>>>>> origin/feat/media-upload
 
   constructor(
     @InjectDataSource() private readonly dataSource: DataSource,
     private readonly rows: MediaRowsService,
     private readonly storages: SchoolStorageService,
+    @Inject(MediaConfig.KEY)
+    private readonly config: SweepWindow = { abandonedAfterMs: DefaultAbandonedAfterMs },
   ) {}
 
   async sweepAbandonedUploads(): Promise<void> {
@@ -57,7 +78,7 @@ export class MediaSweepService {
       taken = await this.takeLock(runner)
       if (!taken) return
 
-      const before = new Date(Date.now() - ABANDONED_AFTER_MS)
+      const before = new Date(Date.now() - this.config.abandonedAfterMs)
       await this.dropAbandonedRows(before)
       await this.abortStaleSessions(before)
     } finally {
@@ -119,7 +140,7 @@ export class MediaSweepService {
   private async abortSessionsIn(profile: StorageProfile, before: Date): Promise<void> {
     const opened = this.storages.openProfile(profile)
 
-    for await (const session of opened.storage.listUnfinished(profile.prefix)) {
+    for await (const session of opened.storage.listUnfinished(prefixOf(profile))) {
       if (session.startedAt < before) {
         await opened.storage.abortUnfinished(session.key, session.uploadId)
       }

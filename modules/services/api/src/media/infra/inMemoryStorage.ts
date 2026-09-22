@@ -1,4 +1,7 @@
-import { Injectable } from '@nestjs/common'
+import { createHash } from 'node:crypto'
+
+import { Inject, Injectable } from '@nestjs/common'
+import { CLOCK, Clock, systemClock } from '@vidya/api/shared/clock'
 import {
   MediaKind,
   MediaStoragePort,
@@ -8,11 +11,13 @@ import {
   toIsoDateTime,
   UploadGrant,
   UploadLimits,
+  windowExpiry,
 } from '@vidya/domain'
 
 import { StorageFailedError } from '../storageFailure'
 import { acceptedCredentials } from './fixtureCredentials'
 import { MediaStorageFactory, SignedHttpPort, StorageCredentials } from './ports'
+import { refuseStreamSigning } from './streamSigning'
 
 export type StorageCall = {
   op: 'signUpload' | 'write' | 'head' | 'signRead' | 'signStream' | 'readRange' | 'remove' | 'list'
@@ -30,7 +35,18 @@ const addressOf = (credentials: StorageCredentials, key: string): string => {
   return `memory://${credentials.bucket}/${key}?${query.toString()}`
 }
 
-const expiryIn = (seconds: number) => toIsoDateTime(new Date(Date.now() + seconds * 1000))
+const expiryIn = (nowMs: number, seconds: number) => toIsoDateTime(new Date(nowMs + seconds * 1000))
+
+/**
+ * A read address, carrying the instant it stops working the way a real one
+ * does.
+ *
+ * The expiry is part of the address rather than only of the answer beside it,
+ * because that is what makes two readers inside one window share a cache entry
+ * — or fail to, if the rounding is ever dropped.
+ */
+const readAddressOf = (credentials: StorageCredentials, key: string, expiresAtMs: number): string =>
+  `${addressOf(credentials, key)}&expires=${Math.floor(expiresAtMs / 1000)}`
 
 /**
  * Storage without a bucket behind it, for the suites that test what the API
@@ -49,19 +65,38 @@ export class InMemoryStorage implements MediaStorageFactory, SignedHttpPort {
 
   private readonly objects = new Map<string, StoredObject & { body: Buffer }>()
 
+  // Defaulted so a suite can open the port with `new InMemoryStorage()`; the
+  // application always has the clock the rest of it is stamped from.
+  constructor(@Inject(CLOCK) private readonly clock: Clock = systemClock) {}
+
   openStorage(credentials: StorageCredentials): MediaStoragePort {
-    return new InMemoryStorageDriver(this, credentials)
+    return new InMemoryStorageDriver(this, credentials, this.clock)
   }
 
+  /**
+   * Writes bytes by the grant, verifying the checksum the grant bound.
+   *
+   * A write whose bytes hash to something else is refused the way the signed
+   * HTTP port reports a 400 from a provider. The digest is kept only when the
+   * grant carried one: a provider answers `HeadObject` with no checksum at all
+   * for an object stored without one, whatever `ChecksumMode` asks for, so a
+   * fake that hashed every object would report digests production never has.
+   */
   async writeByGrant(grant: UploadGrant, body: Buffer): Promise<void> {
     const { bucket, key, accessKeyId } = this.readAddress(grant.url)
     this.record('write', key, accessKeyId)
+
+    const bound = grant.headers['x-amz-checksum-sha256']
+    const hashed = createHash('sha256').update(body).digest('base64')
+
+    if (bound && bound !== hashed) throw new StorageFailedError('unreachable')
 
     this.objects.set(`${bucket}/${key}`, {
       key,
       body,
       sizeBytes: body.length,
       contentType: grant.headers['Content-Type'] ?? 'application/octet-stream',
+      sha256: bound ? hashed : undefined,
     })
   }
 
@@ -117,6 +152,7 @@ class InMemoryStorageDriver implements MediaStoragePort {
   constructor(
     private readonly store: InMemoryStorage,
     private readonly credentials: StorageCredentials,
+    private readonly clock: Clock,
   ) {}
 
   async signUpload(key: string, limits: UploadLimits): Promise<UploadGrant> {
@@ -128,28 +164,29 @@ class InMemoryStorageDriver implements MediaStoragePort {
       headers: {
         'Content-Type': limits.contentType,
         'Content-Length': String(limits.sizeBytes),
+        ...(limits.sha256 ? { 'x-amz-checksum-sha256': limits.sha256 } : {}),
       },
       fields: {},
-      expiresAt: expiryIn(UPLOAD_WINDOW_SECONDS),
+      expiresAt: expiryIn(this.clock.nowMs(), UPLOAD_WINDOW_SECONDS),
     }
   }
 
   async signRead(key: string, kind: MediaKind): Promise<SignedUrl> {
     this.store.record('signRead', key, this.credentials.accessKeyId)
 
+    const expiresAtMs = windowExpiry(this.clock.nowMs(), ReadWindowSeconds[kind])
+
     return {
-      url: addressOf(this.credentials, key),
-      expiresAt: expiryIn(ReadWindowSeconds[kind]),
+      url: readAddressOf(this.credentials, key, expiresAtMs),
+      expiresAt: toIsoDateTime(new Date(expiresAtMs)),
     }
   }
 
-  async signStream(prefix: string, kind: MediaKind): Promise<SignedUrl> {
+  /** Refused for the reason the real driver refuses it, and with the same key. */
+  async signStream(prefix: string): Promise<SignedUrl> {
     this.store.record('signStream', prefix, this.credentials.accessKeyId)
 
-    return {
-      url: addressOf(this.credentials, prefix),
-      expiresAt: expiryIn(ReadWindowSeconds[kind]),
-    }
+    return refuseStreamSigning(this.credentials.delivery)
   }
 
   async head(key: string): Promise<StoredObject | undefined> {

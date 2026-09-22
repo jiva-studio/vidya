@@ -128,7 +128,15 @@ export type ResolveMediaRequest = {
 }
 
 export type ResolveMediaResponse = {
-  /** Keyed by media id. An id the caller may not read is absent, not null. */
+  /**
+   * Keyed by media id, holding what this caller may read and nothing else.
+   *
+   * An id they may not read is absent rather than refused: a screen asking for
+   * twelve files must still draw the eleven it is entitled to, and one stale
+   * reference in old content cannot be allowed to blank a lesson. Absence also
+   * says less than a refusal would — it does not disclose whether the file
+   * exists at all, only that this caller gets no address for it.
+   */
   urls: Record<string, domain.SignedUrl>
 }
 
@@ -143,31 +151,25 @@ export type ResolveMediaResponse = {
  * characters, which is enough to tell two credentials apart and not enough to
  * use one. `delivery` is derived from whether a CDN host is present, not chosen
  * by a person.
+ *
+ * `lent` says the files live in the installation's own bucket rather than one
+ * the school brought. Everything that would reach that bucket — the endpoint,
+ * the bucket name, the key id, the tail of the secret — is then absent, because
+ * it is not the school's to hold; `prefix` still names where its own files sit.
  */
 export type StorageProfileView = {
   id: domain.StorageProfileId
   schoolId: domain.SchoolId
   provider: domain.StorageProvider
-
-  /**
-   * Whether this school is writing into the installation's storage rather than
-   * its own.
-   *
-   * A lent profile answers with no `endpoint`, `bucket`, `accessKeyId` or
-   * `secretTail`: those name the installation's bucket and the key that opens
-   * it, and a school's technician has no business reading either. What is left
-   * is what they can act on — how much room they have, how much they have
-   * used, and that bringing their own credentials is still an option.
-   */
   lent: boolean
 
-  /** The host the files are served from, and blank while the storage is lent. */
-  endpoint: string
+  /** Only `s3-compatible` carries one; for the rest it is derived and refused here. */
+  endpoint: string | null
 
   region: string
-  bucket: string
+  bucket: string | null
   prefix: string
-  accessKeyId: string
+  accessKeyId: string | null
   secretTail: string
   delivery: domain.StorageDelivery
   publicBaseUrl: string | null
@@ -251,7 +253,20 @@ export const MediaRefusals = Object.freeze({
   // The stored secret will not decrypt — ours to explain, theirs to re-enter.
   secretUnreadable: 'storage-secret-unreadable',
 
+  // This profile cannot sign a whole catalogue, only one object at a time.
+  streamUnsupported: 'storage-stream-unsupported',
+
+  // Somebody else rotated the same school's keys first: what is live now is
+  // not what this request started from, so it is read again and re-sent.
+  rotationConflicted: 'storage-rotation-conflicted',
+
+  // A stored ceiling that cannot be carried exactly — refused rather than
+  // answered with a different number than the one in the column.
+  quotaUnreadable: 'storage-quota-unreadable',
+
   notConfigured: 'storage-not-configured',
 } as const)
 
 export type MediaRefusal = (typeof MediaRefusals)[keyof typeof MediaRefusals]
+
+export { MediaResolveLimit } from '@vidya/domain'

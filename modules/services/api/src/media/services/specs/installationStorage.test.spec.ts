@@ -6,7 +6,6 @@ import { School, StorageProfile } from '@vidya/entities'
 import { randomUUID } from 'crypto'
 import { DataSource } from 'typeorm'
 
-import { hasOwnCredentials } from '../../mappers'
 import { StorageFailedError } from '../../storageFailure'
 import { InstallationStorageService } from '../installationStorage.service'
 import { MediaUsageService } from '../mediaUsage.service'
@@ -106,7 +105,7 @@ describe('a school that handed over no storage credentials', () => {
 
     const decided = await new StorageQuotasService(ds).findQuotaBytes(schoolId)
 
-    expect(quotaBytesFor(decided, hasOwnCredentials(profile), QUOTA)).toBe(QUOTA)
+    expect(quotaBytesFor(decided, profile.schoolId !== null, QUOTA)).toBe(QUOTA)
     expect(await new MediaUsageService(ds).usedBytesOf(schoolId)).toBe(0)
   })
 

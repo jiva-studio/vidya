@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
@@ -24,6 +25,9 @@ const fixture = (name: string): UploadFixture =>
   JSON.parse(readFileSync(join(FIXTURES, `${name}.json`), 'utf8')) as UploadFixture
 
 export const grantPutFixture = fixture('upload-grant-put')
+
+/** The digest a browser sends with its ask: base64 SHA-256, as the wire carries it. */
+export const digestOf = (body: Buffer): string => createHash('sha256').update(body).digest('base64')
 export const mediaPageFixture = fixture('media-page')
 
 /** One row of `media`, as raw SQL hands it back before any mapper sees it. */
@@ -79,6 +83,10 @@ const addressOf = (grant: UploadGrant): { bucket: string; key: string } => {
 }
 
 export const createMediaFlow = async (app: INestApplication): Promise<MediaFlow> => {
+  const server = app.getHttpServer()
+  if (!server.listening) {
+    await app.listen(0)
+  }
   const ctx = await createStorageContext(app)
   const storage = app.get(InMemoryStorage)
   const ds = app.get(DataSource)

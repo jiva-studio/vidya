@@ -2,7 +2,7 @@ import { Module, Provider } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
-import { MediaConfig } from '@vidya/api/configs'
+import { CLOCK, systemClock } from '@vidya/api/shared/clock'
 import { AuditLogService, RedisService } from '@vidya/api/shared/services'
 import {
   AuditLog,
@@ -22,6 +22,7 @@ import {
   MediaCatalogController,
   MediaDeletionController,
   MediaUploadsController,
+  MediaUrlsController,
   StorageProfilesController,
 } from './controllers'
 import {
@@ -37,9 +38,11 @@ import {
 import {
   EndpointGuardService,
   InstallationStorageService,
+  MediaAddressesService,
   MediaCatalogService,
   MediaDeletionService,
   MediaMasterKeyService,
+  MediaReadAccessService,
   MediaRowsService,
   MediaSweepSchedule,
   MediaSweepService,
@@ -48,6 +51,7 @@ import {
   MediaUsageService,
   SchoolStorageService,
   SecretSealingService,
+  StorageAuditService,
   StorageProbeService,
   StorageProfilesService,
   StorageQuotasService,
@@ -65,6 +69,9 @@ const pickDriver = <TPort>(config: ConfigType<typeof MediaConfig>, fake: TPort, 
  * real driver says so through the environment instead of undoing an override.
  */
 const storageProviders: Provider[] = [
+  // The signature windows are rounded to wall-clock boundaries, so the instant
+  // a driver signs at has to be movable by a suite.
+  { provide: CLOCK, useValue: systemClock },
   InMemoryStorage,
   S3StorageFactory,
   FetchSignedHttp,
@@ -116,6 +123,7 @@ const storageProviders: Provider[] = [
     MediaUploadsController,
     MediaCatalogController,
     MediaDeletionController,
+    MediaUrlsController,
   ],
   providers: [
     // What the authentication guard needs to read a token; `AuthModule`
@@ -123,6 +131,7 @@ const storageProviders: Provider[] = [
     RedisService,
     AuthUsersService,
     RevokedTokensService,
+    AuditLogService,
 
     AuditLogService,
 
@@ -130,8 +139,14 @@ const storageProviders: Provider[] = [
 
     EndpointGuardService,
     InstallationStorageService,
+    MediaAddressesService,
     MediaCatalogService,
+<<<<<<< HEAD
     MediaDeletionService,
+||||||| 2f94496
+=======
+    MediaReadAccessService,
+>>>>>>> origin/feat/media-upload
     MediaRowsService,
     MediaSweepSchedule,
     MediaSweepService,
@@ -140,6 +155,7 @@ const storageProviders: Provider[] = [
     MediaUsageIndexService,
     SchoolStorageService,
     SecretSealingService,
+    StorageAuditService,
     StorageProbeService,
     StorageProfilesService,
     StorageQuotasService,

@@ -3,6 +3,7 @@ import { PermissionKeys } from '@vidya/domain'
 import { describe, expect, it } from 'vitest'
 
 import { groupPermissions, groupState, splitGroups, toggleGroup, togglePermission } from '../model'
+import type { PermissionGroup } from '../model/types'
 
 const groupOf = (prefix: string) => {
   const group = groupPermissions().find((candidate) => candidate.prefix === prefix)
@@ -111,6 +112,27 @@ describe('splitGroups', () => {
 
     expect(dealt[0][0].prefix).toBe('roles')
     expect(dealt[1][0].prefix).toBe('lessons')
+  })
+
+  // A column is a place to put things, so it is never skipped over: a first
+  // group taller than the share must land in it rather than past it.
+  const tallFirst = (): PermissionGroup[] => [
+    { prefix: 'huge', keys: Array.from({ length: 20 }, (_, at) => `huge:${at}` as PermissionKey) },
+    { prefix: 'a', keys: ['a:read' as PermissionKey] },
+    { prefix: 'b', keys: ['b:read' as PermissionKey] },
+  ]
+
+  for (const columns of [2, 3, 4]) {
+    it(`leaves no column empty while a later one is filled, across ${columns} columns`, () => {
+      const dealt = splitGroups(tallFirst(), columns)
+      const lastFilled = dealt.reduce((at, column, index) => (column.length > 0 ? index : at), -1)
+
+      expect(dealt.slice(0, lastFilled + 1).map((column) => column.length > 0)).not.toContain(false)
+    })
+  }
+
+  it('puts the first group in the first column, however tall it is', () => {
+    expect(splitGroups(tallFirst(), 3)[0].map((group) => group.prefix)).toEqual(['huge'])
   })
 
   it('leaves the columns within a row of each other in height', () => {

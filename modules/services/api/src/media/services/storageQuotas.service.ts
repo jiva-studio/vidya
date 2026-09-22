@@ -4,6 +4,26 @@ import { SchoolId } from '@vidya/domain'
 import { SchoolStorageQuota } from '@vidya/entities'
 import { DataSource } from 'typeorm'
 
+import { StorageFailedError } from '../storageFailure'
+
+/**
+ * A `bigint` ceiling as a number, or a refusal.
+ *
+ * The column holds more than a JSON number carries, and `Number()` rounds the
+ * excess away without saying so: nothing downstream could tell the answer apart
+ * from the ceiling somebody set. Nine petabytes is past any school library, so
+ * the answer to one is a refusal rather than a wider type on the wire.
+ */
+const exactBytes = (stored: string): number => {
+  const bytes = Number(stored)
+
+  if (!Number.isSafeInteger(bytes) || String(bytes) !== stored.trim()) {
+    throw new StorageFailedError('quota-unreadable')
+  }
+
+  return bytes
+}
+
 /**
  * What a school may store.
  *
@@ -49,10 +69,22 @@ export class StorageQuotasService {
 
     if (!row) return undefined
 
-    return row.quotaBytes === null ? null : Number(row.quotaBytes)
+    return row.quotaBytes === null ? null : exactBytes(String(row.quotaBytes))
+  }
+
+  /**
+   * Refuses a ceiling past what a number carries exactly, before anything has
+   * been written: it arrived through a JSON parser that had already rounded it,
+   * so storing it would record a ceiling nobody asked for.
+   */
+  assertSettable(quotaBytes: number | null | undefined): void {
+    if (quotaBytes === null || quotaBytes === undefined) return
+    if (!Number.isSafeInteger(quotaBytes)) throw new StorageFailedError('quota-unreadable')
   }
 
   async setQuotaBytes(schoolId: SchoolId, quotaBytes: number | null): Promise<void> {
+    this.assertSettable(quotaBytes)
+
     await this.dataSource.getRepository(SchoolStorageQuota).upsert(
       {
         schoolId,

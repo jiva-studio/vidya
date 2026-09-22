@@ -1,10 +1,9 @@
 import { randomUUID } from 'node:crypto'
 
 import { Inject, Injectable } from '@nestjs/common'
+import { CLOCK, Clock } from '@vidya/api/shared/clock'
 import { Hlc, hlcNow, hlcToString, parseHlc } from '@vidya/domain'
 import { EntityManager } from 'typeorm'
-
-import { CLOCK, Clock } from './clock'
 
 /**
  * The prefix every server-issued stamp carries. It is a prefix rather than the

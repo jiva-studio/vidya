@@ -86,7 +86,7 @@ describe('reading a school storage profile back', () => {
     expect(response.text).not.toContain(storageProfileFixture.request.tokenSecret)
   })
 
-  it('shows no profile for a school that runs on the storage of the installation', async () => {
+  it('shows no profile when the school has none and the installation lends none', async () => {
     const response = await get(ctx.one.school.id)
 
     expect(response.status).toBe(200)

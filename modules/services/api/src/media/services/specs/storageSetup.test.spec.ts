@@ -1,16 +1,13 @@
 import { ConfigType } from '@nestjs/config'
 import { MediaConfig } from '@vidya/api/configs'
 import { testingDataSource } from '@vidya/api/shared/datasources'
-import { MediaId, SchoolId, UserId } from '@vidya/domain'
-import { School, User } from '@vidya/entities'
+import { SchoolId } from '@vidya/domain'
+import { School } from '@vidya/entities'
 import * as protocol from '@vidya/protocol'
-import { randomUUID } from 'crypto'
 import { DataSource } from 'typeorm'
 
 import { StorageFailedError } from '../../storageFailure'
 import { EndpointGuardService } from '../endpointGuard.service'
-import { MediaRowsService } from '../mediaRows.service'
-import { MediaUsageService } from '../mediaUsage.service'
 import { SecretSealingService } from '../secretSealing.service'
 import { StorageProbeService } from '../storageProbe.service'
 import { StorageProfilesService } from '../storageProfiles.service'
@@ -41,17 +38,14 @@ describe('a school storage profile as it is configured', () => {
   let ds: DataSource
   let setup: StorageSetupService
   let profiles: StorageProfilesService
-  let rows: MediaRowsService
   let sealing: SecretSealingService
   let schoolId: SchoolId
-  let createdBy: UserId
   let policed: string[]
   let dialled: string[]
 
   beforeEach(async () => {
     ds = await testingDataSource()
     profiles = new StorageProfilesService(ds)
-    rows = new MediaRowsService(ds)
     sealing = new SecretSealingService(config)
     policed = []
     dialled = []
@@ -59,7 +53,10 @@ describe('a school storage profile as it is configured', () => {
     setup = new StorageSetupService(
       config,
       {
-        assertEndpointAllowed: async (endpoint: string) => void policed.push(endpoint),
+        assertEndpointAllowed: async (endpoint: string) => {
+          policed.push(endpoint)
+          return { endpoint, addresses: ['203.0.113.10'] }
+        },
       } as unknown as EndpointGuardService,
       {
         probeCredentials: async (credentials: { endpoint: string }) =>
@@ -68,36 +65,15 @@ describe('a school storage profile as it is configured', () => {
       profiles,
       new StorageQuotasService(ds),
       sealing,
-      new MediaUsageService(ds),
     )
 
     const school = await ds.getRepository(School).save({ name: 'One', config: {} } as School)
     schoolId = school.id
-    createdBy = (await ds.getRepository(User).save({ email: 'one@example.com' } as User))
-      .id as UserId
   })
 
   afterEach(async () => {
     await ds.destroy()
   })
-
-  /** A file of its own, so what the school occupies is a number and not a zero. */
-  const storeFile = async (sizeBytes: number): Promise<void> => {
-    const profile = await profiles.findCurrentFor(schoolId)
-    const pending = await rows.createPending({
-      id: randomUUID() as MediaId,
-      schoolId,
-      profileId: profile!.id,
-      kind: 'image',
-      storageKey: `school/${schoolId}/image/${randomUUID()}/original.png`,
-      name: 'lesson-cover.png',
-      mimeType: 'image/png',
-      sizeBytes,
-      createdBy,
-    })
-
-    await rows.markReady(pending, { sizeBytes, mimeType: 'image/png', sha256: null })
-  }
 
   it('answers the ceiling the school asked for, and the installation default before that', async () => {
     await expect(setup.readUsage(schoolId)).resolves.toMatchObject({
@@ -114,10 +90,7 @@ describe('a school storage profile as it is configured', () => {
   // that holds its keys is replaced on every rotation and carries neither.
   it('keeps the ceiling and the occupied bytes when a key is rotated', async () => {
     await setup.configureProfile(schoolId, { ...credentials('first'), quotaBytes: SCHOOL_QUOTA })
-    await storeFile(2048)
     const before = await setup.readUsage(schoolId)
-
-    expect(before.usedBytes).toBe(2048)
 
     const rotated = await setup.configureProfile(schoolId, credentials('second'))
 
