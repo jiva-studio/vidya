@@ -1,6 +1,17 @@
+<<<<<<< HEAD
+import { Injectable, Logger } from '@nestjs/common'
+||||||| 2f94496
+import { Injectable } from '@nestjs/common'
+=======
 import { Inject, Injectable, Logger } from '@nestjs/common'
+>>>>>>> origin/feat/media-upload
 import { InjectDataSource } from '@nestjs/typeorm'
+<<<<<<< HEAD
+||||||| 2f94496
+import { StorageProfile } from '@vidya/entities'
+=======
 import { DefaultAbandonedAfterMs, MediaConfig } from '@vidya/api/configs'
+>>>>>>> origin/feat/media-upload
 import { Media, StorageProfile } from '@vidya/entities'
 import { DataSource, QueryRunner } from 'typeorm'
 
@@ -30,13 +41,25 @@ type SweepWindow = { abandonedAfterMs: number }
  * advisory lock on a dedicated connection: whoever gets it sweeps, and everyone
  * else leaves without an error rather than deleting the same objects twice.
  *
+<<<<<<< HEAD
+ * A row a deletion archived and never finished is swept the same way. It is the
+ * one state nobody else repairs: the bytes are no longer charged for, so nothing
+ * but this notices that the object is still being paid for.
+||||||| 2f94496
+=======
  * One object that will not go must not cost the rest their tick: a failure is
  * named and the row kept, so an operator can find it and the next tick reaches
  * everything behind it.
+>>>>>>> origin/feat/media-upload
  */
 @Injectable()
 export class MediaSweepService {
+<<<<<<< HEAD
+  private readonly log = new Logger(MediaSweepService.name)
+||||||| 2f94496
+=======
   private readonly logger = new Logger(MediaSweepService.name)
+>>>>>>> origin/feat/media-upload
 
   constructor(
     @InjectDataSource() private readonly dataSource: DataSource,
@@ -87,28 +110,24 @@ export class MediaSweepService {
 
   private async dropAbandonedRows(before: Date): Promise<void> {
     for (const media of await this.rows.findAbandoned(before)) {
-      await this.dropRow(media)
+      await this.clearRow(media)
     }
   }
 
   /**
-   * Clears one row and its object, or reports what is left behind.
-   *
-   * The row outlives a storage that would not delete its object: forgetting it
-   * would leave an object nobody can name any more, and the next tick is a
-   * cheaper place to try again than a person is.
+   * One row's object and then its row, with whatever went wrong named rather
+   * than raised: the rows are swept oldest first, so a row the sweep cannot
+   * clear would otherwise be met again on every tick and take the rest of the
+   * work — the other rows and the multipart sessions — down with it.
    */
-  private async dropRow(media: Media): Promise<void> {
+  private async clearRow(media: Media): Promise<void> {
     try {
       const opened = await this.storages.openProfileById(media.profileId)
 
       await opened.storage.remove(media.storageKey)
       await this.rows.deleteRow(media.id)
-    } catch (failure) {
-      this.logger.error(
-        `media ${media.id} was left behind: its object ${media.storageKey} would not go ` +
-          `(${(failure as Error).message})`,
-      )
+    } catch (err) {
+      this.log.error(`Media ${media.id} could not be cleared: ${(err as Error).message}`)
     }
   }
 

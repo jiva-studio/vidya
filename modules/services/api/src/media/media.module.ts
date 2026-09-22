@@ -2,12 +2,14 @@ import { Module, Provider } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
-import { MediaConfig } from '@vidya/api/configs'
 import { CLOCK, systemClock } from '@vidya/api/shared/clock'
 import { AuditLogService, RedisService } from '@vidya/api/shared/services'
 import {
   AuditLog,
+  Lesson,
+  LessonVersion,
   Media,
+  MediaUsage,
   Role,
   School,
   SchoolStorageQuota,
@@ -18,6 +20,7 @@ import {
 
 import {
   MediaCatalogController,
+  MediaDeletionController,
   MediaUploadsController,
   MediaUrlsController,
   StorageProfilesController,
@@ -37,12 +40,14 @@ import {
   InstallationStorageService,
   MediaAddressesService,
   MediaCatalogService,
+  MediaDeletionService,
   MediaMasterKeyService,
   MediaReadAccessService,
   MediaRowsService,
   MediaSweepSchedule,
   MediaSweepService,
   MediaUploadsService,
+  MediaUsageIndexService,
   MediaUsageService,
   SchoolStorageService,
   SecretSealingService,
@@ -101,7 +106,10 @@ const storageProviders: Provider[] = [
   imports: [
     TypeOrmModule.forFeature([
       AuditLog,
+      Lesson,
+      LessonVersion,
       Media,
+      MediaUsage,
       StorageProfile,
       SchoolStorageQuota,
       School,
@@ -114,6 +122,7 @@ const storageProviders: Provider[] = [
     StorageProfilesController,
     MediaUploadsController,
     MediaCatalogController,
+    MediaDeletionController,
     MediaUrlsController,
   ],
   providers: [
@@ -124,18 +133,26 @@ const storageProviders: Provider[] = [
     RevokedTokensService,
     AuditLogService,
 
+    AuditLogService,
+
     ...storageProviders,
 
     EndpointGuardService,
     InstallationStorageService,
     MediaAddressesService,
     MediaCatalogService,
+<<<<<<< HEAD
+    MediaDeletionService,
+||||||| 2f94496
+=======
     MediaReadAccessService,
+>>>>>>> origin/feat/media-upload
     MediaRowsService,
     MediaSweepSchedule,
     MediaSweepService,
     MediaUploadsService,
     MediaUsageService,
+    MediaUsageIndexService,
     SchoolStorageService,
     SecretSealingService,
     StorageAuditService,
@@ -145,6 +162,6 @@ const storageProviders: Provider[] = [
     StorageSetupService,
     MediaMasterKeyService,
   ],
-  exports: [StorageProfilesService],
+  exports: [StorageProfilesService, MediaUsageIndexService],
 })
 export class MediaModule {}

@@ -1,4 +1,5 @@
 export * from './mediaCatalog.controller'
+export * from './mediaDeletion.controller'
 export * from './mediaRefusal.filter'
 export * from './mediaUploads.controller'
 export * from './mediaUrls.controller'

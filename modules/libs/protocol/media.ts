@@ -238,6 +238,11 @@ export const MediaRefusals = Object.freeze({
   notReady: 'media-not-ready',
   inUse: 'media-in-use',
 
+  // Content naming a file this school does not have. Another school's id is
+  // unknown in exactly the same way: a lesson may only point at its own
+  // library, and a save that would dangle is refused rather than stored.
+  unknownMedia: 'media-unknown',
+
   // Three ways storage can say no, and a school acts on each differently:
   // we refused to dial the address, we dialled and were turned away, we
   // dialled and nothing answered.

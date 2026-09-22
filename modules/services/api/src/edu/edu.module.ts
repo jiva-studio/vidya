@@ -17,6 +17,7 @@ import {
   UserSchoolsService,
   UsersService,
 } from '@vidya/api/edu/services'
+import { MediaModule } from '@vidya/api/media/media.module'
 import { PermissionsCacheEvictionModule } from '@vidya/api/permissionsCacheEviction.module'
 import { AuditLogService, RedisService } from '@vidya/api/shared/services'
 import {
@@ -75,6 +76,10 @@ import {
     // school-ownership change needs to give `auth` and cannot carry out on
     // its own.
     PermissionsCacheEvictionModule,
+    // Saving lesson content recounts the files it names, and that index is the
+    // media context's. The dependency only goes this way: nothing in `media`
+    // reaches back into `edu`'s services.
+    MediaModule,
   ],
   controllers: [
     JoinController,
