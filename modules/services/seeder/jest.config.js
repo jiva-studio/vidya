@@ -7,6 +7,7 @@ module.exports = {
   testTimeout: 60000,
   moduleNameMapper: {
     '^@vidya/entities$': '<rootDir>/../../libs/entities',
+    '^@vidya/journal$': '<rootDir>/../../libs/journal',
     '^@vidya/domain$': '<rootDir>/../../libs/domain',
     '^@vidya/protocol$': '<rootDir>/../../libs/protocol',
   },

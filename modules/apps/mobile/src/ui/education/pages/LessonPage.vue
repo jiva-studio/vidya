@@ -50,7 +50,7 @@ import type { LocalBlockState, LocalHomework, LocalLesson, LocalLessonVersion } 
 import { isHomeworkEditable } from '@vidya/client'
 import { useLocalData } from '@/shared'
 import { HomeworkAnswer, LessonSectionsList, LessonSectionView } from '@/ui/education'
-import type { SubmissionState } from '@/ui/sync'
+import type { SubmissionState } from '@vidya/client'
 import { LessonContentGate, SubmittedHomeworkItem } from '@/ui/sync'
 import { education } from '@vidya/client'
 

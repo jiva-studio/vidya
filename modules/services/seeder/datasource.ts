@@ -1,4 +1,5 @@
 import { Entities } from '@vidya/entities'
+import { Clock, registerSyncJournalSubscriber } from '@vidya/journal'
 import { DataSource } from 'typeorm'
 
 /**
@@ -18,3 +19,23 @@ export const SeedDataSource = new DataSource({
   database: process.env.VIDYA_DB_DATABASE || 'postgres',
   entities: Entities,
 })
+
+/** The seeder's reading of the wall clock, the one thing the journal asks of it. */
+const seedClock: Clock = { nowMs: () => Date.now() }
+
+/**
+ * Registers the journal writer on an open connection.
+ *
+ * Seeded rows are ordinary synchronised writes and have to enter `sync_journal`
+ * like any other, or a device pulls an empty answer from a database that is
+ * visibly full.
+ */
+export const attachSyncJournal = (connection: DataSource): DataSource => {
+  registerSyncJournalSubscriber(connection, seedClock)
+
+  return connection
+}
+
+/** The seeder's connection, open and journalling. */
+export const openSeedConnection = async (): Promise<DataSource> =>
+  attachSyncJournal(await SeedDataSource.initialize())

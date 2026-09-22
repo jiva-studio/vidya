@@ -52,6 +52,7 @@ export const aSchool = (overrides: Partial<LocalSchool> = {}): LocalSchool => ({
   name: 'School of Devotion',
   logoUrl: 'https://cdn.example.org/logos/devotion.png',
   description: 'Scripture, kirtan and practice.',
+  code: 'AB3K7Q',
   ...overrides,
 })
 
@@ -143,6 +144,7 @@ export const aHomework = (overrides: Partial<LocalHomework> = {}): LocalHomework
   status: 'pending',
   text: 'The vowels are a, aa, i.',
   grade: null,
+  comment: null,
   answeredSupersededVersion: false,
   reviewedById: null,
   submittedAt: parseIsoDateTime('2026-09-18T08:00:00.000Z'),

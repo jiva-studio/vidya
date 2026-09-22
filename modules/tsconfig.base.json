@@ -23,6 +23,7 @@
       "@vidya/client/testing": ["libs/client/testing"],
       "@vidya/domain": ["libs/domain"],
       "@vidya/entities": ["libs/entities"],
+      "@vidya/journal": ["libs/journal"],
       "@vidya/protocol": ["libs/protocol"],
       "@vidya/usecases": ["libs/usecases"],
       "@vidya/api/*": ["services/api/src/*"]

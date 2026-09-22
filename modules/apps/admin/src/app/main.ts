@@ -1,11 +1,12 @@
 import './styles/index.css'
 
+import { mediaResolverKey } from '@vidya/ui'
 import { createApp } from 'vue'
 
 import { FakeMediaGateway, mediaGatewayKey } from '@/entities/media'
 import { onFailure } from '@/shared/api'
 import { createToasts, systemClock, toastsKey } from '@/shared/lib'
-import { initSentry } from '@/shared/sentry'
+import { initSentry } from '@/shared/telemetry'
 
 import App from './App.vue'
 import { announceFailure } from './failures'
@@ -26,7 +27,12 @@ const start = async () => {
 
   // Nothing stores a file yet, so the editor is wired to the fake from here and
   // from nowhere else: swapping in the real gateway is this one line.
-  app.provide(mediaGatewayKey, new FakeMediaGateway({ clock: systemClock }))
+  const media = new FakeMediaGateway({ clock: systemClock })
+  app.provide(mediaGatewayKey, media)
+
+  // The lesson renderer is shared with the student's site and knows no gateway,
+  // so it is handed the one question it has about an uploaded file.
+  app.provide(mediaResolverKey, (url: string) => media.resolve(url))
 
   // One stack for the whole application, and one route to it: every request
   // that fails is announced here, whichever screen made it.

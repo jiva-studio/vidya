@@ -90,6 +90,7 @@ export const COLLECTION_PROJECTIONS: Readonly<Record<SyncCollection, CollectionP
         text('school_id', 'schoolId', { ...KEY, ...EMPTY }),
         text('name', 'name', EMPTY),
         text('logo_url', 'logoUrl'),
+        text('code', 'code'),
         text('description', 'description'),
       ],
     },

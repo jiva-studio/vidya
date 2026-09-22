@@ -8,11 +8,13 @@
     "build": "npm run clean && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "seed": "ts-node seed.ts",
     "bootstrap": "ts-node bootstrap.cli.ts",
+    "seed:student": "ts-node studentStand.cli.ts",
     "test": "jest --passWithNoTests",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@vidya/entities": "*",
+    "@vidya/journal": "*",
     "pg": "^8.13.1",
     "typeorm": "^0.3.20"
   },

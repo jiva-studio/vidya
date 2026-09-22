@@ -8,14 +8,6 @@ export type BlockType = (typeof BlockTypes)[number]
 export const AuthorableSources: readonly BlockSource[] = ['url', 'youtube', 'vimeo']
 
 /**
- * Why a URL was refused, as a Fluent key rather than a sentence.
- *
- * The model does not speak any language; the screen resolves the key it is
- * handed, so the same check serves the editor, the preview and the tests.
- */
-export type UrlProblem = 'url-required' | 'url-malformed' | 'url-scheme' | 'url-host'
-
-/**
  * Something in the stored content this build cannot author.
  *
  * Both kinds block saving: writing the document back would drop what we failed

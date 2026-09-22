@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { LessonId, LessonVersionId } from '@vidya/domain'
 import { asId } from '@vidya/domain'
-import { Button, FailureState, PageHeader, Skeleton } from '@vidya/ui'
+import type { LessonPreviewLabels } from '@vidya/ui'
+import { Button, Card, FailureState, LessonPreview, PageHeader, Skeleton } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { LessonPreview } from '@/widgets/lesson-editor'
 import { useLessonVersionDocument } from '@/widgets/lesson-editor'
 
 import { pageClasses } from './styles'
@@ -25,6 +25,18 @@ const versionId = asId<LessonVersionId>(String(route.params.versionId ?? ''))
 // from a piece of work answered against a version that has since been replaced,
 // and what the student read is the whole point of the screen.
 const document = useLessonVersionDocument(lessonId)
+
+// The renderer carries no words of its own, so the screen that draws a lesson
+// is the one that names them. Naming the key is what makes this the author's
+// reading of the lesson rather than the student's.
+const previewLabels = computed<LessonPreviewLabels>(() => ({
+  untitledSection: $t('editor-section-untitled'),
+  embeddedMedia: $t('editor-preview-embed-title'),
+  missingMedia: $t('editor-preview-media-missing'),
+  emptyQuestion: $t('editor-preview-quiz-empty'),
+  rightAnswer: $t('editor-preview-quiz-right'),
+  describeUnknownBlock: (type: string) => $t('editor-preview-unknown', { type }),
+}))
 
 /* --------------------------------- Hooks ---------------------------------- */
 
@@ -59,6 +71,8 @@ function onRetry() {
       :retry-label="$t('action-retry')"
       @retry="onRetry"
     />
-    <LessonPreview v-else-if="document.version.value" :content="document.version.value.content" />
+    <Card v-else-if="document.version.value" :title="$t('editor-preview-title')" padded>
+      <LessonPreview :content="document.version.value.content" :labels="previewLabels" />
+    </Card>
   </section>
 </template>

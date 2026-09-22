@@ -18,6 +18,12 @@ describe('reading a school storage profile back', () => {
 
   beforeEach(async () => {
     process.env.VIDYA_MEDIA_MASTER_KEY = TEST_MASTER_KEY
+    delete process.env.VIDYA_MEDIA_DEFAULT_BUCKET
+    delete process.env.VIDYA_MEDIA_DEFAULT_ACCESS_KEY_ID
+    delete process.env.VIDYA_MEDIA_DEFAULT_SECRET
+    delete process.env.VIDYA_MEDIA_DEFAULT_PUBLIC_URL
+    delete process.env.VIDYA_MEDIA_DEFAULT_ENDPOINT
+    delete process.env.VIDYA_MEDIA_DEFAULT_REGION
     app = await createTestingApp()
     ctx = await createStorageContext(app)
   })

@@ -1,3 +1,5 @@
+import type { SubmissionState } from '@vidya/client'
+import { collectLatestOutboxRows, outboxKeyOf, submissionStateOf } from '@vidya/client'
 import type {
   IOutboxRepository,
   OutboxEntry,
@@ -6,8 +8,6 @@ import type {
 } from '@vidya/domain'
 import { createGlobalState } from '@vueuse/core'
 import { ref, watch } from 'vue'
-
-import { type SubmissionState, submissionStateOf } from '@/ui/sync/model/submissionState'
 
 import { useSyncStatus } from './syncStatus'
 
@@ -36,34 +36,20 @@ export interface OutboxView {
   refresh(): void
 }
 
-const keyOf = (collection: SyncCollection, docId: string) => `${collection}:${docId}`
-
-// Rows are journaled in local order, so the highest `id` is the last thing the
-// student did to the document. A refused row lives for ever, and merging by
-// list would let it bury the retry that was written after it.
-const keepLatest = (snapshot: Map<string, OutboxEntry>, row: OutboxEntry): void => {
-  const key = keyOf(row.collection, row.docId)
-  const held = snapshot.get(key)
-  if (held === undefined || held.id < row.id) snapshot.set(key, row)
-}
-
 export const useOutboxView = createGlobalState((): OutboxView => {
   const status = useSyncStatus()
   const journals = new Map<string, IOutboxRepository>()
-  const rows = ref(new Map<string, OutboxEntry>())
+  const rows = ref<ReadonlyMap<string, OutboxEntry>>(new Map())
 
   const reload = async () => {
-    const snapshot = new Map<string, OutboxEntry>()
+    const journaled: OutboxEntry[] = []
 
     for (const [ownerId, outbox] of journals) {
-      const unsettled = await outbox.listUnsettled({ ownerId })
-      for (const row of unsettled) keepLatest(snapshot, row)
-
-      const dead = await outbox.listDead({ ownerId })
-      for (const row of dead) keepLatest(snapshot, row)
+      journaled.push(...(await outbox.listUnsettled({ ownerId })))
+      journaled.push(...(await outbox.listDead({ ownerId })))
     }
 
-    rows.value = snapshot
+    rows.value = collectLatestOutboxRows(journaled)
   }
 
   // A run finishing is the moment the answers changed: rows were taken, or
@@ -84,12 +70,12 @@ export const useOutboxView = createGlobalState((): OutboxView => {
   }
 
   const state = (collection: SyncCollection, docId: string): SubmissionState => {
-    const row = rows.value.get(keyOf(collection, docId))
+    const row = rows.value.get(outboxKeyOf(collection, docId))
     return row === undefined ? 'accepted' : submissionStateOf(row.status, status.syncing.value)
   }
 
   const reason = (collection: SyncCollection, docId: string): SyncRejectionReason | undefined =>
-    rows.value.get(keyOf(collection, docId))?.reason ?? undefined
+    rows.value.get(outboxKeyOf(collection, docId))?.reason ?? undefined
 
   return { state, reason, track, refresh: () => void reload() }
 })

@@ -1,0 +1,1 @@
+export { useLeaveSchool } from './useLeaveSchool'

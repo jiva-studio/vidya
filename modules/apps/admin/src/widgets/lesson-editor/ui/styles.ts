@@ -150,39 +150,3 @@ export const toolbarVersionClasses = [
   'bg-[var(--color-surface-sunken)] px-[var(--space-2)] py-[var(--space-1)]',
   'text-[length:var(--text-xs)] text-[var(--color-text-muted)] whitespace-nowrap',
 ]
-
-/* --------------------------------- Reading -------------------------------- */
-
-export const readingClasses = ['w-full', 'max-w-[var(--prose-max)]', 'mx-auto']
-
-export const previewClasses = ['flex', 'flex-col', 'gap-[var(--space-4)]']
-
-export const previewSectionClasses = ['flex', 'flex-col', 'gap-[var(--space-3)]']
-
-export const previewTitleClasses = [
-  'text-[length:var(--text-md)]',
-  'font-[var(--weight-semibold)]',
-  'text-[var(--color-text)]',
-]
-
-export const previewBlockClasses = ['flex', 'flex-col', 'gap-[var(--space-2)]']
-
-export const frameClasses = [
-  'w-full',
-  'aspect-video',
-  'rounded-[var(--radius-md)]',
-  'border',
-  'border-[var(--color-border)]',
-]
-
-export const playerClasses = ['w-full', 'rounded-[var(--radius-md)]']
-
-export const mutedClasses = ['text-[length:var(--text-sm)]', 'text-[var(--color-text-muted)]']
-
-export const answersClasses = [
-  'flex',
-  'flex-col',
-  'gap-[var(--space-1)]',
-  'm-0',
-  'ps-[var(--space-4)]',
-]

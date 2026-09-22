@@ -3,13 +3,23 @@ import path from 'node:path'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import tailwind from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
+import type { Plugin } from 'vite'
 import { defineConfig } from 'vite'
+
+const devCsp = (): Plugin => ({
+  name: 'admin:dev-csp',
+  apply: 'serve',
+  transformIndexHtml(html) {
+    return html.replace(/<meta\s+http-equiv="Content-Security-Policy"[^>]*\/?>/, '')
+  },
+})
 
 const port = Number(process.env.VIDYA_ADMIN_PORT || 7811)
 const apiUrl = process.env.VIDYA_API_URL || 'http://localhost:7810'
 
 export default defineConfig({
   plugins: [
+    devCsp(),
     vue(),
     tailwind(),
     ...(process.env.SENTRY_AUTH_TOKEN

@@ -5,7 +5,7 @@
         mutate-diff mutate-full mutate-all-diff mutate-all-full \
         api-build api-run api-test \
         db-start db-schema-drop db-migrate db-testdb-drop \
-        dev dev-up dev-down dev-logs mail storybook bootstrap \
+        dev dev-up dev-down dev-logs mail storybook bootstrap seed-student \
         gateway-up gateway-down gateway-logs \
         seed clean
 
@@ -160,6 +160,7 @@ seed:
 #
 #   780x  infrastructure   7800 postgres · 7801 redis · 7802 smtp · 7803 mail ui
 #   781x  applications     7810 api · 7811 admin · 7812 storybook · 7813 gateway
+#                          7814 student site · 7815 gateway, console host
 
 COMPOSE := docker compose -f modules/docker-compose.dev.yml
 MAIL_UI := http://localhost:7803
@@ -170,6 +171,7 @@ export VIDYA_MAILER_PORT  := 7802
 export VIDYA_API_PORT     := 7810
 export VIDYA_ADMIN_PORT   := 7811
 export VIDYA_SB_PORT      := 7812
+export VIDYA_STUDENT_PORT := 7814
 export VIDYA_API_URL      := http://localhost:7810
 
 # Query logging defaults to off (see db.config.ts); set explicitly here so
@@ -221,15 +223,17 @@ dev: dev-up
 storybook:
 	$(NPM) run storybook -w @vidya/admin
 
-# The production shape, locally: one origin serving a built admin and proxying
-# /api to the API on the host. Opt-in — see the `gateway` profile note in
+# The production shape, locally: two origins — the student site and the
+# console — each serving its own build and proxying its own /api to the API on
+# the host. Opt-in — see the `gateway` profile note in
 # modules/docker-compose.dev.yml and modules/services/gateway/README.md — and
 # not part of `dev`/`dev-up`, so the everyday Vite-proxy flow is unaffected.
 # `api-run` or `dev` must already be serving the API for /api to answer.
 gateway-up:
 	$(COMPOSE) --profile gateway up -d --build gateway
 	@echo ""
-	@echo "  gateway   http://localhost:7813"
+	@echo "  student   http://localhost:7813"
+	@echo "  console   http://localhost:7815"
 	@echo ""
 
 gateway-down:
@@ -243,6 +247,14 @@ gateway-logs:
 bootstrap:
 	@test -n "$(EMAIL)" || (echo "usage: make bootstrap EMAIL=you@example.com" && exit 1)
 	$(NPM) run bootstrap -w @vidya/seeder -- --email $(EMAIL)
+
+# What opening the student site needs and `bootstrap` does not make: a school
+# with a joining code and a student role set, a published course with one
+# published lesson, and an account holding no permission at all. Prints the
+# joining link and the address to sign in with. Idempotent, like `bootstrap`.
+seed-student:
+	@test -n "$(EMAIL)" || (echo "usage: make seed-student EMAIL=student@example.com" && exit 1)
+	$(NPM) run seed:student -w @vidya/seeder -- --email $(EMAIL)
 
 # ---------------------------------------------------------------------------
 # Housekeeping

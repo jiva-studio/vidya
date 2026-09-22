@@ -57,13 +57,13 @@ export class UserSchoolsController {
   /*                        POST /edu/users/:userId/schools                     */
   /* -------------------------------------------------------------------------- */
 
-  @Crud.UpdateOne(Routes().edu.user(':userId').schools.create())
+  @Crud.CreateOne(Routes().edu.user(':userId').schools.create())
   async set(
     @Param('userId', new ParseUUIDPipe(), UserExistsPipe) userId: domain.UserId,
     @Body() request: dto.AddUserSchoolsRequest,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.AddUserSchoolsResponse> {
-    if (auth.userId != userId) {
+    if (auth.userId !== userId) {
       throw new ForbiddenException('User does not have permission')
     }
     await this.userSchoolsService.addUser(userId, request.schoolId)
@@ -93,7 +93,7 @@ export class UserSchoolsController {
     @Param('schoolId', new ParseUUIDPipe()) schoolId: domain.SchoolId,
     @Authentication() auth: UserAuthentication,
   ): Promise<dto.LeaveSchoolResponse> {
-    if (auth.userId != userId) {
+    if (auth.userId !== userId) {
       throw new ForbiddenException('User does not have permission')
     }
 

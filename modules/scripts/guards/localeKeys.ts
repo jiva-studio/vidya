@@ -49,9 +49,15 @@ const DYNAMIC_KEYS: DynamicKey[] = [
 
   {
     prefix: 'time-preset-',
-    list: 'apps/mobile/src/ui/education/model/timeRanges.ts#TIME_RANGE_PRESETS',
+    list: 'libs/client/usecases/education/timeRanges.ts#TIME_RANGE_PRESETS',
   },
   { prefix: 'weekday-short-', list: 'libs/domain/preferredTimes.ts#Weekdays' },
+
+  // How far a journaled row has travelled: the four states a screen shows.
+  {
+    prefix: 'submission-',
+    list: 'libs/client/usecases/sync/submissions.ts#SubmissionStates',
+  },
 ]
 
 const TEMPLATE_KEY = /`([a-z][a-z0-9]*(?:-[a-z0-9]+)*-)\$\{([^`{}]*)\}([a-z0-9-]*)`/g
