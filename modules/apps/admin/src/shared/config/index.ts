@@ -29,14 +29,10 @@ export const config = {
       )
     },
     get replaysSessionSampleRate() {
-      return Number(
-        import.meta.env.VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE ?? 0.0,
-      )
+      return Number(import.meta.env.VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE ?? 0.0)
     },
     get replaysOnErrorSampleRate() {
-      return Number(
-        import.meta.env.VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE ?? 1.0,
-      )
+      return Number(import.meta.env.VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE ?? 1.0)
     },
   },
 } as const
