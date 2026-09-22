@@ -10,6 +10,7 @@
     "enableFindRelatedTests": true
   },
   "coverageAnalysis": "perTest",
+  "inPlace": true,
   "ignoreStatic": true,
   "incremental": true,
   "incrementalFile": "../../../.stryker/incremental/api.json",
