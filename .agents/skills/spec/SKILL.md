@@ -64,38 +64,38 @@ Generate `spec.md` with:
 
 ## Step 4: Generate Declarative `.agents/tasks/<slug>/done.yaml`
 
-Generate the machine-readable contract. Follow this exact declarative schema:
+Generate the machine-readable contract. Select the appropriate pipeline profile (`hardened`, `standard`, `fast`, `docs`) and declare verification claims:
 
 ```yaml
 slug: <task-slug>
+pipeline: hardened               # hardened | standard | fast | docs
 target: "modules/libs/domain"
 
 claims:
   # L1: Compilation, Linting, Unit Tests
   - id: l1-check
-    kind: make
+    tool: make
     target: check-package
     params:
       PKG: "@vidya/domain"
 
-  # L2: Mutation Testing (Stryker diff against branch changes)
+  # L2: Mutation Testing (diff mutation against branch base)
   - id: l2-mutation
-    kind: mutation
+    tool: mutation
     target: "@vidya/domain"
     mode: diff
 
   # L3: Deterministic Critic Agent Review
   - id: l3-critic
-    kind: critic
-    runner: "gemini"               # gemini | claude | auto
-    model: "gemini-2.5-flash"      # or claude-3-5-haiku-latest
+    tool: critic
+    runner: "auto"
     checks:
       - "Follows intent.md and respects all Non-Goals"
       - "No unhandled nulls or security bypasses"
 
   # Optional: Diff Hygiene Check
   - id: l4-hygiene
-    kind: hygiene
+    tool: hygiene
     no_stubs: true
     no_skipped_tests: true
 ```
@@ -110,11 +110,11 @@ python3 -m scripts.done --validate .agents/tasks/<slug>/done.yaml
 ```
 
 * **HARD RULE**: The specification process **CANNOT finish** until this command exits with code `0`.
-* If validation reports errors (missing fields, invalid claim kind, bad parameters), fix `done.yaml` and re-run the validation until it returns `✅ done.yaml is VALID`.
+* If validation reports errors (missing fields, invalid claim tool, bad parameters), fix `done.yaml` and re-run the validation until it returns `✅ done.yaml is VALID`.
 
 ---
 
-## Step 6: Hand Off to `/coder`
+## Step 6: Hand Off to Orchestrator or Implementation
 
 Once validated, output:
-> *"Specification and contract locked in `.agents/tasks/<slug>/`. Ready for `/coder`."*
+> *"Specification and contract locked in `.agents/tasks/<slug>/`. Ready for `/band` (or `/coder`)."*

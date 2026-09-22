@@ -5,9 +5,7 @@ description: Implementation agent for features, bug fixes and refactors. Reads t
 
 # Coder Agent
 
-The mandatory implementation workflow. This skill is the **method**; every
-project-specific constraint lives in [`../../rules/`](../../rules/) and is read
-at Phase 1, never duplicated here.
+The implementation workflow for single-agent tasks and subagent implementation phases. This skill describes the **method**; all project-specific constraints and rules live in [`../../rules/`](../../rules/) and are loaded dynamically.
 
 ---
 
@@ -29,62 +27,41 @@ Before writing any code or modifying any files, verify that the task specificati
 
 ## Phase 1: Load the Rules & Task Context
 
-1. Read `.agents/tasks/<slug>/intent.md` (the "Why" and Non-Goals).
+1. Read `.agents/tasks/<slug>/intent.md` (the "Why", Non-Goals, Invariants).
 2. Read `.agents/tasks/<slug>/spec.md` (the "What", Interfaces, and Blast Radius).
-3. Read [`../../rules/architecture.md`](../../rules/architecture.md) — layout, layering, dependency direction.
-4. Read the coding-style rule for the layer you are touching ([`../../rules/`](../../rules/)).
-5. Read [`../../rules/process.md`](../../rules/process.md) — roles, TDD red-first, and what must be proven.
+3. Read project rules in [`../../rules/`](../../rules/) (architecture, coding style, layering).
 
 ---
 
 ## Phase 2: Design within Constraints
 
-Before writing anything, confirm the change fits:
-- **Layer boundaries** — transport does not hold domain logic; domain stays pure.
-- **Package boundaries** — cross-package imports go through public entry points (`index.ts`).
+Before modifying files, confirm the change conforms to project rules:
+- **Layer boundaries** — transport/controllers do not hold domain logic; domain stays pure.
+- **Package boundaries** — cross-package imports go through public entry points.
 - **No swallowed errors** — handle, rethrow, or log explicitly.
 
 ---
 
 ## Phase 3: Implement (TDD)
 
-1. **Red Phase**: Write the failing test first and verify it fails for the right reason.
-2. **Green Phase**: Implement minimal logic until test passes.
-3. **Wire Phase**: Re-export from `index.ts`, register handlers, wire bindings.
+1. **Red Phase**: If writing tests, prove they fail for the right reason first.
+2. **Green Phase**: Implement minimal clean production logic until tests pass.
+3. **Wire Phase**: Re-export public components/types from barrel index files and apply localization strings where applicable.
 
 ---
 
-## Phase 4: Local Quality Gate
+## Phase 4: Local Quality Loop
 
-While working, run the narrow check:
-```bash
-make check-package PKG=@vidya/...
-```
-And verify mutation score:
-```bash
-make mutate-diff PKG=@vidya/...
-```
+While working, run the narrow test and check commands specified for the target workspace.
+Verify locally that all newly added behavior is covered by tests that fail if the logic is altered or mutated.
 
 ---
 
 ## Phase 5: Task Completion & Stop-Hook Verification
 
-<<<<<<< HEAD
-The [`../makefile/SKILL.md`](../makefile/SKILL.md) skill documents every target.
-
-**A partial gate is not a gate.** `check-package` is the inner loop and not a
-substitute: a package's own tests say nothing about the packages that import it,
-and a change that satisfies one stage routinely fails another — a decomposition
-that fixes a line-count violation still has to compile, stay formatted and keep
-the rest of the workspace green.
-
-**A green suite is not the same as a tested change.** `mutate-diff` breaks your
-new code on purpose and checks that something fails. If a mutant survives, the
-suite is passing for a reason unrelated to the behaviour you added.
-
-If it prints `SKIPPED`, that package cannot be scored today and the runner says
-why. Report the gap and move on. Never wait out a mutation run that has gone
-past its budget: the runner abandons it, and so should you.
-
-When you believe the task is done, simply finish your turn.
-The deterministic **Stop-Hook** will automatically execute `scripts/done/` to verify all claims in `done.yaml` (including mutation tests and critic checks). If any check fails, you will receive exact error details to fix.
+When you finish implementation:
+1. Verify with the deterministic verification harness:
+   ```bash
+   python3 -m scripts.done --spec .agents/tasks/<slug>/done.yaml
+   ```
+2. The deterministic **Stop-Hook** will automatically verify all claims in `done.yaml` (compilation, unit tests, mutation score, critic checks). If any claim fails, review the exact error details and repair the implementation.
