@@ -1,7 +1,7 @@
 import { createGlobalState } from '@vueuse/core'
 import { computed, ref, shallowRef } from 'vue'
 
-import { setSentryUser } from '@/shared/sentry'
+import { setSentryUser } from '@/shared/telemetry'
 
 import { hasExpired, readAccessToken, schoolsOf } from './accessToken'
 import { clearRefreshToken, readRefreshToken, writeRefreshToken } from './tokenStore'
