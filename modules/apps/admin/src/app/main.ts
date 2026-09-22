@@ -6,7 +6,7 @@ import { createApp } from 'vue'
 import { FakeMediaGateway, mediaGatewayKey } from '@/entities/media'
 import { onFailure } from '@/shared/api'
 import { createToasts, systemClock, toastsKey } from '@/shared/lib'
-import { initSentry } from '@/shared/sentry'
+import { initSentry } from '@/shared/telemetry'
 
 import App from './App.vue'
 import { announceFailure } from './failures'

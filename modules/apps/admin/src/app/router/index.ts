@@ -3,13 +3,14 @@ import './types'
 import { createRouter, createWebHistory } from 'vue-router'
 
 import { setAppRouter } from '@/shared/access'
+import { config } from '@/shared/config'
 
 import { sectionRoutes } from '../sections'
 import { requireSession, resolveSchool, skipLoginWhenSignedIn } from './guards'
 
 export const createAppRouter = () => {
   const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
+    history: createWebHistory(config.baseUrl),
     routes: sectionRoutes(),
   })
 
