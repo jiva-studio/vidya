@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+"""
+Deterministic Validator for .agents/tasks/<slug>/intent.md
+
+Enforces:
+1. File exists and is non-empty.
+2. Required 5 markdown sections are present and non-empty.
+3. Prior art section contains valid URL references.
+4. JTBD section contains Root Pain, Target User, and Desired Outcome.
+5. In Scope and Non-Goals lists are present.
+6. Adversarial Failure Modes table contains scenarios.
+7. Invariants section contains non-empty rules.
+8. Anti-Technical Pollution Check: Intent must be 100% human/business layer.
+   Rejects code snippets, file extensions (.ts, .vue, .sql, .prisma), DB tables/columns, DTOs, interfaces.
+"""
+
+import sys
+import os
+import re
+from pathlib import Path
+
+REQUIRED_SECTIONS = [
+    r"## 1\. Prior Art",
+    r"## 2\. Problem & JTBD",
+    r"## 3\. Scope Boundaries & Strict Non-Goals",
+    r"## 4\. Adversarial Failure Modes",
+    r"## 5\. Invariants & Business Constraints"
+]
+
+TECHNICAL_BANNED_PATTERNS = [
+    (r"\b\w+\.(vue|ts|js|sql|prisma|css|scss|html|json)\b", "File extension / filename (e.g. .vue, .ts, .sql)"),
+    (r"\b(DTO|TypeORM|Prisma|Repository|Controller|Service|Migration)\b", "Technical architecture / ORM token"),
+    (r"\b(table|column|foreign key|primary key|schema)\b", "Database schema term"),
+    (r"\b(interface|class|function|endpoint|props|v-model)\b", "Code keyword / symbol"),
+    (r"\b(GET|POST|PUT|PATCH|DELETE)\s+/", "HTTP endpoint path"),
+]
+
+def validate_intent_file(path_str: str) -> bool:
+    path = Path(path_str)
+    if not path.exists():
+        print(f"❌ ERROR: Intent file does not exist: {path_str}")
+        return False
+
+    content = path.read_text(encoding="utf-8")
+    if not content.strip():
+        print(f"❌ ERROR: Intent file is empty: {path_str}")
+        return False
+
+    errors = []
+
+    # 1. Section Header Checks
+    for sec_pattern in REQUIRED_SECTIONS:
+        if not re.search(sec_pattern, content, re.IGNORECASE):
+            errors.append(f"Missing mandatory section header matching: '{sec_pattern}'")
+
+    # 2. Section Content Checks
+    if not re.search(r"https?://", content):
+        errors.append("Section 1 (Prior Art) must contain at least one valid HTTP/HTTPS URL reference")
+
+    if not re.search(r"Root Pain", content, re.IGNORECASE):
+        errors.append("Section 2 (JTBD) must specify 'Root Pain'")
+
+    if not re.search(r"Non-Goals", content, re.IGNORECASE):
+        errors.append("Section 3 (Scope) must specify 'Strictly Out of Scope (Non-Goals)'")
+
+    # Check for failure mode table
+    table_rows = re.findall(r"\|.*\|.*\|.*\|", content)
+    # At least header + separator + 2 scenario rows = 4 rows
+    if len(table_rows) < 4:
+        errors.append("Section 4 (Adversarial) must contain a markdown table with at least 2 concrete failure scenarios")
+
+    # Check for invariants
+    if not re.search(r"Invariant\s+\d+|-\s+Invariant", content, re.IGNORECASE) and not re.search(r"## 5\..*\n+-\s+.+\n+-\s+.+", content):
+        errors.append("Section 5 (Invariants) must contain at least 2 distinct invariants")
+
+    # 3. Anti-Technical Pollution Checks
+    for pattern, desc in TECHNICAL_BANNED_PATTERNS:
+        matches = re.finditer(pattern, content, re.IGNORECASE)
+        for m in matches:
+            line_no = content[:m.start()].count("\n") + 1
+            matched_text = m.group(0)
+            # Skip false positives in URLs or markdown links
+            line_str = content.splitlines()[line_no - 1]
+            if "http://" in line_str or "https://" in line_str:
+                continue
+            errors.append(f"Technical pollution on line {line_no}: '{matched_text}' ({desc}). Intent must be 100% human/business layer.")
+
+    if errors:
+        print(f"❌ Validation failed for {path_str}:")
+        for err in errors:
+            print(f"  - {err}")
+        return False
+
+    print(f"✅ Intent file valid: {path_str}")
+    return True
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: vidya-intent-validate <path-to-intent.md>")
+        sys.exit(1)
+
+    target_path = sys.argv[1]
+    if not validate_intent_file(target_path):
+        sys.exit(1)
+    sys.exit(0)

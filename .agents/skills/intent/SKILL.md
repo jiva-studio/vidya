@@ -5,19 +5,36 @@ description: Discovers, grills, and formalizes task intent into a structured .ag
 
 # Intent Skill (`/intent`)
 
-The `/intent` skill is the **human-and-business layer** of task definition. Before discussing code, classes, or files, `/intent` clarifies **why** the task is needed, **what** problem it solves, and **what is strictly out of scope**.
+The `/intent` skill is the **human-and-business layer** of task definition. It clarifies **why** the task is needed, **what** user/business problem it solves, **what** the expected UX behavior is, and **what is strictly out of scope**.
 
 ```mermaid
 flowchart TD
     UserReq["User Prompt / Feature Idea"] --> Slug["1. Resolve Task Slug & Directory
 (.agents/tasks/<slug>/)"]
     Slug --> PriorArt["2. Prior Art Web Search
-(Industry patterns & libraries)"]
-    PriorArt --> Grill5["3. 5-Lens Grill-Me Interview
-(JTBD, Adversarial, Non-Goals, Pre-Mortem, Invariants)"]
-    Grill5 --> SaveIntent["4. Save .agents/tasks/<slug>/intent.md"]
-    SaveIntent --> NextStep["5. Ready for `/spec` (Technical Architecture)"]
+(Research industry benchmarks & UX patterns)"]
+    PriorArt --> Grill5["3. Mandatory 5-Lens Interview
+(Ask 5 distinct lens questions via interactive Q&A)"]
+    Grill5 --> SaveIntent["4. Author .agents/tasks/<slug>/intent.md
+(100% grounded in user answers, Zero Code)"]
+    SaveIntent --> Validate{"5. MANDATORY VALIDATION
+(vidya-intent-validate <file>)"}
+    Validate -->|Exit != 0 (Errors)| FixIntent["Fix intent.md violations"] --> Validate
+    Validate -->|Exit 0 (Valid)| NextStep["6. Ready for `/spec` (Technical Architecture)"]
 ```
+
+---
+
+## 🚫 Strict Anti-Technical Pollution Rules (Zero Code / Zero Technical Design)
+
+`/intent` MUST NEVER discuss, invent, or record technical implementation details:
+- ❌ **NO file names or extensions** (e.g. `.vue`, `.ts`, `.sql`, `.prisma`, `.json`, `.css`).
+- ❌ **NO database schema or ORM terms** (e.g. `table`, `column`, `foreign key`, `TypeORM`, `migration`, `schema`).
+- ❌ **NO code symbols or architecture terms** (e.g. `DTO`, `interface`, `class`, `function`, `method`, `props`, `endpoint`).
+- ❌ **NO HTTP methods or API routes** (e.g. `GET /...`, `POST /...`, `200 OK`).
+- ✅ **ONLY user journeys, business goals, UX workflows, visual interaction behaviors, constraints, and non-goals.**
+
+All technical decisions, database schemas, DTOs, migrations, and file-level planning belong exclusively to `/spec`.
 
 ---
 
@@ -32,44 +49,37 @@ flowchart TD
 
 ---
 
-## Step 2: Prior Art Research (Web Search)
+## Step 2: Prior Art Web Research
 
-Before asking questions, search the web for how the problem is standardly solved in the industry:
-1. Search for established patterns, open-source libraries, and known edge cases.
-2. Note 3–5 sources and summarize standard solutions vs. known failure modes.
-
----
-
-## Step 3: Interactive 5-Lens "Grill-Me" Interview
-
-Execute an interactive Q&A with the user using the `ask_question` tool across **5 mandatory lenses**:
-
-### 🔍 Lens 1: JTBD & 80/20 (Value & Simplicity)
-- *What exact situation triggers this need for the user?*
-- *What is the leanest 80/20 solution that delivers value without adding complex settings/modals?*
-- *How will the user observe success?*
-
-### 🔍 Lens 2: Adversarial & Edge Cases (Resilience)
-- *What happens offline — when the device is disconnected or token is expired?*
-- *What happens under race conditions (rapid double clicks, parallel syncing)?*
-- *How does the system handle empty (`[]`, `""`), huge, or malformed data?*
-
-### 🔍 Lens 3: Negative Requirements (Strict Non-Goals)
-- *What related features, legacy code, or speculative scope are strictly **OUT OF SCOPE**?*
-- *What must the agent NOT touch or rewrite?*
-
-### 🔍 Lens 4: Pre-Mortem Simulation
-- *Imagine this feature failed in production tomorrow: what was the root cause?*
-- *What data migrations or backward compatibility risks exist?*
-
-### 🔍 Lens 5: System Invariants
-- *What critical system properties must NEVER break under any circumstances?*
+Before questioning the user, execute a web search to discover industry UX patterns, benchmarks, and known edge cases:
+1. Search for established UX patterns and product conventions (e.g. `"<feature> UI UX best practices patterns failure modes"`).
+2. Gather 3–5 real design patterns, industry leaders (e.g. Notion, Strapi, Linear, etc.), and usability failure modes.
+3. Keep findings strictly at the product and UX level (no code snippets).
 
 ---
 
-## Step 4: Write `.agents/tasks/<slug>/intent.md`
+## Step 3: Mandatory 5-Lens Interview Protocol
 
-Generate `.agents/tasks/<slug>/intent.md` following this standardized format:
+Conduct an interactive Q&A interview with the user. The interview **CANNOT be skipped, abbreviated, or compressed**.
+You MUST formulate and present questions covering all **5 mandatory lenses**:
+
+| Mandatory Lens | What the Question MUST Clarify |
+| :--- | :--- |
+| **🔍 Lens 1: JTBD & 80/20 (Core UX & Flow)** | Exact user interaction flow, primary triggers, and visual interaction pattern. |
+| **🔍 Lens 2: Adversarial & Limits (Resilience)** | File size/format limits, network drop behavior, retry mechanisms, and empty/huge input handling. |
+| **🔍 Lens 3: Negative Requirements (Non-Goals)** | Which related features, screens, or adjacent scopes are strictly OUT OF SCOPE. |
+| **🔍 Lens 4: Pre-Mortem (Failure & Recovery)** | What happens if resources are deleted/missing, fallback placeholders, replacement vs removal behavior. |
+| **🔍 Lens 5: Invariants (Security & Business)** | Tenant/school data isolation, multi-user permission boundaries, and visibility rules. |
+
+> [!CAUTION]
+> **Zero-Assumption Invariant:**
+> You are STRICTLY FORBIDDEN from inventing or guessing answers for any lens on your own. Every single lens MUST be grounded in explicit user input.
+
+---
+
+## Step 4: Author `.agents/tasks/<slug>/intent.md`
+
+Generate `.agents/tasks/<slug>/intent.md` strictly reflecting the user's answers:
 
 ```markdown
 # Intent: <Title>
@@ -82,29 +92,41 @@ Generate `.agents/tasks/<slug>/intent.md` following this standardized format:
 - Source 2: [Name](URL) — Takeaway
 
 ## 2. Problem & JTBD (The "Why")
-- **Root Pain & Trigger:** ...
-- **Target User & Scenario:** ...
-- **Desired Outcome:** ...
+- **Root Pain & Trigger:** <User problem in plain language>
+- **Target User & Scenario:** <Who uses this and when>
+- **Desired Outcome:** <What the user observes upon success>
 
 ## 3. Scope Boundaries & Strict Non-Goals
 ### In Scope (Goals):
-- ...
+- <Clear user-facing capabilities, NO code/file names>
 ### Strictly Out of Scope (Non-Goals):
-- ...
+- <Explicitly excluded features/screens>
 
 ## 4. Adversarial Failure Modes & Mitigations
 | Failure Scenario | Impact | Required Mitigation |
 | :--- | :--- | :--- |
 | Offline / Network Drop | ... | ... |
-| Concurrency / Race | ... | ... |
+| Limit Exceeded / Invalid Input | ... | ... |
+| Missing / Deleted Resource | ... | ... |
 
 ## 5. Invariants & Business Constraints
-- Invariant 1: ...
-- Invariant 2: ...
+- Invariant 1: <Business / tenancy rule>
+- Invariant 2: <Access / permission rule>
 ```
 
 ---
 
-## Step 5: Hand Off to `/spec`
-Inform the user that the intent is locked and ready for technical specification:
-> *"Intent locked in `.agents/tasks/<slug>/intent.md`. Run `/spec` to generate the technical architecture and `done.yaml`."*
+## Step 5: Deterministic Validation Gate
+
+Execute the deterministic intent validator:
+```bash
+vidya-intent-validate .agents/tasks/<slug>/intent.md
+```
+- If the validator reports errors (exit code != 0), fix `intent.md` immediately until it exits with code 0.
+- If the validator passes (exit code 0), the intent is locked and ready for `/spec`.
+
+---
+
+## Step 6: Hand Off to `/spec`
+Inform the user that the intent is validated and ready for technical specification:
+> *"Intent validated and locked in `.agents/tasks/<slug>/intent.md`. Run `/spec` to generate the technical architecture and `done.yaml`."*

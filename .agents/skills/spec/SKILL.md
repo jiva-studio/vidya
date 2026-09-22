@@ -23,7 +23,7 @@ flowchart TD
 
 ---
 
-## Step 1: Locate Active Task and Intent
+## Step 1: Locate Active Task and Validate Intent
 
 1. Identify active task folder:
    - If argument passed (e.g. `/spec .agents/tasks/feat-enroll`): use that directory.
@@ -32,8 +32,12 @@ flowchart TD
      BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null | tr "/" "-")
      TASK_DIR=".agents/tasks/${BRANCH}"
      ```
-2. Read `.agents/tasks/<slug>/intent.md`.
-   - If `intent.md` does not exist, STOP and instruct the user to run `/intent` first.
+2. Validate `.agents/tasks/<slug>/intent.md`:
+   - Run the deterministic validator:
+     ```bash
+     vidya-intent-validate .agents/tasks/<slug>/intent.md
+     ```
+   - If `intent.md` does not exist or fails validation (exit code != 0), STOP and instruct the user to run `/intent` first. Do NOT proceed to technical design on an invalid intent.
 
 ---
 

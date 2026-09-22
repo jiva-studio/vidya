@@ -81,16 +81,19 @@ never a relative path that climbs out of the package.
 
 ---
 
-## Specification-Driven Development
+## Task Lifecycle: Intent, Spec, Coder
 
-Before implementing a non-trivial task, author a spec with
-[`/spec`](./.agents/skills/spec/SKILL.md). It interviews you on business intent
-and failure modes, then writes `.agents/specs/<branch-slug>.md` from
-[`.agents/specs/TEMPLATE.md`](./.agents/specs/TEMPLATE.md) with observable
-acceptance criteria, a blast radius, a phased plan and a verification gate.
+Every feature or non-trivial change follows a strict 3-stage lifecycle:
 
-The spec is the contract downstream: `coder` executes it and ticks the boxes,
-and Stage 0 of `/review` rejects the diff if any criterion is undelivered.
+1. **`/intent` (Human & Business Layer)**:
+   - Discovers JTBD, UX behavior, non-goals, and failure modes through prior art web research and a mandatory 5-lens interview.
+   - **Zero technical pollution**: Strictly no code snippets, file extensions, DB tables, or DTOs.
+   - Deterministically validated using `scripts/vidya-intent-validate .agents/tasks/<slug>/intent.md`.
+2. **`/spec` (Technical Blueprint)**:
+   - Performs codebase reconnaissance, maps blast radius, specifies architecture, DTOs, DB migrations, and produces `done.yaml`.
+   - Cannot proceed without a valid `intent.md`.
+3. **`/coder` (Implementation & Verification)**:
+   - Implements strictly according to `spec.md` and passes all `done.yaml` quality gates before handoff.
 
 ---
 
