@@ -2,15 +2,16 @@ node_modules
 dist
 coverage
 *.tsbuildinfo
+*.pyc
+__pycache__/
 *.log
 .env
 .env.local
 .claude/
 plan.md
 
-# Specs are per-branch working documents, written by /spec and finished when the
-# branch merges. The template is the shared part and stays; the specs themselves
-# would otherwise leave a permanent trail of transient planning in history.
+# Task directories are local isolated working spaces for /intent, /spec and /coder.
+.agents/tasks/
 .agents/specs/*
 !.agents/specs/TEMPLATE.md
 
