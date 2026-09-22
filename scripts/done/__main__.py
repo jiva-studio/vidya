@@ -9,6 +9,7 @@ from scripts.done.config import TASKS_DIR, REPO_ROOT
 from scripts.done.validator import validate_done_manifest
 from scripts.done.pipeline_loader import validate_pipeline_manifest
 from scripts.done.engine import DoneEngine
+from scripts.done.pipeline_runner import PipelineRunner
 
 def find_active_task_spec() -> Optional[Path]:
     # 1. Check if git branch matches a task folder in .agents/tasks/
@@ -39,6 +40,8 @@ def main():
     parser = argparse.ArgumentParser(description="Deterministic task completion harness and validator.")
     parser.add_argument("--validate", type=str, help="Validate a done.yaml manifest against schema.")
     parser.add_argument("--validate-pipeline", type=str, help="Validate a pipeline.yaml file against schema.")
+    parser.add_argument("--start-pipeline", type=str, nargs="?", const="", help="Initialize pipeline FSM for a task.")
+    parser.add_argument("--status", type=str, nargs="?", const="", help="Show pipeline FSM status for a task.")
     parser.add_argument("--spec", type=str, help="Run verification against specific done.yaml path.")
     parser.add_argument("--task", type=str, help="Run verification for specific task slug in .agents/tasks/<slug>.")
     parser.add_argument("--hook", action="store_true", help="Run in Stop-hook mode with JSON stdin/stdout.")
@@ -91,7 +94,51 @@ def main():
                 print(f"  - {err}", file=sys.stderr)
             sys.exit(1)
 
-    # 3. Hook mode
+    # 3. Start Pipeline Mode
+    if args.start_pipeline is not None:
+        target_spec = None
+        if args.start_pipeline:
+            p = Path(args.start_pipeline).resolve()
+            target_spec = p if p.name == "done.yaml" else (p / "done.yaml" if p.is_dir() else TASKS_DIR / args.start_pipeline / "done.yaml")
+        else:
+            target_spec = find_active_task_spec()
+
+        if not target_spec or not target_spec.exists():
+            print(f"Error: Could not locate done.yaml for starting pipeline.", file=sys.stderr)
+            sys.exit(1)
+
+        runner = PipelineRunner(target_spec)
+        state = runner.init_pipeline()
+        print(f"🚀 Pipeline [{state['pipeline']}] INITIALIZED for task [{state['slug']}].")
+        print(f"👉 Current Stage: [{state['current_stage_id']}]")
+        print(f"Active hooks in .agents/hooks.json will drive and gate each stage transition.")
+        sys.exit(0)
+
+    # 4. Status Mode
+    if args.status is not None:
+        target_spec = None
+        if args.status:
+            p = Path(args.status).resolve()
+            target_spec = p if p.name == "done.yaml" else (p / "done.yaml" if p.is_dir() else TASKS_DIR / args.status / "done.yaml")
+        else:
+            target_spec = find_active_task_spec()
+
+        if not target_spec or not target_spec.exists():
+            print("No active task spec found.", file=sys.stderr)
+            sys.exit(1)
+
+        runner = PipelineRunner(target_spec)
+        state = runner.read_state()
+        if not state:
+            print(f"No active pipeline state found for {target_spec.parent.name}. Run --start-pipeline to initialize.")
+            sys.exit(0)
+
+        print(f"Task: {state.get('slug')} | Pipeline: {state.get('pipeline')} | Status: {state.get('status')}")
+        print(f"Current Stage: {state.get('current_stage_id')} (Index {state.get('current_stage_idx')})")
+        print(f"Completed Stages: {', '.join(state.get('stages_completed', [])) or 'None'}")
+        sys.exit(0)
+
+    # 5. Hook mode (Driven by external Stop-hook)
     if args.hook:
         if os.environ.get("VIDYA_DONE") == "0" or os.environ.get("FORCE_STOP") == "1":
             print(json.dumps({"decision": "allow"}))
@@ -102,12 +149,12 @@ def main():
             print(json.dumps({"decision": "allow"}))
             sys.exit(0)
 
-        engine = DoneEngine(spec_file)
-        result = engine.run(is_hook_mode=True)
-        print(result.get("hook_payload", json.dumps({"decision": "allow"})))
+        runner = PipelineRunner(spec_file)
+        result = runner.evaluate_and_advance(is_hook=True)
+        print(json.dumps(result))
         sys.exit(0)
 
-    # 4. Direct execution mode
+    # 6. Direct execution mode
     target_spec = None
     if args.spec:
         target_spec = Path(args.spec).resolve()
