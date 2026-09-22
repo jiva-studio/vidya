@@ -43,6 +43,7 @@ export const useCourseForm = (courseId?: CourseId) => {
       values.value = {
         name: course.name,
         description: course.description ?? '',
+        coverImageUrl: course.coverImageUrl ?? null,
         learningType: course.learningType,
         status: course.status,
       }

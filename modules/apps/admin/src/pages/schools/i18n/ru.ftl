@@ -20,6 +20,9 @@ schools-form-name-required = Укажите название.
 schools-form-logo = Логотип
 schools-form-logo-hint = https://example.org/logo.png
 schools-form-logo-invalid = Нужна ссылка, начинающаяся с http:// или https://
+schools-form-logo-choose = Выбрать логотип
+schools-form-logo-change = Изменить логотип
+schools-form-logo-remove = Удалить логотип
 schools-form-description = Описание
 schools-form-description-hint = Коротко о школе — это увидят студенты в каталоге
 

@@ -41,6 +41,7 @@ export const createCourse = (
     schoolId,
     name: values.name,
     description: values.description,
+    ...(values.coverImageUrl ? { coverImageUrl: values.coverImageUrl } : {}),
     learningType: values.learningType,
   } satisfies CreateCourseRequest)
 
@@ -52,6 +53,7 @@ export const updateCourse = (
   http.patch<UpdateCourseResponse>(Routes().edu.courses.update(id), {
     name: values.name,
     description: values.description,
+    ...(values.coverImageUrl !== undefined ? { coverImageUrl: values.coverImageUrl } : {}),
     learningType: values.learningType,
     status: values.status,
   } satisfies UpdateCourseRequest)

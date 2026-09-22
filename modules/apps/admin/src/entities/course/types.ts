@@ -10,6 +10,7 @@ import type { CourseLearningType, CourseStatus } from '@vidya/domain'
 export interface CourseFormValues {
   name: string
   description: string
+  coverImageUrl?: string | null
   learningType: CourseLearningType
   status: CourseStatus
 }

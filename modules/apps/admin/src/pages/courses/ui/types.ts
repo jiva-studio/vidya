@@ -27,6 +27,16 @@ export interface CourseRowEmits {
   lessons: [id: string]
 }
 
+export interface CourseCoverFieldProps {
+  modelValue?: string | null
+  error?: string
+  disabled?: boolean
+}
+
+export interface CourseCoverFieldEmits {
+  'update:modelValue': [value: string | null]
+}
+
 /** `publishable` is off while creating: a course that does not exist yet cannot be published. */
 export interface CourseFormProps {
   modelValue: CourseFormValues

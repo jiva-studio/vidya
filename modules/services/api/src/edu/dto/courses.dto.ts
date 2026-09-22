@@ -23,6 +23,9 @@ export class CourseDetails implements protocol.CourseDetails {
   @ApiPropertyOptional({ example: 'A one year course' })
   description?: string
 
+  @ApiPropertyOptional({ example: 'https://cdn.example.com/cover.jpg' })
+  coverImageUrl?: string | null
+
   @ApiProperty({ enum: domain.CourseLearningTypes, example: 'group' })
   learningType: domain.CourseLearningType
 
@@ -42,6 +45,9 @@ export class CourseSummary implements protocol.CourseSummary {
 
   @ApiPropertyOptional({ example: 'A one year course' })
   description?: string
+
+  @ApiPropertyOptional({ example: 'https://cdn.example.com/cover.jpg' })
+  coverImageUrl?: string | null
 }
 
 /* -------------------------------------------------------------------------- */
@@ -64,6 +70,12 @@ export class CreateCourseRequest implements protocol.CreateCourseRequest {
   @IsString()
   @MaxLength(2048)
   description?: string
+
+  @ApiPropertyOptional({ example: 'https://cdn.example.com/cover.jpg' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  coverImageUrl?: string | null
 
   @ApiProperty({ enum: domain.CourseLearningTypes, example: 'group' })
   @IsEnum(domain.CourseLearningTypes)
@@ -124,6 +136,12 @@ export class UpdateCourseRequest implements protocol.UpdateCourseRequest {
   @IsString()
   @MaxLength(2048)
   description?: string
+
+  @ApiPropertyOptional({ example: 'https://cdn.example.com/cover.jpg' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  coverImageUrl?: string | null
 
   @ApiPropertyOptional({ enum: domain.CourseLearningTypes, example: 'group' })
   @IsOptional()

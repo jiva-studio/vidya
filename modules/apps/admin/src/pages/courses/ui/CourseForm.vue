@@ -7,6 +7,7 @@ import { computed, ref } from 'vue'
 
 import type { CourseFormValues } from '@/entities/course'
 
+import CourseCoverField from './CourseCoverField.vue'
 import { formClasses } from './styles'
 import type { CourseFormEmits, CourseFormProps } from './types'
 
@@ -58,6 +59,10 @@ function onName(value: string) {
 
 function onDescription(value: string) {
   patch({ description: value })
+}
+
+function onCoverImageUrl(value: string | null) {
+  patch({ coverImageUrl: value })
 }
 
 function onFormat(value: string) {
@@ -115,6 +120,13 @@ function nameErrorText(): string | undefined {
         />
       </template>
     </FormField>
+
+    <CourseCoverField
+      data-test="course-cover-field"
+      :model-value="props.modelValue.coverImageUrl"
+      :disabled="props.busy"
+      @update:model-value="onCoverImageUrl"
+    />
 
     <FormField :label="$t('course-form-type-label')">
       <RadioGroup

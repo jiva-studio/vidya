@@ -51,8 +51,8 @@ watch(locale, (value) => {
 
 /** Adds a slice's translations to both bundles at once. */
 export const addMessages = (messages: LocaleMessages): void => {
-  enBundle.addResource(new FluentResource(messages.en), { allowOverrides: true })
-  ruBundle.addResource(new FluentResource(messages.ru), { allowOverrides: true })
+  if (messages.en) enBundle.addResource(new FluentResource(messages.en), { allowOverrides: true })
+  if (messages.ru) ruBundle.addResource(new FluentResource(messages.ru), { allowOverrides: true })
 }
 
 addMessages({ en: enMessages, ru: ruMessages })
