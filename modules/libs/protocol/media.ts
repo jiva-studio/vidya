@@ -2,6 +2,8 @@ import * as domain from '@vidya/domain'
 
 import * as crud from './crud'
 
+export { MediaResolveLimit } from '@vidya/domain'
+
 /* -------------------------------------------------------------------------- */
 /*                                   Models                                   */
 /* -------------------------------------------------------------------------- */

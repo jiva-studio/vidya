@@ -1,25 +1,33 @@
 <template>
   <audio
+    v-if="src"
     ref="audio"
     controls
     class="media"
-    :src="block.url"
+    :src="src"
     @timeupdate="onTimeUpdate"
     @pause="onSettled"
     @ended="onSettled"
     @loadedmetadata="onLoadedMetadata"
   />
+
+  <MediaUnavailableNotice v-else :reason="unavailableReason" />
 </template>
 
 <script lang="ts" setup>
 import { ref } from 'vue'
 
+import MediaUnavailableNotice from './MediaUnavailableNotice.vue'
 import { useProgressReporter } from './useProgressReporter'
 import type { AudioSectionBlockEmits, AudioSectionBlockProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<AudioSectionBlockProps>(), { state: undefined })
+const props = withDefaults(defineProps<AudioSectionBlockProps>(), {
+  state: undefined,
+  src: undefined,
+  unavailableReason: 'needs-connection',
+})
 
 /* --------------------------------- Events --------------------------------- */
 

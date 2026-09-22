@@ -5,12 +5,17 @@
       v-else-if="block.type === 'video'"
       :block="block"
       :state="videoState(block.id)"
+      :src="findAddress(block.url)"
+      :poster-src="findAddress(block.posterUrl)"
+      :unavailable-reason="unavailableReason"
       @change="(state) => onBlockStateChanged(block.id, state)"
     />
     <AudioSectionBlock
       v-else-if="block.type === 'audio'"
       :block="block"
       :state="audioState(block.id)"
+      :src="findAddress(block.url)"
+      :unavailable-reason="unavailableReason"
       @change="(state) => onBlockStateChanged(block.id, state)"
     />
     <QuizSectionBlock
@@ -54,6 +59,11 @@ function onBlockStateChanged(blockId: BlockId, state: LessonBlockState) {
 }
 
 /* -------------------------------- Helpers --------------------------------- */
+
+// The address a source plays at, or nothing while the school has issued none.
+function findAddress(source: string | undefined): string | undefined {
+  return source === undefined ? undefined : props.addresses[source]
+}
 
 // A narrowing read per kind: the child wants its own state type, and the record
 // holds the union.

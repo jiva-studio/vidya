@@ -95,6 +95,8 @@ enrollment-rejection-access-lost = Доступ к курсу снят, поэт
 lesson-title = Урок
 lessons-title = Уроки
 embedded-video = Встроенное видео
+media-needs-connection = Файл откроется, когда появится сеть.
+media-not-permitted = Школа больше не открывает вам этот файл.
 
 # Домашняя работа
 homework-your-answer = Ваш ответ

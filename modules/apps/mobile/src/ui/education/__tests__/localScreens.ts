@@ -1,27 +1,6 @@
 import { FluentBundle } from '@fluent/bundle'
-import type {
-  BlockStateKey,
-  HomeworkAnswerKey,
-  IBlockStateRepository,
-  ICourseRepository,
-  IEnrollmentRepository,
-  IGroupRepository,
-  IHomeworkRepository,
-  ILessonRepository,
-  ILessonVersionRepository,
-  ISchoolRepository,
-  LocalBlockState,
-  LocalCourse,
-  LocalEnrollment,
-  LocalGroup,
-  LocalHomework,
-  LocalLesson,
-  LocalLessonVersion,
-  LocalSchool,
-} from '@vidya/client'
 import { education } from '@vidya/client'
 import type { SyncCollection, SyncRejectionReason } from '@vidya/domain'
-import { isLive, isRecruiting } from '@vidya/domain'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { createFluentVue } from 'fluent-vue'
 import { type Component, ref } from 'vue'
@@ -33,48 +12,20 @@ import type { SubmissionState } from '@/ui/sync'
 import syncResources from '@/ui/sync/i18n'
 
 import { routes } from '../routes'
+import { buildRepositories, emptySeed, repositories, seed } from './localDevice'
+import { mediaUrls, resetMediaDoubles } from './localMedia'
 
+export * from './localDevice'
 export * from './localFixtures'
+export * from './localMedia'
 
 /**
- * A device with data on it, and the screens mounted against it.
+ * The screens, mounted against a device with data on it.
  *
- * The screens are supposed to read from the device and from nowhere else, so
- * the doubles here are the device — arrays behind the data ports — and the
- * module double for `@/app` offers no HTTP client at all. A screen that reaches
- * for one fails loudly instead of quietly passing on a fake.
+ * The device is `localDevice`, the school files are `localMedia`, and the module
+ * double for `@/app` offers no transport at all: a screen that reaches for one
+ * fails loudly instead of quietly passing on a fake.
  */
-
-/* -------------------------------------------------------------------------- */
-/*                                  The device                                */
-/* -------------------------------------------------------------------------- */
-
-export interface LocalSeed {
-  schools: LocalSchool[]
-  courses: LocalCourse[]
-  lessons: LocalLesson[]
-  versions: LocalLessonVersion[]
-  enrollments: LocalEnrollment[]
-  groups: LocalGroup[]
-  homework: LocalHomework[]
-  blockStates: LocalBlockState[]
-}
-
-/** The ports the screens read the device through, gathered for one lookup. */
-export interface LocalRepositories {
-  schools: ISchoolRepository
-  courses: ICourseRepository
-  lessons: ILessonRepository
-  lessonVersions: ILessonVersionRepository
-  enrollments: IEnrollmentRepository
-  groups: IGroupRepository
-  homework: IHomeworkRepository
-  blockStates: IBlockStateRepository
-}
-
-export const seed: LocalSeed = emptySeed()
-
-export const repositories = {} as LocalRepositories
 
 /** What a run of the engine has told the screens so far. */
 export const syncStatus = {
@@ -141,23 +92,7 @@ export const appDouble = {
   useSyncStatus: () => syncStatus,
   useOutboxView: () => outboxView,
   useConnections: () => ({ awaitingSignIn }),
-}
-
-/** A controllable `@capacitor/network`, so a test can switch the radio off. */
-const networkListeners: ((status: { connected: boolean }) => void)[] = []
-
-export const capacitorNetworkDouble = {
-  Network: {
-    addListener: (_event: string, listener: (status: { connected: boolean }) => void) => {
-      networkListeners.push(listener)
-      return { remove: () => undefined }
-    },
-    getStatus: () => Promise.resolve({ connected: true }),
-  },
-}
-
-export function setOnline(connected: boolean): void {
-  networkListeners.forEach((listener) => listener({ connected }))
+  useMediaUrls: () => mediaUrls,
 }
 
 /* -------------------------------------------------------------------------- */
@@ -219,19 +154,6 @@ export async function settle(): Promise<void> {
 /*                                    Reset                                   */
 /* -------------------------------------------------------------------------- */
 
-function emptySeed(): LocalSeed {
-  return {
-    schools: [],
-    courses: [],
-    lessons: [],
-    versions: [],
-    enrollments: [],
-    groups: [],
-    homework: [],
-    blockStates: [],
-  }
-}
-
 /** Puts the device back to empty and rebuilds the ports over it. */
 export function resetLocalScreens(): void {
   mounted.splice(0).forEach((wrapper) => wrapper.unmount())
@@ -240,7 +162,7 @@ export function resetLocalScreens(): void {
   navigations.length = 0
   mintedIds.length = 0
   education.useUuidSource(nextUuid)
-  setOnline(true)
+  resetMediaDoubles()
   syncStatus.syncing.value = false
   syncStatus.firstRunCompleted.value = true
   syncStatus.done.value = 0
@@ -248,122 +170,6 @@ export function resetLocalScreens(): void {
   awaitingSignIn.value = []
 
   Object.assign(repositories, buildRepositories())
-}
-
-const notWritten = (): never => {
-  throw new Error('this double reads only; give the screen a repository that writes')
-}
-
-/**
- * Enrolments the way the SQL repository hands them over, method by method.
- *
- * The three readers answer different questions. `list` hides what the student
- * put away, and only that. `getLiveByCourse` hides nothing and looks for the
- * row that still holds a place, newest first when two of them do. `getById`
- * filters nothing: a row asked for by name is the one case the screens exist
- * to explain.
- */
-const byCreatedAt = (direction: 'asc' | 'desc'): LocalEnrollment[] =>
-  seed.enrollments
-    .filter((item) => item.deletedAt === null)
-    .sort((a, b) =>
-      direction === 'asc'
-        ? a.createdAt.localeCompare(b.createdAt)
-        : b.createdAt.localeCompare(a.createdAt),
-    )
-
-/** Hidden once the student put a finished row away. No instant is compared. */
-const visibleToStudent = (row: LocalEnrollment) =>
-  !(row.archivedByStudentAt !== null && !isLive(row.status))
-
-/** The rows that still hold a place, newest first. */
-const listLive = () => byCreatedAt('desc').filter((item) => isLive(item.status))
-
-function buildRepositories(): LocalRepositories {
-  return {
-    schools: {
-      // A fresh array per call, as a query is. Handing out the seed itself
-      // would let a row pushed later appear inside an answer already given.
-      list: async () => seed.schools.slice(),
-      getById: async (id) => seed.schools.find((item) => item.id === id) ?? null,
-    },
-
-    courses: {
-      list: async () => seed.courses.slice(),
-      getById: async (id) => seed.courses.find((item) => item.id === id) ?? null,
-    },
-
-    lessons: {
-      listByCourse: async (courseId) => seed.lessons.filter((item) => item.courseId === courseId),
-      getById: async (id) => seed.lessons.find((item) => item.id === id) ?? null,
-    },
-
-    lessonVersions: {
-      getById: async (id) => seed.versions.find((item) => item.id === id) ?? null,
-      getPublished: async (lessonId) =>
-        seed.versions
-          .filter((item) => item.lessonId === lessonId && item.status === 'published')
-          .sort((a, b) => b.version - a.version)[0] ?? null,
-    },
-
-    enrollments: {
-      list: async () => byCreatedAt('asc').filter(visibleToStudent),
-      getById: async (id) => seed.enrollments.find((item) => item.id === id) ?? null,
-      getLiveByCourse: async (courseId) =>
-        listLive().find((item) => item.courseId === courseId) ?? null,
-      request: notWritten,
-      withdraw: notWritten,
-      archive: notWritten,
-      unarchive: notWritten,
-    },
-
-    groups: {
-      /**
-       * The filter lives in the query, not in the component.
-       *
-       * Two screens read this list, and a predicate written into both of them
-       * is two predicates that will one day disagree about which group is
-       * still taking students.
-       */
-      listRecruitingByCourse: async (courseId) =>
-        seed.groups.filter((item) => item.courseId === courseId && isRecruiting(item.status)),
-
-      // Unfiltered on purpose: an accepted student's own group is shown
-      // whatever its status, or the place they hold disappears the day
-      // recruitment closes.
-      getById: async (id) => seed.groups.find((item) => item.id === id) ?? null,
-    },
-
-    homework: {
-      getById: async (id) => seed.homework.find((item) => item.id === id) ?? null,
-      getByAnswerKey: async (key: HomeworkAnswerKey) =>
-        seed.homework.find(
-          (item) =>
-            item.enrollmentId === key.enrollmentId &&
-            item.lessonVersionId === key.lessonVersionId &&
-            item.sectionId === key.sectionId,
-        ) ?? null,
-      listByEnrollment: async (enrollmentId) =>
-        seed.homework.filter((item) => item.enrollmentId === enrollmentId),
-      saveAnswer: notWritten,
-      submit: notWritten,
-    },
-
-    blockStates: {
-      getByKey: async (key: BlockStateKey) =>
-        seed.blockStates.find(
-          (item) =>
-            item.enrollmentId === key.enrollmentId &&
-            item.lessonVersionId === key.lessonVersionId &&
-            item.blockId === key.blockId,
-        ) ?? null,
-      listByLessonVersion: async (enrollmentId, lessonVersionId) =>
-        seed.blockStates.filter(
-          (item) => item.enrollmentId === enrollmentId && item.lessonVersionId === lessonVersionId,
-        ),
-      save: notWritten,
-    },
-  }
 }
 
 resetLocalScreens()

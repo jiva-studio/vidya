@@ -65,9 +65,18 @@ export interface SyncSetupOptions {
   readonly connections: IConnectionStore
 }
 
+/**
+ * A running engine, and what the rest of the app reaches it through.
+ *
+ * `http` is handed out rather than rebuilt by the caller: it is bound to this
+ * connection's address and reads the session per request, so a screen asking
+ * the school for something cannot reach another server or send a token that
+ * has since been renewed.
+ */
 export interface StartedSync {
   readonly engine: SyncEngine
   readonly triggers: SyncTriggers
+  readonly http: HttpClient
 }
 
 /** What is running, and enough about it to tell a repeat start from a new one. */
@@ -178,6 +187,7 @@ export async function startSync(options: SyncSetupOptions): Promise<StartedSync>
 
   const started: RunningSync = {
     engine,
+    http,
     triggers: await listen(engine, runs, () => awaitingSignIn),
     runs,
     ownerId: options.connection.ownerId,

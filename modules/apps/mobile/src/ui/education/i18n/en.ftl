@@ -95,6 +95,8 @@ enrollment-rejection-access-lost = Your access to this course is gone, so there 
 lesson-title = Lesson
 lessons-title = Lessons
 embedded-video = Embedded video
+media-needs-connection = This file opens when you are online.
+media-not-permitted = The school no longer opens this file for you.
 
 # Homework
 homework-your-answer = Your answer
