@@ -151,20 +151,28 @@ export type ResolveMediaResponse = {
  * characters, which is enough to tell two credentials apart and not enough to
  * use one. `delivery` is derived from whether a CDN host is present, not chosen
  * by a person.
+ *
+ * `lent` says the files live in the installation's own bucket rather than one
+ * the school brought. Everything that would reach that bucket — the endpoint,
+ * the bucket name, the key id, the tail of the secret — is then absent, because
+ * it is not the school's to hold; `prefix` still names where its own files sit.
  */
 export type StorageProfileView = {
   id: domain.StorageProfileId
   schoolId: domain.SchoolId
-  kind: domain.StorageProfileKind
-  endpoint: string
+  provider: domain.StorageProvider
+  lent: boolean
+
+  /** Only `s3-compatible` carries one; for the rest it is derived and refused here. */
+  endpoint: string | null
+
   region: string
-  bucket: string
+  bucket: string | null
   prefix: string
-  accessKeyId: string
+  accessKeyId: string | null
   secretTail: string
   delivery: domain.StorageDelivery
   publicBaseUrl: string | null
-  video: domain.VideoProvider
   quotaBytes: number | null
   usedBytes: number
   verifiedAt: domain.IsoDateTime | null
@@ -182,16 +190,22 @@ export type StorageProfileView = {
  * would otherwise break every file the school has published.
  */
 export type UpsertStorageProfileRequest = {
-  kind: domain.StorageProfileKind
-  endpoint: string
+  provider: domain.StorageProvider
+
+  /** Required for `s3-compatible`, refused for the rest: theirs is derived. */
+  endpoint?: string
+
   region: string
+
+  /** R2 addresses by account rather than by region, and has no regions. */
+  r2AccountId?: string
+
   bucket: string
   prefix?: string
   accessKeyId: string
   secret: string
   publicBaseUrl?: string
   tokenSecret?: string
-  video?: domain.VideoProvider
   quotaBytes?: number
 }
 
@@ -236,6 +250,14 @@ export const MediaRefusals = Object.freeze({
 
   // This profile cannot sign a whole catalogue, only one object at a time.
   streamUnsupported: 'storage-stream-unsupported',
+
+  // Somebody else rotated the same school's keys first: what is live now is
+  // not what this request started from, so it is read again and re-sent.
+  rotationConflicted: 'storage-rotation-conflicted',
+
+  // A stored ceiling that cannot be carried exactly — refused rather than
+  // answered with a different number than the one in the column.
+  quotaUnreadable: 'storage-quota-unreadable',
 
   notConfigured: 'storage-not-configured',
 } as const)

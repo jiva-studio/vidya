@@ -1,3 +1,6 @@
+import { Agent as HttpAgent } from 'node:http'
+import { Agent as HttpsAgent } from 'node:https'
+
 import {
   AbortMultipartUploadCommand,
   DeleteObjectCommand,
@@ -24,6 +27,7 @@ import {
 } from '@vidya/domain'
 
 import { isAllowedMimeType, mimeTypeOfKey } from '../services/mediaLimits'
+import { pinnedLookup } from './pinnedAddresses'
 import { MediaStorageFactory, StorageCredentials } from './ports'
 import { refuseStreamSigning } from './streamSigning'
 
@@ -31,6 +35,21 @@ const UPLOAD_WINDOW_SECONDS = 900
 
 /** What a type nobody may be shown is served as, whatever the object claims. */
 const OPAQUE_TYPE = 'application/octet-stream'
+
+/**
+ * Connects to the addresses the endpoint check approved, where it approved any.
+ *
+ * Resolving the host again here would undo the check: the school owns the name
+ * and can point it somewhere else between the approval and the request.
+ */
+const agentsFor = (addresses: string[]) => {
+  const lookup = pinnedLookup(addresses)
+
+  return {
+    httpAgent: new HttpAgent({ lookup }),
+    httpsAgent: new HttpsAgent({ lookup }),
+  }
+}
 
 const clientFor = (credentials: StorageCredentials): S3Client =>
   new S3Client({
@@ -43,6 +62,7 @@ const clientFor = (credentials: StorageCredentials): S3Client =>
     // Bunny, MinIO and R2 all address a bucket by path; virtual-host style
     // would put the bucket in a hostname none of them serve.
     forcePathStyle: true,
+    ...(credentials.addresses?.length ? { requestHandler: agentsFor(credentials.addresses) } : {}),
   })
 
 const expiryIn = (nowMs: number, seconds: number) => toIsoDateTime(new Date(nowMs + seconds * 1000))

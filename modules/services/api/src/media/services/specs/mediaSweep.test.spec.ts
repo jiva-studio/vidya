@@ -112,16 +112,24 @@ describe('sweeping what an abandoned upload left behind', () => {
 
     const profile = await ds.getRepository(StorageProfile).save({
       schoolId,
-      kind: 's3',
+      provider: 's3-compatible',
       endpoint: 'https://de-s3.storage.bunnycdn.com',
+      r2AccountId: null,
       region: 'de',
       bucket: 'vidya-demo',
       prefix: `school/${schoolId}`,
       accessKeyId: 'vidya-demo',
+      secrets: {
+        keyVersion: 1,
+        dek: { ciphertext: 'c2VhbGVkLWRlaw==', nonce: 'ZGVrLW5vbmNl' },
+        secret: { ciphertext: 'c2VhbGVk', nonce: 'bm9uY2U=' },
+        tokenSecret: null,
+      },
       delivery: 'presigned',
-      video: { kind: 'none' },
-      quotaBytes: null,
-      usedBytes: '0',
+      publicBaseUrl: null,
+      verifiedAt: new Date('2026-09-21T12:00:00.000Z'),
+      verifyError: null,
+      retiredAt: null,
     } as StorageProfile)
     profileId = profile.id
 

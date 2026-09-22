@@ -1,9 +1,9 @@
+import type { Connection, HttpClient, IConnectionStore, Session } from '@vidya/client'
+import { normaliseBaseUrl, ownerIdAt } from '@vidya/client'
 import { createGlobalState } from '@vueuse/core'
 import { computed, ref } from 'vue'
 
-import { ownerIdAt, PreferencesConnectionStore } from '@/infra'
-import type { Connection, HttpClient, IConnectionStore, Session } from '@/ports'
-import { normaliseBaseUrl } from '@/ports'
+import { PreferencesConnectionStore } from '@/infra'
 
 import { endSessionOn401 } from './endSessionOn401'
 import { connectionClient, stopSync } from './sync'

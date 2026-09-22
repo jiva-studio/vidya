@@ -1,3 +1,13 @@
+import { DatabaseSuspendedError } from '@vidya/client'
+import {
+  COURSE_ID,
+  COURSE_SCOPE,
+  ENROLLMENT_ID,
+  HOMEWORK_ID,
+  LESSON_VERSION_ID,
+  SCHOOL_ID,
+  SECTION_ID,
+} from '@vidya/client/testing'
 import type {
   EnrollmentId,
   HomeworkId,
@@ -8,17 +18,6 @@ import type {
 } from '@vidya/domain'
 import { asId } from '@vidya/domain'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-import { DatabaseSuspendedError } from '@/ports'
-import {
-  COURSE_ID,
-  COURSE_SCOPE,
-  ENROLLMENT_ID,
-  HOMEWORK_ID,
-  LESSON_VERSION_ID,
-  SCHOOL_ID,
-  SECTION_ID,
-} from '@/usecases/sync/__tests__/fakeSyncServer'
 
 import { connectionTo, inMemoryConnectionStore } from './connectionFixtures'
 import { fakeSyncNetwork } from './fakeSyncNetwork'
@@ -72,7 +71,7 @@ vi.mock('@capacitor/preferences', () => ({
   },
 }))
 
-const { openTestDatabase } = await import('@/infra/persistence/testing')
+const { openTestDatabase } = await import('@vidya/client/testing')
 const { startSync, stopSync, WRITE_DEBOUNCE_MS } = await import('../sync')
 const { hasSynced } = await import('../deviceSync')
 const { NoConnectionError, useRepositories } = await import('../repositories')

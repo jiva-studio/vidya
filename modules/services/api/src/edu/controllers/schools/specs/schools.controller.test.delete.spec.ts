@@ -38,9 +38,9 @@ describe('SchoolsController', () => {
       }).rejects.toThrow(`School with id ${ctx.one.school.id} not found`)
     })
 
-    it('throws error for user without any permissions', async () => {
+    it('throws error for user without delete permissions', async () => {
       await expect(async () => {
-        await ctr.deleteOne(ctx.one.school.id, await ctx.authenticate(ctx.misc.users.empty))
+        await ctr.deleteOne(ctx.one.school.id, await ctx.authenticate(ctx.one.users.readonly))
       }).rejects.toThrow(`User does not have permission`)
     })
   })

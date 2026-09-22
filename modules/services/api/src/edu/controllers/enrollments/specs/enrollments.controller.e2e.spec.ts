@@ -1,5 +1,7 @@
 import { INestApplication } from '@nestjs/common'
+import { EnrollmentsService } from '@vidya/api/edu/services'
 import { createTestingApp } from '@vidya/api/edu/shared'
+import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
 
@@ -20,42 +22,24 @@ describe('/edu/enrollments', () => {
 
   const routes = protocol.Routes().edu.enrollments
 
-  const enrol = (token: string) =>
-    request(app.getHttpServer())
-      .post(routes.create())
-      .auth(token, { type: 'bearer' })
-      .send({ courseId: ctx.courseId })
+  const place = (overrides: Record<string, unknown> = {}) =>
+    app.get(EnrollmentsService).create({
+      courseId: domain.asId<domain.CourseId>(ctx.courseId),
+      studentId: domain.asId<domain.UserId>(ctx.studentId),
+      schoolId: domain.asId<domain.SchoolId>(ctx.schoolId),
+      ...overrides,
+    })
 
   /* -------------------------------------------------------------------------- */
-  /*                                  Enrolling                                 */
+  /*                            What a request starts as                        */
   /* -------------------------------------------------------------------------- */
-
-  it('lets a student with no permissions enrol', async () => {
-    // Access comes from being enrolled; requiring a permission would make enrolling impossible.
-    const response = await enrol(ctx.tokens.student).expect(201)
-
-    expect(response.body.id).toBeDefined()
-  })
-
-  it('still requires authentication', () => {
-    return request(app.getHttpServer())
-      .post(routes.create())
-      .send({ courseId: ctx.courseId })
-      .expect(401)
-  })
-
-  it('refuses a second request for the same course', async () => {
-    await enrol(ctx.tokens.student).expect(201)
-
-    return enrol(ctx.tokens.student).expect(409)
-  })
 
   it('starts pending, with no group', async () => {
-    const created = await enrol(ctx.tokens.student).expect(201)
+    const asked = await place()
 
     const response = await request(app.getHttpServer())
-      .get(routes.get(created.body.id))
-      .auth(ctx.tokens.student, { type: 'bearer' })
+      .get(routes.get(asked.id))
+      .auth(ctx.tokens.moderator, { type: 'bearer' })
       .expect(200)
 
     expect(response.body.status).toBe('pending')
@@ -63,7 +47,7 @@ describe('/edu/enrollments', () => {
   })
 
   it('shows a student only their own enrollments', async () => {
-    await enrol(ctx.tokens.student).expect(201)
+    await place()
 
     const response = await request(app.getHttpServer())
       .get(routes.find())
@@ -74,75 +58,33 @@ describe('/edu/enrollments', () => {
   })
 
   it("does not let one student read another's enrollment", async () => {
-    const created = await enrol(ctx.tokens.student).expect(201)
+    const asked = await place()
 
     return request(app.getHttpServer())
-      .get(routes.get(created.body.id))
+      .get(routes.get(asked.id))
       .auth(ctx.tokens.otherStudent, { type: 'bearer' })
       .expect(403)
   })
-
-  /* -------------------------------------------------------------------------- */
-  /*                            What a request carries                          */
-  /* -------------------------------------------------------------------------- */
-
-  const askFor = (preferredTimes: unknown) =>
-    request(app.getHttpServer())
-      .post(routes.create())
-      .auth(ctx.tokens.student, { type: 'bearer' })
-      .send({ courseId: ctx.courseId, preferredTimes })
-
-  const rangesOf = (count: number) =>
-    Array.from({ length: count }, (_, index) => ({
-      days: ['mon'],
-      startMinute: index * 60,
-      endMinute: index * 60 + 30,
-    }))
-
-  it('takes a set of ranges the school can read', async () => {
-    // The refusals below have to be the rule speaking, not the route.
-    const response = await askFor({
-      timeZone: 'Asia/Kolkata',
-      ranges: [{ days: ['sat', 'sun'], startMinute: 420, endMinute: 660 }],
-    }).expect(201)
-
-    expect(response.body.id).toBeDefined()
-  })
-
-  it('refuses a preferred range that ends before it starts', () =>
-    askFor({
-      timeZone: 'Asia/Kolkata',
-      ranges: [{ days: ['mon'], startMinute: 660, endMinute: 420 }],
-    }).expect(400))
-
-  it('refuses a preferred range that ends the minute it starts', () =>
-    askFor({
-      timeZone: 'Asia/Kolkata',
-      ranges: [{ days: ['mon'], startMinute: 660, endMinute: 660 }],
-    }).expect(400))
-
-  it('refuses more ranges than a week holds', () =>
-    askFor({ timeZone: 'Asia/Kolkata', ranges: rangesOf(9) }).expect(400))
 
   /* -------------------------------------------------------------------------- */
   /*                                 Moderation                                 */
   /* -------------------------------------------------------------------------- */
 
   it('requires the moderate permission to decide', async () => {
-    const created = await enrol(ctx.tokens.student).expect(201)
+    const asked = await place()
 
     return request(app.getHttpServer())
-      .patch(routes.moderate(created.body.id))
+      .patch(routes.moderate(asked.id))
       .auth(ctx.tokens.observer, { type: 'bearer' })
       .send({ status: 'accepted' })
       .expect(403)
   })
 
   it('accepts without a group, leaving the student in the queue', async () => {
-    const created = await enrol(ctx.tokens.student).expect(201)
+    const asked = await place()
 
     const response = await request(app.getHttpServer())
-      .patch(routes.moderate(created.body.id))
+      .patch(routes.moderate(asked.id))
       .auth(ctx.tokens.moderator, { type: 'bearer' })
       .send({ status: 'accepted' })
       .expect(200)
@@ -152,10 +94,10 @@ describe('/edu/enrollments', () => {
   })
 
   it('accepts straight into a group', async () => {
-    const created = await enrol(ctx.tokens.student).expect(201)
+    const asked = await place()
 
     const response = await request(app.getHttpServer())
-      .patch(routes.moderate(created.body.id))
+      .patch(routes.moderate(asked.id))
       .auth(ctx.tokens.moderator, { type: 'bearer' })
       .send({ status: 'accepted', groupId: ctx.groupId })
       .expect(200)
@@ -165,26 +107,26 @@ describe('/edu/enrollments', () => {
 
   it('refuses a group belonging to a different course', async () => {
     // Otherwise a student ends up with a place on a course they never applied to.
-    const created = await enrol(ctx.tokens.student).expect(201)
+    const asked = await place()
 
     return request(app.getHttpServer())
-      .patch(routes.moderate(created.body.id))
+      .patch(routes.moderate(asked.id))
       .auth(ctx.tokens.moderator, { type: 'bearer' })
       .send({ status: 'accepted', groupId: ctx.foreignGroupId })
       .expect(409)
   })
 
   it('refuses to decide the same request twice', async () => {
-    const created = await enrol(ctx.tokens.student).expect(201)
+    const asked = await place()
 
     await request(app.getHttpServer())
-      .patch(routes.moderate(created.body.id))
+      .patch(routes.moderate(asked.id))
       .auth(ctx.tokens.moderator, { type: 'bearer' })
       .send({ status: 'declined' })
       .expect(200)
 
     return request(app.getHttpServer())
-      .patch(routes.moderate(created.body.id))
+      .patch(routes.moderate(asked.id))
       .auth(ctx.tokens.moderator, { type: 'bearer' })
       .send({ status: 'accepted' })
       .expect(409)
@@ -195,16 +137,16 @@ describe('/edu/enrollments', () => {
   /* -------------------------------------------------------------------------- */
 
   it('moves an accepted student out of the queue into a group', async () => {
-    const created = await enrol(ctx.tokens.student).expect(201)
+    const asked = await place()
 
     await request(app.getHttpServer())
-      .patch(routes.moderate(created.body.id))
+      .patch(routes.moderate(asked.id))
       .auth(ctx.tokens.moderator, { type: 'bearer' })
       .send({ status: 'accepted' })
       .expect(200)
 
     const response = await request(app.getHttpServer())
-      .patch(routes.group(created.body.id))
+      .patch(routes.group(asked.id))
       .auth(ctx.tokens.moderator, { type: 'bearer' })
       .send({ groupId: ctx.groupId })
       .expect(200)
@@ -213,10 +155,10 @@ describe('/edu/enrollments', () => {
   })
 
   it('does not assign a group to a request that is still pending', async () => {
-    const created = await enrol(ctx.tokens.student).expect(201)
+    const asked = await place()
 
     return request(app.getHttpServer())
-      .patch(routes.group(created.body.id))
+      .patch(routes.group(asked.id))
       .auth(ctx.tokens.moderator, { type: 'bearer' })
       .send({ groupId: ctx.groupId })
       .expect(409)

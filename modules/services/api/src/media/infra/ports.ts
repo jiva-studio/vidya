@@ -7,6 +7,12 @@ import { MediaStoragePort, StorageDelivery, UploadGrant } from '@vidya/domain'
  * reach: a bucket signed by its own endpoint signs one object at a time, and
  * only a CDN in front of it can sign a whole catalogue. It is absent where a
  * caller only ever moves single objects, and then nothing may sign a prefix.
+ *
+ * `addresses` is what the endpoint check approved: the dial connects to one of
+ * them and never resolves the name a second time, so the host cannot be moved
+ * to an address nobody checked between the approval and the request. It is
+ * absent for a host we composed ourselves, which is not the school's to
+ * re-point and goes through no check to pin.
  */
 export type StorageCredentials = {
   endpoint: string
@@ -16,6 +22,7 @@ export type StorageCredentials = {
   accessKeyId: string
   secret: string
   delivery?: StorageDelivery
+  addresses?: string[]
 }
 
 /**
@@ -37,8 +44,8 @@ export interface MediaStorageFactory {
  * that used a private path would prove a path nobody uses.
  */
 export interface SignedHttpPort {
-  writeByGrant(grant: UploadGrant, body: Buffer): Promise<void>
-  readRange(url: string, lengthBytes: number): Promise<Buffer>
+  writeByGrant(grant: UploadGrant, body: Buffer, addresses?: string[]): Promise<void>
+  readRange(url: string, lengthBytes: number, addresses?: string[]): Promise<Buffer>
 }
 
 /**

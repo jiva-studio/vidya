@@ -52,6 +52,11 @@ describe('FetchHttpClient', () => {
     expect(sentHeader('authorization')).toBeNull()
   })
 
+  it('attaches an x-request-id header for distributed tracing', async () => {
+    await client().get('/edu/courses')
+    expect(sentHeader('x-request-id')).toBeTruthy()
+  })
+
   it('reads the token at call time rather than at construction', async () => {
     const http = client()
     token = 'later'

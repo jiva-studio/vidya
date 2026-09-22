@@ -8,6 +8,7 @@ roles-column-description = Описание
 roles-column-actions = Действия
 roles-empty-title = Ролей пока нет
 roles-empty-body = Создайте роль и выдайте её человеку.
+roles-school-missing = Сначала выберите школу.
 roles-create = Создать роль
 roles-edit = Изменить
 

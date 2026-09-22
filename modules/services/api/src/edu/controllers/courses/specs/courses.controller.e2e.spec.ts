@@ -1,5 +1,7 @@
 import { INestApplication } from '@nestjs/common'
-import { createTestingApp } from '@vidya/api/edu/shared'
+import { AuthService } from '@vidya/api/auth/services'
+import { createTestingApp, newId } from '@vidya/api/edu/shared'
+import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
 import * as request from 'supertest'
 
@@ -141,6 +143,22 @@ describe('/edu/courses', () => {
       .expect(404)
   })
 
+  it('refuses to update a course when holding update permissions in another school and only read in this school', async () => {
+    const auth = app.get(AuthService)
+    const token = (
+      await auth.generateTokens(newId<domain.UserId>(), [
+        { sid: ctx.one.school.id, p: ['courses:update'] },
+        { sid: ctx.two.school.id, p: ['courses:read'] },
+      ])
+    ).accessToken
+
+    return request(app.getHttpServer())
+      .patch(routes.update(ctx.two.courseId))
+      .auth(token, { type: 'bearer' })
+      .send({ name: 'Hijacked' })
+      .expect(403)
+  })
+
   /* -------------------------------------------------------------------------- */
   /*                                  Deleting                                  */
   /* -------------------------------------------------------------------------- */
@@ -162,5 +180,20 @@ describe('/edu/courses', () => {
       .delete(routes.delete(ctx.two.courseId))
       .auth(ctx.one.tokens.admin, { type: 'bearer' })
       .expect(404)
+  })
+
+  it('refuses to delete a course when holding delete permissions in another school and only read in this school', async () => {
+    const auth = app.get(AuthService)
+    const token = (
+      await auth.generateTokens(newId<domain.UserId>(), [
+        { sid: ctx.one.school.id, p: ['courses:delete'] },
+        { sid: ctx.two.school.id, p: ['courses:read'] },
+      ])
+    ).accessToken
+
+    return request(app.getHttpServer())
+      .delete(routes.delete(ctx.two.courseId))
+      .auth(token, { type: 'bearer' })
+      .expect(403)
   })
 })

@@ -1,11 +1,6 @@
 import { StorageProfile } from '@vidya/entities'
 
-import {
-  deliveryFor,
-  secretTailOf,
-  toStorageProfileView,
-  videoProviderOf,
-} from '../storageProfile.mapper'
+import { deliveryFor, secretTailOf, toStorageProfileView } from '../storageProfile.mapper'
 
 describe('how a profile delivers reads', () => {
   it('signs from the storage endpoint when no CDN host was given', () => {
@@ -38,24 +33,21 @@ describe('the profile as it goes on the wire', () => {
   const profile = {
     id: 'e5f60718-293a-4b45-cd6e-7f8091021324',
     schoolId: '6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f',
-    kind: 's3',
+    provider: 's3-compatible',
     endpoint: 'https://de-s3.storage.bunnycdn.com',
+    r2AccountId: null,
     region: 'de',
     bucket: 'vidya-demo',
     prefix: 'school/6f0a1f4e-1f2b-4f3c-8d5e-7a8b9c0d1e2f',
     accessKeyId: 'vidya-demo',
-    secretCiphertext: Buffer.from('sealed'),
-    secretNonce: Buffer.from('nonce'),
-    keyVersion: 1,
-    dekCiphertext: Buffer.from('sealed-dek'),
-    dekNonce: Buffer.from('dek-nonce'),
+    secrets: {
+      keyVersion: 1,
+      dek: { ciphertext: 'c2VhbGVkLWRlaw==', nonce: 'ZGVrLW5vbmNl' },
+      secret: { ciphertext: 'c2VhbGVk', nonce: 'bm9uY2U=' },
+      tokenSecret: { ciphertext: 'c2VhbGVkLXRva2Vu', nonce: 'dG9rZW4tbm9uY2U=' },
+    },
     delivery: 'bunny-token',
     publicBaseUrl: 'https://cdn.demo-school.example',
-    tokenSecretCiphertext: Buffer.from('sealed-token'),
-    tokenSecretNonce: Buffer.from('token-nonce'),
-    video: { kind: 'none' },
-    quotaBytes: '53687091200',
-    usedBytes: '402118',
     verifiedAt: new Date('2026-09-21T12:00:03.880Z'),
     verifyError: null,
     retiredAt: null,
@@ -63,77 +55,77 @@ describe('the profile as it goes on the wire', () => {
     updatedAt: new Date('2026-09-21T12:00:03.880Z'),
   } as unknown as StorageProfile
 
-  it('carries nothing sealed, and no field that holds a secret', () => {
-    const view = toStorageProfileView(profile, '427e') as unknown as Record<string, unknown>
+  const occupancy = { usedBytes: 402118, quotaBytes: 53687091200 }
 
-    expect(Object.keys(view).filter((key) => /cipher|nonce|dek|secret$/i.test(key))).toEqual([])
-    expect(JSON.stringify(view)).not.toContain('sealed')
+  it('carries nothing sealed, and no field that holds a secret', () => {
+    const view = toStorageProfileView(profile, '427e', occupancy) as unknown as Record<
+      string,
+      unknown
+    >
+
+    expect(Object.keys(view).filter((key) => /cipher|nonce|dek|secrets?$/i.test(key))).toEqual([])
+    expect(JSON.stringify(view)).not.toContain('c2VhbGVk')
   })
 
   it('answers the tail it was given and no more of the secret', () => {
-    expect(toStorageProfileView(profile, '427e').secretTail).toBe('427e')
+    expect(toStorageProfileView(profile, '427e', occupancy).secretTail).toBe('427e')
   })
 
-  it('counts bytes as numbers, whichever way the driver hands them over', () => {
-    const view = toStorageProfileView(profile, '427e')
+  // What a school occupies and what it may occupy are not on the profile: one
+  // is the sum of its files, the other its own policy row.
+  it('counts bytes as numbers, from what it was handed beside the profile', () => {
+    const view = toStorageProfileView(profile, '427e', occupancy)
 
     expect(view.quotaBytes).toBe(53687091200)
     expect(view.usedBytes).toBe(402118)
   })
 
-  it('says a profile has no quota rather than a quota of zero', () => {
-    const view = toStorageProfileView({ ...profile, quotaBytes: null }, '427e')
+  it('says a school has no quota rather than a quota of zero', () => {
+    const view = toStorageProfileView(profile, '427e', { usedBytes: 0, quotaBytes: null })
 
     expect(view.quotaBytes).toBeNull()
   })
 
+  // The screen answers "where do this school's files live", and a school on a
+  // named provider has an address like any other — we composed it, so we are
+  // the ones who can say it.
+  it('names the provider and the host its files are actually at', () => {
+    expect(toStorageProfileView(profile, '427e', occupancy)).toMatchObject({
+      provider: 's3-compatible',
+      endpoint: 'https://de-s3.storage.bunnycdn.com',
+    })
+
+    const named = {
+      ...profile,
+      provider: 'bunny',
+      region: 'de',
+      endpoint: null,
+    } as unknown as StorageProfile
+
+    expect(toStorageProfileView(named, '427e', occupancy)).toMatchObject({
+      provider: 'bunny',
+      endpoint: 'https://de-s3.storage.bunnycdn.com',
+    })
+
+    const r2 = {
+      ...profile,
+      provider: 'r2',
+      region: 'auto',
+      r2AccountId: 'a1b2c3d4e5',
+      endpoint: null,
+    } as unknown as StorageProfile
+
+    expect(toStorageProfileView(r2, '427e', occupancy).endpoint).toBe(
+      'https://a1b2c3d4e5.r2.cloudflarestorage.com',
+    )
+  })
+
   it('answers when the credentials were last proved, as an instant on the wire', () => {
-    expect(toStorageProfileView(profile, '427e').verifiedAt).toBe('2026-09-21T12:00:03.880Z')
-    expect(toStorageProfileView({ ...profile, verifiedAt: null }, '427e').verifiedAt).toBeNull()
-  })
-})
-
-describe('the video provider a profile is given', () => {
-  it('is none when the school named none', () => {
-    expect(videoProviderOf(undefined)).toEqual({ kind: 'none' })
-    expect(videoProviderOf({ kind: 'none' })).toEqual({ kind: 'none' })
-  })
-
-  it('is kept whole when a provider came with everything it needs', () => {
+    expect(toStorageProfileView(profile, '427e', occupancy).verifiedAt).toBe(
+      '2026-09-21T12:00:03.880Z',
+    )
     expect(
-      videoProviderOf({ kind: 'bunny-stream', libraryId: '42', pullZoneHost: 'vz.example' }),
-    ).toEqual({ kind: 'bunny-stream', libraryId: '42', pullZoneHost: 'vz.example' })
-  })
-
-  // The column is json, so anything accepted here is read back as a provider
-  // later; a half-filled one would fail at playback instead of at entry.
-  it('falls back to none when the provider is missing a field', () => {
-    expect(videoProviderOf({ kind: 'bunny-stream', libraryId: '42' } as never)).toEqual({
-      kind: 'none',
-    })
-    expect(videoProviderOf({ kind: 'bunny-stream', pullZoneHost: 'vz.example' } as never)).toEqual({
-      kind: 'none',
-    })
-  })
-
-  it('falls back to none when a field is present but empty', () => {
-    expect(
-      videoProviderOf({ kind: 'bunny-stream', libraryId: '', pullZoneHost: 'vz.example' }),
-    ).toEqual({ kind: 'none' })
-  })
-
-  it('falls back to none for a provider nobody has implemented', () => {
-    expect(videoProviderOf({ kind: 'mux' } as never)).toEqual({ kind: 'none' })
-  })
-
-  it('keeps nothing beyond the fields a provider declares', () => {
-    const kept = videoProviderOf({
-      kind: 'bunny-stream',
-      libraryId: '42',
-      pullZoneHost: 'vz.example',
-      apiKey: 'must-not-be-stored',
-    } as never)
-
-    expect(Object.keys(kept).sort()).toEqual(['kind', 'libraryId', 'pullZoneHost'])
+      toStorageProfileView({ ...profile, verifiedAt: null }, '427e', occupancy).verifiedAt,
+    ).toBeNull()
   })
 })

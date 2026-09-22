@@ -61,6 +61,11 @@ export abstract class EntitiesService<TEntity extends ObjectLiteral> {
     return await this.repository.find(query)
   }
 
+  /** One page, and how many rows the filter matched in all. */
+  async findAndCount(query?: FindManyOptions<TEntity>): Promise<[TEntity[], number]> {
+    return await this.repository.findAndCount(query)
+  }
+
   /**
    * Updates an entity based on the provided query and request.
    * @param query Query to filter the entity
@@ -145,6 +150,10 @@ export class ScopedEntitiesServiceRequest<TEntity extends ObjectLiteral> {
    */
   async findAll(query?: FindManyOptions<TEntity>): Promise<TEntity[]> {
     return await this.service.findAll(this.applyScope(query))
+  }
+
+  async findAndCount(query?: FindManyOptions<TEntity>): Promise<[TEntity[], number]> {
+    return await this.service.findAndCount(this.applyScope(query))
   }
 
   async findOne(query: FindManyOptions<TEntity>): Promise<TEntity | null> {

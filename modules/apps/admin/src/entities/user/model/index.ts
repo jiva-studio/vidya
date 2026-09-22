@@ -1,2 +1,2 @@
 export type * from './types'
-export { useUsers } from './useUsers'
+export { PAGE_SIZE, useUsers } from './useUsers'

@@ -6,7 +6,7 @@ export const routes: RouteRecordRaw[] = [
     path: '/s/:schoolId/users',
     name: 'users',
     component: () => import('./ui/UsersPage.vue'),
-    meta: { permission: 'users:read', breadcrumbs: ['nav-users'] },
+    meta: { permission: 'users:read' },
   },
   {
     // The identifier is a prop rather than something read from the router, so
@@ -18,7 +18,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       section: 'users',
       permission: 'users:read',
-      breadcrumbs: ['nav-users', 'users-card-title'],
+      nav: { parent: 'users', label: 'users-card-title' },
     },
   },
 ]

@@ -1,9 +1,14 @@
-import { Injectable, Logger, OnApplicationBootstrap, OnApplicationShutdown } from '@nestjs/common'
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnApplicationBootstrap,
+  OnApplicationShutdown,
+} from '@nestjs/common'
+import { ConfigType } from '@nestjs/config'
+import { MediaConfig } from '@vidya/api/configs'
 
 import { MediaSweepService } from './mediaSweep.service'
-
-/** The sweep is hourly: the rows it collects are a day old, so the hour is slack. */
-const SWEEP_EVERY_MS = 60 * 60 * 1000
 
 /** One scheduled job, and the means to run it now instead of at the next tick. */
 export type ScheduledJob = { fireOnTick(): Promise<void> }
@@ -26,10 +31,13 @@ export class MediaSweepSchedule implements OnApplicationBootstrap, OnApplication
 
   private timer: NodeJS.Timeout | null = null
 
-  constructor(private readonly sweep: MediaSweepService) {}
+  constructor(
+    private readonly sweep: MediaSweepService,
+    @Inject(MediaConfig.KEY) private readonly config: ConfigType<typeof MediaConfig>,
+  ) {}
 
   onApplicationBootstrap(): void {
-    this.timer = setInterval(() => void this.runQuietly(), SWEEP_EVERY_MS)
+    this.timer = setInterval(() => void this.runQuietly(), this.config.sweepEveryMs)
 
     // The tick must never be the reason the process stays alive.
     this.timer.unref()
@@ -47,14 +55,14 @@ export class MediaSweepSchedule implements OnApplicationBootstrap, OnApplication
 
   /**
    * A tick that failed must not take the process down: an unhandled rejection
-   * from a timer does exactly that, and the next hour's sweep would have
-   * collected the same rows anyway.
+   * from a timer does exactly that, and the next tick would have collected the
+   * same rows anyway.
    */
   private async runQuietly(): Promise<void> {
     try {
       await this.sweep.sweepAbandonedUploads()
     } catch (failure) {
-      this.logger.error(`the hourly sweep did not finish: ${(failure as Error).message}`)
+      this.logger.error(`the sweep did not finish: ${(failure as Error).message}`)
     }
   }
 }

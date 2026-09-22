@@ -64,6 +64,16 @@ export const maxBytesOf = (limits: MediaSizeLimits, kind: MediaKind): number =>
 export const defaultPrefixOf = (schoolId: SchoolId): string => `school/${schoolId}`
 
 /**
+ * The prefix a school's files live under, read from one place by everything
+ * that writes, lists or sweeps them.
+ *
+ * A stored prefix that is empty or blank is no prefix at all, and reading it as
+ * one names every object in the bucket — including another school's.
+ */
+export const prefixOf = (profile: { schoolId: SchoolId; prefix: string | null }): string =>
+  (profile.prefix ?? '').trim() || defaultPrefixOf(profile.schoolId)
+
+/**
  * The object key one upload writes to.
  *
  * The media id is a path segment rather than a suffix so everything belonging

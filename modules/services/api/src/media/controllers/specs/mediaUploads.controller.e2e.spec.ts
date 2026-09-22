@@ -150,15 +150,34 @@ describe('asking for permission to upload a file', () => {
     ).toEqual([])
   })
 
-  it('counts the bytes outstanding grants promised, so parallel grants cannot overfill', async () => {
+  it('grants room to five of ten asks that arrive together and refuses the rest', async () => {
     await configure({ quotaBytes: 20480 })
 
-    const statuses: number[] = []
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-      statuses.push((await ask({ sizeBytes: 4096 })).status)
-    }
+    const asked = await Promise.all(Array.from({ length: 10 }, () => ask({ sizeBytes: 4096 })))
+    const statuses = asked.map((response) => response.status)
 
-    expect(statuses).toEqual([201, 201, 201, 201, 201, 413, 413, 413, 413, 413])
+    expect(statuses.filter((status) => status === 201)).toHaveLength(5)
+    expect(statuses.filter((status) => status === 413)).toHaveLength(5)
+  })
+
+  it('never promises more bytes than the quota holds, however many ask at once', async () => {
+    await configure({ quotaBytes: 20480 })
+
+    await Promise.all(Array.from({ length: 10 }, () => ask({ sizeBytes: 4096 })))
+    const usage = await flow.usageOf(flow.ctx.one.school.id, flow.ctx.one.users.owner)
+
+    expect(usage.body.reservedBytes).toBeLessThanOrEqual(20480)
+  })
+
+  it('refuses a file larger than the ceiling for its kind before any byte is signed', async () => {
+    await configure()
+    const expected = refusalFor(ROUTE, MediaRefusals.tooLarge)
+
+    const response = await ask({ sizeBytes: 20_971_520 })
+
+    expect(response.status).toBe(expected.status)
+    expect(response.body.message).toContain(MediaRefusals.tooLarge)
+    expect(await flow.mediaRowsOf(flow.ctx.one.school.id)).toEqual([])
   })
 
   it('reports the bytes promised to grants that have not completed', async () => {

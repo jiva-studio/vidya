@@ -4,8 +4,17 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthUsersService, RevokedTokensService } from '@vidya/api/auth/services'
 import { MediaConfig } from '@vidya/api/configs'
 import { CLOCK, systemClock } from '@vidya/api/shared/clock'
-import { RedisService } from '@vidya/api/shared/services'
-import { Media, Role, School, StorageProfile, User, UserRole } from '@vidya/entities'
+import { AuditLogService, RedisService } from '@vidya/api/shared/services'
+import {
+  AuditLog,
+  Media,
+  Role,
+  School,
+  SchoolStorageQuota,
+  StorageProfile,
+  User,
+  UserRole,
+} from '@vidya/entities'
 
 import {
   MediaCatalogController,
@@ -25,6 +34,7 @@ import {
 } from './infra'
 import {
   EndpointGuardService,
+  InstallationStorageService,
   MediaAddressesService,
   MediaCatalogService,
   MediaMasterKeyService,
@@ -36,8 +46,10 @@ import {
   MediaUsageService,
   SchoolStorageService,
   SecretSealingService,
+  StorageAuditService,
   StorageProbeService,
   StorageProfilesService,
+  StorageQuotasService,
   StorageSetupService,
 } from './services'
 
@@ -86,7 +98,18 @@ const storageProviders: Provider[] = [
  * concerns that belong together and beside nothing else.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Media, StorageProfile, School, User, Role, UserRole])],
+  imports: [
+    TypeOrmModule.forFeature([
+      AuditLog,
+      Media,
+      StorageProfile,
+      SchoolStorageQuota,
+      School,
+      User,
+      Role,
+      UserRole,
+    ]),
+  ],
   controllers: [
     StorageProfilesController,
     MediaUploadsController,
@@ -99,10 +122,12 @@ const storageProviders: Provider[] = [
     RedisService,
     AuthUsersService,
     RevokedTokensService,
+    AuditLogService,
 
     ...storageProviders,
 
     EndpointGuardService,
+    InstallationStorageService,
     MediaAddressesService,
     MediaCatalogService,
     MediaReadAccessService,
@@ -113,8 +138,10 @@ const storageProviders: Provider[] = [
     MediaUsageService,
     SchoolStorageService,
     SecretSealingService,
+    StorageAuditService,
     StorageProbeService,
     StorageProfilesService,
+    StorageQuotasService,
     StorageSetupService,
     MediaMasterKeyService,
   ],

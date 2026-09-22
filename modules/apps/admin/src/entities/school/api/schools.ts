@@ -1,5 +1,6 @@
 import type { SchoolId } from '@vidya/domain'
 import type {
+  CreateSchoolCodeResponse,
   CreateSchoolRequest,
   CreateSchoolResponse,
   GetSchoolResponse,
@@ -11,6 +12,13 @@ import { Routes } from '@vidya/protocol'
 
 import type { HttpClient } from '@/shared/api'
 import { useHttp } from '@/shared/api'
+
+/** One page of the schools list, as a screen asks for it. */
+export interface SchoolPageQuery {
+  limit?: number
+  offset?: number
+  query?: string
+}
 
 import type {
   SchoolConfigs,
@@ -27,7 +35,8 @@ import type {
  * token grants, which is why it takes no school of its own.
  */
 export const schoolApi = (http: HttpClient) => ({
-  list: () => http.get<GetSchoolsResponse>(Routes().edu.schools.find()),
+  list: (page: SchoolPageQuery = {}) =>
+    http.get<GetSchoolsResponse>(Routes().edu.schools.find(), { ...page }),
 
   get: (id: SchoolId) => http.get<GetSchoolResponse>(Routes().edu.schools.get(id)),
 
@@ -36,6 +45,10 @@ export const schoolApi = (http: HttpClient) => ({
 
   update: (id: SchoolId, body: UpdateSchoolRequest) =>
     http.patch<UpdateSchoolResponse>(Routes().edu.schools.update(id), body),
+
+  // Asking twice hands back the same code, so the caller need not remember
+  // whether the school has one.
+  createCode: (id: SchoolId) => http.post<CreateSchoolCodeResponse>(Routes().edu.schools.code(id)),
 
   configs: (id: SchoolId) => http.get<SchoolConfigs>(Routes().edu.schools.configs.getAll(id)),
 

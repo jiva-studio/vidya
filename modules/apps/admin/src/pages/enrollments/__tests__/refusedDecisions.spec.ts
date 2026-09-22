@@ -4,7 +4,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { setAppRouter } from '@/shared/access'
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, pending, refusal } from '@/shared/testing'
@@ -16,9 +16,11 @@ const ENROLLMENTS = '/edu/enrollments'
 const COURSES = '/edu/courses'
 const GROUPS = '/edu/groups'
 
-const REVIEW = 'Рассмотреть'
-const ACCEPT = 'Принять в группу'
-const ARCHIVE = 'Убрать'
+// Read when a test asks, not when the file loads: the copy is registered in
+// `beforeEach`, and a name taken before that would be the key itself.
+const REVIEW = () => translate('enrollments-review')
+const ACCEPT = () => translate('enrollments-review-accept')
+const ARCHIVE = () => translate('enrollments-archive')
 
 const blank = { template: '<div />' }
 
@@ -49,11 +51,11 @@ const details = (over: Record<string, unknown> = {}) => ({
 })
 
 const world = (over: FakeAnswers = {}): FakeAnswers => ({
-  [COURSES]: { items: [{ id: 'c1', name: 'Основы' }] },
-  [GROUPS]: { items: [{ id: 'g1', name: 'Утренняя', status: 'pending' }] },
+  [COURSES]: { items: [{ id: 'c1', name: 'Foundations' }] },
+  [GROUPS]: { items: [{ id: 'g1', name: 'Morning', status: 'pending' }] },
   [ENROLLMENTS]: { items: [summary()] },
   [`${ENROLLMENTS}/e1`]: details(),
-  '/edu/users/u1': { id: 'u1', name: 'Аня Иванова', email: 'a@example.com', roles: [] },
+  '/edu/users/u1': { id: 'u1', name: 'Ann Ivanova', email: 'a@example.com', roles: [] },
   ...over,
 })
 
@@ -122,25 +124,25 @@ describe('a decision the server refuses', () => {
       world({ [`PATCH ${ENROLLMENTS}/e1/moderation`]: () => pending() }),
     )
 
-    await click(page, REVIEW)
-    await clickInBody(ACCEPT)
+    await click(page, REVIEW())
+    await clickInBody(ACCEPT())
 
-    expect(inBody(ACCEPT)).toBeDefined()
-    expect(inBody(ACCEPT)?.getAttribute('aria-busy')).toBe('true')
+    expect(inBody(ACCEPT())).toBeDefined()
+    expect(inBody(ACCEPT())?.getAttribute('aria-busy')).toBe('true')
   })
 
   it('keeps the review open on a refusal and names the reason the server gave', async () => {
     const { page } = await mountPage(
       world({
-        [`PATCH ${ENROLLMENTS}/e1/moderation`]: refusal(409, 'Группа уже набрана'),
+        [`PATCH ${ENROLLMENTS}/e1/moderation`]: refusal(409, 'The group is already full'),
       }),
     )
 
-    await click(page, REVIEW)
-    await clickInBody(ACCEPT)
+    await click(page, REVIEW())
+    await clickInBody(ACCEPT())
 
-    expect(inBody(ACCEPT)).toBeDefined()
-    expect(shown(page)).toContain('Группа уже набрана')
+    expect(inBody(ACCEPT())).toBeDefined()
+    expect(shown(page)).toContain('The group is already full')
   })
 
   it('closes the review once the server has taken the decision', async () => {
@@ -148,12 +150,12 @@ describe('a decision the server refuses', () => {
       world({ [`PATCH ${ENROLLMENTS}/e1/moderation`]: details({ status: 'accepted' }) }),
     )
 
-    await click(page, REVIEW)
-    expect(inBody(ACCEPT)).toBeDefined()
+    await click(page, REVIEW())
+    expect(inBody(ACCEPT())).toBeDefined()
 
-    await clickInBody(ACCEPT)
+    await clickInBody(ACCEPT())
 
-    expect(inBody(ACCEPT)).toBeUndefined()
+    expect(inBody(ACCEPT())).toBeUndefined()
   })
 
   it('says on the row itself why the school could not put it away', async () => {
@@ -161,14 +163,14 @@ describe('a decision the server refuses', () => {
       world({
         [ENROLLMENTS]: { items: [summary({ status: 'declined' })] },
         [`${ENROLLMENTS}/e1`]: details({ status: 'declined' }),
-        [`PATCH ${ENROLLMENTS}/e1/archive`]: refusal(409, 'Заявка ещё держит место'),
+        [`PATCH ${ENROLLMENTS}/e1/archive`]: refusal(409, 'The request still holds a place'),
       }),
     )
 
-    await click(page, ARCHIVE)
-    await clickInBody(ARCHIVE)
+    await click(page, ARCHIVE())
+    await clickInBody(ARCHIVE())
 
-    expect(page.text()).toContain('Заявка ещё держит место')
+    expect(page.text()).toContain('The request still holds a place')
   })
 
   it('turns a refusal without a sentence of its own into one an operator can read', async () => {
@@ -180,10 +182,10 @@ describe('a decision the server refuses', () => {
       }),
     )
 
-    await click(page, ARCHIVE)
-    await clickInBody(ARCHIVE)
+    await click(page, ARCHIVE())
+    await clickInBody(ARCHIVE())
 
-    expect(page.text()).toContain('Нет доступа')
+    expect(page.text()).toContain(translate('page-forbidden-title'))
     expect(page.text()).not.toContain('error-forbidden')
   })
 
@@ -196,10 +198,10 @@ describe('a decision the server refuses', () => {
       }),
     )
 
-    await click(page, ARCHIVE)
-    await clickInBody(ARCHIVE)
+    await click(page, ARCHIVE())
+    await clickInBody(ARCHIVE())
 
-    const button = page.findAll('button').find((candidate) => nameOf(candidate) === ARCHIVE)
+    const button = page.findAll('button').find((candidate) => nameOf(candidate) === ARCHIVE())
 
     expect(button?.attributes('aria-busy')).toBe('true')
   })
@@ -207,15 +209,15 @@ describe('a decision the server refuses', () => {
   it('leaves no reason from a refused decision on the next request reviewed', async () => {
     const { page } = await mountPage(
       world({
-        [`PATCH ${ENROLLMENTS}/e1/moderation`]: refusal(409, 'Группа уже набрана'),
+        [`PATCH ${ENROLLMENTS}/e1/moderation`]: refusal(409, 'The group is already full'),
       }),
     )
 
-    await click(page, REVIEW)
-    await clickInBody(ACCEPT)
-    await clickInBody('Закрыть')
-    await click(page, REVIEW)
+    await click(page, REVIEW())
+    await clickInBody(ACCEPT())
+    await clickInBody(translate('action-close'))
+    await click(page, REVIEW())
 
-    expect(shown(page)).not.toContain('Группа уже набрана')
+    expect(shown(page)).not.toContain('The group is already full')
   })
 })

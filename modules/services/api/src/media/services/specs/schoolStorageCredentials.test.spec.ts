@@ -1,6 +1,7 @@
 import { StorageProfile } from '@vidya/entities'
 
 import { MediaStorageFactory, StorageCredentials } from '../../infra/ports'
+import { InstallationStorageService } from '../installationStorage.service'
 import { SchoolStorageService } from '../schoolStorage.service'
 import { SecretSealingService } from '../secretSealing.service'
 import { StorageProfilesService } from '../storageProfiles.service'
@@ -36,7 +37,12 @@ const sealing = { openSecret: () => 'secret' } as unknown as SecretSealingServic
 describe("the credentials a school's bucket is opened with", () => {
   it('carries the way the profile delivers reads, which decides what may be signed', () => {
     const { opened, storages } = recordingFactory()
-    const service = new SchoolStorageService(storages, {} as StorageProfilesService, sealing)
+    const service = new SchoolStorageService(
+      storages,
+      {} as InstallationStorageService,
+      {} as StorageProfilesService,
+      sealing,
+    )
 
     service.openProfile(profile())
 

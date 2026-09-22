@@ -41,7 +41,7 @@ import { computed, ref } from 'vue'
 import { useRepositories } from '@/app'
 import { AsyncButton, PageWithHeaderLayout, WithListHeader } from '@/design'
 import { useLocalData } from '@/shared'
-import { education } from '@/usecases'
+import { education } from '@vidya/client'
 
 import { TimeRangeSelector } from '../components/TimeRange'
 import GroupSelector from '../containers/GroupSelector.vue'

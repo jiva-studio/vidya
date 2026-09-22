@@ -1,79 +1,74 @@
 <script setup lang="ts">
 import type { RoleId } from '@vidya/domain'
 import { Badge, Checkbox, EmptyState, FailureState, Skeleton } from '@vidya/ui'
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 
 import type { RoleRow } from '@/entities/role'
 import { useCan } from '@/shared/access'
 
-import { useUserRoles } from '../model'
-import type { UserRolesSelectorProps } from '../types'
+import type { UserRolesSelectorEmits, UserRolesSelectorProps } from '../types'
 import { badgesClasses, listClasses, noticeClasses, sectionClasses } from './styles'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = defineProps<UserRolesSelectorProps>()
+const props = withDefaults(defineProps<UserRolesSelectorProps>(), {
+  loading: false,
+  error: undefined,
+})
+
+/* --------------------------------- Events --------------------------------- */
+
+const emit = defineEmits<UserRolesSelectorEmits>()
 
 /* --------------------------------- State ---------------------------------- */
-
-// The school is read at the moment of the request, so a switch mid-screen
-// cannot send the previous school's identifier.
-const roles = useUserRoles(() => props.userId)
 
 // Hidden rather than disabled: a control nobody can explain is worse than no
 // control at all. The server refuses either way.
 const canManage = useCan('users:update')
 
-const held = computed(() => new Set<RoleId>(roles.assigned.value))
+const held = computed(() => new Set<RoleId>(props.selected))
 
 // A failure to load replaces the list; a failure to save sits under it, so the
-// operator keeps what they were looking at and can try the toggle again.
-const loadFailed = computed(() => Boolean(roles.error.value) && roles.available.value.length === 0)
-const saveFailed = computed(() => Boolean(roles.error.value) && roles.available.value.length > 0)
+// operator keeps what they were looking at and can try again.
+const loadFailed = computed(() => Boolean(props.error) && props.available.length === 0)
+const saveFailed = computed(() => Boolean(props.error) && props.available.length > 0)
 const assignedRoles = computed<RoleRow[]>(() =>
-  roles.available.value.filter((role) => held.value.has(role.id)),
+  props.available.filter((role) => held.value.has(role.id)),
 )
-
-/* ---------------------------------- Hooks --------------------------------- */
-
-onMounted(() => {
-  void roles.load()
-})
 
 /* -------------------------------- Handlers -------------------------------- */
 
 function onRetry() {
-  void roles.load()
+  emit('retry')
 }
 
 function onToggle(roleId: RoleId, checked: boolean) {
-  void (checked ? roles.assign(roleId) : roles.revoke(roleId))
+  emit('toggle', roleId, checked)
 }
 </script>
 
 <template>
   <section :class="sectionClasses">
-    <Skeleton v-if="roles.loading.value" shape="block" :lines="3" />
+    <Skeleton v-if="props.loading" shape="block" :lines="3" />
     <FailureState
       v-else-if="loadFailed"
       :title="$t('state-error-title')"
-      :description="$t(roles.error.value ?? 'state-error')"
+      :description="$t(props.error ?? 'state-error')"
       :retry-label="$t('action-retry')"
       @retry="onRetry"
     />
     <EmptyState
-      v-else-if="roles.available.value.length === 0"
+      v-else-if="props.available.length === 0"
       :title="$t('users-roles-empty-title')"
       :description="$t('users-roles-empty-body')"
     />
     <div v-else-if="canManage" :class="listClasses">
       <Checkbox
-        v-for="role in roles.available.value"
+        v-for="role in props.available"
         :key="role.id"
         :model-value="held.has(role.id)"
         :label="role.name"
         :description="role.description"
-        :disabled="roles.saving.value"
         @update:model-value="onToggle(role.id, $event)"
       />
     </div>
@@ -81,7 +76,7 @@ function onToggle(roleId: RoleId, checked: boolean) {
       <Badge v-for="role in assignedRoles" :key="role.id">{{ role.name }}</Badge>
     </div>
     <p v-if="saveFailed" :class="noticeClasses" role="alert">
-      {{ $t(roles.error.value ?? 'state-error') }}
+      {{ $t(props.error ?? 'state-error') }}
     </p>
   </section>
 </template>

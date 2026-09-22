@@ -1,9 +1,5 @@
-import type { EnrollmentId, HomeworkId, LessonVersionId, SchoolId, SectionId } from '@vidya/domain'
-import { asId } from '@vidya/domain'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-import type { IConnectionStore, IDatabase } from '@/ports'
-import { DatabaseSuspendedError } from '@/ports'
+import type { IConnectionStore, IDatabase } from '@vidya/client'
+import { DatabaseSuspendedError } from '@vidya/client'
 import {
   COURSE_ID,
   COURSE_SCOPE,
@@ -13,7 +9,10 @@ import {
   SCHOOL_ID,
   SECTION_ID,
   USER_SCOPE,
-} from '@/usecases/sync/__tests__/fakeSyncServer'
+} from '@vidya/client/testing'
+import type { EnrollmentId, HomeworkId, LessonVersionId, SchoolId, SectionId } from '@vidya/domain'
+import { asId } from '@vidya/domain'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { connectionTo, inMemoryConnectionStore } from './connectionFixtures'
 import { fakeSyncNetwork, ticks } from './fakeSyncNetwork'
@@ -71,7 +70,7 @@ vi.mock('@capacitor/preferences', () => ({
   },
 }))
 
-const { openTestDatabase } = await import('@/infra/persistence/testing')
+const { openTestDatabase } = await import('@vidya/client/testing')
 const { startSync } = await import('../sync')
 
 const SCHOOL_A = 'https://school-a.test'

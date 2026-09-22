@@ -12,6 +12,6 @@ export const routes: RouteRecordRaw[] = [
     path: '/s/:schoolId/enrollments',
     name: 'enrollments',
     component: () => import('./ui/EnrollmentsPage.vue'),
-    meta: { permission: 'enrollments:read', breadcrumbs: ['nav-enrollments'] },
+    meta: { permission: 'enrollments:read' },
   },
 ]

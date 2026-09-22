@@ -1,34 +1,49 @@
 import { Injectable } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
-import {
-  SchoolId,
-  StorageDelivery,
-  StorageProfileId,
-  StorageProfileKind,
-  VideoProvider,
-} from '@vidya/domain'
-import { School, StorageProfile } from '@vidya/entities'
-import { DataSource, EntityManager, IsNull } from 'typeorm'
+import { SchoolId, StorageDelivery, StorageProfileId, StorageProvider } from '@vidya/domain'
+import { School, StorageProfile, StorageSecrets } from '@vidya/entities'
+import { DataSource, EntityManager, IsNull, QueryFailedError } from 'typeorm'
 
-import { SealedProfile } from './secretSealing.service'
+import { StorageFailedError } from '../storageFailure'
+
+const UNIQUE_VIOLATION = '23505'
+const LIVE_PER_SCHOOL = 'UQ_storage_profiles_live_per_school'
+
+/** Whether the write lost a race for the school's one live profile. */
+const isLiveProfileTaken = (error: unknown): boolean => {
+  if (!(error instanceof QueryFailedError)) return false
+
+  const driver = error.driverError as { code?: string; constraint?: string } | undefined
+
+  return driver?.code === UNIQUE_VIOLATION && driver?.constraint === LIVE_PER_SCHOOL
+}
 
 /** A profile as it is about to be written; a row is never edited after this. */
 export type StorageProfileDraft = {
   id: StorageProfileId
   schoolId: SchoolId
-  kind: StorageProfileKind
-  endpoint: string
+  provider: StorageProvider
+
+  /** Null for every provider whose address we compose ourselves. */
+  endpoint: string | null
+
   region: string
+
+  /** The account R2 is addressed by, and null for every other provider. */
+  r2AccountId: string | null
   bucket: string
   prefix: string
   accessKeyId: string
   delivery: StorageDelivery
   publicBaseUrl: string | null
-  video: VideoProvider
-  quotaBytes: number | null
-  sealed: SealedProfile
-  verifiedAt: Date
+  secrets: StorageSecrets
+
+  /** Null while nobody has probed these keys, which is how a lent row starts. */
+  verifiedAt: Date | null
 }
+
+/** The installation's own bucket, which belongs to no school and names none. */
+export type InstallationProfileDraft = Omit<StorageProfileDraft, 'schoolId'>
 
 /**
  * The rows behind a school's storage.
@@ -38,6 +53,10 @@ export type StorageProfileDraft = {
  * profiles would leave it ambiguous which one a new upload belongs in. The
  * retired row stays exactly as it was, because the files it wrote are still
  * read through the keys it holds.
+ *
+ * The installation's own bucket is a row here too, naming no school: a file is
+ * read through the profile that wrote it, so the bucket a school is lent has to
+ * be something a file can point at for as long as it exists.
  */
 @Injectable()
 export class StorageProfilesService {
@@ -53,16 +72,88 @@ export class StorageProfilesService {
     return this.dataSource.getRepository(StorageProfile).findOne({ where: { id: profileId } })
   }
 
+  /**
+   * Retires the live row and writes a new one, or refuses because somebody else
+   * did it first: the database holds the school to one live profile, and the
+   * writer that lost has to read what is live now rather than be told a
+   * constraint name.
+   */
   async replaceProfile(draft: StorageProfileDraft): Promise<StorageProfile> {
-    return this.dataSource.transaction(async (manager) => {
-      await this.retireLive(manager, draft.schoolId)
+    try {
+      return await this.dataSource.transaction(async (manager) => {
+        await this.retireLive(manager, draft.schoolId)
 
-      const saved = await manager.getRepository(StorageProfile).save(rowFrom(draft))
+        const saved = await manager
+          .getRepository(StorageProfile)
+          .save(rowFrom(draft, draft.schoolId))
+        await manager
+          .getRepository(School)
+          .update({ id: draft.schoolId }, { currentStorageProfileId: saved.id })
+
+        return saved
+      })
+    } catch (error) {
+      if (isLiveProfileTaken(error)) throw new StorageFailedError('rotation-conflicted')
+
+      throw error
+    }
+  }
+
+  /** The installation's own bucket, which has no school and one live row. */
+  async findInstallationProfile(): Promise<StorageProfile | null> {
+    return this.dataSource
+      .getRepository(StorageProfile)
+      .findOne({ where: { schoolId: IsNull(), retiredAt: IsNull() } })
+  }
+
+  /**
+   * Writes the installation's row, or reads the one another request wrote.
+   *
+   * Two schools touching the lent bucket for the first time at once both try to
+   * create it; the partial unique index keeps one, and the loser wants that row
+   * rather than a refusal — neither school asked for a profile to be created.
+   */
+  async createInstallationProfile(draft: InstallationProfileDraft): Promise<StorageProfile> {
+    try {
+      return await this.dataSource.getRepository(StorageProfile).save(rowFrom(draft, null))
+    } catch (error) {
+      const written = await this.findInstallationProfile()
+      if (!written) throw error
+
+      return written
+    }
+  }
+
+  /**
+   * Writes a profile unless the school already has a live one.
+   *
+   * Which of two callers wins is the unique index's decision and not a read's:
+   * both insert, the conflicting insert writes nothing, and who the live
+   * profile belongs to is asked afterwards rather than before. Nothing is
+   * inferred from the driver's answer to the insert, because a row carrying
+   * its own id is reported as written whether it landed or not.
+   */
+  async insertIfAbsent(draft: StorageProfileDraft): Promise<StorageProfile | null> {
+    return this.dataSource.transaction(async (manager) => {
+      await manager
+        .getRepository(StorageProfile)
+        .createQueryBuilder()
+        .insert()
+        .values(rowFrom(draft, draft.schoolId))
+        .orIgnore()
+        .execute()
+
+      const live = await manager
+        .getRepository(StorageProfile)
+        .findOne({ where: { schoolId: draft.schoolId, retiredAt: IsNull() } })
+
+      if (live?.id !== draft.id) return null
+
       await manager
         .getRepository(School)
-        .update({ id: draft.schoolId }, { currentStorageProfileId: saved.id })
+        .update({ id: draft.schoolId }, { currentStorageProfileId: draft.id })
 
-      return saved
+      return live
     })
   }
 
@@ -92,27 +183,22 @@ export class StorageProfilesService {
   }
 }
 
-const rowFrom = (draft: StorageProfileDraft): Partial<StorageProfile> => ({
+const rowFrom = (
+  draft: InstallationProfileDraft,
+  schoolId: SchoolId | null,
+): Partial<StorageProfile> => ({
   id: draft.id,
-  schoolId: draft.schoolId,
-  kind: draft.kind,
+  schoolId,
+  provider: draft.provider,
   endpoint: draft.endpoint,
   region: draft.region,
+  r2AccountId: draft.r2AccountId,
   bucket: draft.bucket,
   prefix: draft.prefix,
   accessKeyId: draft.accessKeyId,
-  secretCiphertext: draft.sealed.secret.ciphertext,
-  secretNonce: draft.sealed.secret.nonce,
-  keyVersion: draft.sealed.keyVersion,
-  dekCiphertext: draft.sealed.dek.ciphertext,
-  dekNonce: draft.sealed.dek.nonce,
+  secrets: draft.secrets,
   delivery: draft.delivery,
   publicBaseUrl: draft.publicBaseUrl,
-  tokenSecretCiphertext: draft.sealed.tokenSecret?.ciphertext ?? null,
-  tokenSecretNonce: draft.sealed.tokenSecret?.nonce ?? null,
-  video: draft.video,
-  quotaBytes: draft.quotaBytes === null ? null : String(draft.quotaBytes),
-  usedBytes: '0',
   verifiedAt: draft.verifiedAt,
   verifyError: null,
   retiredAt: null,

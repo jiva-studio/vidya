@@ -54,6 +54,10 @@ describe('the address lesson content stores for an uploaded file', () => {
     expect(parseMediaPath(`/media/${ID}/original.png`)).toBeUndefined()
   })
 
+  it('refuses an id in upper case, which would name one row by two strings', () => {
+    expect(parseMediaPath(`/media/${ID.toUpperCase()}`)).toBeUndefined()
+  })
+
   it('refuses an absolute address, so a signature can never be stored as content', () => {
     expect(parseMediaPath(`https://cdn.example/media/${ID}`)).toBeUndefined()
     expect(parseMediaPath(`media://${ID}`)).toBeUndefined()

@@ -15,6 +15,7 @@ const values = {
   name: 'Sanskrit grammar',
   description: 'Cases and verbs',
   learningType: 'group' as const,
+  status: 'draft' as const,
 }
 
 const transport = () =>
@@ -85,6 +86,7 @@ describe('course requests', () => {
       'description',
       'learningType',
       'name',
+      'status',
     ])
   })
 })

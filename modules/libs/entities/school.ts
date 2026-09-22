@@ -9,6 +9,10 @@ export type SchoolConfig = {
   studentRoleIds: RoleId[]
 }
 
+/**
+ * `code` is the public code a joining link carries, and it is null until the
+ * school asks for one: a school with no code cannot be reached by a link.
+ */
 @Entity({ name: 'schools' })
 export class School {
   @PrimaryGeneratedColumn('uuid')
@@ -24,6 +28,9 @@ export class School {
 
   @Column({ nullable: true, type: 'character varying' })
   description: string | null
+
+  @Column({ nullable: true, type: 'character varying', length: 6 })
+  code: string | null
 
   @Column({ nullable: false, type: 'json', default: {} })
   config: SchoolConfig

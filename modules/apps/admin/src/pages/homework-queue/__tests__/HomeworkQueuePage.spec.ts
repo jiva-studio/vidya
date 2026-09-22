@@ -45,12 +45,12 @@ const enrollment = (id: string, studentId: string) => ({
 })
 
 const world = (over: FakeAnswers = {}): FakeAnswers => ({
-  '/edu/courses': { items: [{ id: 'c1', name: 'Основы' }] },
-  '/edu/groups': { items: [{ id: 'g1', name: 'Утренняя' }] },
+  '/edu/courses': { items: [{ id: 'c1', name: 'Foundations' }] },
+  '/edu/groups': { items: [{ id: 'g1', name: 'Morning' }] },
   [HOMEWORK]: { items: [summary('h1', 'e1'), summary('h2', 'e2')] },
   '/edu/enrollments/e1': enrollment('e1', 'u1'),
   '/edu/enrollments/e2': enrollment('e2', 'u1'),
-  '/edu/users/u1': { id: 'u1', name: 'Аня Иванова', email: 'a@example.com', roles: [] },
+  '/edu/users/u1': { id: 'u1', name: 'Ann Ivanova', email: 'a@example.com', roles: [] },
   ...over,
 })
 
@@ -90,8 +90,8 @@ describe('HomeworkQueuePage', () => {
     const { transport, page } = await mountPage(world())
 
     expect(transport.calls[0]).toMatchObject({ path: HOMEWORK, query: { status: 'pending' } })
-    expect(page.text()).toContain('Аня Иванова')
-    expect(page.text()).toContain('Основы')
+    expect(page.text()).toContain('Ann Ivanova')
+    expect(page.text()).toContain('Foundations')
     expect(transport.callsTo('/edu/users/u1')).toHaveLength(1)
   })
 
@@ -110,11 +110,11 @@ describe('HomeworkQueuePage', () => {
 
   it('shows our own words for a refusal, and reads the list again on demand', async () => {
     const { transport, page } = await mountPage(
-      world({ [HOMEWORK]: refusal(503, 'Очередь недоступна') }),
+      world({ [HOMEWORK]: refusal(503, 'The queue is unavailable') }),
     )
 
     const alert = page.find('[role="alert"]')
-    expect(alert.text()).not.toContain('Очередь недоступна')
+    expect(alert.text()).not.toContain('The queue is unavailable')
     expect(alert.text().length).toBeGreaterThan(0)
 
     await alert.find('button').trigger('click')

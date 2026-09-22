@@ -91,18 +91,21 @@ Once it is in:
 
 Not "I believe it works". Evidence, in the handover:
 
-1. **The gate is green.** The full gate for the area touched, with the command
-   and its exit shown. A partial gate is not a gate.
-2. **Every new test is mutation-checked by hand.** For each one: break the
-   property the test defends, confirm the test goes red, revert. A test that
-   still passes with the behaviour removed defends nothing, and it is cheaper to
-   find that out now than after it has guarded a regression for a month.
-3. **The mutation score on the diff has not dropped.** `make mutate-diff` passes
-   its threshold. New code that the suite does not actually exercise is not done.
+1. **Its own suites are green**, with the command and its output shown, run narrowly: the agent's `--testPathPattern`, and `--runInBand`. The full gate is not the agent's to run — see below.
+2. **Every new test is mutation-checked by hand.** For each one: break the property the test defends, confirm the test goes red, revert. A test that still passes with the behaviour removed defends nothing, and it is cheaper to find that out now than after it has guarded a regression for a month.
+3. **What it could not prove, named plainly.** A test that is green by construction, a property only a real provider can answer, a rollback pg-mem cannot model: say so, so a reviewer does not read it as coverage.
 
-An agent that cannot produce all three says so plainly and names what is missing.
-Reporting a band as complete when it is not is the one failure that costs more
-than the defect.
+An agent that cannot produce these says so and names what is missing. Reporting a band as complete when it is not is the one failure that costs more than the defect.
+
+### The gate and the mutation score
+
+`make check` and `make mutate-diff` are run once per branch, by whoever owns it, after the bands are green. An agent runs neither.
+
+Mid-branch a full gate executes the red suites of every band still in flight, so it says nothing about the one asking. A mutation run costs more than it looks: before the first mutant it runs the package's whole suite once as a dry run (15 minutes is where `@vidya/api` gives up), then one covering-test run per mutant — and in the packages driven by the command runner, `apps/admin` and `libs/ui`, a whole suite per mutant.
+
+Both targets go through `scripts/vidya-run-alone`, which waits for its turn rather than failing: the turn is taken in the common git directory, which every worktree resolves to the same path whatever branch it is on, and each turn is appended to `vidya-run-alone.log` beside it — who ran what, where, and for how long, readable from any checkout. Waiting is unbounded and announced on stderr every minute: these runs take tens of minutes, so any cap short enough to be useful would kill a caller for being second in line. A turn always ends — the holder finishes, or dies and the kernel releases it. `VIDYA_WAIT_SECONDS=<n>` caps the wait where a caller genuinely cannot afford one.
+
+An agent that needs a mutation score, or a gate wider than its own suites, asks the band owner for it.
 
 ---
 

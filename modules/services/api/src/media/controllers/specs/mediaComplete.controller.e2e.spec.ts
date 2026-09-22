@@ -4,11 +4,16 @@ import { MediaId, mediaPath, UploadGrant } from '@vidya/domain'
 import { MediaRefusals } from '@vidya/protocol'
 
 import { refusalFor, TEST_MASTER_KEY } from './context'
-import { createMediaFlow, grantPutFixture, MediaFlow } from './uploadFlow'
+import { createMediaFlow, digestOf, MediaFlow } from './uploadFlow'
 
 const ROUTE = 'POST /media/:id/complete'
 
-const SHA256 = grantPutFixture.request.sha256 as string
+const BYTES = Buffer.alloc(2048, 3)
+
+// The digest of the very bytes the upload sends: storage verifies what the
+// grant binds, so a declared digest that belongs to no file is refused on the
+// way in and never reaches a completion.
+const SHA256 = digestOf(BYTES)
 
 type Granted = { mediaId: string; grant: UploadGrant }
 
@@ -45,7 +50,7 @@ describe('saying that the bytes of an upload have landed', () => {
 
   it('turns the row ready and answers with the durable path a block stores', async () => {
     const granted = await ask()
-    await flow.putBytes(granted.grant, Buffer.alloc(2048, 3))
+    await flow.putBytes(granted.grant, BYTES)
 
     const response = await complete(granted.mediaId)
 
@@ -60,7 +65,7 @@ describe('saying that the bytes of an upload have landed', () => {
 
   it('takes the size and the type from storage rather than from the client', async () => {
     const granted = await ask()
-    await flow.putBytes(granted.grant, Buffer.alloc(2048, 3))
+    await flow.putBytes(granted.grant, BYTES)
 
     const response = await complete(granted.mediaId)
     const stored = flow.objectBehind(granted.grant)
@@ -74,7 +79,7 @@ describe('saying that the bytes of an upload have landed', () => {
 
   it('adds the bytes storage reported to what the school occupies', async () => {
     const granted = await ask()
-    await flow.putBytes(granted.grant, Buffer.alloc(2048, 3))
+    await flow.putBytes(granted.grant, BYTES)
 
     await complete(granted.mediaId)
 
@@ -101,10 +106,10 @@ describe('saying that the bytes of an upload have landed', () => {
   })
 
   it('fails the row and deletes the object when storage holds a different number of bytes', async () => {
-    const granted = await ask()
+    const granted = await ask({ sha256: undefined })
     await flow.putBytes(granted.grant, Buffer.alloc(4096, 3))
 
-    await complete(granted.mediaId)
+    await complete(granted.mediaId, {})
 
     expect((await flow.mediaRow(granted.mediaId))?.status).toBe('failed')
     expect(flow.objectBehind(granted.grant)).toBeUndefined()
@@ -113,7 +118,7 @@ describe('saying that the bytes of an upload have landed', () => {
 
   it('fails the row and deletes the object when storage holds a different type', async () => {
     const granted = await ask()
-    await flow.putBytes(granted.grant, Buffer.alloc(2048, 3), 'image/gif')
+    await flow.putBytes(granted.grant, BYTES, 'image/gif')
 
     await complete(granted.mediaId)
 
@@ -122,10 +127,10 @@ describe('saying that the bytes of an upload have landed', () => {
   })
 
   it('charges nothing and releases the reservation for a file it refused', async () => {
-    const granted = await ask()
+    const granted = await ask({ sha256: undefined })
     await flow.putBytes(granted.grant, Buffer.alloc(4096, 3))
 
-    await complete(granted.mediaId)
+    await complete(granted.mediaId, {})
 
     expect(await usage()).toMatchObject({ usedBytes: 0, reservedBytes: 0 })
   })
@@ -155,7 +160,7 @@ describe('uploading bytes a school already has', () => {
 
     expect(asked.status).toBe(201)
     const granted = { mediaId: asked.body.mediaId, grant: asked.body.grant as UploadGrant }
-    await flow.putBytes(granted.grant, Buffer.alloc(2048, 3))
+    await flow.putBytes(granted.grant, BYTES)
     return granted
   }
 

@@ -1,7 +1,7 @@
 import type { UserId } from '@vidya/domain'
 import type { UserDetails } from '@vidya/protocol'
 
-import type { UserRow } from '@/entities/user'
+import type { UserFormValues, UserRow } from '@/entities/user'
 
 export interface UsersTableRowProps {
   user: UserRow
@@ -16,7 +16,13 @@ export interface UserCardPageProps {
 }
 
 export interface UserDetailsFormProps {
-  user: UserDetails
+  modelValue: UserFormValues
+  busy?: boolean
+  invalid?: boolean
+}
+
+export interface UserDetailsFormEmits {
+  'update:modelValue': [values: UserFormValues]
 }
 
 export interface UserFactsProps {

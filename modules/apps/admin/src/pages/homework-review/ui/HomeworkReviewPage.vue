@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { HomeworkId } from '@vidya/domain'
 import type { HomeworkDetails } from '@vidya/protocol'
-import { Breadcrumbs, Button, FailureState, PageHeader, Skeleton } from '@vidya/ui'
+import { Button, FailureState, PageHeader, Skeleton } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -15,6 +15,7 @@ import HomeworkWork from './HomeworkWork.vue'
 import ReviewQueueNav from './ReviewQueueNav.vue'
 import { sectionClasses } from './styles'
 import type { HomeworkReviewPageProps } from './types'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -33,11 +34,6 @@ const canGrade = useCan('homework:grade')
 
 const grade = ref<number | undefined>(undefined)
 const confirming = ref(false)
-
-const breadcrumbs = computed(() => [
-  { key: 'homework', label: $t('homework-title') },
-  { key: 'current', label: context.value.studentName ?? $t('homework-review-title') },
-])
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -65,10 +61,6 @@ useReviewKeyboard({
 })
 
 /* -------------------------------- Handlers -------------------------------- */
-
-function onBreadcrumb(key: string) {
-  if (key === 'homework') void router.push({ name: 'homework-queue' })
-}
 
 function onBack() {
   void router.push({ name: 'homework-queue' })
@@ -124,9 +116,7 @@ function advance(id: HomeworkId, updated: HomeworkDetails) {
 <template>
   <section :class="sectionClasses">
     <PageHeader :title="$t('homework-review-title')">
-      <template #breadcrumbs>
-        <Breadcrumbs :items="breadcrumbs" @select="onBreadcrumb" />
-      </template>
+      <template #leading><PageBack /></template>
       <template #actions>
         <Button variant="ghost" @click="onBack">{{ $t('homework-back-to-list') }}</Button>
       </template>

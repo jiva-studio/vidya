@@ -18,6 +18,20 @@ export type SchoolDetails = {
 
 export type SchoolSummary = Pick<SchoolDetails, 'id' | 'name' | 'logoUrl'>
 
+/**
+ * What a joining link resolves to, before anyone has signed in.
+ *
+ * Deliberately three fields: enough to draw the card a person decides on, and
+ * nothing that says anything about who else is in the school.
+ */
+export type SchoolCard = Pick<SchoolDetails, 'id' | 'name' | 'logoUrl'>
+
+export type ResolveSchoolResponse = crud.GetItemResponse<SchoolCard>
+
+/** The code a school hands out; created on request, never derived from the name. */
+export type SchoolJoinCode = { code: string }
+export type CreateSchoolCodeResponse = crud.GetItemResponse<SchoolJoinCode>
+
 /* -------------------------------------------------------------------------- */
 /*                                   Create                                   */
 /* -------------------------------------------------------------------------- */
@@ -29,7 +43,11 @@ export type CreateSchoolResponse = crud.CreateItemResponse<SchoolDetails['id']>
 /*                                    Read                                    */
 /* -------------------------------------------------------------------------- */
 
-export type GetSchoolsResponse = crud.GetItemsListResponse<SchoolSummary>
+export type GetSchoolsQuery = crud.PageQuery & {
+  query?: string
+}
+
+export type GetSchoolsResponse = crud.GetPagedItemsListResponse<SchoolSummary>
 
 export type GetSchoolResponse = crud.GetItemResponse<SchoolDetails>
 

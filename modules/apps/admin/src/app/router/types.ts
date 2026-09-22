@@ -1,5 +1,7 @@
 import type { PermissionKey } from '@vidya/domain'
 
+import type { NavPlacement } from '@/shared/navigation'
+
 declare module 'vue-router' {
   interface RouteMeta {
     /** Reachable without a session. Only sign-in and the not-found screen are. */
@@ -20,7 +22,7 @@ declare module 'vue-router' {
     section?: string
 
     /** Fluent keys of the breadcrumb trail, root first. */
-    breadcrumbs?: readonly string[]
+    nav?: NavPlacement
   }
 }
 

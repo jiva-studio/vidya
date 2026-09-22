@@ -5,6 +5,7 @@ import { createApp } from 'vue'
 import { HttpMediaGateway, mediaGatewayKey } from '@/entities/media'
 import { onFailure, useApi } from '@/shared/api'
 import { createToasts, toastsKey } from '@/shared/lib'
+import { initSentry } from '@/shared/sentry'
 
 import App from './App.vue'
 import { announceFailure } from './failures'
@@ -20,6 +21,8 @@ const start = async () => {
 
   const router = createAppRouter()
   const app = createApp(App).use(router).use(createI18n())
+
+  initSentry(app, router)
 
   // One gateway for the whole application, so the addresses one screen primed
   // are the ones the next screen draws with.

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages } from '@/shared/i18n'
+import { addMessages, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
@@ -59,7 +59,7 @@ const fill = async (
 const save = async (page: Awaited<ReturnType<typeof mountForm>>['page']) => {
   await page
     .findAll('button')
-    .find((candidate) => candidate.text() === 'Сохранить')
+    .find((candidate) => candidate.text() === translate('action-save'))
     ?.trigger('click')
   await flushPromises()
 }
