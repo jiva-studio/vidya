@@ -32,6 +32,24 @@ const exactBytes = (stored: string): number => {
  * there would be re-entered on every rotation and lost by anyone who rotated
  * without repeating it.
  */
+/**
+ * The ceiling a school stores under, given what was decided for it.
+ *
+ * A school nobody has decided about stores under the installation's default,
+ * unless it brought keys of its own: one paying its own provider is limited by
+ * that provider rather than by us, while one writing into the installation's
+ * bucket is spending room the installation pays for.
+ */
+export const quotaBytesFor = (
+  decided: number | null | undefined,
+  ownCredentials: boolean,
+  installationDefault: number,
+): number | null => {
+  if (decided !== undefined) return decided
+
+  return ownCredentials ? null : installationDefault
+}
+
 @Injectable()
 export class StorageQuotasService {
   constructor(@InjectDataSource() private readonly dataSource: DataSource) {}

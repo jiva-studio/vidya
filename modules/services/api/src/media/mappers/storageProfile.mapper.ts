@@ -37,6 +37,7 @@ export type StorageOccupancy = {
 }
 
 /**
+/**
  * A school storing in the installation's bucket: which school, and where under
  * that bucket its own files sit.
  */
@@ -93,3 +94,4 @@ const reachOf = (profile: StorageProfile, secretTail: string, lease?: StorageLea
         secretTail,
         publicBaseUrl: profile.publicBaseUrl,
       }
+

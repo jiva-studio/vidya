@@ -10,6 +10,7 @@ import {
   storageProfileFixture,
   TEST_MASTER_KEY,
 } from './context'
+import { createMediaFlow, MediaFlow } from './uploadFlow'
 
 const ROUTE = 'PUT /edu/schools/:schoolId/storage'
 
@@ -201,5 +202,104 @@ describe('handing a school its own storage credentials', () => {
     expect(retired?.accessKeyId).toBe(ctx.credentialsFor(ctx.one.school.id).accessKeyId)
     expect(retired?.secrets.secret.ciphertext).toBeTruthy()
     expect(retired?.bucket).toBe(storageProfileFixture.request.bucket)
+  })
+})
+
+/**
+ * Rotating a key is the case the whole design of the table exists for: a file
+ * is read through the profile that wrote it, never through the one that is
+ * current, so the old row has to survive the rotation and stay in the file's.
+ */
+describe('rotating a key under content that is already published', () => {
+  let app: INestApplication
+  let flow: MediaFlow
+
+  beforeEach(async () => {
+    process.env.VIDYA_MEDIA_MASTER_KEY = TEST_MASTER_KEY
+    app = await createTestingApp()
+    flow = await createMediaFlow(app)
+  })
+
+  afterEach(async () => {
+    await app.close()
+  })
+
+  const school = () => flow.ctx.one.school.id
+  const owner = () => flow.ctx.one.users.owner
+
+  const rotate = async (bucket: string) =>
+    request(app.getHttpServer())
+      .put(Routes().edu.schools.storage.update(school()))
+      .set('Authorization', await flow.ctx.getAuthTokenFor(owner()))
+      .send({ ...flow.ctx.credentialsFor(school()), bucket })
+      .expect(200)
+
+  const uploadImage = async (sizeBytes: number) => {
+    const asked = await flow.askUpload(
+      flow.imageUpload(school(), { sizeBytes, sha256: undefined }),
+      owner(),
+    )
+
+    expect(asked.status).toBe(201)
+    await flow.putBytes(asked.body.grant, Buffer.alloc(sizeBytes, 1))
+    expect((await flow.completeUpload(asked.body.mediaId, {}, owner())).status).toBe(200)
+
+    return asked.body.mediaId as string
+  }
+
+  const usage = async () => (await flow.usageOf(school(), owner())).body
+
+  it('leaves an uploaded file pointing at the profile that wrote it', async () => {
+    await flow.configureStorage(school(), owner())
+    const wroteIt = await flow.ctx.currentProfileIdOf(school())
+    expect(wroteIt).toEqual(expect.any(String))
+
+    const mediaId = await uploadImage(4096)
+
+    await rotate('vidya-demo-rotated')
+
+    expect(await flow.ctx.currentProfileIdOf(school())).not.toBe(wroteIt)
+    await expect(flow.ctx.profileIdOfMedia(mediaId)).resolves.toBe(wroteIt)
+  })
+
+  it('keeps the profile a published file reads through, retired but intact', async () => {
+    await flow.configureStorage(school(), owner())
+    const wroteIt = await flow.ctx.currentProfileIdOf(school())
+    await uploadImage(4096)
+
+    await rotate('vidya-demo-rotated')
+
+    const retired = (await flow.ctx.profileRows(school())).find((row) => row.id === wroteIt)
+
+    expect(retired).toBeDefined()
+    expect(retired?.retiredAt).not.toBeNull()
+    expect(retired?.bucket).toBe(storageProfileFixture.request.bucket)
+    expect(retired?.secrets.secret.ciphertext).toBeTruthy()
+  })
+
+  // The defect this schema was rewritten for: the count used to live on the
+  // profile, so rotating a key on a full bucket reported it as empty.
+  it('reports the same occupied bytes before and after the rotation', async () => {
+    await flow.configureStorage(school(), owner())
+    await uploadImage(4096)
+    await uploadImage(1024)
+
+    const before = await usage()
+    await rotate('vidya-demo-rotated')
+    const after = await usage()
+
+    expect(before.usedBytes).toBe(5120)
+    expect(after.usedBytes).toBe(before.usedBytes)
+    expect(after.countsByKind).toEqual(before.countsByKind)
+  })
+
+  it('counts a file uploaded after the rotation on top, not instead', async () => {
+    await flow.configureStorage(school(), owner())
+    await uploadImage(4096)
+
+    await rotate('vidya-demo-rotated')
+    await uploadImage(1024)
+
+    expect(await usage()).toMatchObject({ usedBytes: 5120 })
   })
 })

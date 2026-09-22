@@ -6,6 +6,7 @@ import { Group } from './group'
 import { Homework } from './homework'
 import { Lesson } from './lesson'
 import { LessonVersion } from './lessonVersion'
+import { Media } from './media'
 import { Role } from './role'
 import { School } from './school'
 import { SchoolStorageQuota } from './schoolStorageQuota'
@@ -30,6 +31,7 @@ export {
   LearningType,
   Lesson,
   LessonVersion,
+  Media,
   Role,
   School,
   SchoolStorageQuota,
@@ -48,6 +50,7 @@ export const Entities = [
   Homework,
   Lesson,
   LessonVersion,
+  Media,
   School,
   SchoolStorageQuota,
   StorageProfile,

@@ -118,6 +118,9 @@ export type StorageContext = Context & {
 
   sealedSecretsOf(profileId: string): Promise<StorageSecrets>
 
+  /** Which profile a stored file is read through, which is the one that wrote it. */
+  profileIdOfMedia(mediaId: string): Promise<string | undefined>
+
   /** Every call the API has made to storage since the app booted, in order. */
   storageCalls(): StorageCall[]
 
@@ -180,6 +183,11 @@ export const createStorageContext = async (app: INestApplication): Promise<Stora
       return storage
         .keysUnder(storageProfileFixture.request.bucket, prefix)
         .map((stored) => stored.key)
+    },
+
+    async profileIdOfMedia(mediaId) {
+      const rows = await ds.query('SELECT "profileId" FROM "media" WHERE "id" = $1', [mediaId])
+      return rows[0]?.profileId
     },
 
     async sealedSecretsOf(profileId) {

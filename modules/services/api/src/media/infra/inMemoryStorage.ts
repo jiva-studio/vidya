@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import { Injectable } from '@nestjs/common'
 import {
   MediaKind,
@@ -53,15 +55,30 @@ export class InMemoryStorage implements MediaStorageFactory, SignedHttpPort {
     return new InMemoryStorageDriver(this, credentials)
   }
 
+  /**
+   * Writes bytes by the grant, verifying the checksum the grant bound.
+   *
+   * A write whose bytes hash to something else is refused the way the signed
+   * HTTP port reports a 400 from a provider. The digest is kept only when the
+   * grant carried one: a provider answers `HeadObject` with no checksum at all
+   * for an object stored without one, whatever `ChecksumMode` asks for, so a
+   * fake that hashed every object would report digests production never has.
+   */
   async writeByGrant(grant: UploadGrant, body: Buffer): Promise<void> {
     const { bucket, key, accessKeyId } = this.readAddress(grant.url)
     this.record('write', key, accessKeyId)
+
+    const bound = grant.headers['x-amz-checksum-sha256']
+    const hashed = createHash('sha256').update(body).digest('base64')
+
+    if (bound && bound !== hashed) throw new StorageFailedError('unreachable')
 
     this.objects.set(`${bucket}/${key}`, {
       key,
       body,
       sizeBytes: body.length,
       contentType: grant.headers['Content-Type'] ?? 'application/octet-stream',
+      sha256: bound ? hashed : undefined,
     })
   }
 
@@ -128,6 +145,7 @@ class InMemoryStorageDriver implements MediaStoragePort {
       headers: {
         'Content-Type': limits.contentType,
         'Content-Length': String(limits.sizeBytes),
+        ...(limits.sha256 ? { 'x-amz-checksum-sha256': limits.sha256 } : {}),
       },
       fields: {},
       expiresAt: expiryIn(UPLOAD_WINDOW_SECONDS),

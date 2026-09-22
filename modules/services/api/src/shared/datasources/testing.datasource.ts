@@ -116,7 +116,12 @@ const inMemoryDataSource = async (): Promise<DataSource> => {
   // pg-mem is single-session, so these only need to resolve; the locks are proved under postgres.
   // `pg_advisory_xact_lock` is the journal's ordering lock and is exercised by every
   // write that reaches sync_journal, so the memory suite needs it to resolve as well.
-  for (const name of ['pg_advisory_lock', 'pg_advisory_unlock', 'pg_advisory_xact_lock']) {
+  for (const name of [
+    'pg_advisory_lock',
+    'pg_try_advisory_lock',
+    'pg_advisory_unlock',
+    'pg_advisory_xact_lock',
+  ]) {
     db.public.registerFunction({
       name,
       args: [DataType.integer],

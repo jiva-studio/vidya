@@ -6,6 +6,7 @@ import { MediaConfig } from '@vidya/api/configs'
 import { AuditLogService, RedisService } from '@vidya/api/shared/services'
 import {
   AuditLog,
+  Media,
   Role,
   School,
   SchoolStorageQuota,
@@ -14,7 +15,11 @@ import {
   UserRole,
 } from '@vidya/entities'
 
-import { StorageProfilesController } from './controllers'
+import {
+  MediaCatalogController,
+  MediaUploadsController,
+  StorageProfilesController,
+} from './controllers'
 import {
   DnsAddressResolver,
   FetchSignedHttp,
@@ -27,7 +32,15 @@ import {
 } from './infra'
 import {
   EndpointGuardService,
+  InstallationStorageService,
+  MediaCatalogService,
   MediaMasterKeyService,
+  MediaRowsService,
+  MediaSweepSchedule,
+  MediaSweepService,
+  MediaUploadsService,
+  MediaUsageService,
+  SchoolStorageService,
   SecretSealingService,
   StorageAuditService,
   StorageProbeService,
@@ -80,16 +93,17 @@ const storageProviders: Provider[] = [
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      AuditLog,
+      Media,
       StorageProfile,
       SchoolStorageQuota,
       School,
       User,
       Role,
       UserRole,
-      AuditLog,
     ]),
   ],
-  controllers: [StorageProfilesController],
+  controllers: [StorageProfilesController, MediaUploadsController, MediaCatalogController],
   providers: [
     // What the authentication guard needs to read a token; `AuthModule`
     // exports nothing, so every context that guards a route provides them.
@@ -101,6 +115,14 @@ const storageProviders: Provider[] = [
     ...storageProviders,
 
     EndpointGuardService,
+    InstallationStorageService,
+    MediaCatalogService,
+    MediaRowsService,
+    MediaSweepSchedule,
+    MediaSweepService,
+    MediaUploadsService,
+    MediaUsageService,
+    SchoolStorageService,
     SecretSealingService,
     StorageAuditService,
     StorageProbeService,
