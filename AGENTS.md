@@ -81,7 +81,7 @@ never a relative path that climbs out of the package.
 
 ---
 
-## Task Lifecycle: Intent, Spec, Coder
+## Task Lifecycle: Intent, Spec, Band / Coder
 
 Every feature or non-trivial change follows a strict 3-stage lifecycle:
 
@@ -92,8 +92,9 @@ Every feature or non-trivial change follows a strict 3-stage lifecycle:
 2. **`/spec` (Technical Blueprint)**:
    - Performs codebase reconnaissance, maps blast radius, specifies architecture, DTOs, DB migrations, and produces `done.yaml`.
    - Cannot proceed without a valid `intent.md`.
-3. **`/coder` (Implementation & Verification)**:
-   - Implements strictly according to `spec.md` and passes all `done.yaml` quality gates before handoff.
+3. **`/band` or `/coder` (Implementation & Verification)**:
+   - **`/band` (Multi-Agent TDD Orchestrator)**: Autonomously coordinates specialized subagents: Test Author (Red Phase) $\to$ Code Implementer (Green Phase) $\to$ Adversarial Reviewer $\to$ Quality Gatekeeper according to `rules/process.md`.
+   - **`/coder` (Direct Implementation Agent)**: Implements strictly according to `spec.md` in a sequential TDD loop and passes all `done.yaml` quality gates.
 
 ---
 
