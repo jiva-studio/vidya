@@ -33,6 +33,9 @@ PKG="${2:-}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MODULES_DIR="$REPO_ROOT/modules"
 
+# Unset stand/fixture env vars exported by Makefile so unit tests run in pristine isolated mode
+unset VIDYA_MEDIA_DEFAULT_ENDPOINT VIDYA_MEDIA_DEFAULT_BUCKET VIDYA_MEDIA_DEFAULT_ACCESS_KEY_ID VIDYA_MEDIA_DEFAULT_SECRET VIDYA_MEDIA_MASTER_KEY 2>/dev/null || true
+
 run_for_package() {
   local package="$1"
   local location
