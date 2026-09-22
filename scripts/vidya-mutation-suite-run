@@ -102,10 +102,14 @@ run_for_package() {
 
     case "$MODE" in
       full)
-        timeout "$BUDGET" npx stryker run && exit 0
-        status=$?
-        [ "$status" -eq 124 ] && skipped "It ran past the $BUDGET budget and was abandoned."
-        exit "$status"
+        if [ -n "${VIDYA_MUTATION_BUDGET:-}" ]; then
+          timeout "$VIDYA_MUTATION_BUDGET" npx stryker run && exit 0
+          status=$?
+          [ "$status" -eq 124 ] && skipped "It ran past the $VIDYA_MUTATION_BUDGET budget and was abandoned."
+          exit "$status"
+        else
+          npx stryker run
+        fi
         ;;
       diff)
         local base
