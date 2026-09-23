@@ -1,8 +1,9 @@
-auth-title = Sign in to Vidya
+auth-title = Sign in
 auth-email-label = Email
-auth-email-hint = We will send an eight-digit code
-auth-email-submit = Send the code
+auth-email-placeholder = name@example.com
+auth-email-submit = Send code
 auth-email-sending = Sending…
+
 
 auth-code-label = Code from the email
 auth-code-hint = Sent to { $email }

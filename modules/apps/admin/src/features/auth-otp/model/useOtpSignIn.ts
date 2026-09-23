@@ -46,7 +46,7 @@ export const useOtpSignIn = () => {
       if (isTooManyRequests(caught)) {
         countdown.start(CODE_LIFETIME_SECONDS)
         step.value = 'code'
-        error.value = 'auth-error-code-still-valid'
+        error.value = undefined
       } else {
         error.value = reasonFor(caught)
       }

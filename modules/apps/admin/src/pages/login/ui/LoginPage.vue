@@ -3,7 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { OtpForm } from '@/features/auth-otp'
 
-import { pageClasses, panelClasses, titleClasses } from './styles'
+import { pageClasses, panelClasses } from './styles'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -24,7 +24,6 @@ function onSignedIn() {
 <template>
   <div :class="pageClasses">
     <div :class="panelClasses">
-      <h1 :class="titleClasses">{{ $t('auth-title') }}</h1>
       <OtpForm @signed-in="onSignedIn" />
     </div>
   </div>
