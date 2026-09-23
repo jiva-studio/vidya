@@ -47,6 +47,7 @@ function onResend() {
 function onChangeEmail() {
   signIn.step.value = 'email'
   signIn.code.value = ''
+  signIn.error.value = undefined
 }
 </script>
 

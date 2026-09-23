@@ -71,11 +71,15 @@ describe('OtpForm', () => {
     expect(inputs).toHaveLength(8)
   })
 
-  it('lets the user go back to change the email using the back button in header', async () => {
-    const { form } = mountForm({ [OTP]: { success: true } })
+  it('lets the user go back to change the email using the back button in header and clears errors', async () => {
+    const { form } = mountForm({
+      [OTP]: { success: true },
+      [SIGN_IN]: new HttpError(401, SIGN_IN),
+    })
     await typeEmail(form, 'owner@example.com')
 
-    expect(form.find('input[name="one-time-code"]').exists()).toBe(true)
+    await typeCode(form, '00000000')
+    expect(form.text()).toContain(translate('auth-error-wrong-code'))
 
     const backButton = form.find(
       'button[aria-label="Ввести другой адрес"], button[aria-label="Use a different address"]',
@@ -86,6 +90,7 @@ describe('OtpForm', () => {
 
     expect(form.find('input[name="email"]').exists()).toBe(true)
     expect(form.find('input[name="one-time-code"]').exists()).toBe(false)
+    expect(form.find('[role="alert"]').exists()).toBe(false)
   })
 
   it('treats a 429 as a code already in the inbox, not as a failure', async () => {
