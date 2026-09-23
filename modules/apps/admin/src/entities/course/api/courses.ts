@@ -36,24 +36,32 @@ export const createCourse = (
   http: HttpClient,
   schoolId: SchoolId,
   values: CourseFormValues,
-): Promise<CreateCourseResponse> =>
-  http.post<CreateCourseResponse>(Routes().edu.courses.create(), {
+): Promise<CreateCourseResponse> => {
+  const payload: CreateCourseRequest = {
     schoolId,
     name: values.name,
     description: values.description,
-    ...(values.coverImageUrl ? { coverImageUrl: values.coverImageUrl } : {}),
     learningType: values.learningType,
-  } satisfies CreateCourseRequest)
+  }
+  if (values.coverImageUrl !== undefined) {
+    payload.coverImageUrl = values.coverImageUrl
+  }
+  return http.post<CreateCourseResponse>(Routes().edu.courses.create(), payload)
+}
 
 export const updateCourse = (
   http: HttpClient,
   id: CourseId,
   values: CourseFormValues,
-): Promise<UpdateCourseResponse> =>
-  http.patch<UpdateCourseResponse>(Routes().edu.courses.update(id), {
+): Promise<UpdateCourseResponse> => {
+  const payload: UpdateCourseRequest = {
     name: values.name,
     description: values.description,
-    ...(values.coverImageUrl !== undefined ? { coverImageUrl: values.coverImageUrl } : {}),
     learningType: values.learningType,
     status: values.status,
-  } satisfies UpdateCourseRequest)
+  }
+  if (values.coverImageUrl !== undefined) {
+    payload.coverImageUrl = values.coverImageUrl
+  }
+  return http.patch<UpdateCourseResponse>(Routes().edu.courses.update(id), payload)
+}

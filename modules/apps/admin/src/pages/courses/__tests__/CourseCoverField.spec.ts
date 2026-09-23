@@ -1,12 +1,11 @@
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import MediaPickerDialog from '@/features/pick-media/ui/MediaPickerDialog.vue'
+import { MediaPickerDialog } from '@/features/pick-media'
 import { addMessages, locale } from '@/shared/i18n'
 import { mountWithApp } from '@/shared/testing'
 
 import { messages } from '../i18n'
-// CourseCoverField component (to be created in ui/CourseCoverField.vue)
 import CourseCoverField from '../ui/CourseCoverField.vue'
 
 addMessages(messages)

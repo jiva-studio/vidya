@@ -6,6 +6,7 @@ import { computed, ref } from 'vue'
 import type { PickedMedia } from '@/entities/media'
 import { MediaPickerDialog } from '@/features/pick-media'
 
+import SchoolLogoPreview from './SchoolLogoPreview.vue'
 import type { SchoolLogoFieldProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
@@ -56,54 +57,28 @@ function onRemove() {
   <FormField :label="$t('schools-form-logo')" :error="props.error">
     <template #default="field">
       <div class="flex flex-col gap-3">
-        <div v-if="hasImage" class="flex items-center gap-4">
-          <img
-            :src="props.modelValue"
-            alt="School logo"
-            class="h-16 w-16 rounded-md object-cover border border-slate-200"
-          />
-          <div class="flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              data-test="open-picker"
-              data-action="pick"
-              aria-label="Change logo"
-              :disabled="props.disabled"
-              @click="onOpenPicker"
-            >
-              {{ $t('schools-form-logo-change') }}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              data-test="remove-logo"
-              data-action="remove"
-              aria-label="Remove logo"
-              :disabled="props.disabled"
-              @click="onRemove"
-            >
-              {{ $t('schools-form-logo-remove') }}
-            </Button>
-          </div>
-        </div>
+        <SchoolLogoPreview
+          v-if="hasImage"
+          :src="props.modelValue"
+          :disabled="props.disabled"
+          @change="onOpenPicker"
+          @remove="onRemove"
+        />
 
-        <div v-else class="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            data-test="open-picker"
-            data-action="pick"
-            aria-label="Choose logo"
-            :disabled="props.disabled"
-            @click="onOpenPicker"
-          >
-            {{ $t('schools-form-logo-choose') }}
-          </Button>
-        </div>
+        <Button
+          v-else
+          type="button"
+          variant="secondary"
+          size="sm"
+          data-test="open-picker"
+          data-action="pick"
+          aria-label="Choose logo"
+          class="self-start"
+          :disabled="props.disabled"
+          @click="onOpenPicker"
+        >
+          {{ $t('schools-form-logo-choose') }}
+        </Button>
 
         <Input
           :id="field.id"
@@ -115,15 +90,15 @@ function onRemove() {
           :disabled="props.disabled"
           @update:model-value="onInput"
         />
-
-        <MediaPickerDialog
-          :open="pickerOpen"
-          kind="image"
-          accept="image/*"
-          @update:open="onPickerClose"
-          @pick="onPick"
-        />
       </div>
     </template>
   </FormField>
+
+  <MediaPickerDialog
+    :open="pickerOpen"
+    kind="image"
+    accept="image/*"
+    @update:open="onPickerClose"
+    @pick="onPick"
+  />
 </template>

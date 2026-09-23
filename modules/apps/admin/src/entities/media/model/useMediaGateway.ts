@@ -9,14 +9,6 @@ import type { MediaGateway } from '../types'
  */
 export const mediaGatewayKey: InjectionKey<MediaGateway> = Symbol('vidya.mediaGateway')
 
-const defaultClock = {
-  now: () => Date.now(),
-  schedule: (fn: () => void, ms: number) => {
-    const timer = setTimeout(fn, ms)
-    return { cancel: () => clearTimeout(timer) }
-  },
-}
-
 export const useMediaGateway = (): MediaGateway => {
-  return inject(mediaGatewayKey, null) ?? new FakeMediaGateway({ clock: defaultClock })
+  return inject(mediaGatewayKey, null) ?? new FakeMediaGateway()
 }

@@ -1,6 +1,7 @@
 import { asId, toIsoDateTime } from '@vidya/domain'
 
 import type { Clock } from '@/shared/lib'
+import { systemClock } from '@/shared/lib'
 
 import type {
   MediaGateway,
@@ -22,7 +23,7 @@ const TickMs = 50
 const FailAtPercent = 60
 
 interface FakeMediaGatewayOptions {
-  clock: Clock
+  clock?: Clock
 }
 
 const detectKind = (type: string): MediaKind => {
@@ -46,8 +47,8 @@ export class FakeMediaGateway implements MediaGateway {
   private readonly uploaded: MediaRecord[] = []
   private readonly blobs = new Map<string, string>()
 
-  constructor(options: FakeMediaGatewayOptions) {
-    this.clock = options.clock
+  constructor(options: FakeMediaGatewayOptions = {}) {
+    this.clock = options.clock ?? systemClock
   }
 
   upload(request: UploadRequest): Promise<MediaRecord> {

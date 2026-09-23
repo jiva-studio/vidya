@@ -3,7 +3,6 @@ import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { FakeMediaGateway, mediaGatewayKey } from '@/entities/media'
-import MediaPickerDialog from '@/features/pick-media/ui/MediaPickerDialog.vue'
 import { addMessages, locale } from '@/shared/i18n'
 import { manualClock } from '@/shared/lib'
 import { mountWithApp } from '@/shared/testing'
@@ -86,7 +85,7 @@ describe('MediaBlockEditor', () => {
     empty.vm.$emit('library')
     await flushPromises()
 
-    const picker = wrapper.findComponent(MediaPickerDialog)
+    const picker = wrapper.findComponent({ name: 'MediaPickerDialog' })
     expect(picker.exists()).toBe(true)
     expect(picker.props('open')).toBe(true)
   })
@@ -94,7 +93,7 @@ describe('MediaBlockEditor', () => {
   it('emits update with picked media when media is selected in MediaPickerDialog', async () => {
     const wrapper = mountEditor(createEmptyBlock())
 
-    const picker = wrapper.findComponent(MediaPickerDialog)
+    const picker = wrapper.findComponent({ name: 'MediaPickerDialog' })
     picker.vm.$emit('pick', {
       url: 'https://cdn.example.com/picked-asset.jpg',
       source: 'upload',
