@@ -46,7 +46,10 @@ function onClick(event: MouseEvent) {
     :aria-busy="props.busy"
     @click="onClick"
   >
-    <span :class="props.busy ? busyLabelClasses : undefined">
+    <span
+      class="inline-flex items-center justify-center gap-1.5"
+      :class="props.busy ? busyLabelClasses : undefined"
+    >
       <slot />
     </span>
     <span v-if="props.busy" :class="busyOverlayClasses">

@@ -32,7 +32,7 @@ function tintOf(name: string): string {
 
 <template>
   <AvatarRoot :class="cn(avatarVariants({ size: props.size }), tint, props.class)">
-    <AvatarImage v-if="props.src" :src="named" :alt="named" :class="imageClasses" />
+    <AvatarImage v-if="props.src" :src="props.src" :alt="named" :class="imageClasses" />
     <AvatarFallback :delay-ms="0">{{ initials }}</AvatarFallback>
   </AvatarRoot>
 </template>

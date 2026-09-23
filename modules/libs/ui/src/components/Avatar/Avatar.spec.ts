@@ -66,4 +66,13 @@ describe('Avatar', () => {
     expect(classesOf('   ')).toContain(first)
     expect(classesOf('')).toContain(first)
   })
+
+  it('renders image with the given src when provided', () => {
+    const wrapper = mount(Avatar, {
+      props: { name: 'School', src: 'https://example.com/logo.png' },
+    })
+    const img = wrapper.find('img')
+    expect(img.exists()).toBe(true)
+    expect(img.attributes('src')).toBe('https://example.com/logo.png')
+  })
 })

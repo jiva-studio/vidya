@@ -29,6 +29,8 @@ permission-group-lessons = Уроки
 permission-group-groups = Группы
 permission-group-enrollments = Заявки
 permission-group-homework = Домашние работы
+permission-group-media = Медиафайлы
+permission-group-storage = Хранилище
 
 permission-action-all = Все права в этой школе
 permission-all-hint = Пользователи с этой ролью имеют полный доступ ко всем функциям школы.
@@ -41,3 +43,4 @@ permission-action-delete = Удаление
 permission-action-publish = Публикация
 permission-action-moderate = Приём и отклонение
 permission-action-grade = Проверка
+permission-action-upload = Загрузка

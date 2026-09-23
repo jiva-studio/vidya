@@ -29,6 +29,8 @@ permission-group-lessons = Lessons
 permission-group-groups = Groups
 permission-group-enrollments = Requests
 permission-group-homework = Homework
+permission-group-media = Media
+permission-group-storage = Storage
 
 permission-action-all = Every permission in this school
 permission-all-hint = Users with this role have full access to all school features.
@@ -41,3 +43,4 @@ permission-action-delete = Delete
 permission-action-publish = Publish
 permission-action-moderate = Accept and decline
 permission-action-grade = Grade
+permission-action-upload = Upload
