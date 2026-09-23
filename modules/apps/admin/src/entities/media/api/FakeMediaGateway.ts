@@ -43,11 +43,12 @@ const fails = (name: string): boolean => name.toLowerCase().startsWith(FailingUp
  */
 export class FakeMediaGateway implements MediaGateway {
   private readonly clock: Clock
-  private readonly uploaded: MediaRecord[] = []
+  private uploaded: MediaRecord[] = []
   private readonly blobs = new Map<string, string>()
 
   constructor(options: FakeMediaGatewayOptions) {
     this.clock = options.clock
+    this.loadFromStorage()
   }
 
   upload(request: UploadRequest): Promise<MediaRecord> {
@@ -80,7 +81,22 @@ export class FakeMediaGateway implements MediaGateway {
     if (!target) return undefined
     if (!target.startsWith('/media/')) return target
 
-    return this.blobs.get(target)
+    const held = this.blobs.get(target)
+    if (held) return held
+
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(`vidya.fake_media.${target}`)
+        if (stored) {
+          this.blobs.set(target, stored)
+          return stored
+        }
+      } catch {
+        // storage quota
+      }
+    }
+
+    return undefined
   }
 
   private all(): MediaRecord[] {
@@ -135,8 +151,57 @@ export class FakeMediaGateway implements MediaGateway {
       createdAt: toIsoDateTime(new Date()),
     }
 
-    this.blobs.set(record.url, URL.createObjectURL(file))
+    if (typeof URL !== 'undefined' && URL.createObjectURL) {
+      try {
+        this.blobs.set(record.url, URL.createObjectURL(file))
+      } catch {
+        // ignore
+      }
+    }
+
+    if (typeof FileReader !== 'undefined') {
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          this.blobs.set(record.url, reader.result)
+          if (typeof localStorage !== 'undefined') {
+            try {
+              localStorage.setItem(`vidya.fake_media.${record.url}`, reader.result)
+            } catch {
+              // quota
+            }
+          }
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+
     this.uploaded.unshift(record)
+    this.saveRecords()
     return record
+  }
+
+  private saveRecords(): void {
+    if (typeof localStorage === 'undefined') return
+    try {
+      localStorage.setItem('vidya.fake_media_records', JSON.stringify(this.uploaded))
+    } catch {
+      // quota
+    }
+  }
+
+  private loadFromStorage(): void {
+    if (typeof localStorage === 'undefined') return
+    try {
+      const raw = localStorage.getItem('vidya.fake_media_records')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) {
+          this.uploaded = parsed
+        }
+      }
+    } catch {
+      // ignore
+    }
   }
 }

@@ -80,7 +80,10 @@ export default defineConfig([
     //
     // The rule stays on everywhere else, so the next cross-import is still
     // reported.
-    files: ['./src/features/edit-lesson-content/ui/MediaBlockEditor.vue'],
+    files: [
+      './src/features/edit-lesson-content/ui/MediaBlockEditor.vue',
+      './src/features/edit-lesson-content/__tests__/MediaBlockEditor.spec.ts',
+    ],
     rules: { 'fsd/forbidden-imports': 'off' },
   },
 ])
