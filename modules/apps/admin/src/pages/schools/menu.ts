@@ -1,11 +1,11 @@
 import type { MenuGroup } from '@/shared/navigation'
 
-/** Schools in the organisation group. Owned by T2. */
+/** Schools and settings in the organisation and school groups. */
 export const menu: MenuGroup[] = [
   {
     label: 'nav-group-org',
     items: [
-      { route: 'schools', label: 'nav-schools', icon: 'building', permission: 'schools:read' },
+      { route: 'schools', label: 'nav-schools', icon: 'building', permission: 'schools:create' },
     ],
   },
 ]

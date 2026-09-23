@@ -1,9 +1,9 @@
 import type { MenuGroup } from '@/shared/navigation'
 
-/** People in the organisation group. Owned by T2. */
+/** People in the school group. Owned by T2. */
 export const menu: MenuGroup[] = [
   {
-    label: 'nav-group-org',
+    label: 'nav-group-school',
     items: [{ route: 'users', label: 'nav-users', icon: 'users', permission: 'users:read' }],
   },
 ]
