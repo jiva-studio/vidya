@@ -10,7 +10,7 @@ import { grants, useSession } from '@/shared/session'
 
 import type { SidebarEntryChild, SidebarNavProps } from '../types'
 import SidebarEntry from './SidebarEntry.vue'
-import { groupLabelClasses, navClasses } from './styles'
+import { groupClasses, groupLabelClasses, navClasses } from './styles'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -63,12 +63,13 @@ function entryTo(item: MenuItem) {
 
 <template>
   <nav :class="navClasses" :aria-label="$t('nav-label')">
-    <div v-for="group in visible" :key="group.label">
+    <div v-for="group in visible" :key="group.label" :class="groupClasses">
       <p :class="groupLabelClasses">{{ $t(group.label) }}</p>
       <SidebarEntry
         v-for="item in group.items"
         :key="item.route"
         :label="$t(item.label)"
+        :icon="item.icon"
         :to="entryTo(item)"
         :child="childOf(item)"
       />

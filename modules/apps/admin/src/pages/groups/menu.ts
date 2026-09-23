@@ -4,6 +4,6 @@ import type { MenuGroup } from '@/shared/navigation'
 export const menu: MenuGroup[] = [
   {
     label: 'nav-group-edu',
-    items: [{ route: 'groups', label: 'nav-groups', icon: 'users', permission: 'groups:read' }],
+    items: [{ route: 'groups', label: 'nav-groups', icon: 'layers', permission: 'groups:read' }],
   },
 ]

@@ -1,14 +1,9 @@
 import type { MenuGroup } from '@/shared/navigation'
 
-/**
- * Roles in the organisation group. Owned by T2.
- *
- * The heading is declared by every section that belongs under it and drawn
- * once: the composition root merges groups by label.
- */
+/** Roles in the school group. Owned by T2. */
 export const menu: MenuGroup[] = [
   {
-    label: 'nav-group-org',
+    label: 'nav-group-school',
     items: [{ route: 'roles', label: 'nav-roles', icon: 'shield', permission: 'roles:read' }],
   },
 ]

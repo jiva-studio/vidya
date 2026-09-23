@@ -16,5 +16,6 @@ export interface SidebarEntryChild {
 export interface SidebarEntryProps {
   readonly label: string
   readonly to: RouteLocationRaw
+  readonly icon?: string
   readonly child?: SidebarEntryChild
 }
