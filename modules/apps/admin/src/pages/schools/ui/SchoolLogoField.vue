@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { Button, FormField, Input } from '@vidya/ui'
+import { FormField } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, ref } from 'vue'
 
 import type { PickedMedia } from '@/entities/media'
+import { useMediaGateway } from '@/entities/media'
 import { MediaPickerDialog } from '@/features/pick-media'
 
+import SchoolLogoDropzone from './SchoolLogoDropzone.vue'
 import SchoolLogoPreview from './SchoolLogoPreview.vue'
 import type { SchoolLogoFieldProps } from './types'
 
@@ -26,9 +28,17 @@ const emit = defineEmits<{
 /* --------------------------------- State ---------------------------------- */
 
 const { $t } = useFluent()
+const gateway = useMediaGateway()
 const pickerOpen = ref(false)
 
 const hasImage = computed(() => Boolean(props.modelValue && props.modelValue.trim().length > 0))
+
+const resolvedSrc = computed(() => {
+  if (!props.modelValue) return ''
+  const resolved = gateway.resolve(props.modelValue)
+  if (resolved) return resolved
+  return props.modelValue
+})
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -37,6 +47,7 @@ function onInput(value: string) {
 }
 
 function onOpenPicker() {
+  if (props.disabled) return
   pickerOpen.value = true
 }
 
@@ -49,6 +60,7 @@ function onPick(picked: PickedMedia) {
 }
 
 function onRemove() {
+  if (props.disabled) return
   emit('update:modelValue', '')
 }
 </script>
@@ -56,39 +68,29 @@ function onRemove() {
 <template>
   <FormField :label="$t('schools-form-logo')" :error="props.error">
     <template #default="field">
-      <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-3" data-test="school-logo-field">
+        <input
+          :id="field.id"
+          class="sr-only"
+          :value="props.modelValue"
+          name="logoUrl"
+          :disabled="props.disabled"
+          @input="onInput(($event.target as HTMLInputElement).value)"
+        />
+
         <SchoolLogoPreview
           v-if="hasImage"
-          :src="props.modelValue"
+          :src="resolvedSrc"
           :disabled="props.disabled"
           @change="onOpenPicker"
           @remove="onRemove"
         />
 
-        <Button
+        <SchoolLogoDropzone
           v-else
-          type="button"
-          variant="secondary"
-          size="sm"
-          data-test="open-picker"
-          data-action="pick"
-          aria-label="Choose logo"
-          class="self-start"
+          :error="props.error"
           :disabled="props.disabled"
           @click="onOpenPicker"
-        >
-          {{ $t('schools-form-logo-choose') }}
-        </Button>
-
-        <Input
-          :id="field.id"
-          :model-value="props.modelValue"
-          name="logoUrl"
-          :placeholder="$t('schools-form-logo-hint')"
-          :described-by="field.describedBy"
-          :invalid="field.invalid"
-          :disabled="props.disabled"
-          @update:model-value="onInput"
         />
       </div>
     </template>
