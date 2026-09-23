@@ -8,6 +8,7 @@ import type { PickedMedia } from '@/entities/media'
 import { useMediaGateway } from '@/entities/media'
 import { MediaPickerDialog } from '@/features/pick-media'
 
+import CourseCoverPlaceholder from './CourseCoverPlaceholder.vue'
 import type { CourseCoverFieldEmits, CourseCoverFieldProps } from './types'
 
 defineOptions({
@@ -35,25 +36,23 @@ const loadFailed = ref(false)
 
 const hasImage = computed(() => Boolean(props.modelValue && props.modelValue.trim().length > 0))
 
-function placeholderSvg(title: string): string {
-  const safeTitle = title.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="240" viewBox="0 0 400 240">
-    <rect width="100%" height="100%" fill="#f1f5f9" rx="8"/>
-    <circle cx="200" cy="100" r="36" fill="#e2e8f0"/>
-    <path d="M120 190 C150 140, 250 140, 280 190" fill="#cbd5e1"/>
-    <text x="200" y="215" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="500" fill="#64748b" text-anchor="middle">${safeTitle}</text>
-  </svg>`
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
-}
-
 const resolvedSrc = computed(() => {
   if (!props.modelValue) return ''
   const resolved = gateway.resolve(props.modelValue)
   if (resolved) return resolved
-  if (props.modelValue.startsWith('/media/')) {
-    return placeholderSvg('Cover')
-  }
   return props.modelValue
+})
+
+const showPlaceholder = computed(() => {
+  if (loadFailed.value) return true
+  if (
+    props.modelValue &&
+    props.modelValue.startsWith('/media/') &&
+    !gateway.resolve(props.modelValue)
+  ) {
+    return true
+  }
+  return false
 })
 
 /* -------------------------------- Handlers -------------------------------- */
@@ -85,10 +84,12 @@ function onRemove() {
       v-if="hasImage"
       class="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-white"
     >
+      <CourseCoverPlaceholder v-if="showPlaceholder" title="Cover" class="h-20 w-32 shrink-0" />
       <img
-        :src="loadFailed ? placeholderSvg('Cover') : resolvedSrc"
+        v-else
+        :src="resolvedSrc"
         alt="Course cover"
-        class="h-20 w-32 object-cover rounded-md"
+        class="h-20 w-32 object-cover rounded-md shrink-0"
         @error="loadFailed = true"
       />
       <IconButton
