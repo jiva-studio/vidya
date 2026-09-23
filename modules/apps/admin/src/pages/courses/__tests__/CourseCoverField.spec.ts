@@ -16,16 +16,16 @@ describe('CourseCoverField', () => {
     localStorage.clear()
   })
 
-  it('renders empty state with choose button when modelValue is empty or null', () => {
+  it('renders empty state with choose trigger when modelValue is empty or null', () => {
     const wrapper = mountWithApp(CourseCoverField, {
       props: { modelValue: null },
     })
 
     expect(wrapper.find('img').exists()).toBe(false)
-    const chooseBtn = wrapper.find(
-      'button[data-test="choose-cover"], button[data-action="pick"], button',
+    const chooseTrigger = wrapper.find(
+      '[data-test="choose-cover"], [data-test="cover-drop-area"], button[data-action="pick"]',
     )
-    expect(chooseBtn.exists()).toBe(true)
+    expect(chooseTrigger.exists()).toBe(true)
   })
 
   it('renders inline image preview when modelValue contains an image URL', () => {
@@ -38,7 +38,7 @@ describe('CourseCoverField', () => {
     expect(img.attributes('src')).toBe('https://cdn.example.com/cover.jpg')
   })
 
-  it('opens MediaPickerDialog with image kind when choose button is clicked', async () => {
+  it('opens MediaPickerDialog with image kind when choose trigger is clicked', async () => {
     const wrapper = mountWithApp(CourseCoverField, {
       props: { modelValue: null },
     })
@@ -48,8 +48,10 @@ describe('CourseCoverField', () => {
     expect(picker.props('open')).toBe(false)
     expect(picker.props('kind')).toBe('image')
 
-    const chooseBtn = wrapper.find('button')
-    await chooseBtn.trigger('click')
+    const chooseTrigger = wrapper.find(
+      '[data-test="choose-cover"], [data-test="cover-drop-area"], button[data-action="pick"]',
+    )
+    await chooseTrigger.trigger('click')
     await flushPromises()
 
     expect(wrapper.findComponent(MediaPickerDialog).props('open')).toBe(true)

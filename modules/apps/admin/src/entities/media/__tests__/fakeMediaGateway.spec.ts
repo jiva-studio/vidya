@@ -1,5 +1,5 @@
 import { flushPromises } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { manualClock } from '@/shared/lib'
 
@@ -38,6 +38,10 @@ const settle = async <TResult>(
 }
 
 describe('uploading a file', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
   it('hands back a path the server could serve and never a url that dies with the tab', async () => {
     const clock = manualClock()
     const gateway = new FakeMediaGateway({ clock })
@@ -139,6 +143,10 @@ describe('uploading a file', () => {
 })
 
 describe('showing a stored file', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
   it('resolves a file uploaded in this session to something an img can load', async () => {
     const clock = manualClock()
     const gateway = new FakeMediaGateway({ clock })
@@ -146,6 +154,18 @@ describe('showing a stored file', () => {
     const record = await settle(gateway.upload({ file: file('Chart.png') }), clock)
 
     expect(gateway.resolve(record.url)).toMatch(/^blob:/)
+  })
+
+  it('restores uploaded files in subsequent gateway instances from storage', async () => {
+    const clock = manualClock()
+    const gateway1 = new FakeMediaGateway({ clock })
+
+    const record = await settle(gateway1.upload({ file: file('Persisted.png') }), clock)
+
+    const gateway2 = new FakeMediaGateway({ clock: manualClock() })
+    const list = await gateway2.list({})
+    expect(list.items[0].id).toBe(record.id)
+    expect(list.items[0].name).toBe('Persisted.png')
   })
 
   it('knows nothing about a file it never held, which is what a reload leaves behind', () => {
@@ -163,6 +183,10 @@ describe('showing a stored file', () => {
 })
 
 describe('the library the school appears to have', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
   it('answers a page at a time', async () => {
     const gateway = new FakeMediaGateway({ clock: manualClock() })
 

@@ -34,6 +34,7 @@ course-form-publish-on = Студенты видят этот курс в шко
 course-form-publish-off = Черновик: студенты пока не видят курс. Опубликуйте его, когда он будет готов.
 course-form-cover-label = Обложка
 course-form-cover-choose = Выбрать обложку
+course-form-cover-drop = Нажмите или перетащите обложку
 course-form-cover-change = Изменить обложку
 course-form-cover-remove = Удалить обложку
 course-form-submit = Сохранить
