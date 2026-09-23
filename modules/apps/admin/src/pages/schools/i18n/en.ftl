@@ -2,6 +2,8 @@
 
 nav-group-org = Organisation
 nav-schools = Schools
+nav-group-school = School
+nav-school-settings = School settings
 
 schools-title = Schools
 schools-column-name = Name
@@ -21,22 +23,23 @@ schools-form-logo = Logo
 schools-form-logo-hint = https://example.org/logo.png
 schools-form-logo-invalid = Needs a link beginning with http:// or https://
 schools-form-logo-choose = Choose logo
+schools-form-logo-drop = Click or drag logo here
 schools-form-logo-change = Change logo
 schools-form-logo-remove = Remove logo
 schools-form-description = Description
-schools-form-description-hint = A line or two about the school — students see it in the catalogue
+schools-form-description-hint = Short description of the school
 
 schools-join-title = Joining link
 schools-join-hint = Hand this link out: whoever opens it joins the school and sees its courses.
 schools-join-create = Get the link
 schools-join-copy = Copy
-schools-join-copied = The link is copied.
+schools-join-copied = Copied
+schools-join-copy-failed = Could not copy link
 schools-join-no-student-role = The school has no role for a new student yet, so there is no link to give out.
 schools-join-open-settings = Choose the role in the school settings
 
 schools-settings-title = School settings
 schools-settings-default-role = New student's role
-schools-settings-default-role-hint = Everyone accepted onto a course gets this role
 schools-settings-default-role-none = Not set
 schools-settings-student-roles = Student roles
 schools-settings-empty-title = This school has no roles yet

@@ -9,27 +9,26 @@ const props = defineProps<DefaultRoleFieldProps>()
 
 /* --------------------------------- Events --------------------------------- */
 
-const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
+const emit = defineEmits<{
+  'update:modelValue': [value: string]
+}>()
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onSelect(value: string) {
-  emit('update:modelValue', value)
+function onSelect(value: string | number | undefined) {
+  emit('update:modelValue', value ? String(value) : '')
 }
 </script>
 
 <template>
-  <FormField
-    :label="$t('schools-settings-default-role')"
-    :hint="$t('schools-settings-default-role-hint')"
-  >
+  <FormField :label="$t('schools-settings-default-role')">
     <template #default="field">
       <Select
         :id="field.id"
         :model-value="props.modelValue"
         :options="props.options"
         :placeholder="$t('schools-settings-default-role-none')"
-        :described-by="field.describedBy"
+        :disabled="props.disabled"
         @update:model-value="onSelect"
       />
     </template>

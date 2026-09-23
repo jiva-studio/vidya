@@ -9,9 +9,9 @@ import { useRouter } from 'vue-router'
 import type { SchoolRow } from '@/entities/school'
 import { useSchools } from '@/entities/school'
 import { useCan } from '@/shared/access'
+import { ListPage } from '@/widgets/list-page'
 
 import SchoolsTableRow from './SchoolsTableRow.vue'
-import { ListPage } from '@/widgets/list-page'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -26,7 +26,7 @@ const canUpdate = useCan('schools:update')
 
 const columns = computed<TableColumn[]>(() => [
   { key: 'name', label: $t('schools-column-name') },
-  { key: 'actions', label: $t('schools-column-actions'), align: 'end' },
+  { key: 'joiningLink', label: $t('schools-join-title'), align: 'center', width: '220px' },
 ])
 
 const emptyActionLabel = computed(() => (canCreate.value ? $t('schools-create') : undefined))
@@ -45,10 +45,6 @@ function onCreate() {
 
 function onEdit(id: SchoolId) {
   void router.push({ name: 'school-edit', params: { id } })
-}
-
-function onSettings(id: SchoolId) {
-  void router.push({ name: 'school-settings', params: { id } })
 }
 
 function onRetry() {
@@ -104,12 +100,7 @@ function asSchool(row: TableRowData): SchoolRow {
       @empty-action="onCreate"
     >
       <template #row="{ row }">
-        <SchoolsTableRow
-          :school="asSchool(row)"
-          :can-update="canUpdate"
-          @edit="onEdit"
-          @settings="onSettings"
-        />
+        <SchoolsTableRow :school="asSchool(row)" :can-update="canUpdate" @edit="onEdit" />
       </template>
     </Table>
   </ListPage>

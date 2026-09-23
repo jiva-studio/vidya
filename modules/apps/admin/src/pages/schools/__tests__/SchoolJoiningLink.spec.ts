@@ -74,7 +74,7 @@ describe('SchoolJoiningLink', () => {
     await press(section, 'Copy')
 
     expect(writeText).toHaveBeenCalledWith('http://localhost:7814/j/AB3K7Q')
-    expect(section.text()).toContain('The link is copied.')
+    expect(section.text()).toContain('Copied')
   })
 
   it('names the setting a school without a student role is missing', async () => {
@@ -92,7 +92,7 @@ describe('SchoolJoiningLink', () => {
     await press(section, 'Get the link')
 
     expect(section.findComponent({ name: 'RouterLink' }).props('to')).toEqual({
-      name: 'school-settings',
+      name: 'school-edit',
       params: { id: SCHOOL },
     })
   })
