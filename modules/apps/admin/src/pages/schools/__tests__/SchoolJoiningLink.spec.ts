@@ -4,7 +4,7 @@ import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages, locale } from '@/shared/i18n'
+import { addMessages, locale, translate } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp, refusal, signInAs } from '@/shared/testing'
@@ -121,6 +121,6 @@ describe('SchoolJoiningLink', () => {
 
     await press(section, 'Получить ссылку')
 
-    expect(section.text()).toContain('В школе ещё не выбрана роль для нового студента')
+    expect(section.text()).toContain(translate('schools-join-no-student-role'))
   })
 })

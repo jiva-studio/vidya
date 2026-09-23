@@ -27,7 +27,7 @@ describe('PinInput', () => {
     expect(inputs).toHaveLength(6)
   })
 
-  it('emits update:modelValue when digits change', async () => {
+  it('renders provided modelValue across input slots', async () => {
     const wrapper = mount(PinInput, {
       props: {
         length: 8,
@@ -40,5 +40,34 @@ describe('PinInput', () => {
     expect((inputs[1].element as HTMLInputElement).value).toBe('2')
     expect((inputs[2].element as HTMLInputElement).value).toBe('3')
     expect((inputs[3].element as HTMLInputElement).value).toBe('4')
+    expect((inputs[4].element as HTMLInputElement).value).toBe('')
+  })
+
+  it('applies danger border class when invalid prop is true', () => {
+    const wrapper = mount(PinInput, {
+      props: {
+        length: 4,
+        invalid: true,
+      },
+    })
+
+    const inputs = wrapper.findAll('input[aria-label*="pin input"]')
+    for (const input of inputs) {
+      expect(input.classes()).toContain('border-[var(--color-danger-border)]')
+    }
+  })
+
+  it('disables all inputs when disabled prop is true', () => {
+    const wrapper = mount(PinInput, {
+      props: {
+        length: 4,
+        disabled: true,
+      },
+    })
+
+    const inputs = wrapper.findAll('input[aria-label*="pin input"]')
+    for (const input of inputs) {
+      expect(input.attributes('disabled')).toBeDefined()
+    }
   })
 })

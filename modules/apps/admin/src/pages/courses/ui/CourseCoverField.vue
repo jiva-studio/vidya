@@ -84,11 +84,7 @@ function onRemove() {
       v-if="hasImage"
       class="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-white"
     >
-      <CourseCoverPlaceholder
-        v-if="showPlaceholder"
-        title="Cover"
-        class="h-20 w-32 shrink-0"
-      />
+      <CourseCoverPlaceholder v-if="showPlaceholder" title="Cover" class="h-20 w-32 shrink-0" />
       <img
         v-else
         :src="resolvedSrc"
