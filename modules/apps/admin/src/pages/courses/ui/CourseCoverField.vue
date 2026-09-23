@@ -121,7 +121,7 @@ function onRemove() {
     <!-- When no image is chosen (Empty Drop Area) -->
     <div
       v-else
-      class="w-full border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-1.5 text-center transition-all cursor-pointer bg-white hover:bg-slate-100 border-slate-300 hover:border-slate-400 group"
+      class="w-full border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-1.5 text-center transition-all cursor-pointer bg-[var(--color-surface-sunken)] hover:bg-[var(--color-border)] border-[var(--color-border-strong)] hover:border-slate-400 group"
       :class="[
         props.error ? 'border-rose-300 bg-rose-50/20 hover:bg-rose-50/40' : '',
         props.disabled ? 'opacity-50 pointer-events-none' : '',

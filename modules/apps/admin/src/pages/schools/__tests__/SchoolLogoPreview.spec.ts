@@ -30,7 +30,9 @@ describe('SchoolLogoPreview', () => {
       },
     })
 
-    const changeBtn = wrapper.find('[data-test="open-picker"]')
+    const changeBtn = wrapper.find(
+      'button[aria-label*="change" i], button[aria-label*="изменить" i], button[data-action="pick"]',
+    )
     expect(changeBtn.exists()).toBe(true)
     await changeBtn.trigger('click')
     await flushPromises()
@@ -45,7 +47,9 @@ describe('SchoolLogoPreview', () => {
       },
     })
 
-    const removeBtn = wrapper.find('[data-test="remove-logo"]')
+    const removeBtn = wrapper.find(
+      'button[aria-label*="remove" i], button[aria-label*="удалить" i], button[data-action="remove"]',
+    )
     expect(removeBtn.exists()).toBe(true)
     await removeBtn.trigger('click')
     await flushPromises()
@@ -61,10 +65,10 @@ describe('SchoolLogoPreview', () => {
       },
     })
 
-    const changeBtn = wrapper.find('[data-test="open-picker"]')
-    const removeBtn = wrapper.find('[data-test="remove-logo"]')
-
-    expect(changeBtn.attributes('disabled')).toBeDefined()
-    expect(removeBtn.attributes('disabled')).toBeDefined()
+    const buttons = wrapper.findAll('button')
+    expect(buttons.length).toBeGreaterThanOrEqual(2)
+    for (const btn of buttons) {
+      expect(btn.attributes('disabled')).toBeDefined()
+    }
   })
 })
