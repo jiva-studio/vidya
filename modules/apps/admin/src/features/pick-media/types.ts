@@ -1,7 +1,7 @@
 import type { MediaKind, MediaRecord, PickedMedia } from '@/entities/media'
 
-/** The three ways a file reaches a block, in the order the dialog offers them. */
-export const MediaPickerTabs = ['upload', 'library', 'link'] as const
+/** The ways a file reaches a block: uploading a new file or picking from media library. */
+export const MediaPickerTabs = ['upload', 'library'] as const
 export type MediaPickerTab = (typeof MediaPickerTabs)[number]
 
 export interface MediaPickerDialogProps {

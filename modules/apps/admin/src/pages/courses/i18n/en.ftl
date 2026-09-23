@@ -34,6 +34,7 @@ course-form-publish-on = Students see this course in the school.
 course-form-publish-off = A draft: students do not see this course yet. Publish it when it is ready.
 course-form-cover-label = Cover image
 course-form-cover-choose = Choose cover
+course-form-cover-drop = Click or drag cover image here
 course-form-cover-change = Change cover
 course-form-cover-remove = Remove cover
 course-form-submit = Save

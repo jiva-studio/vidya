@@ -51,3 +51,13 @@ export interface CourseFormEmits {
   submit: []
   cancel: []
 }
+
+export interface CourseCoverFieldProps {
+  modelValue?: string | null
+  error?: string
+  disabled?: boolean
+}
+
+export interface CourseCoverFieldEmits {
+  'update:modelValue': [value: string | null]
+}
