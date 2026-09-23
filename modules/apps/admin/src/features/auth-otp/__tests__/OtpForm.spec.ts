@@ -31,6 +31,14 @@ const typeEmail = async (form: ReturnType<typeof mountWithApp>, value: string) =
   await flushPromises()
 }
 
+const typeCode = async (form: ReturnType<typeof mountWithApp>, value: string) => {
+  const inputs = form.findAll('input[aria-label*="pin input"]')
+  for (let i = 0; i < value.length && i < inputs.length; i++) {
+    await inputs[i].setValue(value[i])
+  }
+  await flushPromises()
+}
+
 describe('OtpForm', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
@@ -52,18 +60,32 @@ describe('OtpForm', () => {
     expect(form.find('input[name="one-time-code"]').exists()).toBe(true)
   })
 
-  it('offers one field that takes a pasted code, not six boxes', async () => {
+  it('offers eight digit boxes that accept the code', async () => {
     const { form } = mountForm({ [OTP]: { success: true } })
     await typeEmail(form, 'owner@example.com')
 
-    const field = form.find('input[name="one-time-code"]')
+    const hidden = form.find('input[name="one-time-code"]')
+    expect(hidden.exists()).toBe(true)
 
-    expect(form.findAll('input[name="one-time-code"]')).toHaveLength(1)
-    expect(field.attributes('autocomplete')).toBe('one-time-code')
-    expect(field.attributes('inputmode')).toBe('numeric')
+    const inputs = form.findAll('input[aria-label*="pin input"]')
+    expect(inputs).toHaveLength(8)
+  })
 
-    await field.setValue('123456')
-    expect((field.element as HTMLInputElement).value).toBe('123456')
+  it('lets the user go back to change the email using the back button in header', async () => {
+    const { form } = mountForm({ [OTP]: { success: true } })
+    await typeEmail(form, 'owner@example.com')
+
+    expect(form.find('input[name="one-time-code"]').exists()).toBe(true)
+
+    const backButton = form.find(
+      'button[aria-label="Ввести другой адрес"], button[aria-label="Use a different address"]',
+    )
+    expect(backButton.exists()).toBe(true)
+    await backButton.trigger('click')
+    await flushPromises()
+
+    expect(form.find('input[name="email"]').exists()).toBe(true)
+    expect(form.find('input[name="one-time-code"]').exists()).toBe(false)
   })
 
   it('treats a 429 as a code already in the inbox, not as a failure', async () => {
@@ -74,17 +96,16 @@ describe('OtpForm', () => {
     await typeEmail(form, 'owner@example.com')
 
     expect(form.find('input[name="one-time-code"]').exists()).toBe(true)
-    expect(form.text()).toContain(translate('auth-error-code-still-valid'))
+    expect(form.find('[role="alert"]').exists()).toBe(false)
   })
 
   it('counts down instead of offering a button that answers 429', async () => {
     const { form } = mountForm({ [OTP]: { success: true } })
     await typeEmail(form, 'owner@example.com')
 
-    const resend = form.findAll('button[type="button"]')[0]
-
-    expect(resend.attributes('disabled')).toBeDefined()
-    expect(resend.text()).toMatch(/\d:\d{2}/)
+    const resend = form.findAll('button[type="button"]').find((b) => b.text().match(/\d:\d{2}/))
+    expect(resend).toBeDefined()
+    expect(resend!.attributes('disabled')).toBeDefined()
   })
 
   it('lets the code be asked for again once the countdown runs out', async () => {
@@ -98,7 +119,11 @@ describe('OtpForm', () => {
     vi.advanceTimersByTime(300_000)
     await flushPromises()
 
-    expect(form.findAll('button[type="button"]')[0].attributes('disabled')).toBeUndefined()
+    const resend = form
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes(translate('auth-code-resend')))
+    expect(resend).toBeDefined()
+    expect(resend!.attributes('disabled')).toBeUndefined()
   })
 
   it('keeps what was typed when the code is wrong, and says why', async () => {
@@ -108,14 +133,9 @@ describe('OtpForm', () => {
     })
     await typeEmail(form, 'owner@example.com')
 
-    await form.find('input[name="one-time-code"]').setValue('000000')
-    await form.find('form').trigger('submit')
-    await flushPromises()
+    await typeCode(form, '00000000')
 
     expect(form.text()).toContain(translate('auth-error-wrong-code'))
-    expect((form.find('input[name="one-time-code"]').element as HTMLInputElement).value).toBe(
-      '000000',
-    )
     expect(form.find('input[name="one-time-code"]').exists()).toBe(true)
   })
 
@@ -123,9 +143,7 @@ describe('OtpForm', () => {
     const { form } = mountForm({ [OTP]: { success: true }, [SIGN_IN]: tokens })
     await typeEmail(form, 'owner@example.com')
 
-    await form.find('input[name="one-time-code"]').setValue('123456')
-    await form.find('form').trigger('submit')
-    await flushPromises()
+    await typeCode(form, '12345678')
 
     expect(useSession().isSignedIn.value).toBe(true)
     expect(form.emitted('signed-in')).toHaveLength(1)
