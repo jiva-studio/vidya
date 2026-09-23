@@ -1,6 +1,6 @@
-auth-title = Вход в Vidya
+auth-title = Вход
 auth-email-label = Электронная почта
-auth-email-hint = Пришлём код из восьми цифр
+auth-email-placeholder = name@example.com
 auth-email-submit = Отправить код
 auth-email-sending = Отправляем…
 
@@ -15,4 +15,5 @@ auth-code-change-email = Ввести другой адрес
 auth-error-offline = Нет связи с сервером. Проверьте интернет и попробуйте снова.
 auth-error-wrong-code = Неверный код. Проверьте письмо — возможно, пришло новое.
 auth-error-code-still-valid = Код уже отправлен и ещё действует. Используйте его.
+auth-error-too-many = Слишком много попыток. Пожалуйста, подождите немного перед следующим запросом.
 auth-error-failed = Не удалось отправить код. Попробуйте ещё раз через минуту.

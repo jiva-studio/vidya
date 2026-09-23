@@ -10,6 +10,7 @@ import { CODE_LIFETIME_SECONDS, useResendCountdown } from './useResendCountdown'
 const reasonFor = (error: unknown): string => {
   if (error instanceof OfflineError) return 'auth-error-offline'
   if (error instanceof HttpError && error.status === 401) return 'auth-error-wrong-code'
+  if (error instanceof HttpError && error.status === 429) return 'auth-error-too-many'
   if (error instanceof HttpError && error.reason) return error.reason
   return 'auth-error-failed'
 }
@@ -43,10 +44,14 @@ export const useOtpSignIn = () => {
     } catch (caught) {
       // A refusal because the last code is still alive is not a failure: the
       // operator has the code already, so the screen moves on and waits.
-      if (isTooManyRequests(caught)) {
+      if (
+        isTooManyRequests(caught) &&
+        caught instanceof HttpError &&
+        caught.reason?.includes('already been generated')
+      ) {
         countdown.start(CODE_LIFETIME_SECONDS)
         step.value = 'code'
-        error.value = 'auth-error-code-still-valid'
+        error.value = undefined
       } else {
         error.value = reasonFor(caught)
       }

@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { Button, FormField, Input } from '@vidya/ui'
-import { computed, ref, watch } from 'vue'
+import { Button, FormField, Input, PinInput } from '@vidya/ui'
+import { ArrowLeft } from 'lucide-vue-next'
+import { computed } from 'vue'
 
 import type { OtpFormEmits } from '../types'
 import { useOtpSignIn } from '../model'
-import { codeInputClasses, formClasses, linkButtonClasses, secondaryRowClasses } from './styles'
+import {
+  backButtonClasses,
+  formClasses,
+  headerClasses,
+  linkButtonClasses,
+  resendRowClasses,
+  titleClasses,
+} from './styles'
 
 /* --------------------------------- Events --------------------------------- */
 
@@ -13,7 +21,6 @@ const emit = defineEmits<OtpFormEmits>()
 /* --------------------------------- State ---------------------------------- */
 
 const signIn = useOtpSignIn()
-const codeField = ref<{ $el?: HTMLInputElement } | undefined>(undefined)
 
 const showCodeStep = computed(() => signIn.step.value === 'code')
 const canResend = computed(() => signIn.countdown.canResend.value)
@@ -21,12 +28,6 @@ const canResend = computed(() => signIn.countdown.canResend.value)
 // The error stands where the hint stands, so a refusal does not add a line and
 // push everything below it down the page.
 const error = computed(() => signIn.error.value)
-
-/* ---------------------------------- Hooks --------------------------------- */
-
-watch(showCodeStep, (shown) => {
-  if (shown) codeField.value?.$el?.focus()
-})
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -46,21 +47,32 @@ function onResend() {
 function onChangeEmail() {
   signIn.step.value = 'email'
   signIn.code.value = ''
+  signIn.error.value = undefined
 }
 </script>
 
 <template>
-  <form v-if="!showCodeStep" :class="formClasses" @submit.prevent="onEmailSubmit">
-    <FormField
-      :label="$t('auth-email-label')"
-      :hint="$t('auth-email-hint')"
-      :error="error ? $t(error) : undefined"
-      required
+  <div :class="headerClasses">
+    <button
+      v-if="showCodeStep"
+      :class="backButtonClasses"
+      type="button"
+      :aria-label="$t('auth-code-change-email')"
+      @click="onChangeEmail"
     >
+      <ArrowLeft class="h-4 w-4" />
+    </button>
+    <h1 :class="titleClasses">{{ $t('auth-title') }}</h1>
+  </div>
+
+  <form v-if="!showCodeStep" :class="formClasses" @submit.prevent="onEmailSubmit">
+    <FormField :error="error ? $t(error) : undefined">
       <template #default="field">
         <Input
           :id="field.id"
           v-model="signIn.email.value"
+          :placeholder="$t('auth-email-placeholder')"
+          :aria-label="$t('auth-email-label')"
           :aria-describedby="field.describedBy"
           :invalid="field.invalid"
           type="email"
@@ -83,25 +95,18 @@ function onChangeEmail() {
   </form>
 
   <form v-else :class="formClasses" @submit.prevent="onCodeSubmit">
-    <FormField
-      :label="$t('auth-code-label')"
-      :hint="$t('auth-code-hint', { email: signIn.email.value })"
-      :error="error ? $t(error) : undefined"
-      required
-    >
+    <FormField :error="error ? $t(error) : undefined">
       <template #default="field">
-        <Input
+        <PinInput
           :id="field.id"
-          ref="codeField"
           v-model="signIn.code.value"
-          :class="codeInputClasses"
-          :aria-describedby="field.describedBy"
+          :length="8"
           :invalid="field.invalid"
+          :aria-describedby="field.describedBy"
           type="text"
+          otp
           name="one-time-code"
-          autocomplete="one-time-code"
-          inputmode="numeric"
-          required
+          @complete="onCodeSubmit"
         />
       </template>
     </FormField>
@@ -116,13 +121,10 @@ function onChangeEmail() {
       {{ $t('auth-code-submit') }}
     </Button>
 
-    <div :class="secondaryRowClasses">
+    <div :class="resendRowClasses">
       <button :class="linkButtonClasses" type="button" :disabled="!canResend" @click="onResend">
         <span v-if="canResend">{{ $t('auth-code-resend') }}</span>
         <span v-else>{{ $t('auth-code-wait', { time: signIn.countdown.label.value }) }}</span>
-      </button>
-      <button :class="linkButtonClasses" type="button" @click="onChangeEmail">
-        {{ $t('auth-code-change-email') }}
       </button>
     </div>
   </form>

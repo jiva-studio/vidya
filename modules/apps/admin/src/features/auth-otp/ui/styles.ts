@@ -1,15 +1,21 @@
-// The two steps hold a different number of controls, so without a floor the
-// page jumps the moment the code is asked for. The floor is the taller step.
-export const formClasses = [
-  'flex w-full flex-col gap-[var(--space-4)]',
-  'min-h-[15rem] justify-start',
+export const headerClasses = 'flex items-center gap-[var(--space-2)] pb-[var(--space-5)]'
+
+export const titleClasses = [
+  'text-[length:var(--text-lg)]',
+  'font-[var(--weight-semibold)]',
+  'text-[var(--color-text)]',
 ]
 
-export const codeInputClasses = 'font-[family-name:var(--font-mono)] tracking-[0.4em]'
-
-export const secondaryRowClasses = [
-  'flex flex-wrap items-center justify-between gap-[var(--space-2)]',
+export const backButtonClasses = [
+  '-ml-2 flex h-8 w-8 items-center justify-center rounded-full',
+  'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)]',
+  'transition-colors duration-[var(--duration-fast)]',
+  'focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]',
 ]
+
+export const formClasses = ['flex w-full flex-col gap-[var(--space-4)]']
+
+export const resendRowClasses = ['flex items-center justify-center']
 
 export const linkButtonClasses = [
   'text-[length:var(--text-sm)]',

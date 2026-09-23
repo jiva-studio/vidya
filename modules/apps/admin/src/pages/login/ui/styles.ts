@@ -9,7 +9,7 @@ export const pageClasses = [
 
 export const panelClasses = [
   'w-full',
-  'max-w-[22rem]',
+  'max-w-[27rem]',
   'rounded-[var(--radius-lg)]',
   'border',
   'border-[var(--color-border)]',

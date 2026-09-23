@@ -42,7 +42,8 @@ const askForCode = async (canvasElement: HTMLElement) => {
 const enterCode = async (canvasElement: HTMLElement) => {
   await askForCode(canvasElement)
   const form = within(canvasElement)
-  await userEvent.type(await form.findByLabelText(/код|code/i), '123456')
+  const firstSlot = (await form.findAllByRole('textbox'))[0]
+  if (firstSlot) await userEvent.type(firstSlot, '12345678')
   await userEvent.click(form.getByRole('button', { name: /войти|sign in/i }))
 }
 
