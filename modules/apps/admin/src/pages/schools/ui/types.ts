@@ -10,16 +10,11 @@ export interface SchoolsTableRowProps {
 
 export interface SchoolsTableRowEmits {
   edit: [id: SchoolId]
-  settings: [id: SchoolId]
 }
 
 /** Both the create and the edit screen are this component; the id tells them apart. */
 export interface SchoolFormPageProps {
   id?: SchoolId
-}
-
-export interface SchoolSettingsPageProps {
-  id: SchoolId
 }
 
 export interface SchoolJoiningLinkProps {
@@ -47,6 +42,7 @@ export interface SchoolAboutFieldProps {
 export interface DefaultRoleFieldProps {
   modelValue: string
   options: { value: string; label: string }[]
+  disabled?: boolean
 }
 
 export interface StudentRolesListProps {

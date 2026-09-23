@@ -1,19 +1,27 @@
 <script setup lang="ts">
-import { FormFooter, PageHeader } from '@vidya/ui'
+import type { RoleId } from '@vidya/domain'
+import { asId } from '@vidya/domain'
+import type { SelectOption } from '@vidya/ui'
+import { FormFooter, Label, PageHeader } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
-import { reasonOf, useToasts } from '@/shared/lib'
+import type { RoleRow } from '@/entities/role'
+import { roleApi } from '@/entities/role'
 import { useSchoolApi } from '@/entities/school'
+import { useCan } from '@/shared/access'
+import { useHttp } from '@/shared/api'
+import { reasonOf, useToasts } from '@/shared/lib'
+import { PageBack } from '@/shared/navigation'
 
+import DefaultRoleField from './DefaultRoleField.vue'
 import SchoolAboutField from './SchoolAboutField.vue'
-import SchoolJoiningLink from './SchoolJoiningLink.vue'
 import SchoolLogoField from './SchoolLogoField.vue'
 import SchoolNameField from './SchoolNameField.vue'
-import type { SchoolFormPageProps } from './types'
+import StudentRolesList from './StudentRolesList.vue'
 import { formClasses, pageClasses } from './styles'
-import { PageBack } from '@/shared/navigation'
+import type { SchoolFormPageProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -22,23 +30,42 @@ const props = withDefaults(defineProps<SchoolFormPageProps>(), { id: undefined }
 /* --------------------------------- State ---------------------------------- */
 
 const { $t } = useFluent()
+const route = useRoute()
 const router = useRouter()
 const toasts = useToasts()
 const api = useSchoolApi()
+const roles = roleApi(useHttp())
+
+const canManageOrg = useCan('schools:create')
+const isSettingsPage = computed(() => route.name === 'school-settings')
 
 const name = ref('')
 const logoUrl = ref('')
 const description = ref('')
+const defaultStudentRoleId = ref('')
+const studentRoleIds = ref<RoleId[]>([])
+const availableRoles = ref<RoleRow[]>([])
+
 const busy = ref(false)
 const error = ref<string | undefined>(undefined)
 const invalid = ref(false)
 const badLogo = ref(false)
 
-const title = computed(() =>
-  props.id ? $t('schools-form-edit-title') : $t('schools-form-create-title'),
-)
+const title = computed(() => {
+  if (isSettingsPage.value) return $t('nav-school-settings')
+  return props.id ? $t('schools-form-edit-title') : $t('schools-form-create-title')
+})
 const nameError = computed(() => (invalid.value ? $t('schools-form-name-required') : undefined))
 const logoError = computed(() => (badLogo.value ? $t('schools-form-logo-invalid') : undefined))
+
+// Only users with org-level school management rights can edit the school name;
+// school-level admins see it as disabled.
+const nameDisabled = computed(() => busy.value || (Boolean(props.id) && !canManageOrg.value))
+
+const roleOptions = computed<SelectOption[]>(() =>
+  availableRoles.value.map((role) => ({ value: role.id, label: role.name })),
+)
+const chosenStudentRoles = computed(() => new Set<RoleId>(studentRoleIds.value))
 
 /* ---------------------------------- Hooks --------------------------------- */
 
@@ -47,6 +74,12 @@ onMounted(() => {
 })
 
 /* -------------------------------- Handlers -------------------------------- */
+
+function onToggleRole(roleId: RoleId, checked: boolean) {
+  studentRoleIds.value = checked
+    ? [...studentRoleIds.value, roleId]
+    : studentRoleIds.value.filter((held) => held !== roleId)
+}
 
 async function onSubmit() {
   invalid.value = name.value.trim().length === 0
@@ -59,7 +92,11 @@ async function onSubmit() {
   try {
     await send()
     toasts.show({ title: $t('toast-saved'), tone: 'success' })
-    void router.push({ name: 'schools' })
+    if (isSettingsPage.value) {
+      await load()
+    } else {
+      void router.push({ name: 'schools' })
+    }
   } catch (failure) {
     error.value = reasonOf(failure)
   } finally {
@@ -68,7 +105,11 @@ async function onSubmit() {
 }
 
 function onCancel() {
-  void router.push({ name: 'schools' })
+  if (isSettingsPage.value) {
+    void load()
+  } else {
+    void router.push({ name: 'schools' })
+  }
 }
 
 /* -------------------------------- Helpers --------------------------------- */
@@ -79,10 +120,19 @@ async function load(): Promise<void> {
 
   busy.value = true
   try {
-    const school = await api.get(id)
+    const [school, configs, rolesList] = await Promise.all([
+      api.get(id),
+      api.configs(id).catch(() => ({ defaultStudentRoleId: undefined, studentRoleIds: [] })),
+      roles.list(id).catch(() => ({ items: [] })),
+    ])
+
     name.value = school.name
     logoUrl.value = school.logoUrl ?? ''
     description.value = school.description ?? ''
+
+    defaultStudentRoleId.value = configs.defaultStudentRoleId ?? ''
+    studentRoleIds.value = configs.studentRoleIds ?? []
+    availableRoles.value = rolesList.items
   } catch (failure) {
     error.value = reasonOf(failure)
   } finally {
@@ -90,22 +140,21 @@ async function load(): Promise<void> {
   }
 }
 
-/**
- * An empty box means the school has no logo, which the wire spells `null`; an
- * empty string would be a logo whose address is nothing.
- */
 function filled(value: string): string | null {
   const trimmed = value.trim()
   return trimmed.length > 0 ? trimmed : null
 }
 
-// Caught here so a mistyped address comes back as a field error rather than as
-// a 400 whose message names a validator.
 function isAddressable(value: string): boolean {
   const trimmed = value.trim()
   if (trimmed.length === 0) return true
+  if (trimmed.startsWith('/media/')) return true
 
   return URL.canParse(trimmed) && /^https?:$/.test(new URL(trimmed).protocol)
+}
+
+function chosenDefaultRole(): RoleId | undefined {
+  return defaultStudentRoleId.value ? asId<RoleId>(defaultStudentRoleId.value) : undefined
 }
 
 async function send(): Promise<void> {
@@ -116,7 +165,13 @@ async function send(): Promise<void> {
   }
 
   if (props.id) {
-    await api.update(props.id, body)
+    await Promise.all([
+      api.update(props.id, body),
+      api.saveConfigs(props.id, {
+        defaultStudentRoleId: chosenDefaultRole(),
+        studentRoleIds: studentRoleIds.value,
+      }),
+    ])
     return
   }
 
@@ -130,9 +185,27 @@ async function send(): Promise<void> {
       <template #leading><PageBack /></template>
     </PageHeader>
     <form :class="formClasses" @submit.prevent="onSubmit">
-      <SchoolNameField v-model="name" :error="nameError" :disabled="busy" />
-      <SchoolLogoField v-model="logoUrl" :error="logoError" :disabled="busy" />
+      <SchoolNameField v-model="name" :error="nameError" :disabled="nameDisabled" />
       <SchoolAboutField v-model="description" :disabled="busy" />
+      <SchoolLogoField v-model="logoUrl" :error="logoError" :disabled="busy" />
+
+      <!-- Role settings (available when editing existing school) -->
+      <DefaultRoleField
+        v-if="props.id && availableRoles.length > 0"
+        v-model="defaultStudentRoleId"
+        :options="roleOptions"
+        :disabled="busy"
+      />
+      <div v-if="props.id && availableRoles.length > 0" class="flex flex-col gap-2">
+        <Label>{{ $t('schools-settings-student-roles') }}</Label>
+        <StudentRolesList
+          :roles="availableRoles"
+          :chosen="[...chosenStudentRoles]"
+          :disabled="busy"
+          @toggle="onToggleRole"
+        />
+      </div>
+
       <FormFooter
         :submit-label="$t('action-save')"
         :cancel-label="$t('action-cancel')"
@@ -141,6 +214,5 @@ async function send(): Promise<void> {
         @cancel="onCancel"
       />
     </form>
-    <SchoolJoiningLink v-if="props.id" :id="props.id" />
   </section>
 </template>

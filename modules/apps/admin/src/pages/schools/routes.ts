@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from 'vue-router'
+import type { RouteLocationNormalized, RouteRecordRaw } from 'vue-router'
 
 /**
  * Routes for schools. Owned by T2.
@@ -11,7 +11,7 @@ export const routes: RouteRecordRaw[] = [
     path: '/s/:schoolId/schools',
     name: 'schools',
     component: () => import('./ui/SchoolsPage.vue'),
-    meta: { permission: 'schools:read' },
+    meta: { permission: 'schools:create' },
   },
   {
     path: '/s/:schoolId/schools/new',
@@ -34,16 +34,13 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
-    // The identifier is a prop rather than something read from the router, so
-    // the screen mounts in a test and in a story without one.
-    path: '/s/:schoolId/schools/:id/settings',
+    path: '/s/:schoolId/settings',
     name: 'school-settings',
-    props: true,
-    component: () => import('./ui/SchoolSettingsPage.vue'),
+    props: (route: RouteLocationNormalized) => ({ id: route.params.schoolId }),
+    component: () => import('./ui/SchoolFormPage.vue'),
     meta: {
-      section: 'schools',
+      section: 'school-settings',
       permission: 'schools:update',
-      nav: { parent: 'schools', label: 'schools-settings-title' },
     },
   },
 ]
