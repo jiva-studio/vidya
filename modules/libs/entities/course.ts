@@ -21,6 +21,9 @@ export class Course {
   @Column({ nullable: true })
   description: string
 
+  @Column({ nullable: true, type: 'character varying' })
+  coverImageUrl: string | null
+
   @Column({
     type: 'enum',
     enum: LearningType,

@@ -102,6 +102,7 @@ export class CoursesController {
       schoolId: request.schoolId,
       name: request.name,
       description: request.description,
+      coverImageUrl: request.coverImageUrl,
       learningType: request.learningType,
     })
 

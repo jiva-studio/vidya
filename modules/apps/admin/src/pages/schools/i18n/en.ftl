@@ -20,6 +20,9 @@ schools-form-name-required = Enter a name.
 schools-form-logo = Logo
 schools-form-logo-hint = https://example.org/logo.png
 schools-form-logo-invalid = Needs a link beginning with http:// or https://
+schools-form-logo-choose = Choose logo
+schools-form-logo-change = Change logo
+schools-form-logo-remove = Remove logo
 schools-form-description = Description
 schools-form-description-hint = A line or two about the school — students see it in the catalogue
 

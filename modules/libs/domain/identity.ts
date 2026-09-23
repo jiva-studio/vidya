@@ -10,8 +10,9 @@
  */
 
 declare const brand: unique symbol
+declare const instantBrand: unique symbol
 
-type Brand<TValue, TBrand extends string> = TValue & { readonly [brand]: TBrand }
+type Brand<TValue, TBrand extends string> = TValue & { readonly [brand]?: TBrand }
 
 /* -------------------------------------------------------------------------- */
 /*                                Identifiers                                 */
@@ -59,7 +60,7 @@ export const asId = <TId extends Id<string>>(value: string): TId => value as TId
  * what precision to expect. `Date` stays on the inside — it is a runtime object
  * and cannot survive JSON — and the conversion happens in exactly one place.
  */
-export type IsoDateTime = Brand<string, 'IsoDateTime'>
+export type IsoDateTime = string & { readonly [instantBrand]: 'IsoDateTime' }
 
 const ISO_UTC_MILLIS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 

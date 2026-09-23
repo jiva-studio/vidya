@@ -8,8 +8,16 @@ import { project, projectAll } from './project'
 /*                                   Fields                                   */
 /* -------------------------------------------------------------------------- */
 
-const COURSE = ['id', 'schoolId', 'name', 'description', 'learningType', 'status'] as const
-const COURSE_SUMMARY = ['id', 'name', 'description', 'status'] as const
+const COURSE = [
+  'id',
+  'schoolId',
+  'name',
+  'description',
+  'coverImageUrl',
+  'learningType',
+  'status',
+] as const
+const COURSE_SUMMARY = ['id', 'name', 'description', 'coverImageUrl', 'status'] as const
 
 const GROUP = ['id', 'courseId', 'name', 'description'] as const
 const GROUP_SUMMARY = ['id', 'courseId', 'name', 'status'] as const
@@ -68,7 +76,10 @@ const HOMEWORK_SUMMARY = [
 /*                                   Courses                                  */
 /* -------------------------------------------------------------------------- */
 
-export const toCourseDetails = (c: entities.Course) => project<dto.CourseDetails>(c, COURSE)
+export const toCourseDetails = (c: entities.Course): dto.CourseDetails => ({
+  ...project<dto.CourseDetails>(c, COURSE),
+  coverImageUrl: c.coverImageUrl ?? null,
+})
 export const toCourseSummaries = (c: entities.Course[]) =>
   projectAll<dto.CourseSummary>(c, COURSE_SUMMARY)
 export const toCreatedId = <TId extends domain.Id<string>>(e: { id: TId }) => ({ id: e.id })

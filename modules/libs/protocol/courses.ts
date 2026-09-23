@@ -12,11 +12,15 @@ export type CourseDetails = {
   schoolId: domain.SchoolId
   name: string
   description?: string
+  coverImageUrl?: string | null
   learningType: domain.CourseLearningType
   status: domain.CourseStatus
 }
 
-export type CourseSummary = Pick<CourseDetails, 'id' | 'name' | 'description' | 'status'>
+export type CourseSummary = Pick<
+  CourseDetails,
+  'id' | 'name' | 'description' | 'coverImageUrl' | 'status'
+>
 
 /* -------------------------------------------------------------------------- */
 /*                                   Create                                   */

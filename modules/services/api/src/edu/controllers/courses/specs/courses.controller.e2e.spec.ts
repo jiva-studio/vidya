@@ -76,6 +76,29 @@ describe('/edu/courses', () => {
     expect(response.body.id).toBeDefined()
   })
 
+  it('creates a course with coverImageUrl and returns it on get', async () => {
+    const payload: protocol.CreateCourseRequest = {
+      schoolId: ctx.one.school.id,
+      name: 'Course with cover',
+      coverImageUrl: 'https://cdn.example.com/courses/cover1.jpg',
+      learningType: 'individual',
+    }
+
+    const response = await request(app.getHttpServer())
+      .post(routes.create())
+      .auth(ctx.one.tokens.admin, { type: 'bearer' })
+      .send(payload)
+      .expect(201)
+
+    const courseId = response.body.id
+    const getResponse = await request(app.getHttpServer())
+      .get(routes.get(courseId))
+      .auth(ctx.one.tokens.admin, { type: 'bearer' })
+      .expect(200)
+
+    expect(getResponse.body.coverImageUrl).toBe('https://cdn.example.com/courses/cover1.jpg')
+  })
+
   it('refuses to create a course in a school the token does not cover', () => {
     const payload: protocol.CreateCourseRequest = {
       schoolId: ctx.two.school.id,
@@ -133,6 +156,20 @@ describe('/edu/courses', () => {
       .expect(200)
 
     expect(response.body.name).toBe('Renamed')
+  })
+
+  it('updates a course coverImageUrl', async () => {
+    const payload: protocol.UpdateCourseRequest = {
+      coverImageUrl: 'https://cdn.example.com/courses/updated-cover.jpg',
+    }
+
+    const response = await request(app.getHttpServer())
+      .patch(routes.update(ctx.one.courseId))
+      .auth(ctx.one.tokens.admin, { type: 'bearer' })
+      .send(payload)
+      .expect(200)
+
+    expect(response.body.coverImageUrl).toBe('https://cdn.example.com/courses/updated-cover.jpg')
   })
 
   it('does not update a course belonging to another school', () => {
