@@ -1,4 +1,4 @@
-export type TableAlign = 'start' | 'end'
+export type TableAlign = 'start' | 'center' | 'end'
 
 export interface TableColumn {
   key: string

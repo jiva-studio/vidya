@@ -28,7 +28,7 @@ export const headCellVariants = cva(
     'whitespace-nowrap',
   ],
   {
-    variants: { align: { start: 'text-left', end: 'text-right' } },
+    variants: { align: { start: 'text-left', center: 'text-center', end: 'text-right' } },
     defaultVariants: { align: 'start' },
   },
 )
@@ -41,7 +41,7 @@ export const rowVariants = cva(
   {
     variants: {
       interactive: {
-        true: 'cursor-pointer hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]',
+        true: 'cursor-pointer hover:bg-slate-500/[0.035] focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]',
         false: '',
       },
       selected: { true: 'bg-[var(--color-primary-surface)]', false: '' },
@@ -58,7 +58,7 @@ export const cellVariants = cva(
   ],
   {
     variants: {
-      align: { start: 'text-left', end: 'text-right' },
+      align: { start: 'text-left', center: 'text-center', end: 'text-right' },
       tone: {
         primary: 'font-[var(--weight-medium)] text-[var(--color-text)]',
         secondary: 'font-[var(--weight-normal)] text-[var(--color-text-muted)]',

@@ -17,7 +17,7 @@ export const buttonVariants = cva(buttonBase, {
         'bg-[var(--color-primary)] text-[var(--color-text-inverse)] hover:bg-[var(--color-primary-hover)]',
       secondary:
         'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border-strong)] hover:bg-[var(--color-surface-hover)]',
-      ghost: 'bg-transparent text-[var(--color-text)] hover:bg-[var(--color-surface-hover)]',
+      ghost: 'bg-transparent text-[var(--color-text)] hover:bg-slate-900/[0.07]',
       danger:
         'bg-[var(--color-danger-fg)] text-[var(--color-text-inverse)] hover:bg-[var(--color-danger-fg-hover)]',
     },
@@ -44,7 +44,7 @@ export const iconButtonVariants = cva([...buttonBase, 'p-0 [&_svg]:size-[var(--s
       secondary:
         'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border-strong)] hover:bg-[var(--color-surface-hover)]',
       ghost:
-        'bg-transparent text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)]',
+        'bg-transparent text-[var(--color-text-muted)] hover:bg-slate-900/[0.07] hover:text-[var(--color-text)]',
       danger: 'bg-transparent text-[var(--color-danger-fg)] hover:bg-[var(--color-danger-surface)]',
     },
     size: {

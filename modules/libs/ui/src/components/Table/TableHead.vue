@@ -9,7 +9,7 @@ const props = withDefaults(defineProps<TableHeadProps>(), { class: undefined })
 
 /* -------------------------------- Helpers --------------------------------- */
 
-function alignOf(align: 'start' | 'end' | undefined, numeric: boolean | undefined) {
+function alignOf(align: 'start' | 'center' | 'end' | undefined, numeric: boolean | undefined) {
   if (align) return align
   return numeric ? 'end' : 'start'
 }
