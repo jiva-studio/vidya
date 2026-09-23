@@ -9,6 +9,13 @@ import type { MenuGroup } from '@/shared/navigation'
 export const menu: MenuGroup[] = [
   {
     label: 'nav-group-edu',
-    items: [{ route: 'courses', label: 'nav-courses', icon: 'book', permission: 'courses:read' }],
+    items: [
+      {
+        route: 'courses',
+        label: 'nav-courses',
+        icon: 'graduation-cap',
+        permission: 'courses:read',
+      },
+    ],
   },
 ]

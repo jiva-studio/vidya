@@ -6,9 +6,11 @@ export const navClasses = [
   'py-[var(--space-4)]',
 ]
 
+export const groupClasses = ['flex', 'flex-col', 'gap-[var(--space-1)]']
+
 export const groupLabelClasses = [
   'px-[var(--space-2)]',
-  'pb-[var(--space-2)]',
+  'pb-[var(--space-1)]',
   'text-[length:var(--text-2xs)]',
   'font-[var(--weight-semibold)]',
   'uppercase',
@@ -24,15 +26,17 @@ export const itemClasses = [
   'rounded-[var(--radius-md)]',
   'px-[var(--space-2)]',
   'text-[length:var(--text-base)]',
+  'leading-none',
   'text-[var(--color-text)]',
   'transition-colors',
   'duration-[var(--duration-fast)]',
   'hover:bg-[var(--color-surface-hover)]',
 ]
 
+export const itemIconClasses = ['size-[var(--space-4)]', 'shrink-0']
+
 export const activeItemClasses = [
-  'bg-[var(--color-surface-hover)]',
-  'font-[var(--weight-medium)]',
+  'bg-[var(--color-primary-surface)]',
   'text-[var(--color-primary)]',
 ]
 
@@ -59,6 +63,6 @@ export const childClasses = [
   'rounded-[var(--radius-md)]',
   'px-[var(--space-2)]',
   'text-[length:var(--text-sm)]',
-  'font-[var(--weight-medium)]',
   'text-[var(--color-primary)]',
+  'bg-[var(--color-primary-surface)]',
 ]
