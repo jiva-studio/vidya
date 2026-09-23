@@ -4,13 +4,14 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { httpClientKey, resetApi } from '@/shared/api'
-import { addMessages, translate } from '@/shared/i18n'
+import { addMessages } from '@/shared/i18n'
 import { useSession } from '@/shared/session'
 import type { FakeAnswers } from '@/shared/testing'
 import { fakeHttpClient, mountWithApp } from '@/shared/testing'
 
 import { messages } from '../i18n'
 import SchoolFormPage from '../ui/SchoolFormPage.vue'
+import SchoolLogoField from '../ui/SchoolLogoField.vue'
 
 const SCHOOLS = '/edu/schools'
 const LOGO = 'https://cdn.example.org/logo.png'
@@ -48,24 +49,17 @@ const mountForm = async (answers: FakeAnswers, props: Record<string, unknown> = 
   return { transport, page }
 }
 
-const fill = async (
-  page: Awaited<ReturnType<typeof mountForm>>['page'],
-  selector: string,
-  value: string,
-) => {
-  await page.find(selector).setValue(value)
-}
-
 const save = async (page: Awaited<ReturnType<typeof mountForm>>['page']) => {
-  await page
-    .findAll('button')
-    .find((candidate) => candidate.text() === translate('action-save'))
-    ?.trigger('click')
+  await page.find('form').trigger('submit')
   await flushPromises()
 }
 
 const sent = (transport: Awaited<ReturnType<typeof mountForm>>['transport']) =>
-  transport.calls.find((call) => call.method === 'POST' || call.method === 'PATCH')
+  transport.calls.find(
+    (call) =>
+      call.method === 'POST' ||
+      (call.method === 'PATCH' && call.path.startsWith(SCHOOLS) && !call.path.includes('configs')),
+  )
 
 /**
  * Without a way in, a logo and a description can only be put there by a seed or
@@ -83,9 +77,9 @@ describe('the logo and the description of a school', () => {
   it('reaches the server when a school is created with them', async () => {
     const { transport, page } = await mountForm({ 'POST /edu/schools': { id: 'school-2' } })
 
-    await fill(page, 'input[name="name"]', 'Second')
-    await fill(page, 'input[name="logoUrl"]', LOGO)
-    await fill(page, 'textarea', ABOUT)
+    await page.find('input[name="name"]').setValue('Second')
+    page.findComponent(SchoolLogoField).vm.$emit('update:modelValue', LOGO)
+    await page.find('textarea').setValue(ABOUT)
     await save(page)
 
     expect(sent(transport)).toEqual({
@@ -108,11 +102,11 @@ describe('the logo and the description of a school', () => {
       { id: 'school-1' },
     )
 
-    expect((page.find('input[name="logoUrl"]').element as HTMLInputElement).value).toBe(LOGO)
+    expect(page.findComponent(SchoolLogoField).props('modelValue')).toBe(LOGO)
     expect((page.find('textarea').element as HTMLTextAreaElement).value).toBe(ABOUT)
   })
 
-  it('is cleared by emptying the box, which is not the same as leaving it alone', async () => {
+  it('is cleared by removing the logo, which is not the same as leaving it alone', async () => {
     const { transport, page } = await mountForm(
       {
         '/edu/schools/school-1': {
@@ -126,20 +120,29 @@ describe('the logo and the description of a school', () => {
       { id: 'school-1' },
     )
 
-    await fill(page, 'input[name="logoUrl"]', '')
+    page.findComponent(SchoolLogoField).vm.$emit('update:modelValue', '')
     await save(page)
 
     expect(sent(transport)?.body).toMatchObject({ logoUrl: null, description: ABOUT })
   })
 
-  it('refuses an address that is not one, without asking the server', async () => {
+  it('accepts media storage paths for logo without error', async () => {
     const { transport, page } = await mountForm({ 'POST /edu/schools': { id: 'school-2' } })
 
-    await fill(page, 'input[name="name"]', 'Second')
-    await fill(page, 'input[name="logoUrl"]', 'cdn.example.org/logo.png')
+    await page.find('input[name="name"]').setValue('Second')
+    page
+      .findComponent(SchoolLogoField)
+      .vm.$emit('update:modelValue', '/media/f8abdc11-3c0b-480e-a7e3-50789fe7ca2a')
     await save(page)
 
-    expect(sent(transport)).toBeUndefined()
-    expect(page.text()).toContain('http://')
+    expect(sent(transport)).toEqual({
+      method: 'POST',
+      path: SCHOOLS,
+      body: {
+        name: 'Second',
+        logoUrl: '/media/f8abdc11-3c0b-480e-a7e3-50789fe7ca2a',
+        description: null,
+      },
+    })
   })
 })

@@ -32,7 +32,6 @@ const testRouter = () =>
       { path: '/schools', name: 'schools', component: blank },
       { path: '/schools/new', name: 'school-new', component: blank },
       { path: '/schools/:id', name: 'school-edit', component: blank },
-      { path: '/schools/:id/settings', name: 'school-settings', component: blank },
     ],
   })
 
@@ -104,20 +103,17 @@ describe('SchoolsPage', () => {
       .map((button) => button.attributes('aria-label') ?? button.text())
 
     expect(labels).not.toContain(translate('schools-form-create-title'))
-    expect(labels).not.toContain(translate('schools-edit'))
   })
 
-  it('leads to the settings of a school that may be changed', async () => {
+  it('leads to the edit page of a school that may be changed', async () => {
     const { page, router } = await mountPage({
       [SCHOOLS]: { items: [{ id: 'school-1', name: 'First' }] },
     })
 
-    const settings = page
-      .findAll('button')
-      .find((button) => button.attributes('aria-label') === translate('schools-settings'))
-    await settings?.trigger('click')
+    const row = page.find('tbody tr')
+    await row?.trigger('click')
     await flushPromises()
 
-    expect(router.currentRoute.value.name).toBe('school-settings')
+    expect(router.currentRoute.value.name).toBe('school-edit')
   })
 })

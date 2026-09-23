@@ -1,15 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import * as domain from '@vidya/domain'
 import * as protocol from '@vidya/protocol'
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUrl,
-  Matches,
-  MaxLength,
-  MinLength,
-} from 'class-validator'
+import { IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator'
 
 import { PagedQuery } from './paging.dto'
 
@@ -95,8 +87,9 @@ export class CreateSchoolRequest implements protocol.CreateSchoolRequest {
   name: string
 
   @ApiPropertyOptional({ example: 'https://cdn.example.org/logo.png' })
-  @IsUrl()
+  @IsString()
   @IsOptional()
+  @MaxLength(2048)
   logoUrl: string | null
 
   @ApiPropertyOptional({ example: 'Scripture, kirtan and practice.' })
@@ -132,8 +125,9 @@ export class UpdateSchoolRequest implements protocol.UpdateSchoolRequest {
   name?: string
 
   @ApiPropertyOptional({ example: 'https://cdn.example.org/logo.png' })
-  @IsUrl()
+  @IsString()
   @IsOptional()
+  @MaxLength(2048)
   logoUrl?: string | null
 
   @ApiPropertyOptional({ example: 'Scripture, kirtan and practice.' })

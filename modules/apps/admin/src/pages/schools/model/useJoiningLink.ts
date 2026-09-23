@@ -49,6 +49,9 @@ export const useJoiningLink = (schoolId: SchoolId) => {
     try {
       await navigator.clipboard.writeText(link.value)
       copied.value = true
+      setTimeout(() => {
+        copied.value = false
+      }, 2000)
     } catch {
       // A browser that withholds the clipboard leaves the link on screen to be
       // selected by hand, which is the way out rather than a failure to report.

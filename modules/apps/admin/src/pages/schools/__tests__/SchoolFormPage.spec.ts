@@ -50,10 +50,7 @@ const mountForm = async (answers: FakeAnswers, props: Record<string, unknown> = 
 }
 
 const save = async (page: Awaited<ReturnType<typeof mountForm>>['page']) => {
-  const button = page
-    .findAll('button')
-    .find((candidate) => candidate.text() === translate('action-save'))
-  await button?.trigger('click')
+  await page.find('form').trigger('submit')
   await flushPromises()
 }
 
@@ -72,7 +69,8 @@ describe('SchoolFormPage', () => {
     await page.find('input[name="name"]').setValue('Second')
     await save(page)
 
-    expect(transport.calls[0]).toEqual({
+    const postCall = transport.calls.find((c) => c.method === 'POST')
+    expect(postCall).toEqual({
       method: 'POST',
       path: SCHOOLS,
       body: { name: 'Second', logoUrl: null, description: null },
@@ -93,7 +91,10 @@ describe('SchoolFormPage', () => {
     const { transport, page } = await mountForm(
       {
         '/edu/schools/school-1': { id: 'school-1', name: 'First' },
+        '/edu/schools/school-1/configs': { defaultStudentRoleId: undefined, studentRoleIds: [] },
+        '/edu/roles': { items: [] },
         'PATCH /edu/schools/school-1': { id: 'school-1', name: 'Renamed' },
+        'PATCH /edu/schools/school-1/configs': { success: true },
       },
       { id: 'school-1' },
     )
@@ -103,7 +104,10 @@ describe('SchoolFormPage', () => {
     await page.find('input[name="name"]').setValue('Renamed')
     await save(page)
 
-    expect(transport.calls[1]).toEqual({
+    const patchCall = transport.calls.find(
+      (c) => c.method === 'PATCH' && c.path === '/edu/schools/school-1',
+    )
+    expect(patchCall).toEqual({
       method: 'PATCH',
       path: '/edu/schools/school-1',
       body: { name: 'Renamed', logoUrl: null, description: null },
@@ -122,5 +126,22 @@ describe('SchoolFormPage', () => {
       { key: 'failure-conflict', reason: 'A school with this name already exists' },
     ])
     expect(page.text()).not.toContain('A school with this name already exists')
+  })
+
+  it('disables the school name field when the user only has school update rights', async () => {
+    useSession().end()
+    signIn(['schools:update'] as PermissionKey[])
+
+    const { page } = await mountForm(
+      {
+        '/edu/schools/school-1': { id: 'school-1', name: 'First' },
+        '/edu/schools/school-1/configs': { defaultStudentRoleId: undefined, studentRoleIds: [] },
+        '/edu/roles': { items: [] },
+      },
+      { id: 'school-1' },
+    )
+
+    const nameInput = page.find('input[name="name"]')
+    expect(nameInput.attributes('disabled')).toBeDefined()
   })
 })

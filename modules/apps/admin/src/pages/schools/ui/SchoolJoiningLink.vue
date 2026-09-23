@@ -15,7 +15,7 @@ const props = defineProps<SchoolJoiningLinkProps>()
 
 const joining = useJoiningLink(props.id)
 
-const settings = computed(() => ({ name: 'school-settings', params: { id: props.id } }))
+const settings = computed(() => ({ name: 'school-edit', params: { id: props.id } }))
 
 /* -------------------------------- Handlers -------------------------------- */
 
