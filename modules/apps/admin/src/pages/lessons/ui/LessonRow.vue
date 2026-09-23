@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { IconButton, TableCell, TableRow } from '@vidya/ui'
-import { Pencil } from 'lucide-vue-next'
+import { TableCell, TableRow } from '@vidya/ui'
 
 import LessonVersionBadge from './LessonVersionBadge.vue'
 import type { LessonRowEmits, LessonRowProps } from './types'
@@ -15,13 +14,15 @@ const emit = defineEmits<LessonRowEmits>()
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onEdit() {
-  emit('edit', props.row.id)
+function onRowClick() {
+  if (props.canEdit) {
+    emit('edit', props.row.id)
+  }
 }
 </script>
 
 <template>
-  <TableRow>
+  <TableRow :interactive="props.canEdit" @select="onRowClick">
     <TableCell align="start" numeric nowrap>{{ props.row.lessonNumber }}</TableCell>
     <TableCell tone="primary" truncate :title="props.row.title">{{ props.row.title }}</TableCell>
     <TableCell nowrap>
@@ -30,11 +31,6 @@ function onEdit() {
         :published-version="props.row.publishedVersion"
         :draft-version="props.row.draftVersion"
       />
-    </TableCell>
-    <TableCell actions>
-      <IconButton v-if="props.canEdit" :label="$t('lessons-edit')" @click="onEdit">
-        <Pencil />
-      </IconButton>
     </TableCell>
   </TableRow>
 </template>

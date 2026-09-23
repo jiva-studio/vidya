@@ -36,7 +36,6 @@ const columns = computed<TableColumn[]>(() => [
   },
   { key: 'title', label: $t('lessons-column-title') },
   { key: 'state', label: $t('lessons-column-state') },
-  { key: 'actions', label: $t('lessons-column-actions'), align: 'end' },
 ])
 
 const emptyAction = computed(() => (props.canCreate ? $t('lessons-empty-action') : undefined))

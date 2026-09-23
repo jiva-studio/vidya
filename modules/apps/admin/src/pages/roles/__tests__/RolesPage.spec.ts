@@ -121,4 +121,16 @@ describe('RolesPage', () => {
       translate('roles-create'),
     )
   })
+
+  it('leads to the edit page of a role that may be changed', async () => {
+    const { page, router } = await mountPage({
+      [ROLES]: { items: [{ id: 'role-1', name: 'Teacher', description: 'Runs a group' }] },
+    })
+
+    const row = page.find('tbody tr')
+    await row?.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('role-edit')
+  })
 })

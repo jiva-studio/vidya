@@ -49,10 +49,11 @@ const router = () =>
 
 const open = (answers: Record<string, unknown>) => {
   const transport = fakeHttpClient(answers)
+  const r = router()
   const page = mountWithApp(CoursesPage, {
-    global: { plugins: [router()], provide: { [httpClientKey as symbol]: transport.client } },
+    global: { plugins: [r], provide: { [httpClientKey as symbol]: transport.client } },
   })
-  return { transport, page }
+  return { transport, page, router: r }
 }
 
 describe('CoursesPage', () => {
@@ -120,5 +121,18 @@ describe('CoursesPage', () => {
     expect(page.findAll('button').map((button) => button.text())).not.toContain(
       translate('courses-create'),
     )
+  })
+
+  it('leads to the edit page of a course on row click', async () => {
+    const { page, router } = open({
+      [COURSES]: { items: [{ id: 'c1', name: 'Sanskrit grammar', description: 'Cases' }] },
+    })
+    await flushPromises()
+
+    const row = page.find('tbody tr')
+    await row?.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('course-edit')
   })
 })

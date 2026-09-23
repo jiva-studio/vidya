@@ -46,12 +46,13 @@ const routes = () =>
 
 const open = async (answers: Record<string, unknown>) => {
   const transport = fakeHttpClient(answers)
+  const r = routes()
   const page = mountWithApp(GroupsPage, {
-    global: { plugins: [routes()], provide: { [httpClientKey as symbol]: transport.client } },
+    global: { plugins: [r], provide: { [httpClientKey as symbol]: transport.client } },
   })
   await flushPromises()
 
-  return { transport, page }
+  return { transport, page, router: r }
 }
 
 describe('GroupsPage', () => {
@@ -105,5 +106,17 @@ describe('GroupsPage', () => {
     expect(page.findAll('button').map((button) => button.text())).not.toContain(
       translate('groups-create'),
     )
+  })
+
+  it('leads to the edit page of a group on row click', async () => {
+    const { page, router } = await open({
+      [GROUPS]: { items: [{ id: 'g1', name: 'Morning group' }] },
+    })
+
+    const row = page.find('tbody tr')
+    await row?.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('group-edit')
   })
 })

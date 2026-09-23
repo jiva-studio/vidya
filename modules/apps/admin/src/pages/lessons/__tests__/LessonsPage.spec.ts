@@ -72,7 +72,7 @@ const open = async (answers: Record<string, unknown>) => {
   })
   await flushPromises()
 
-  return { transport, page }
+  return { transport, page, router: routes }
 }
 
 describe('LessonsPage', () => {
@@ -154,5 +154,18 @@ describe('LessonsPage', () => {
 
     expect(names).not.toContain(translate('lessons-edit'))
     expect(page.text()).not.toContain(translate('lessons-add'))
+  })
+
+  it('leads to the editor of a lesson on row click', async () => {
+    const { page, router } = await open({
+      [`${LESSONS}/l1/versions`]: versions('l1', [[1, 'draft']]),
+      [LESSONS]: { items: [lesson('l1', 1, 'Alphabet')] },
+    })
+
+    const row = page.find('tbody tr')
+    await row?.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('lesson-editor')
   })
 })

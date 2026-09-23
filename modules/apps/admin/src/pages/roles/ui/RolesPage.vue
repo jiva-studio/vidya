@@ -25,7 +25,6 @@ const canUpdate = useCan('roles:update')
 const columns = computed<TableColumn[]>(() => [
   { key: 'name', label: $t('roles-column-name') },
   { key: 'description', label: $t('roles-column-description') },
-  { key: 'actions', label: $t('roles-column-actions'), align: 'end' },
 ])
 
 const emptyActionLabel = computed(() => (canCreate.value ? $t('roles-create') : undefined))
