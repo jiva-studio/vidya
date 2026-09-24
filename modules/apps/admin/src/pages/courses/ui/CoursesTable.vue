@@ -28,7 +28,7 @@ const { $t } = useFluent()
 const columns = computed<TableColumn[]>(() => [
   { key: 'name', label: $t('courses-column-name') },
   { key: 'description', label: $t('courses-column-description') },
-  { key: 'actions', label: $t('courses-column-actions'), align: 'end' },
+  { key: 'lessons', label: $t('courses-open-lessons'), align: 'end', width: '80px' },
 ])
 
 // The empty state offers the action only to someone who may take it; a dead end

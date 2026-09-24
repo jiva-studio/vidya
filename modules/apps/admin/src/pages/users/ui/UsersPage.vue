@@ -22,7 +22,6 @@ const users = useUsers()
 const columns = computed<TableColumn[]>(() => [
   { key: 'name', label: $t('users-column-name') },
   { key: 'roles', label: $t('users-column-roles') },
-  { key: 'actions', label: $t('users-column-actions'), align: 'end' },
 ])
 
 // A list narrowed to nothing is not an empty school: saying so is the only

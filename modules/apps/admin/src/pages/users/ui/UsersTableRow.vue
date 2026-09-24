@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { Avatar, Badge, IconButton, TableCell, TableRow } from '@vidya/ui'
+import { Avatar, Badge, TableCell, TableRow } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { ArrowRight } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import { rolesClasses } from './styles'
@@ -29,13 +28,13 @@ const roles = computed(() => props.user.roles ?? [])
 
 /* -------------------------------- Handlers -------------------------------- */
 
-function onOpen() {
+function onRowClick() {
   emit('open', props.user.id)
 }
 </script>
 
 <template>
-  <TableRow>
+  <TableRow interactive @select="onRowClick">
     <TableCell tone="primary" truncate :title="name">
       <div class="inline-flex items-center gap-[var(--space-2)]">
         <Avatar :name="props.user.name" size="sm" />
@@ -47,11 +46,6 @@ function onOpen() {
         <Badge v-for="role in roles" :key="role.id">{{ role.name }}</Badge>
         <span v-if="roles.length === 0">—</span>
       </div>
-    </TableCell>
-    <TableCell actions>
-      <IconButton :label="$t('users-open')" @click="onOpen">
-        <ArrowRight />
-      </IconButton>
     </TableCell>
   </TableRow>
 </template>

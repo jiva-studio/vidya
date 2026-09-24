@@ -220,4 +220,16 @@ describe('UsersPage', () => {
     expect(page.text()).toContain('User 0')
     expect(page.text()).toContain(translate('users-unnamed'))
   })
+
+  it('leads to the user card on row click', async () => {
+    const { page, router } = await mountPage({
+      [USERS]: { items: [{ id: 'user-1', name: 'Ann Smith' }] },
+    })
+
+    const row = page.find('tbody tr')
+    await row?.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('user')
+  })
 })

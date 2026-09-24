@@ -29,7 +29,7 @@ const { $t } = useFluent()
 const columns = computed<TableColumn[]>(() => [
   { key: 'name', label: $t('groups-column-name') },
   { key: 'course', label: $t('groups-column-course') },
-  { key: 'actions', label: $t('groups-column-actions'), align: 'end' },
+  { key: 'members', label: $t('groups-open-members'), align: 'end', width: '80px' },
 ])
 
 const emptyAction = computed(() => (props.canCreate ? $t('groups-empty-action') : undefined))
