@@ -118,7 +118,13 @@ export class OtpController {
       to: request.destination,
       subject: 'Your OTP', // TODO: get from school config
       template: `${lang}/otp`,
-      context: { code: otp.code },
+      context: {
+        code: otp.code,
+        brandName: this.mailerConfig.from.name,
+        supportEmail: this.mailerConfig.from.address,
+        ttlMinutes: 5,
+        currentYear: new Date().getFullYear(),
+      },
     })
 
     return new dto.GetOtpResponse()
