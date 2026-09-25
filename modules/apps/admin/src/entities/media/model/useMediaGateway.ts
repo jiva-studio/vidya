@@ -9,6 +9,11 @@ import type { MediaGateway } from '../types'
  */
 export const mediaGatewayKey: InjectionKey<MediaGateway> = Symbol('vidya.mediaGateway')
 
+let defaultGateway: MediaGateway | undefined
+
 export const useMediaGateway = (): MediaGateway => {
-  return inject(mediaGatewayKey, null) ?? new FakeMediaGateway()
+  const injected = inject(mediaGatewayKey, null)
+  if (injected) return injected
+  if (!defaultGateway) defaultGateway = new FakeMediaGateway()
+  return defaultGateway
 }

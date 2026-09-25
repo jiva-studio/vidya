@@ -11,12 +11,25 @@ import type { LessonsTableEmits, LessonsTableProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<LessonsTableProps>(), {
-  loading: false,
-  error: undefined,
-  canCreate: false,
-  canEdit: false,
-})
+const props = withDefaults(
+  defineProps<
+    LessonsTableProps & {
+      courseNames?: Map<string, string>
+      emptyTitle?: string
+      emptyDescription?: string
+    }
+  >(),
+  {
+    loading: false,
+    error: undefined,
+    canCreate: false,
+    canEdit: false,
+    showCourse: false,
+    courseNames: () => new Map(),
+    emptyTitle: undefined,
+    emptyDescription: undefined,
+  },
+)
 
 /* --------------------------------- Events --------------------------------- */
 
@@ -35,7 +48,8 @@ const columns = computed<TableColumn[]>(() => [
     width: 'var(--col-index)',
   },
   { key: 'title', label: $t('lessons-column-title') },
-  { key: 'state', label: $t('lessons-column-state') },
+  ...(props.showCourse ? [{ key: 'course', label: $t('lessons-column-course') }] : []),
+  { key: 'state', label: $t('lessons-column-state'), align: 'end' },
 ])
 
 const emptyAction = computed(() => (props.canCreate ? $t('lessons-empty-action') : undefined))
@@ -50,8 +64,8 @@ function onEmptyAction() {
   emit('create')
 }
 
-function onEdit(id: string) {
-  emit('edit', id)
+function onEdit(row: LessonRowData) {
+  emit('edit', row)
 }
 
 /* -------------------------------- Helpers --------------------------------- */
@@ -67,15 +81,21 @@ function asLesson(row: unknown): LessonRowData {
     :rows="props.rows"
     :loading="props.loading"
     :error="props.error"
-    :empty-title="$t('lessons-empty-title')"
-    :empty-description="$t('lessons-empty-body')"
+    :empty-title="props.emptyTitle ?? $t('lessons-empty-title')"
+    :empty-description="props.emptyDescription ?? $t('lessons-empty-body')"
     :empty-action-label="emptyAction"
     :retry-label="$t('action-retry')"
     @retry="onRetry"
     @empty-action="onEmptyAction"
   >
     <template #row="{ row }">
-      <LessonRow :row="asLesson(row)" :can-edit="props.canEdit" @edit="onEdit" />
+      <LessonRow
+        :row="asLesson(row)"
+        :can-edit="props.canEdit"
+        :show-course="props.showCourse"
+        :course-name="props.courseNames.get(asLesson(row).courseId)"
+        @edit="onEdit"
+      />
     </template>
   </Table>
 </template>

@@ -128,9 +128,11 @@ editor-unsaved-stay = Остаться
 # Публикация
 
 publish-confirm-title = Опубликовать эту версию?
-publish-confirm-body = Версию { $version } начнут читать студенты. Изменить её потом нельзя — только создать новую.
+publish-confirm-body = Вы действительно хотите опубликовать версию { $version }? Студенты получат к ней доступ.
 publish-confirm-submit = Опубликовать
 publish-confirm-cancel = Отмена
+
+
 
 # Файлы в медиа-блоке
 

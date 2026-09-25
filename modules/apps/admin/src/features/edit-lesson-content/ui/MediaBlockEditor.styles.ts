@@ -5,7 +5,7 @@ export const mediaBlockClasses = ['flex', 'flex-col', 'gap-[var(--space-3)]']
 export const mediaRowClasses = ['flex', 'flex-wrap', 'items-center', 'gap-[var(--space-2)]']
 
 export const mediaPlayerClasses = [
-  'w-full rounded-[var(--radius-md)]',
+  'w-full rounded-[var(--radius-md)] overflow-hidden',
   'bg-[var(--color-surface-hover)]',
 ]
 

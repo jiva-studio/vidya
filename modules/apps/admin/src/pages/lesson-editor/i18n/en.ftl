@@ -128,9 +128,11 @@ editor-unsaved-stay = Stay here
 # Publishing
 
 publish-confirm-title = Publish this version?
-publish-confirm-body = Students start reading version { $version }. It cannot be changed afterwards — only a new version can.
+publish-confirm-body = Are you sure you want to publish version { $version }? Students will have access to it.
 publish-confirm-submit = Publish
 publish-confirm-cancel = Cancel
+
+
 
 # Files in a media block
 

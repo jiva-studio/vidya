@@ -15,7 +15,7 @@ export interface BlockFault {
 const written = (value: string | undefined): boolean => (value ?? '').trim().length > 0
 
 const mediaWritten = (block: MediaBlock): boolean =>
-  written(block.url) || written(block.caption) || ('posterUrl' in block && written(block.posterUrl))
+  written(block.url) || ('posterUrl' in block && written(block.posterUrl))
 
 const quizWritten = (block: QuizBlock): boolean =>
   written(block.question) || written(block.explanation) || block.answers.some(written)

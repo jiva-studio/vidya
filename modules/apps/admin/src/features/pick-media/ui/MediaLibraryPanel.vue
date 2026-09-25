@@ -56,9 +56,8 @@ function onPick(record: MediaRecord) {
 
 /* -------------------------------- Helpers --------------------------------- */
 
-// A file this session never held has no address to show, so the tile falls back
-// to the icon for its kind rather than to a broken image.
 function addressOf(record: MediaRecord): string | undefined {
+  if (record.kind !== 'image') return undefined
   return gateway.resolve(record.url)
 }
 </script>

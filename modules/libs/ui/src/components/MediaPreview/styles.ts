@@ -6,6 +6,6 @@ export const frameClasses = [
   'border-[var(--color-border)]',
 ]
 
-export const playerClasses = ['w-full', 'rounded-[var(--radius-md)]']
+export const playerClasses = ['w-full', 'rounded-[var(--radius-md)]', 'overflow-hidden']
 
 export const missingClasses = ['text-[length:var(--text-sm)]', 'text-[var(--color-text-muted)]']

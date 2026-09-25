@@ -180,6 +180,24 @@ describe('showing a stored file', () => {
 
     expect(gateway.resolve('https://example.org/a.png')).toBe('https://example.org/a.png')
   })
+
+  it('gracefully handles localStorage write failures without throwing', async () => {
+    const clock = manualClock()
+    const gateway = new FakeMediaGateway({ clock })
+
+    const originalSetItem = localStorage.setItem
+    localStorage.setItem = () => {
+      throw new Error('QuotaExceededError')
+    }
+
+    try {
+      const record = await settle(gateway.upload({ file: file('Resilient.png') }), clock)
+      expect(record.name).toBe('Resilient.png')
+      expect(gateway.resolve(record.url)).toMatch(/^blob:/)
+    } finally {
+      localStorage.setItem = originalSetItem
+    }
+  })
 })
 
 describe('the library the school appears to have', () => {

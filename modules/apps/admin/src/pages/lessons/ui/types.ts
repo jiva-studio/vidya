@@ -6,21 +6,23 @@ export interface LessonsTableProps {
   error?: string
   canCreate?: boolean
   canEdit?: boolean
+  showCourse?: boolean
 }
 
 export interface LessonsTableEmits {
   retry: []
   create: []
-  edit: [id: string]
+  edit: [row: LessonRow]
 }
 
 export interface LessonRowProps {
   row: LessonRow
   canEdit?: boolean
+  showCourse?: boolean
 }
 
 export interface LessonRowEmits {
-  edit: [id: string]
+  edit: [row: LessonRow]
 }
 
 export interface LessonVersionBadgeProps {
@@ -33,9 +35,11 @@ export interface AddLessonDialogProps {
   open?: boolean
   busy?: boolean
   error?: string
+  courseId?: string
+  courses?: { id: string; name: string }[]
 }
 
 export interface AddLessonDialogEmits {
   'update:open': [open: boolean]
-  submit: [title: string]
+  submit: [title: string, courseId?: string]
 }

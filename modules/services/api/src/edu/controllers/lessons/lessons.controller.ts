@@ -80,7 +80,7 @@ export class LessonsController {
 
     const lessons = await this.lessons
       .scopedBy({ permissions: auth.permissions })
-      .findAll({ where: { courseId: query.courseId } })
+      .findAll({ where: query.courseId ? { courseId: query.courseId } : {} })
 
     return { items: toLessonSummaries(lessons) }
   }

@@ -68,7 +68,7 @@ export const menuIconClasses = ['size-[var(--space-4)] shrink-0 text-[var(--colo
 export const menuItemClasses =
   'w-full justify-start h-[var(--control-sm)] px-[var(--space-2)] ' +
   'rounded-[var(--radius-sm)] text-[length:var(--text-sm)] font-[var(--weight-regular)] ' +
-  '[&>span]:flex [&>span]:w-full [&>span]:items-center [&>span]:gap-[var(--space-2)]'
+  '[&>span]:flex [&>span]:w-full [&>span]:items-center [&>span]:justify-start [&>span]:gap-[var(--space-2)]'
 
 // The rule runs the full width of the panel, which the panel's own padding
 // would otherwise inset it from.

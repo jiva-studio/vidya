@@ -31,6 +31,10 @@ export class LessonSummary implements protocol.LessonSummary {
   @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
   id: domain.LessonId
 
+  @ApiProperty({ example: '6eb216f2-543d-4f15-88f5-f325a1bdcafd' })
+  @IsUUID()
+  courseId: domain.CourseId
+
   @ApiProperty({ example: 1 })
   lessonNumber: number
 

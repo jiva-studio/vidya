@@ -29,7 +29,12 @@ function iconFor(kind: ThumbnailKind): typeof Image {
 
 <template>
   <div :class="cn(tileVariants({ selected: props.selected }), props.class)">
-    <img v-if="props.src" :src="props.src" :alt="props.alt" :class="imageClasses" />
+    <img
+      v-if="props.src && props.kind === 'image'"
+      :src="props.src"
+      :alt="props.alt"
+      :class="imageClasses"
+    />
     <div v-else :class="placeholderClasses" role="img" :aria-label="props.alt">
       <component :is="placeholderIcon" :class="iconClasses" />
     </div>

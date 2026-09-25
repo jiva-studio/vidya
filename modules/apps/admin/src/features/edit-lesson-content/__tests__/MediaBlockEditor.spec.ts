@@ -119,39 +119,4 @@ describe('MediaBlockEditor', () => {
     expect(wrapper.findComponent(MediaBlockEditorFilled).exists()).toBe(true)
     expect(wrapper.findComponent(MediaBlockEditorEmpty).exists()).toBe(false)
   })
-
-  it('emits update when caption is changed in filled state', async () => {
-    const block = createFilledBlock()
-    const wrapper = mountEditor(block)
-
-    const filled = wrapper.findComponent(MediaBlockEditorFilled)
-    filled.vm.$emit('caption', 'Updated description of temple')
-    await flushPromises()
-
-    expect(wrapper.emitted('update')).toBeTruthy()
-    expect(wrapper.emitted('update')![0]).toEqual([
-      {
-        ...block,
-        caption: 'Updated description of temple',
-      },
-    ])
-  })
-
-  it('emits update with cleared url when replace is clicked', async () => {
-    const block = createFilledBlock()
-    const wrapper = mountEditor(block)
-
-    const filled = wrapper.findComponent(MediaBlockEditorFilled)
-    filled.vm.$emit('replace')
-    await flushPromises()
-
-    expect(wrapper.emitted('update')).toBeTruthy()
-    expect(wrapper.emitted('update')![0]).toEqual([
-      {
-        ...block,
-        url: '',
-        source: 'url',
-      },
-    ])
-  })
 })

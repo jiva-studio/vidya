@@ -6,7 +6,11 @@ import type { LessonRowEmits, LessonRowProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
-const props = withDefaults(defineProps<LessonRowProps>(), { canEdit: false })
+const props = withDefaults(defineProps<LessonRowProps & { courseName?: string }>(), {
+  canEdit: false,
+  showCourse: false,
+  courseName: undefined,
+})
 
 /* --------------------------------- Events --------------------------------- */
 
@@ -16,7 +20,7 @@ const emit = defineEmits<LessonRowEmits>()
 
 function onRowClick() {
   if (props.canEdit) {
-    emit('edit', props.row.id)
+    emit('edit', props.row)
   }
 }
 </script>
@@ -25,7 +29,10 @@ function onRowClick() {
   <TableRow :interactive="props.canEdit" @select="onRowClick">
     <TableCell align="start" numeric nowrap>{{ props.row.lessonNumber }}</TableCell>
     <TableCell tone="primary" truncate :title="props.row.title">{{ props.row.title }}</TableCell>
-    <TableCell nowrap>
+    <TableCell v-if="props.showCourse" truncate :title="props.courseName">
+      {{ props.courseName || '—' }}
+    </TableCell>
+    <TableCell align="end" nowrap>
       <LessonVersionBadge
         :state="props.row.state"
         :published-version="props.row.publishedVersion"

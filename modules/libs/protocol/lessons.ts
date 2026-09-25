@@ -34,7 +34,7 @@ export type LessonDetails = {
   title: string
 }
 
-export type LessonSummary = Pick<LessonDetails, 'id' | 'lessonNumber' | 'title'>
+export type LessonSummary = Pick<LessonDetails, 'id' | 'courseId' | 'lessonNumber' | 'title'>
 
 export type LessonVersionDetails = {
   id: domain.LessonVersionId
