@@ -156,11 +156,6 @@ export interface MediaBlockEditorFilledProps extends Frozen {
   src?: string
 }
 
-export interface MediaBlockEditorFilledEmits {
-  caption: [caption: string]
-  replace: []
-}
-
 export interface MediaBlockEditorProgressProps {
   percent: number
 }

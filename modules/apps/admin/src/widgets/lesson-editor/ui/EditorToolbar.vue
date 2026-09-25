@@ -5,6 +5,7 @@ import { computed } from 'vue'
 
 import { titleClasses, toolbarErrorClasses, toolbarVersionClasses } from './styles'
 import type { EditorToolbarEmits, EditorToolbarProps } from './types'
+import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -72,6 +73,7 @@ function onPublish() {
 
 <template>
   <PageHeader :title="props.title ?? $t('editor-title')">
+    <template #leading><PageBack /></template>
     <template #title>
       <Input
         :class="titleClasses"

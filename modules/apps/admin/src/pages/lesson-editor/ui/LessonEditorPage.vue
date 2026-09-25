@@ -59,7 +59,7 @@ async function onRename(next: string) {
 }
 
 function onBack() {
-  void router.push({ name: 'lessons', params: { courseId } })
+  void router.push({ name: 'lessons', query: { courseId: String(courseId) } })
 }
 </script>
 

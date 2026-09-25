@@ -1,6 +1,7 @@
 import type { CourseId } from '@vidya/domain'
+import { asId } from '@vidya/domain'
 import type { LessonSummary, LessonVersionSummary } from '@vidya/protocol'
-import { onMounted, ref, watch } from 'vue'
+import { computed, isRef, onMounted, type Ref, ref, watch } from 'vue'
 
 import { useCurrentSchool } from '@/shared/access'
 import { useHttp } from '@/shared/api'
@@ -12,6 +13,7 @@ import { draftVersionOf, lessonVersionState, publishedVersionOf } from './versio
 
 const toRow = (lesson: LessonSummary, versions: LessonVersionSummary[]): LessonRow => ({
   id: lesson.id,
+  courseId: lesson.courseId,
   lessonNumber: lesson.lessonNumber,
   title: lesson.title,
   state: lessonVersionState(versions),
@@ -20,18 +22,21 @@ const toRow = (lesson: LessonSummary, versions: LessonVersionSummary[]): LessonR
 })
 
 /**
- * The lessons of one course, each with the state of its latest version.
+ * The lessons of a school or course, each with the state of its latest version.
  *
  * The versions come one request per lesson because `LessonSummary` carries no
  * version field and `GET /edu/lessons` offers no way to ask for them. They go
  * out together rather than in sequence, and the whole page is one round of
  * fan-out rather than one request per row as the operator scrolls.
  */
-export const useCourseLessons = (courseId: CourseId) => {
+export const useCourseLessons = (courseIdArg?: Ref<string> | string) => {
   const http = useHttp()
   const { generation } = useCurrentSchool()
 
-  const rows = ref<LessonRow[]>([])
+  const courseId = isRef(courseIdArg) ? courseIdArg : ref(courseIdArg ?? '')
+  const query = ref('')
+
+  const allRows = ref<LessonRow[]>([])
   const loading = ref(false)
   const error = ref<string | undefined>(undefined)
   const addError = ref<string | undefined>(undefined)
@@ -41,15 +46,16 @@ export const useCourseLessons = (courseId: CourseId) => {
   const load = async (): Promise<void> => {
     const mine = ++ticket
 
-    rows.value = []
+    allRows.value = []
     loading.value = true
     error.value = undefined
 
     try {
-      const { items } = await getLessons(http, { courseId })
+      const selectedCourse = courseId.value ? asId<CourseId>(courseId.value) : undefined
+      const { items } = await getLessons(http, { courseId: selectedCourse })
       const versions = await Promise.all(items.map((lesson) => getLessonVersions(http, lesson.id)))
       if (mine !== ticket) return
-      rows.value = items.map((lesson, index) => toRow(lesson, versions[index].items))
+      allRows.value = items.map((lesson, index) => toRow(lesson, versions[index].items))
     } catch (caught) {
       if (mine !== ticket) return
       error.value = reasonOf(caught, 'lessons-load-failed')
@@ -58,13 +64,21 @@ export const useCourseLessons = (courseId: CourseId) => {
     }
   }
 
+  const rows = computed<LessonRow[]>(() => {
+    const term = query.value.trim().toLowerCase()
+    if (!term) return allRows.value
+    return allRows.value.filter((row) => row.title.toLowerCase().includes(term))
+  })
+
   /** The number is the list's business: the next one, never typed by hand. */
-  const add = async (title: string): Promise<boolean> => {
-    const next = Math.max(0, ...rows.value.map((row) => row.lessonNumber)) + 1
+  const add = async (title: string, targetCourseId?: string): Promise<boolean> => {
+    const target = asId<CourseId>(targetCourseId || courseId.value)
+    const courseLessons = allRows.value.filter((row) => row.courseId === target)
+    const next = Math.max(0, ...courseLessons.map((row) => row.lessonNumber)) + 1
     addError.value = undefined
 
     try {
-      await createLesson(http, courseId, next, title)
+      await createLesson(http, target, next, title)
       await load()
       return true
       // Kept apart from the list's own error: a failed add must not replace the
@@ -75,7 +89,7 @@ export const useCourseLessons = (courseId: CourseId) => {
     }
   }
 
-  watch(generation, () => {
+  watch([generation, courseId], () => {
     void load()
   })
 
@@ -83,5 +97,18 @@ export const useCourseLessons = (courseId: CourseId) => {
     void load()
   })
 
-  return { rows, loading, error, addError, reload: load, add }
+  return {
+    rows,
+    allRows,
+    loading,
+    error,
+    addError,
+    courseId,
+    query,
+    find: (term: string) => {
+      query.value = term
+    },
+    reload: load,
+    add,
+  }
 }

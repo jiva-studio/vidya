@@ -1,10 +1,18 @@
 import type { MenuGroup } from '@/shared/navigation'
 
 /**
- * Lessons have no sidebar entry. Owned by T3.
- *
- * They are reached from their course, because the screen needs a course to
- * mean anything, and an entry that lands on "choose a course first" is a
- * detour rather than navigation.
+ * Lessons in the teaching-material group.
  */
-export const menu: MenuGroup[] = []
+export const menu: MenuGroup[] = [
+  {
+    label: 'nav-group-edu',
+    items: [
+      {
+        route: 'lessons',
+        label: 'nav-lessons',
+        icon: 'book',
+        permission: 'lessons:read',
+      },
+    ],
+  },
+]

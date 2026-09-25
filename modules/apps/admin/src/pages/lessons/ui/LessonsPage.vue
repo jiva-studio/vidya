@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import type { CourseId } from '@vidya/domain'
-import { asId } from '@vidya/domain'
-import { Button, PageHeader } from '@vidya/ui'
+import type { SelectOption } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { useCourseLessons } from '@/entities/lesson'
+import { useCourses } from '@/entities/course'
+import { useCourseLessons, type LessonRow } from '@/entities/lesson'
 import { useCan } from '@/shared/access'
+import { ListPage } from '@/widgets/list-page'
 
 import AddLessonDialog from './AddLessonDialog.vue'
+import LessonsFilters from './LessonsFilters.vue'
 import LessonsTable from './LessonsTable.vue'
-import { pageClasses } from './styles'
-import { PageBack } from '@/shared/navigation'
 
 /* --------------------------------- State ---------------------------------- */
 
@@ -20,14 +19,45 @@ const { $t } = useFluent()
 const route = useRoute()
 const router = useRouter()
 
-const courseId = asId<CourseId>(String(route.params.courseId ?? ''))
-const lessons = useCourseLessons(courseId)
+const initialCourseId = computed(() => String(route.query.courseId ?? route.params.courseId ?? ''))
+
+const courseFilter = ref<string>(initialCourseId.value)
+const courses = useCourses()
+const lessons = useCourseLessons(courseFilter)
 
 const canCreate = useCan('lessons:create')
 const canEdit = useCan('lessons:update')
 
 const adding = ref(false)
 const busy = ref(false)
+
+const courseNames = computed(
+  () => new Map(courses.items.value.map((course) => [course.id, course.name])),
+)
+
+const courseOptions = computed<SelectOption[]>(() =>
+  courses.items.value.map((course) => ({ value: course.id, label: course.name })),
+)
+
+const filtersApplied = computed(() => !!lessons.query.value || !!courseFilter.value)
+
+const isSearching = computed(() => !!lessons.query.value.trim())
+
+const emptyTitle = computed(() =>
+  isSearching.value ? $t('lessons-no-matches-title') : $t('lessons-empty-title'),
+)
+const emptyDescription = computed(() =>
+  isSearching.value ? $t('lessons-no-matches-body') : $t('lessons-empty-body'),
+)
+
+watch(
+  () => route.query.courseId,
+  (next) => {
+    if (typeof next === 'string') {
+      courseFilter.value = next
+    }
+  },
+)
 
 /* -------------------------------- Handlers -------------------------------- */
 
@@ -39,43 +69,65 @@ function onDialog(open: boolean) {
   adding.value = open
 }
 
-async function onAdd(title: string) {
+async function onAdd(title: string, targetCourseId?: string) {
   busy.value = true
-  const added = await lessons.add(title)
+  const added = await lessons.add(title, targetCourseId)
   busy.value = false
   if (added) adding.value = false
 }
 
-// The editor is another section's screen, reached by the name of its route so
-// that this one never has to know where it lives or what it is made of.
-function onEdit(id: string) {
-  void router.push({ name: 'lesson-editor', params: { courseId, lessonId: id } })
-}
-
-function onBack() {
-  void router.push({ name: 'courses' })
+function onEdit(row: LessonRow) {
+  void router.push({
+    name: 'lesson-editor',
+    params: { courseId: row.courseId, lessonId: row.id },
+  })
 }
 
 function onRetry() {
   void lessons.reload()
 }
+
+function onSearch(term: string) {
+  lessons.find(term)
+}
+
+function onCourse(courseId: string) {
+  courseFilter.value = courseId
+}
+
+function onClear() {
+  courseFilter.value = ''
+  lessons.find('')
+}
 </script>
 
 <template>
-  <section :class="pageClasses">
-    <PageHeader :title="$t('lessons-title')">
-      <template #leading><PageBack /></template>
-      <template #actions>
-        <Button variant="ghost" @click="onBack">{{ $t('lessons-back') }}</Button>
-        <Button v-if="canCreate" @click="onCreate">{{ $t('lessons-add') }}</Button>
-      </template>
-    </PageHeader>
+  <ListPage
+    :title="$t('lessons-title')"
+    :create-label="canCreate ? $t('lessons-add') : undefined"
+    @create="onCreate"
+  >
+    <template #filters>
+      <LessonsFilters
+        :search="lessons.query.value"
+        :course-id="courseFilter"
+        :course-options="courseOptions"
+        :filters-applied="filtersApplied"
+        @update:search="onSearch"
+        @update:course-id="onCourse"
+        @clear="onClear"
+      />
+    </template>
     <LessonsTable
       :rows="lessons.rows.value"
       :loading="lessons.loading.value"
       :error="lessons.error.value ? $t('state-error') : undefined"
       :can-create="canCreate"
       :can-edit="canEdit"
+      :show-course="!courseFilter"
+      :course-names="courseNames"
+      :empty-title="emptyTitle"
+      :empty-description="emptyDescription"
       @retry="onRetry"
       @create="onCreate"
       @edit="onEdit"
@@ -84,8 +136,10 @@ function onRetry() {
       :open="adding"
       :busy="busy"
       :error="lessons.addError.value && $t(lessons.addError.value)"
+      :course-id="courseFilter"
+      :courses="courses.items.value"
       @update:open="onDialog"
       @submit="onAdd"
     />
-  </section>
+  </ListPage>
 </template>

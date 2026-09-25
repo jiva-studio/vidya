@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, embedSrc, FormField, Input } from '@vidya/ui'
+import { embedSrc } from '@vidya/ui'
 import { useFluent } from 'fluent-vue'
 import { computed } from 'vue'
 
@@ -9,7 +9,7 @@ import {
   mediaPlayerClasses,
   mediaRowClasses,
 } from './MediaBlockEditor.styles'
-import type { MediaBlockEditorFilledEmits, MediaBlockEditorFilledProps } from './types'
+import type { MediaBlockEditorFilledProps } from './types'
 
 /* --------------------------------- Props ---------------------------------- */
 
@@ -18,30 +18,16 @@ const props = withDefaults(defineProps<MediaBlockEditorFilledProps>(), {
   src: undefined,
 })
 
-/* --------------------------------- Events --------------------------------- */
-
-const emit = defineEmits<MediaBlockEditorFilledEmits>()
-
 /* --------------------------------- State ---------------------------------- */
 
 const { $t } = useFluent()
 
 const embed = computed(() => embedSrc(props.block.source, props.block.url))
-const image = computed(() => props.src && props.kind === 'image')
-const video = computed(() => props.src && props.kind === 'video')
-const audio = computed(() => props.src && props.kind === 'audio')
-const caption = computed(() => props.block.caption ?? '')
-const alt = computed(() => caption.value || $t('editor-media-preview-alt'))
-
-/* -------------------------------- Handlers -------------------------------- */
-
-function onCaption(value: string) {
-  emit('caption', value)
-}
-
-function onReplace() {
-  emit('replace')
-}
+const effectiveSrc = computed(() => props.src || props.block.url)
+const image = computed(() => effectiveSrc.value && props.kind === 'image')
+const video = computed(() => effectiveSrc.value && props.kind === 'video')
+const audio = computed(() => effectiveSrc.value && props.kind === 'audio')
+const alt = computed(() => $t('editor-media-preview-alt'))
 </script>
 
 <template>
@@ -55,23 +41,9 @@ function onReplace() {
       referrerpolicy="no-referrer"
       allowfullscreen
     />
-    <img v-else-if="image" :src="props.src" :alt="alt" :class="mediaPlayerClasses" />
-    <video v-else-if="video" :src="props.src" :class="mediaPlayerClasses" controls />
-    <audio v-else-if="audio" :src="props.src" :class="mediaPlayerClasses" controls />
+    <img v-else-if="image" :src="effectiveSrc" :alt="alt" :class="mediaPlayerClasses" />
+    <video v-else-if="video" :src="effectiveSrc" :class="mediaPlayerClasses" controls />
+    <audio v-else-if="audio" :src="effectiveSrc" :class="mediaPlayerClasses" controls />
     <p v-else :class="mediaMutedClasses">{{ $t('editor-media-unavailable') }}</p>
-    <Button v-if="!props.frozen" variant="secondary" @click="onReplace">
-      {{ $t('editor-media-replace') }}
-    </Button>
-    <FormField :label="$t('editor-media-caption-label')" :hint="$t('editor-media-caption-hint')">
-      <template #default="field">
-        <Input
-          :id="field.id"
-          :model-value="caption"
-          :described-by="field.describedBy"
-          :readonly="props.frozen"
-          @update:model-value="onCaption"
-        />
-      </template>
-    </FormField>
   </div>
 </template>

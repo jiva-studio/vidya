@@ -23,7 +23,7 @@ const GROUP = ['id', 'courseId', 'name', 'description'] as const
 const GROUP_SUMMARY = ['id', 'courseId', 'name', 'status'] as const
 
 const LESSON = ['id', 'courseId', 'lessonNumber', 'title'] as const
-const LESSON_SUMMARY = ['id', 'lessonNumber', 'title'] as const
+const LESSON_SUMMARY = ['id', 'courseId', 'lessonNumber', 'title'] as const
 
 const VERSION = ['id', 'lessonId', 'version', 'status', 'publishedAt'] as const
 const VERSION_DETAILS = [...VERSION, 'content'] as const

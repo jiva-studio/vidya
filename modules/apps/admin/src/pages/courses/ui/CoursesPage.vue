@@ -52,7 +52,7 @@ function onEdit(id: string) {
 }
 
 function onLessons(id: string) {
-  void router.push({ name: 'lessons', params: { courseId: id } })
+  void router.push({ name: 'lessons', query: { courseId: id } })
 }
 
 function onRetry() {

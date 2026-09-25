@@ -90,14 +90,6 @@ async function onRetry() {
   if (record) store(record)
 }
 
-function onCaption(caption: string) {
-  emit('update', { ...props.block, caption })
-}
-
-function onReplace() {
-  emit('update', { ...props.block, url: '', source: 'url' })
-}
-
 /* -------------------------------- Helpers --------------------------------- */
 
 async function send(file: File | undefined) {
@@ -137,8 +129,6 @@ function announce(name: string) {
       :kind="props.kind"
       :src="src"
       :frozen="props.frozen"
-      @caption="onCaption"
-      @replace="onReplace"
     />
     <MediaBlockEditorEmpty
       v-else

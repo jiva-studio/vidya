@@ -11,6 +11,7 @@ import { useSession } from '@/shared/session'
 import { fakeHttpClient, mountWithApp, pending, refusal } from '@/shared/testing'
 
 import { messages } from '../i18n'
+import LessonsFilters from '../ui/LessonsFilters.vue'
 import LessonsPage from '../ui/LessonsPage.vue'
 
 addMessages(messages)
@@ -38,8 +39,9 @@ const signIn = (granted: string[]) =>
 // screen and in the way of a string comparison.
 const plain = (text: string) => text.replaceAll('\u2068', '').replaceAll('\u2069', '')
 
-const lesson = (id: string, number: number, title: string) => ({
+const lesson = (id: string, number: number, title: string, courseId: string = COURSE) => ({
   id,
+  courseId,
   lessonNumber: number,
   title,
 })
@@ -58,15 +60,18 @@ const open = async (answers: Record<string, unknown>) => {
     history: createMemoryHistory(),
     routes: [
       { path: '/courses', name: 'courses', component: blank },
-      { path: '/courses/:courseId/lessons', name: 'lessons', component: blank },
+      { path: '/lessons', name: 'lessons', component: blank },
       { path: '/courses/:courseId/lessons/:lessonId', name: 'lesson-editor', component: blank },
     ],
   })
 
-  await routes.push(`/courses/${COURSE}/lessons`)
+  await routes.push(`/lessons?courseId=${COURSE}`)
   await routes.isReady()
 
-  const transport = fakeHttpClient(answers)
+  const transport = fakeHttpClient({
+    '/edu/courses': { items: [{ id: COURSE, name: 'Sanskrit' }] },
+    ...answers,
+  })
   const page = mountWithApp(LessonsPage, {
     global: { plugins: [routes], provide: { [httpClientKey as symbol]: transport.client } },
   })
@@ -86,7 +91,8 @@ describe('LessonsPage', () => {
   it('asks for the lessons of the course in the address', async () => {
     const { transport } = await open({ [LESSONS]: { items: [] } })
 
-    expect(transport.calls[0]).toMatchObject({ path: LESSONS, query: { courseId: COURSE } })
+    const lessonCall = transport.calls.find((call) => call.path === LESSONS)
+    expect(lessonCall).toMatchObject({ path: LESSONS, query: { courseId: COURSE } })
   })
 
   it('shows the number, the title and the state of the latest version', async () => {
@@ -167,5 +173,18 @@ describe('LessonsPage', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('lesson-editor')
+  })
+
+  it('shows no matches title when searching yields no results', async () => {
+    const { page } = await open({
+      [`${LESSONS}/l1/versions`]: versions('l1', [[1, 'draft']]),
+      [LESSONS]: { items: [lesson('l1', 1, 'Alphabet')] },
+    })
+
+    const filters = page.findComponent(LessonsFilters)
+    filters.vm.$emit('update:search', 'Nonexistent query')
+    await flushPromises()
+
+    expect(page.text()).toContain(translate('lessons-no-matches-title'))
   })
 })

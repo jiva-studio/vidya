@@ -160,6 +160,8 @@ export class FakeMediaGateway implements MediaGateway {
       }
     }
 
+    this.saveBlobToIdb(record.url, file)
+
     if (typeof FileReader !== 'undefined') {
       const reader = new FileReader()
       reader.onload = () => {
@@ -182,6 +184,27 @@ export class FakeMediaGateway implements MediaGateway {
     return record
   }
 
+  private saveBlobToIdb(key: string, file: Blob): void {
+    if (typeof indexedDB === 'undefined') return
+    try {
+      const req = indexedDB.open('vidya.fake_media_blobs', 1)
+      req.onupgradeneeded = () => {
+        req.result.createObjectStore('blobs')
+      }
+      req.onsuccess = () => {
+        try {
+          const db = req.result
+          const tx = db.transaction('blobs', 'readwrite')
+          tx.objectStore('blobs').put(file, key)
+        } catch {
+          // ignore
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   private saveRecords(): void {
     if (typeof localStorage === 'undefined') return
     try {
@@ -192,13 +215,50 @@ export class FakeMediaGateway implements MediaGateway {
   }
 
   private loadFromStorage(): void {
+    this.loadRecordsFromLocalStorage()
+    this.loadBlobsFromIndexedDb()
+  }
+
+  private loadRecordsFromLocalStorage(): void {
     if (typeof localStorage === 'undefined') return
     try {
       const raw = localStorage.getItem('vidya.fake_media_records')
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (Array.isArray(parsed)) {
-          this.uploaded = parsed
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        this.uploaded = parsed
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  private loadBlobsFromIndexedDb(): void {
+    if (typeof indexedDB === 'undefined' || typeof URL === 'undefined' || !URL.createObjectURL) {
+      return
+    }
+    try {
+      const req = indexedDB.open('vidya.fake_media_blobs', 1)
+      req.onupgradeneeded = () => req.result.createObjectStore('blobs')
+      req.onsuccess = () => this.hydrateBlobsFromDb(req.result)
+    } catch {
+      // ignore
+    }
+  }
+
+  private hydrateBlobsFromDb(db: IDBDatabase): void {
+    try {
+      const tx = db.transaction('blobs', 'readonly')
+      const store = tx.objectStore('blobs')
+      for (const item of this.uploaded) {
+        const getReq = store.get(item.url)
+        getReq.onsuccess = () => {
+          if (!getReq.result || this.blobs.has(item.url)) return
+          try {
+            this.blobs.set(item.url, URL.createObjectURL(getReq.result))
+          } catch {
+            // ignore
+          }
         }
       }
     } catch {

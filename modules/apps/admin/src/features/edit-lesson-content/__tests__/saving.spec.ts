@@ -14,8 +14,8 @@ const doc = (...blocks: LessonBlock[]): LessonContent => ({
 const text = (value: string): LessonBlock =>
   ({ id: id<BlockId>('text'), type: 'text', content: value }) as LessonBlock
 
-const image = (url: string, caption?: string): LessonBlock =>
-  ({ id: id<BlockId>('image'), type: 'image', source: 'url', url, caption }) as LessonBlock
+const image = (url: string, posterUrl?: string): LessonBlock =>
+  ({ id: id<BlockId>('image'), type: 'image', source: 'url', url, posterUrl }) as LessonBlock
 
 const quiz = (
   question: string,
@@ -48,8 +48,8 @@ describe('what reaches the server', () => {
     expect(kept(doc(image('')))).toEqual([])
   })
 
-  it('keeps a media block that has only a caption, because someone wrote it', () => {
-    expect(kept(doc(image('', 'A temple courtyard')))).toEqual(['image'])
+  it('keeps a media block that has a poster url, because someone specified it', () => {
+    expect(kept(doc(image('', 'https://example.org/poster.png')))).toEqual(['image'])
   })
 
   it('drops a quiz with no question and nothing typed into any option', () => {
@@ -102,8 +102,8 @@ describe('what stops a version being published', () => {
     expect(findInvalidBlocks(doc(text('# only a heading')))).toEqual([])
   })
 
-  it('faults a media block that was captioned but never given a link', () => {
-    expect(findInvalidBlocks(doc(image('', 'A temple courtyard')))).toEqual(['image'])
+  it('faults a media block that was given a poster but never given a link', () => {
+    expect(findInvalidBlocks(doc(image('', 'https://example.org/poster.png')))).toEqual(['image'])
   })
 
   it('faults a quiz with options but no question', () => {

@@ -1,4 +1,4 @@
-import type { LessonId } from '@vidya/domain'
+import type { CourseId, LessonId } from '@vidya/domain'
 
 /**
  * Where a lesson's content stands, as the list shows it.
@@ -14,6 +14,7 @@ export type LessonVersionState = 'draft' | 'published' | 'revising'
 /** One row of the lessons list: the lesson plus what its versions add up to. */
 export type LessonRow = {
   id: LessonId
+  courseId: CourseId
   lessonNumber: number
   title: string
   state?: LessonVersionState

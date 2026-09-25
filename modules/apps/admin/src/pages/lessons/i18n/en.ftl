@@ -1,23 +1,32 @@
-# Texts for lessons. Owned by T3.
+# Texts for lessons.
+
+nav-lessons = Lessons
 
 lessons-title = Lessons
-lessons-column-number = No.
+lessons-column-number = #
 lessons-column-title = Title
+lessons-column-course = Course
 lessons-column-state = Version
 lessons-column-actions = Actions
 lessons-edit = Edit
 lessons-add = Add lesson
 lessons-back = All courses
-lessons-empty-title = This course has no lessons
+lessons-empty-title = No lessons yet
 lessons-empty-body = Add a lesson, then write its content in the editor.
+lessons-no-matches-title = No matches found
+lessons-no-matches-body = Try changing search or filter parameters.
 lessons-empty-action = Add lesson
-lessons-load-failed = The lessons could not be loaded.
+lessons-load-failed = Could not load lessons.
+lessons-filter-all = All courses
+lessons-filter-course = Course
 
 lesson-create-title = New lesson
-lesson-create-body = The lesson number is assigned automatically — the next one in the course.
+lesson-create-course-label = Course
+lesson-create-course-placeholder = Select course
 lesson-create-title-label = Title
-lesson-create-title-hint = For example: The Devanagari alphabet
+lesson-create-title-placeholder = e.g., Devanagari alphabet
 lesson-create-title-required = Enter a title.
+lesson-create-course-required = Select a course.
 lesson-create-submit = Add
 lesson-create-cancel = Cancel
 lesson-create-failed = The lesson could not be added.
