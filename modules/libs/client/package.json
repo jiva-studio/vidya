@@ -23,7 +23,7 @@
   "devDependencies": {
     "@types/sql.js": "^1.4.11",
     "fake-indexeddb": "^6.2.5",
-    "vite": "^8.3.0",
+    "vite": "^8.3.4",
     "vitest": "^5.0.1"
   }
 }
